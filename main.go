@@ -1,43 +1,38 @@
 package main
 
 import (
-	"context"
+	"gong/sdk"
+	"gong/server"
 	"log"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 )
 
 func main() {
-	slog.SetDefault(slog.Default())
-
-	engine, err := actor.NewEngine(actor.NewEngineConfig())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	engine.SpawnFunc(func(ctx *actor.Context) {
-		switch msg := ctx.Message().(type) {
-		case actor.Initialized:
-			ctx.Engine().Subscribe(ctx.PID())
-		case actor.EventLogger:
-			level, logMsg, attr := msg.Log()
-			level = slog.LevelInfo
-			slog.Log(context.Background(), level, logMsg, attr...)
-		default:
-			log.Printf("%T %+v", msg, msg)
+	if len(os.Args) > 1 && os.Args[1] == "-c" {
+		engine, err := actor.NewEngine(actor.NewEngineConfig())
+		if err != nil {
+			log.Fatal(err)
 		}
-	}, "gong")
 
-	pid := engine.Spawn(newServer(), "server", actor.WithID("primary"))
-	engine.Poison(pid)
+		gongPID := engine.Spawn(sdk.NewGongActor(), "gong")
 
-	time.Sleep(1 * time.Second)
-	engine.Send(pid, testMsg{})
-	engine.BroadcastEvent(testMsg{})
+		pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.MiddlewareGong()))
+		engine.Send(pid, testMsg{})
+		engine.Poison(pid)
 
-	time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
+		engine.Send(pid, testMsg{})
+		time.Sleep(10 * time.Second)
+
+		engine.Stop(gongPID)
+		time.Sleep(time.Second)
+	} else {
+		log.Fatal(server.Start())
+	}
 }
 
 type testMsg struct {
@@ -47,14 +42,14 @@ func (m testMsg) Log() (slog.Level, string, []any) {
 	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi"}
 }
 
-type server struct{}
+type client struct{}
 
-func newServer() actor.Producer {
+func newClient() actor.Producer {
 	return func() actor.Receiver {
-		return server{}
+		return client{}
 	}
 }
 
-func (s server) Receive(ctx *actor.Context) {
+func (c client) Receive(ctx *actor.Context) {
 
 }
