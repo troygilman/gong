@@ -1,0 +1,12 @@
+module gong
+
+go 1.22.2
+
+require github.com/anthdm/hollywood v0.0.0-20240114090715-5a41e08e1d14
+
+require (
+	github.com/DataDog/gostackparse v0.7.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/zeebo/xxh3 v1.0.2 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
+)
