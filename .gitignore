@@ -1,0 +1,5 @@
+view/**/*_templ.go
+static/css
+.env
+.gen
+tmp

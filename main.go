@@ -1,55 +1,53 @@
 package main
 
 import (
-	"gong/sdk"
-	"gong/server"
+	"gong/domain"
+	"gong/example"
+	"gong/handler"
 	"log"
-	"log/slog"
 	"os"
-	"time"
 
-	"github.com/anthdm/hollywood/actor"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-c" {
-		engine, err := actor.NewEngine(actor.NewEngineConfig())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig()), "gong")
-
-		pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
-		engine.Send(pid, testMsg{})
-		engine.Poison(pid)
-
-		time.Sleep(1 * time.Second)
-		engine.Send(pid, testMsg{})
-		time.Sleep(10 * time.Second)
-
-		engine.Stop(gongPID)
-		time.Sleep(time.Second)
+		example.StartClient()
 	} else {
-		log.Fatal(server.Start())
+		log.Fatal(run())
 	}
 }
 
-type testMsg struct {
+func run() error {
+	app, err := domain.NewDefaultApp()
+	if err != nil {
+		return err
+	}
+
+	e := echo.New()
+	e.HTTPErrorHandler = httpErrorHandler
+
+	e.Use(handler.MiddlewareLogRequest())
+
+	e.Use(handler.MiddlewareWithApp(app))
+
+	e.GET("/connect", handler.ProjectConnect)
+
+	return e.Start(":8080")
 }
 
-func (m testMsg) Log() (slog.Level, string, []any) {
-	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi"}
-}
-
-type client struct{}
-
-func newClient() actor.Producer {
-	return func() actor.Receiver {
-		return client{}
+func httpErrorHandler(err error, ctx echo.Context) {
+	switch err := err.(type) {
+	default:
+		log.Printf("ERROR: %s %s - %s", ctx.Request().Method, ctx.Request().RequestURI, err.Error())
 	}
 }
 
-func (c client) Receive(ctx *actor.Context) {
+type groupable interface {
+	Group(string, ...echo.MiddlewareFunc) *echo.Group
+}
 
+func newGroup(e groupable, path string, f func(group *echo.Group), middlewares ...echo.MiddlewareFunc) {
+	group := e.Group(path, middlewares...)
+	f(group)
 }

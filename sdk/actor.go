@@ -17,7 +17,7 @@ import (
 
 var (
 	gongPID    *actor.PID = nil
-	serverHost            = "localhost:8000"
+	serverHost            = "localhost:8080"
 )
 
 type Event struct {
