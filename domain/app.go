@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
+
+const DefaultTimeout = time.Second
 
 type App interface {
 	Engine() *actor.Engine

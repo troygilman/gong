@@ -1,0 +1,16 @@
+package view
+
+import "gong/domain"
+
+templ Project(props domain.ProjectProps) {
+	@Index() {
+		<div>
+			Project
+			for _, actor := range props.Actors {
+				<div>
+					{ actor }
+				</div>
+			}
+		</div>
+	}
+}

@@ -29,6 +29,26 @@ type Event struct {
 	Attr      map[string]any
 }
 
+func GongMiddleware() actor.MiddlewareFunc {
+	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
+		return func(ctx *actor.Context) {
+			switch msg := ctx.Message().(type) {
+			case actor.EventLogger:
+				level, logMsg, attr := msg.Log()
+				ctx.Send(gongPID, Event{
+					MsgType:   fmt.Sprintf("%T", msg),
+					Timestamp: time.Now(),
+					Receiver:  ctx.PID().String(),
+					Level:     level,
+					Msg:       logMsg,
+					Attr:      createAttrMap(attr),
+				})
+			}
+			next(ctx)
+		}
+	}
+}
+
 type GongConfig struct {
 	ProjectID string
 	QueueSize uint
@@ -59,11 +79,9 @@ func NewGong(config GongConfig) actor.Producer {
 func (g *Gong) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		log.Println("init")
 		gongPID = ctx.PID()
 		ctx.Engine().Subscribe(ctx.PID())
 	case actor.Started:
-		log.Println("start")
 		events := make(chan Event, g.config.QueueSize)
 		g.events = events
 		go connect(g.config.ProjectID, events, func(err error) {

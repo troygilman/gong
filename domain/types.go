@@ -35,3 +35,7 @@ func (h *EventHeap) Pop() any {
 	*h = old[0 : n-1]
 	return x
 }
+
+type ProjectProps struct {
+	Actors []string
+}

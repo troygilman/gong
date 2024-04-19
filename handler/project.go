@@ -5,16 +5,40 @@ import (
 	"encoding/json"
 	"gong/domain"
 	"gong/sdk"
+	"gong/view"
 	"log"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/troygilman0/utils"
 )
+
+func GetProject(ctx echo.Context) error {
+	app := mustApp(ctx)
+
+	projectID, err := uuid.Parse(ctx.Param("projectID"))
+	if err != nil {
+		return err
+	}
+
+	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	r := app.Engine().Request(projectPID, domain.MsgGetProjectProps{}, domain.DefaultTimeout)
+	response, err := utils.HandleResponse[domain.RspGetProjectProps](r)
+	if err != nil {
+		return err
+	}
+
+	return renderView(ctx, view.Project(response.Props))
+}
 
 var upgrader = websocket.Upgrader{}
 
-func ProjectConnect(ctx echo.Context) error {
+func ConnectProject(ctx echo.Context) error {
 	app := mustApp(ctx)
 
 	projectID, err := uuid.Parse(ctx.Param("projectID"))

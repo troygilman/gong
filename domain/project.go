@@ -54,6 +54,16 @@ func (p *project) receive(ctx *actor.Context) error {
 		p.actors = make(map[string]EventHeap)
 	case MsgEvent:
 		p.handleEvent(msg.Event)
+	case MsgGetProjectProps:
+		props := ProjectProps{
+			Actors: make([]string, 0, len(p.actors)),
+		}
+		for actor := range p.actors {
+			props.Actors = append(props.Actors, actor)
+		}
+		ctx.Respond(RspGetProjectProps{
+			Props: props,
+		})
 	default:
 		_ = msg
 	}

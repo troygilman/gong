@@ -19,6 +19,7 @@ func StartClient() {
 
 	pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
 	engine.Send(pid, testMsg{})
+	time.Sleep(5 * time.Second)
 	engine.Poison(pid)
 
 	time.Sleep(1 * time.Second)
