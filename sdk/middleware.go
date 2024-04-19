@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 )
@@ -13,11 +14,12 @@ func GongMiddleware() actor.MiddlewareFunc {
 			case actor.EventLogger:
 				level, logMsg, attr := msg.Log()
 				ctx.Send(gongPID, Event{
-					MsgType:  fmt.Sprintf("%T", msg),
-					Receiver: ctx.PID(),
-					Level:    level,
-					Msg:      logMsg,
-					Attr:     attr,
+					MsgType:   fmt.Sprintf("%T", msg),
+					Timestamp: time.Now(),
+					Receiver:  ctx.PID().String(),
+					Level:     level,
+					Msg:       logMsg,
+					Attr:      createAttrMap(attr),
 				})
 			}
 			next(ctx)

@@ -21,11 +21,12 @@ var (
 )
 
 type Event struct {
-	MsgType  string
-	Receiver *actor.PID
-	Level    slog.Level
-	Msg      string
-	Attr     []any
+	MsgType   string
+	Timestamp time.Time
+	Receiver  string
+	Level     slog.Level
+	Msg       string
+	Attr      map[string]any
 }
 
 type GongConfig struct {
@@ -58,29 +59,45 @@ func NewGong(config GongConfig) actor.Producer {
 func (g *Gong) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
+		log.Println("init")
 		gongPID = ctx.PID()
-	case actor.Started:
 		ctx.Engine().Subscribe(ctx.PID())
-		{
-			events := make(chan Event, g.config.QueueSize)
-			g.events = events
-			go connect(g.config.ProjectID, events, func(err error) {
-				if g.config.Logger != nil {
-					g.config.Logger.Error("Gong: " + err.Error())
-				}
-			})
-		}
+	case actor.Started:
+		log.Println("start")
+		events := make(chan Event, g.config.QueueSize)
+		g.events = events
+		go connect(g.config.ProjectID, events, func(err error) {
+			if g.config.Logger != nil {
+				g.config.Logger.Error("Gong: " + err.Error())
+			}
+		})
 	case actor.Stopped:
 		close(g.events)
 	case actor.EventLogger:
 		level, logMsg, attr := msg.Log()
 		event := Event{
 			MsgType:  fmt.Sprintf("%T", msg),
-			Receiver: nil,
+			Receiver: "",
 			Level:    level,
 			Msg:      logMsg,
-			Attr:     attr,
+			Attr:     createAttrMap(attr),
 		}
+
+		switch msg := msg.(type) {
+		case actor.ActorInitializedEvent:
+			event.Timestamp = msg.Timestamp
+		case actor.ActorStartedEvent:
+			event.Timestamp = msg.Timestamp
+		case actor.ActorStoppedEvent:
+			event.Timestamp = msg.Timestamp
+		case actor.ActorRestartedEvent:
+			event.Timestamp = msg.Timestamp
+		case actor.ActorMaxRestartsExceededEvent:
+			event.Timestamp = msg.Timestamp
+		default:
+			event.Timestamp = time.Now()
+		}
+
 		if err := g.pushEvent(event); err != nil {
 			log.Println(err)
 		}
@@ -166,4 +183,16 @@ func connect(projectID string, events <-chan Event, logErr func(err error)) {
 			return
 		}
 	}
+}
+
+func createAttrMap(attr []any) map[string]any {
+	m := make(map[string]any)
+	for i := 0; i < len(attr); i += 2 {
+		var val any = nil
+		if i+1 < len(attr) {
+			val = attr[i+1]
+		}
+		m[fmt.Sprintf("%+v", attr[i])] = val
+	}
+	return m
 }
