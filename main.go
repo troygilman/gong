@@ -31,7 +31,7 @@ func run() error {
 
 	e.Use(handler.MiddlewareWithApp(app))
 
-	e.GET("/connect", handler.ProjectConnect)
+	e.GET("project/:projectID/connect", handler.ProjectConnect)
 
 	return e.Start(":8080")
 }

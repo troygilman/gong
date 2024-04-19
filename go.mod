@@ -3,11 +3,12 @@ module gong
 go 1.22.0
 
 require (
-	github.com/anthdm/hollywood v0.0.0-20240114090715-5a41e08e1d14
+	github.com/anthdm/hollywood v0.0.0-20240115210651-dd34702ee21f
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.5.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/troygilman0/utils v0.0.0-20240223031254-a41c95ea2efc
 )
 
 require (

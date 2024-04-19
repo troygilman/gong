@@ -29,12 +29,14 @@ type Event struct {
 }
 
 type GongConfig struct {
+	ProjectID string
 	QueueSize uint
 	Logger    *slog.Logger
 }
 
-func NewDefaultGongConfig() GongConfig {
+func NewDefaultGongConfig(projectID string) GongConfig {
 	return GongConfig{
+		ProjectID: projectID,
 		QueueSize: 1000,
 		Logger:    slog.Default(),
 	}
@@ -62,7 +64,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		{
 			events := make(chan Event, g.config.QueueSize)
 			g.events = events
-			go connect(events, func(err error) {
+			go connect(g.config.ProjectID, events, func(err error) {
 				if g.config.Logger != nil {
 					g.config.Logger.Error("Gong: " + err.Error())
 				}
@@ -95,11 +97,11 @@ func (g *Gong) pushEvent(e Event) error {
 	return nil
 }
 
-func connect(events <-chan Event, logErr func(err error)) {
+func connect(projectID string, events <-chan Event, logErr func(err error)) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *&serverHost, Path: "/connect"}
+	u := url.URL{Scheme: "ws", Host: *&serverHost, Path: fmt.Sprintf("project/%s/connect", projectID)}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		logErr(fmt.Errorf("dial: %s", err.Error()))

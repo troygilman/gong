@@ -47,6 +47,8 @@ func NewDefaultApp() (App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
+	app.producerFuncs[ActorKindProject] = NewProjectProducerWithApp
+
 	return app, nil
 }
 
