@@ -18,9 +18,9 @@ func main() {
 			log.Fatal(err)
 		}
 
-		gongPID := engine.Spawn(sdk.NewGongActor(), "gong")
+		gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig()), "gong")
 
-		pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.MiddlewareGong()))
+		pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
 		engine.Send(pid, testMsg{})
 		engine.Poison(pid)
 
