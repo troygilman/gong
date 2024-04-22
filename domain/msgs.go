@@ -11,3 +11,12 @@ type MsgGetProjectProps struct{}
 type RspGetProjectProps struct {
 	Props ProjectProps
 }
+
+type MsgEventsListenStart struct {
+	ID     string
+	Events chan<- sdk.Event
+}
+
+type MsgEventsListenStop struct {
+	ID string
+}

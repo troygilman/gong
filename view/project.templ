@@ -1,16 +1,41 @@
 package view
 
-import "gong/domain"
+import (
+	"gong/domain"
+	"gong/sdk"
+)
 
 templ Project(props domain.ProjectProps) {
 	@Index() {
-		<div>
+		<div
+ 			hx-ext="sse,debug"
+ 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+		>
 			Project
-			for _, actor := range props.Actors {
-				<div>
-					{ actor }
-				</div>
-			}
+			<div sse-swap="sse-new" hx-swap="afterbegin">
+				for _, actor := range props.Actors {
+					<div>
+						{ actor }
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
+
+templ ProjectActor(pid string, events []sdk.Event) {
+	<div sse-swap={ "sse-delete-" + pid } hx-swap="outerHTML">
+		{ pid }
+		<div sse-swap={ "sse-update-" + pid } hx-swap="afterbegin">
+			@ProjectActorEvents(events)
+		</div>
+	</div>
+}
+
+templ ProjectActorEvents(events []sdk.Event) {
+	for _, event := range events {
+		<div>
+			{ event.MsgType }
 		</div>
 	}
 }

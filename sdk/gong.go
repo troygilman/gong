@@ -15,15 +15,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var (
-	gongPID    *actor.PID = nil
+const (
 	serverHost            = "localhost:8080"
+	actorInitializedEvent = "actor.ActorInitializedEvent"
+	actorStartedEvent     = "actor.ActorStartedEvent"
+	actorStoppedEvent     = "actor.ActorStoppedEvent"
+)
+
+var (
+	gongPID *actor.PID = nil
 )
 
 type Event struct {
 	MsgType   string
 	Timestamp time.Time
-	Receiver  string
+	PID       string
 	Level     slog.Level
 	Msg       string
 	Attr      map[string]any
@@ -38,10 +44,18 @@ func GongMiddleware() actor.MiddlewareFunc {
 				ctx.Send(gongPID, Event{
 					MsgType:   fmt.Sprintf("%T", msg),
 					Timestamp: time.Now(),
-					Receiver:  ctx.PID().String(),
+					PID:       ctx.PID().String(),
 					Level:     level,
 					Msg:       logMsg,
 					Attr:      createAttrMap(attr),
+				})
+			case actor.Initialized, actor.Started, actor.Stopped:
+				ctx.Send(gongPID, Event{
+					MsgType:   fmt.Sprintf("%T", msg),
+					Timestamp: time.Now(),
+					PID:       ctx.PID().String(),
+					Level:     slog.LevelInfo,
+					Attr:      make(map[string]any),
 				})
 			}
 			next(ctx)
@@ -94,11 +108,19 @@ func (g *Gong) Receive(ctx *actor.Context) {
 	case actor.EventLogger:
 		level, logMsg, attr := msg.Log()
 		event := Event{
-			MsgType:  fmt.Sprintf("%T", msg),
-			Receiver: "",
-			Level:    level,
-			Msg:      logMsg,
-			Attr:     createAttrMap(attr),
+			MsgType: fmt.Sprintf("%T", msg),
+			Level:   level,
+			Msg:     logMsg,
+			Attr:    createAttrMap(attr),
+		}
+
+		switch event.MsgType {
+		case actorInitializedEvent, actorStartedEvent, actorStoppedEvent:
+			pid, ok := event.Attr["pid"].(*actor.PID)
+			if !ok {
+				break
+			}
+			event.PID = pid.String()
 		}
 
 		switch msg := msg.(type) {
@@ -116,9 +138,9 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			event.Timestamp = time.Now()
 		}
 
-		if err := g.pushEvent(event); err != nil {
-			log.Println(err)
-		}
+		// if err := g.pushEvent(event); err != nil {
+		// 	log.Println(err)
+		// }
 	case Event:
 		if err := g.pushEvent(msg); err != nil {
 			log.Println(err)
@@ -136,7 +158,7 @@ func connect(projectID string, events <-chan Event, logErr func(err error)) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *&serverHost, Path: fmt.Sprintf("project/%s/connect", projectID)}
+	u := url.URL{Scheme: "ws", Host: serverHost, Path: fmt.Sprintf("project/%s/connect", projectID)}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		logErr(fmt.Errorf("dial: %s", err.Error()))
@@ -213,4 +235,20 @@ func createAttrMap(attr []any) map[string]any {
 		m[fmt.Sprintf("%+v", attr[i])] = val
 	}
 	return m
+}
+
+func parsePIDString(a any) (string, bool) {
+	m, ok := a.(map[string]any)
+	if !ok {
+		return "", false
+	}
+	address, ok := m["address"].(string)
+	if !ok {
+		return "", false
+	}
+	id, ok := m["ID"].(string)
+	if !ok {
+		return "", false
+	}
+	return actor.NewPID(address, id).String(), true
 }

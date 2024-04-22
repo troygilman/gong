@@ -10,7 +10,7 @@ import (
 func MiddlewareLogRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			log.Printf("%s: %s", ctx.Request().Method, ctx.Request().RequestURI)
+			log.Printf("%s: %s %s", ctx.Request().Method, ctx.Request().RequestURI, requestID(ctx))
 			return next(ctx)
 		}
 	}

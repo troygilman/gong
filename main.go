@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -27,12 +28,14 @@ func run() error {
 	e := echo.New()
 	e.HTTPErrorHandler = httpErrorHandler
 
+	e.Use(middleware.RequestID())
 	e.Use(handler.MiddlewareLogRequest())
 
 	e.Use(handler.MiddlewareWithApp(app))
 
 	e.GET("project/:projectID", handler.GetProject)
 	e.GET("project/:projectID/connect", handler.ConnectProject)
+	e.GET("project/:projectID/sse", handler.ConnectProjectSSE)
 
 	return e.Start(":8080")
 }

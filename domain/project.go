@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	ActorKindProject      = "Project"
-	actorInitializedEvent = "actor.ActorInitializedEvent"
-	actorStartedEvent     = "actor.ActorStartedEvent"
-	actorStoppedEvent     = "actor.ActorStoppedEvent"
+	ActorKindProject = "Project"
+	ActorInitialized = "actor.Initialized"
+	ActorStarted     = "actor.Started"
+	ActorStopped     = "actor.Stopped"
 )
 
 type project struct {
 	commonActorData
-	actors map[string]EventHeap
+	actors    map[string]EventHeap
+	listeners map[string]chan<- sdk.Event
 }
 
 func NewProjectProducer() actor.Producer {
@@ -52,10 +53,12 @@ func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]EventHeap)
+		p.listeners = make(map[string]chan<- sdk.Event)
 	case MsgEvent:
 		p.handleEvent(msg.Event)
 	case MsgGetProjectProps:
 		props := ProjectProps{
+			ID:     p.id,
 			Actors: make([]string, 0, len(p.actors)),
 		}
 		for actor := range p.actors {
@@ -64,6 +67,10 @@ func (p *project) receive(ctx *actor.Context) error {
 		ctx.Respond(RspGetProjectProps{
 			Props: props,
 		})
+	case MsgEventsListenStart:
+		p.listeners[msg.ID] = msg.Events
+	case MsgEventsListenStop:
+		delete(p.listeners, msg.ID)
 	default:
 		_ = msg
 	}
@@ -81,48 +88,29 @@ func (p *project) create(id uuid.UUID) error {
 }
 
 func (p *project) handleEvent(event sdk.Event) {
-	actorPID := event.Receiver
 	log.Printf("%+v", event)
 
+	for _, c := range p.listeners {
+		select {
+		case c <- event:
+		default:
+		}
+	}
+
 	switch event.MsgType {
-	case actorInitializedEvent, actorStartedEvent:
-		pid, ok := parsePIDString(event.Attr["pid"])
-		if !ok {
-			break
-		}
-		actorPID = pid
-	case actorStoppedEvent:
-		pid, ok := parsePIDString(event.Attr["pid"])
-		if !ok {
-			break
-		}
-		delete(p.actors, pid)
+	case ActorInitialized:
+		events := make(EventHeap, 0)
+		heap.Init(&events)
+		p.actors[event.PID] = events
+	case ActorStopped:
+		delete(p.actors, event.PID)
 		return
 	}
 
-	events, ok := p.actors[actorPID]
-	if !ok {
-		events = make(EventHeap, 0)
-		heap.Init(&events)
+	events, ok := p.actors[event.PID]
+	if ok {
+		heap.Push(&events, event)
+		p.actors[event.PID] = events
+		log.Println(events)
 	}
-
-	heap.Push(&events, event)
-	p.actors[actorPID] = events
-	log.Println(events)
-}
-
-func parsePIDString(a any) (string, bool) {
-	m, ok := a.(map[string]any)
-	if !ok {
-		return "", false
-	}
-	address, ok := m["address"].(string)
-	if !ok {
-		return "", false
-	}
-	id, ok := m["ID"].(string)
-	if !ok {
-		return "", false
-	}
-	return actor.NewPID(address, id).String(), true
 }
