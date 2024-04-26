@@ -1,33 +1,64 @@
 package view
 
 import (
-	"gong/domain"
 	"gong/sdk"
+	"fmt"
+	"gong/domain"
+	"github.com/google/uuid"
 )
 
-templ Project(props domain.ProjectProps) {
+templ Project(props domain.ProjectProps, actorIndex int) {
 	@Index() {
 		<div
- 			hx-ext="sse,debug"
- 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
+			hx-ext="sse,debug"
+			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 		>
-			Project
-			<div sse-swap="sse-new" hx-swap="afterbegin">
-				for _, actor := range props.Actors {
-					<div>
-						{ actor }
+			<div class="border-b">
+				Project
+			</div>
+			<div class="flex flex-row grow min-w-full min-h-0">
+				<div class="flex flex-col w-64 h-full border-r">
+					Actors
+					<div
+						id="actors"
+						class="flex flex-col"
+						sse-swap="sse-new"
+						hx-swap="afterbegin"
+					>
+						for _, actorProps := range props.ActorProps {
+							@ProjectActor(actorProps, props.ID)
+						}
 					</div>
-				}
+				</div>
+				<div class="flex flex-col grow min-h-full min-w-0">
+					Events
+					if actorIndex >= 0 {
+						<div id="events" class="flex flex-col" sse-swap="sse-update" hx-swap="afterbegin"></div>
+					}
+				</div>
 			</div>
 		</div>
 	}
 }
 
-templ ProjectActor(pid string, events []sdk.Event) {
-	<div sse-swap={ "sse-delete-" + pid } hx-swap="outerHTML">
-		{ pid }
-		<div sse-swap={ "sse-update-" + pid } hx-swap="afterbegin">
-			@ProjectActorEvents(events)
+templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
+	<div
+		sse-swap={ "sse-delete-" + props.PID }
+		hx-swap="outerHTML"
+	>
+		<div
+			hx-get={ fmt.Sprintf("/project/%s/events&actor=%s", projectID.String(), props.PID) }
+			hx-trigger="click"
+			hx-swap="none"
+		>
+			<div class="flex flex-row">
+				{ props.PID }
+				{ fmt.Sprintf("%d", props.NumEvents) }
+			</div>
+			// <div sse-swap={ "sse-update-" + pid } hx-swap="afterbegin">
+			// 	@ProjectActorEvents(events)
+			// </div>
 		</div>
 	</div>
 }

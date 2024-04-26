@@ -3,3 +3,4 @@ static/css
 .env
 .gen
 tmp
+node_modules

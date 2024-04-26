@@ -37,6 +37,11 @@ func (h *EventHeap) Pop() any {
 }
 
 type ProjectProps struct {
-	ID     uuid.UUID
-	Actors []string
+	ID         uuid.UUID
+	ActorProps []ProjectActorProps
+}
+
+type ProjectActorProps struct {
+	PID       string
+	NumEvents int
 }

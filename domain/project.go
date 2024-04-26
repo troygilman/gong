@@ -58,11 +58,14 @@ func (p *project) receive(ctx *actor.Context) error {
 		p.handleEvent(msg.Event)
 	case MsgGetProjectProps:
 		props := ProjectProps{
-			ID:     p.id,
-			Actors: make([]string, 0, len(p.actors)),
+			ID:         p.id,
+			ActorProps: make([]ProjectActorProps, 0, len(p.actors)),
 		}
-		for actor := range p.actors {
-			props.Actors = append(props.Actors, actor)
+		for pid, events := range p.actors {
+			props.ActorProps = append(props.ActorProps, ProjectActorProps{
+				PID:       pid,
+				NumEvents: len(events),
+			})
 		}
 		ctx.Respond(RspGetProjectProps{
 			Props: props,

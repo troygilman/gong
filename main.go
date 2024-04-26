@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"gong/domain"
 	"gong/example"
 	"gong/handler"
@@ -10,6 +11,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+//go:embed static
+var static embed.FS
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-c" {
@@ -30,8 +34,9 @@ func run() error {
 
 	e.Use(middleware.RequestID())
 	e.Use(handler.MiddlewareLogRequest())
-
 	e.Use(handler.MiddlewareWithApp(app))
+
+	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 
 	e.GET("project/:projectID", handler.GetProject)
 	e.GET("project/:projectID/connect", handler.ConnectProject)

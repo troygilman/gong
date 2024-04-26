@@ -37,7 +37,7 @@ func GetProject(ctx echo.Context) error {
 		return err
 	}
 
-	return renderView(ctx, view.Project(response.Props))
+	return renderView(ctx, view.Project(response.Props, -1))
 }
 
 const (
@@ -114,7 +114,10 @@ listenerLoop:
 
 				switch sseType {
 				case sseTypeNew:
-					err = writeServerSentEvent(ctx, sseTypeNew, view.ProjectActor(pid, events))
+					err = writeServerSentEvent(ctx, sseTypeNew, view.ProjectActor(domain.ProjectActorProps{
+						PID:       pid,
+						NumEvents: len(events),
+					}, projectID))
 				case sseTypeUpdate:
 					err = writeServerSentEvent(ctx, sseTypeUpdate+"-"+pid, view.ProjectActorEvents(events))
 				case sseTypeDelete:
