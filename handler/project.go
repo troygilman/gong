@@ -68,7 +68,7 @@ func GetProjectEvents(ctx echo.Context) error {
 		return err
 	}
 
-	return renderView(ctx, view.ProjectActorEventsContainer(actorPID, response.Events))
+	return renderView(ctx, view.ProjectActorEventsContainer(projectID, actorPID, response.Events, false))
 }
 
 const (

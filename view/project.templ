@@ -15,7 +15,7 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 		>
 			<div class="border-b">
-				Project
+				Project { props.ID.String() }
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
 				<div class="flex flex-col w-64 h-full border-r">
@@ -38,12 +38,9 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 						Events
 					</div>
 					if actorIndex >= 0 {
-						<div
-							id="events-container"
-							hx-get={ fmtProjectEventsEndpoint(props.ID, props.ActorProps[actorIndex].PID) }
-						></div>
+						@ProjectActorEventsContainer(props.ID, props.ActorProps[actorIndex].PID, []sdk.Event{}, true)
 					} else {
-						<div id="events-container"></div>
+						@ProjectActorEventsContainer(props.ID, "", []sdk.Event{}, false)
 					}
 				</div>
 			</div>
@@ -73,21 +70,51 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 	</div>
 }
 
-templ ProjectActorEventsContainer(pid string, events []sdk.Event) {
-	<div
-		id="events-container"
-		hx-swap-oob="true"
-		sse-swap={ "sse-update-" + pid }
-		hx-swap="afterbegin"
-	>
-		@ProjectActorEvents(events)
+templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events []sdk.Event, lazyLoad bool) {
+	<div class="overflow-x-auto">
+		<table class="table table-pin-rows">
+			<thead>
+				<tr>
+					<th>Timestamp</th>
+					<th>Type</th>
+					<th>Level</th>
+					<th>Message</th>
+				</tr>
+			</thead>
+			<tbody
+				id="events-container"
+				sse-swap={ "sse-update-" + pid }
+				hx-swap="afterbegin"
+				hx-swap-oob="true"
+				if lazyLoad {
+					hx-get={ fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), pid) }
+				}
+			>
+				@ProjectActorEvents(events)
+			</tbody>
+		</table>
 	</div>
 }
 
 templ ProjectActorEvents(events []sdk.Event) {
 	for i := len(events)-1; i >= 0; i-- {
-		<div>
-			{ events[i].MsgType }
-		</div>
+		@projectActorEvent(events[i])
 	}
+}
+
+templ projectActorEvent(event sdk.Event) {
+	<tr>
+		<td>
+			{ event.Timestamp.String() }
+		</td>
+		<td>
+			{ event.MsgType }
+		</td>
+		<td>
+			{ event.Level.String() }
+		</td>
+		<td>
+			{ event.Msg }
+		</td>
+	</tr>
 }
