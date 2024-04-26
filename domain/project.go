@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"container/heap"
 	"gong/sdk"
 	"log"
+	"slices"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -19,7 +19,7 @@ const (
 
 type project struct {
 	commonActorData
-	actors    map[string]EventHeap
+	actors    map[string]EventList
 	listeners map[string]chan<- sdk.Event
 }
 
@@ -52,7 +52,7 @@ func (p *project) Receive(ctx *actor.Context) {
 func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]EventHeap)
+		p.actors = make(map[string]EventList)
 		p.listeners = make(map[string]chan<- sdk.Event)
 	case MsgEvent:
 		p.handleEvent(msg.Event)
@@ -69,6 +69,11 @@ func (p *project) receive(ctx *actor.Context) error {
 		}
 		ctx.Respond(RspGetProjectProps{
 			Props: props,
+		})
+	case MsgGetProjectEvents:
+		events := slices.Clone(p.actors[msg.ActorPID])
+		ctx.Respond(RspGetProjectEvents{
+			Events: events,
 		})
 	case MsgEventsListenStart:
 		p.listeners[msg.ID] = msg.Events
@@ -102,8 +107,7 @@ func (p *project) handleEvent(event sdk.Event) {
 
 	switch event.MsgType {
 	case ActorInitialized:
-		events := make(EventHeap, 0)
-		heap.Init(&events)
+		events := make(EventList, 0)
 		p.actors[event.PID] = events
 	case ActorStopped:
 		delete(p.actors, event.PID)
@@ -112,7 +116,7 @@ func (p *project) handleEvent(event sdk.Event) {
 
 	events, ok := p.actors[event.PID]
 	if ok {
-		heap.Push(&events, event)
+		events.Push(event)
 		p.actors[event.PID] = events
 		log.Println(events)
 	}

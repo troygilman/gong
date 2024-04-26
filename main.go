@@ -38,9 +38,10 @@ func run() error {
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 
-	e.GET("project/:projectID", handler.GetProject)
-	e.GET("project/:projectID/connect", handler.ConnectProject)
-	e.GET("project/:projectID/sse", handler.ConnectProjectSSE)
+	e.GET("/project/:projectID", handler.GetProject)
+	e.GET("/project/:projectID/events", handler.GetProjectEvents)
+	e.GET("/project/:projectID/connect", handler.ConnectProject)
+	e.GET("/project/:projectID/sse", handler.ConnectProjectSSE)
 
 	return e.Start(":8080")
 }

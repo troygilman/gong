@@ -19,7 +19,9 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
 				<div class="flex flex-col w-64 h-full border-r">
-					Actors
+					<div class="border-b">
+						Actors
+					</div>
 					<div
 						id="actors"
 						class="flex flex-col"
@@ -32,14 +34,25 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 					</div>
 				</div>
 				<div class="flex flex-col grow min-h-full min-w-0">
-					Events
+					<div class="border-b">
+						Events
+					</div>
 					if actorIndex >= 0 {
-						<div id="events" class="flex flex-col" sse-swap="sse-update" hx-swap="afterbegin"></div>
+						<div
+							id="events-container"
+							hx-get={ fmtProjectEventsEndpoint(props.ID, props.ActorProps[actorIndex].PID) }
+						></div>
+					} else {
+						<div id="events-container"></div>
 					}
 				</div>
 			</div>
 		</div>
 	}
+}
+
+func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
+	return fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), actorPID)
 }
 
 templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
@@ -48,7 +61,7 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 		hx-swap="outerHTML"
 	>
 		<div
-			hx-get={ fmt.Sprintf("/project/%s/events&actor=%s", projectID.String(), props.PID) }
+			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
 			hx-trigger="click"
 			hx-swap="none"
 		>
@@ -56,17 +69,25 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 				{ props.PID }
 				{ fmt.Sprintf("%d", props.NumEvents) }
 			</div>
-			// <div sse-swap={ "sse-update-" + pid } hx-swap="afterbegin">
-			// 	@ProjectActorEvents(events)
-			// </div>
 		</div>
 	</div>
 }
 
+templ ProjectActorEventsContainer(pid string, events []sdk.Event) {
+	<div
+		id="events-container"
+		hx-swap-oob="true"
+		sse-swap={ "sse-update-" + pid }
+		hx-swap="afterbegin"
+	>
+		@ProjectActorEvents(events)
+	</div>
+}
+
 templ ProjectActorEvents(events []sdk.Event) {
-	for _, event := range events {
+	for i := len(events)-1; i >= 0; i-- {
 		<div>
-			{ event.MsgType }
+			{ events[i].MsgType }
 		</div>
 	}
 }

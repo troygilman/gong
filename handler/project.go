@@ -40,6 +40,37 @@ func GetProject(ctx echo.Context) error {
 	return renderView(ctx, view.Project(response.Props, -1))
 }
 
+func GetProjectEvents(ctx echo.Context) error {
+	app := mustApp(ctx)
+
+	projectID, err := uuid.Parse(ctx.Param("projectID"))
+	if err != nil {
+		return err
+	}
+
+	actorPID := ctx.QueryParam("actor")
+	if actorPID == "" {
+		return errors.New("actor must be non-empty")
+	}
+
+	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	msg := domain.MsgGetProjectEvents{
+		ActorPID: actorPID,
+	}
+
+	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
+	response, err := utils.HandleResponse[domain.RspGetProjectEvents](r)
+	if err != nil {
+		return err
+	}
+
+	return renderView(ctx, view.ProjectActorEventsContainer(actorPID, response.Events))
+}
+
 const (
 	sseTypeNew    = "sse-new"
 	sseTypeUpdate = "sse-update"

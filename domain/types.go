@@ -2,6 +2,7 @@ package domain
 
 import (
 	"gong/sdk"
+	"sort"
 
 	"github.com/google/uuid"
 	actor_utils "github.com/troygilman0/utils"
@@ -18,22 +19,15 @@ type commonActorData struct {
 	poisonTimer actor_utils.PoisonTimer
 }
 
-type EventHeap []sdk.Event
+type EventList []sdk.Event
 
-func (h EventHeap) Len() int           { return len(h) }
-func (h EventHeap) Less(i, j int) bool { return h[j].Timestamp.After(h[i].Timestamp) }
-func (h EventHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-
-func (h *EventHeap) Push(x any) {
-	*h = append(*h, x.(sdk.Event))
-}
-
-func (h *EventHeap) Pop() any {
-	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[0 : n-1]
-	return x
+func (l *EventList) Push(e sdk.Event) {
+	i := sort.Search(len(*l), func(i int) bool {
+		return e.Timestamp.Before((*l)[i].Timestamp)
+	})
+	*l = append(*l, sdk.Event{})
+	copy((*l)[i+1:], (*l)[i:])
+	(*l)[i] = e
 }
 
 type ProjectProps struct {

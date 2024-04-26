@@ -12,6 +12,14 @@ type RspGetProjectProps struct {
 	Props ProjectProps
 }
 
+type MsgGetProjectEvents struct {
+	ActorPID string
+}
+
+type RspGetProjectEvents struct {
+	Events EventList
+}
+
 type MsgEventsListenStart struct {
 	ID     string
 	Events chan<- sdk.Event
