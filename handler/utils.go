@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"gong/domain"
-	"log"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -42,7 +41,6 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 	}
 
 	sb.WriteString(fmt.Sprintf("data: %s\n\n", d))
-	log.Println(sb.String())
 	if _, err := fmt.Fprint(ctx.Response().Writer, sb.String()); err != nil {
 		return err
 	}

@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"gong/domain"
 	"github.com/google/uuid"
+	"gong/types"
 )
 
 templ Project(props domain.ProjectProps, actorIndex int) {
 	@Index() {
 		<div
-			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
-			hx-ext="sse,debug"
-			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+ 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
+ 			hx-ext="sse,debug"
+ 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 		>
 			<div class="border-b">
 				Project { props.ID.String() }
@@ -23,10 +24,10 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 						Actors
 					</div>
 					<div
-						id="actors"
-						class="flex flex-col"
-						sse-swap="sse-new"
-						hx-swap="afterbegin"
+ 						id="actors"
+ 						class="flex flex-col"
+ 						sse-swap={ types.SseTypeNewActor }
+ 						hx-swap="afterbegin"
 					>
 						for _, actorProps := range props.ActorProps {
 							@ProjectActor(actorProps, props.ID)
@@ -54,20 +55,30 @@ func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
 
 templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 	<div
-		sse-swap={ "sse-delete-" + props.PID }
-		hx-swap="outerHTML"
+ 		sse-swap={ types.SseTypeDeleteActor + props.PID }
+ 		hx-swap="outerHTML"
 	>
 		<div
-			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
-			hx-trigger="click"
-			hx-swap="none"
+ 			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
+ 			hx-trigger="click"
+ 			hx-swap="none"
 		>
 			<div class="flex flex-row">
 				{ props.PID }
-				{ fmt.Sprintf("%d", props.NumEvents) }
+				<div
+ 					class="ml-2"
+ 					sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
+ 					hx-swap="innerHTML"
+				>
+					@ProjectActorNumEvents(props.NumEvents)
+				</div>
 			</div>
 		</div>
 	</div>
+}
+
+templ ProjectActorNumEvents(numEvents int) {
+	{ fmt.Sprintf("%d", numEvents) }
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events []sdk.Event, lazyLoad bool) {
@@ -82,12 +93,12 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events []sdk.
 				</tr>
 			</thead>
 			<tbody
-				id="events-container"
-				sse-swap={ "sse-update-" + pid }
-				hx-swap="afterbegin"
-				hx-swap-oob="true"
-				if lazyLoad {
-					hx-get={ fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), pid) }
+ 				id="events-container"
+ 				sse-swap={ types.SseTypeNewEvents + pid }
+ 				hx-swap="afterbegin"
+ 				hx-swap-oob="true"
+ 				if lazyLoad {
+					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
 				}
 			>
 				@ProjectActorEvents(events)

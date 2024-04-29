@@ -6,6 +6,7 @@ import (
 	"errors"
 	"gong/domain"
 	"gong/sdk"
+	"gong/types"
 	"gong/view"
 	"log"
 	"net/http"
@@ -71,12 +72,6 @@ func GetProjectEvents(ctx echo.Context) error {
 	return renderView(ctx, view.ProjectActorEventsContainer(projectID, actorPID, response.Events, false))
 }
 
-const (
-	sseTypeNew    = "sse-new"
-	sseTypeUpdate = "sse-update"
-	sseTypeDelete = "sse-delete"
-)
-
 func ConnectProjectSSE(ctx echo.Context) error {
 	app := mustApp(ctx)
 
@@ -90,7 +85,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
-	eventChan := make(chan sdk.Event, 100)
+	eventChan := make(chan domain.ListenerEvent, 100)
 	app.Engine().Send(projectPID, domain.MsgEventsListenStart{
 		ID:     requestID(ctx),
 		Events: eventChan,
@@ -109,7 +104,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 
 	timerDuration := 50 * time.Millisecond
 	timer := time.NewTimer(timerDuration)
-	batch := make(map[string][]sdk.Event)
+	batch := make(map[string][]domain.ListenerEvent)
 
 listenerLoop:
 	for {
@@ -119,7 +114,7 @@ listenerLoop:
 				break listenerLoop
 			}
 
-			batch[event.PID] = append(batch[event.PID], event)
+			batch[event.Event.PID] = append(batch[event.Event.PID], event)
 			if !timer.Stop() {
 				<-timer.C
 			}
@@ -128,35 +123,59 @@ listenerLoop:
 			for pid, events := range batch {
 				slices.Reverse(events)
 
-				var sseType string
-			eventLoop:
-				for _, event := range events {
-					switch event.MsgType {
-					case domain.ActorInitialized:
-						sseType = sseTypeNew
-						break eventLoop
-					case domain.ActorStopped:
-						sseType = sseTypeDelete
-						break eventLoop
-					default:
-						sseType = sseTypeUpdate
-					}
-				}
+				err := func() error {
+					var sseType string
+					var numEvents int
 
-				switch sseType {
-				case sseTypeNew:
-					err = writeServerSentEvent(ctx, sseTypeNew, view.ProjectActor(domain.ProjectActorProps{
-						PID:       pid,
-						NumEvents: len(events),
-					}, projectID))
-				case sseTypeUpdate:
-					err = writeServerSentEvent(ctx, sseTypeUpdate+"-"+pid, view.ProjectActorEvents(events))
-				case sseTypeDelete:
-					err = writeServerSentEvent(ctx, sseTypeDelete+"-"+pid, nil)
-				}
+					if len(events) > 0 {
+						numEvents = events[0].NumEvents
+					}
+
+				eventLoop:
+					for _, event := range events {
+						switch event.Event.MsgType {
+						case domain.ActorInitialized:
+							sseType = types.SseTypeNewActor
+							break eventLoop
+						case domain.ActorStopped:
+							sseType = types.SseTypeDeleteActor
+							break eventLoop
+						default:
+							sseType = types.SseTypeNewEvents
+						}
+					}
+
+					switch sseType {
+					case types.SseTypeNewActor:
+						props := domain.ProjectActorProps{
+							PID:       pid,
+							NumEvents: len(events),
+						}
+						if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActor(props, projectID)); err != nil {
+							return err
+						}
+					case types.SseTypeNewEvents:
+						sdkEvents := make([]sdk.Event, len(events))
+						for i, e := range events {
+							sdkEvents[i] = e.Event
+						}
+						if err := writeServerSentEvent(ctx, types.SseTypeNewEvents+pid, view.ProjectActorEvents(sdkEvents)); err != nil {
+							return err
+						}
+						if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorNumEvents(numEvents)); err != nil {
+							return err
+						}
+					case types.SseTypeDeleteActor:
+						if err := writeServerSentEvent(ctx, types.SseTypeDeleteActor+pid, nil); err != nil {
+							return err
+						}
+					}
+
+					return nil
+				}()
 
 				if err != nil {
-					return err
+					log.Printf("error while writing SSE: %s\n", err.Error())
 				}
 
 				flusher.Flush()

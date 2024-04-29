@@ -22,7 +22,7 @@ type RspGetProjectEvents struct {
 
 type MsgEventsListenStart struct {
 	ID     string
-	Events chan<- sdk.Event
+	Events chan<- ListenerEvent
 }
 
 type MsgEventsListenStop struct {

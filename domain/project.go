@@ -2,7 +2,6 @@ package domain
 
 import (
 	"gong/sdk"
-	"log"
 	"slices"
 
 	"github.com/anthdm/hollywood/actor"
@@ -20,7 +19,7 @@ const (
 type project struct {
 	commonActorData
 	actors    map[string]EventList
-	listeners map[string]chan<- sdk.Event
+	listeners map[string]chan<- ListenerEvent
 }
 
 func NewProjectProducer() actor.Producer {
@@ -53,7 +52,7 @@ func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]EventList)
-		p.listeners = make(map[string]chan<- sdk.Event)
+		p.listeners = make(map[string]chan<- ListenerEvent)
 	case MsgEvent:
 		p.handleEvent(msg.Event)
 	case MsgGetProjectProps:
@@ -96,13 +95,9 @@ func (p *project) create(id uuid.UUID) error {
 }
 
 func (p *project) handleEvent(event sdk.Event) {
-	log.Printf("%+v", event)
-
-	for _, c := range p.listeners {
-		select {
-		case c <- event:
-		default:
-		}
+	listenerEvent := ListenerEvent{
+		Event:     event,
+		NumEvents: 0,
 	}
 
 	switch event.MsgType {
@@ -111,13 +106,19 @@ func (p *project) handleEvent(event sdk.Event) {
 		p.actors[event.PID] = events
 	case ActorStopped:
 		delete(p.actors, event.PID)
-		return
 	}
 
 	events, ok := p.actors[event.PID]
 	if ok {
 		events.Push(event)
 		p.actors[event.PID] = events
-		log.Println(events)
+		listenerEvent.NumEvents = len(events)
+	}
+
+	for _, c := range p.listeners {
+		select {
+		case c <- listenerEvent:
+		default:
+		}
 	}
 }

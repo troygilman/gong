@@ -39,3 +39,8 @@ type ProjectActorProps struct {
 	PID       string
 	NumEvents int
 }
+
+type ListenerEvent struct {
+	Event     sdk.Event
+	NumEvents int
+}
