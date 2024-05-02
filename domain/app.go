@@ -17,6 +17,7 @@ type App interface {
 	Engine() *actor.Engine
 	PID(kind string, id string) (*actor.PID, error)
 	JWT(tokenString string) (jwt.RegisteredClaims, error)
+	DB() Database
 }
 
 type defaultApp struct {
@@ -24,6 +25,7 @@ type defaultApp struct {
 	engine        *actor.Engine
 	pids          map[string]*actor.PID
 	producerFuncs map[string]producerFunc
+	db            Database
 }
 
 type producerFunc func(App) actor.Producer
@@ -34,6 +36,8 @@ const (
 
 func NewDefaultApp() (App, error) {
 	app := new(defaultApp)
+
+	app.db = NewPostgresDatabase()
 
 	secret, ok := os.LookupEnv(envAuthSecret)
 	if !ok {
@@ -98,4 +102,8 @@ func (app *defaultApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 		return claims, errors.New("invalid jwt")
 	}
 	return claims, nil
+}
+
+func (app *defaultApp) DB() Database {
+	return app.db
 }

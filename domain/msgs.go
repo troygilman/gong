@@ -1,6 +1,9 @@
 package domain
 
-import "gong/sdk"
+import (
+	"gong/sdk"
+	"gong/types"
+)
 
 type MsgEvent struct {
 	Event sdk.Event
@@ -17,12 +20,12 @@ type MsgGetProjectEvents struct {
 }
 
 type RspGetProjectEvents struct {
-	Events EventList
+	Events types.EventList
 }
 
 type MsgEventsListenStart struct {
 	ID     string
-	Events chan<- ListenerEvent
+	Events chan<- types.Event
 }
 
 type MsgEventsListenStop struct {

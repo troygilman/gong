@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"gong/domain"
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
 	"log"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -85,7 +85,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
-	eventChan := make(chan domain.ListenerEvent, 100)
+	eventChan := make(chan types.Event, 100)
 	app.Engine().Send(projectPID, domain.MsgEventsListenStart{
 		ID:     requestID(ctx),
 		Events: eventChan,
@@ -104,7 +104,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 
 	timerDuration := 50 * time.Millisecond
 	timer := time.NewTimer(timerDuration)
-	batch := make(map[string][]domain.ListenerEvent)
+	batch := make(map[string]types.EventList)
 
 listenerLoop:
 	for {
@@ -114,34 +114,24 @@ listenerLoop:
 				break listenerLoop
 			}
 
-			batch[event.Event.PID] = append(batch[event.Event.PID], event)
+			events := batch[event.Event.PID]
+			events.Push(event)
+			batch[event.Event.PID] = events
+
 			if !timer.Stop() {
 				<-timer.C
 			}
 
 		case <-timer.C:
 			for pid, events := range batch {
-				slices.Reverse(events)
-
 				err := func() error {
-					var sseType string
-					var numEvents int
+					var sseType string = types.SseTypeNewEvents
+					var numEvents int32
 
 					if len(events) > 0 {
-						numEvents = events[0].NumEvents
-					}
-
-				eventLoop:
-					for _, event := range events {
-						switch event.Event.MsgType {
-						case domain.ActorInitialized:
+						numEvents = events[len(events)-1].Index + 1
+						if events[0].Index == 0 {
 							sseType = types.SseTypeNewActor
-							break eventLoop
-						case domain.ActorStopped:
-							sseType = types.SseTypeDeleteActor
-							break eventLoop
-						default:
-							sseType = types.SseTypeNewEvents
 						}
 					}
 
@@ -149,17 +139,13 @@ listenerLoop:
 					case types.SseTypeNewActor:
 						props := domain.ProjectActorProps{
 							PID:       pid,
-							NumEvents: len(events),
+							NumEvents: int32(len(events)),
 						}
 						if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActor(props, projectID)); err != nil {
 							return err
 						}
 					case types.SseTypeNewEvents:
-						sdkEvents := make([]sdk.Event, len(events))
-						for i, e := range events {
-							sdkEvents[i] = e.Event
-						}
-						if err := writeServerSentEvent(ctx, types.SseTypeNewEvents+pid, view.ProjectActorEvents(sdkEvents)); err != nil {
+						if err := writeServerSentEvent(ctx, types.SseTypeNewEvents+pid, view.ProjectActorEvents(events)); err != nil {
 							return err
 						}
 						if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorNumEvents(numEvents)); err != nil {
@@ -175,12 +161,17 @@ listenerLoop:
 				}()
 
 				if err != nil {
-					log.Printf("error while writing SSE: %s\n", err.Error())
+					return fmt.Errorf("error while writing SSE: %s", err.Error())
 				}
 
-				flusher.Flush()
 				delete(batch, pid)
 			}
+
+			if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
+				return err
+			}
+
+			flusher.Flush()
 		}
 		timer.Reset(timerDuration)
 	}

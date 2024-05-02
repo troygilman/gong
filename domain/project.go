@@ -2,6 +2,7 @@ package domain
 
 import (
 	"gong/sdk"
+	"gong/types"
 	"slices"
 
 	"github.com/anthdm/hollywood/actor"
@@ -18,8 +19,9 @@ const (
 
 type project struct {
 	commonActorData
-	actors    map[string]EventList
-	listeners map[string]chan<- ListenerEvent
+	actors    map[string]types.EventList
+	listeners map[string]chan<- types.Event
+	session   int32
 }
 
 func NewProjectProducer() actor.Producer {
@@ -51,10 +53,12 @@ func (p *project) Receive(ctx *actor.Context) {
 func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]EventList)
-		p.listeners = make(map[string]chan<- ListenerEvent)
+		p.actors = make(map[string]types.EventList)
+		p.listeners = make(map[string]chan<- types.Event)
 	case MsgEvent:
-		p.handleEvent(msg.Event)
+		if err := p.handleEvent(msg.Event); err != nil {
+			return err
+		}
 	case MsgGetProjectProps:
 		props := ProjectProps{
 			ID:         p.id,
@@ -63,7 +67,7 @@ func (p *project) receive(ctx *actor.Context) error {
 		for pid, events := range p.actors {
 			props.ActorProps = append(props.ActorProps, ProjectActorProps{
 				PID:       pid,
-				NumEvents: len(events),
+				NumEvents: int32(len(events)),
 			})
 		}
 		ctx.Respond(RspGetProjectProps{
@@ -86,6 +90,9 @@ func (p *project) receive(ctx *actor.Context) error {
 
 func (p *project) load(id uuid.UUID) error {
 	p.id = id
+	if session, err := p.app.DB().QuerySession(p.id); err == nil {
+		p.session = session + 1
+	}
 	return nil
 }
 
@@ -94,31 +101,32 @@ func (p *project) create(id uuid.UUID) error {
 	return nil
 }
 
-func (p *project) handleEvent(event sdk.Event) {
-	listenerEvent := ListenerEvent{
-		Event:     event,
-		NumEvents: 0,
-	}
-
-	switch event.MsgType {
-	case ActorInitialized:
-		events := make(EventList, 0)
-		p.actors[event.PID] = events
-	case ActorStopped:
-		delete(p.actors, event.PID)
+func (p *project) handleEvent(sdkEvent sdk.Event) error {
+	event := types.Event{
+		ProjectID: p.id,
+		Session:   p.session,
+		Event:     sdkEvent,
 	}
 
 	events, ok := p.actors[event.PID]
-	if ok {
-		events.Push(event)
-		p.actors[event.PID] = events
-		listenerEvent.NumEvents = len(events)
+	if !ok {
+		events = make(types.EventList, 0)
 	}
+
+	event.Index = int32(len(events))
+	events.Push(event)
+	p.actors[event.PID] = events
 
 	for _, c := range p.listeners {
 		select {
-		case c <- listenerEvent:
+		case c <- event:
 		default:
 		}
 	}
+
+	if err := p.app.DB().CreateEvent(&event); err != nil {
+		return err
+	}
+
+	return nil
 }

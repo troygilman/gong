@@ -17,7 +17,7 @@ func StartClient() {
 
 	gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")), "gong")
 
-	pid := engine.Spawn(newClient(), "client", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid := engine.Spawn(newClient(), "client1", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
 	for range 100 {
 		engine.Send(pid, testMsg{})
 		time.Sleep(100 * time.Millisecond)

@@ -1,7 +1,6 @@
 package view
 
 import (
-	"gong/sdk"
 	"fmt"
 	"gong/domain"
 	"github.com/google/uuid"
@@ -39,9 +38,9 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 						Events
 					</div>
 					if actorIndex >= 0 {
-						@ProjectActorEventsContainer(props.ID, props.ActorProps[actorIndex].PID, []sdk.Event{}, true)
+						@ProjectActorEventsContainer(props.ID, props.ActorProps[actorIndex].PID, make(types.EventList, 0), true)
 					} else {
-						@ProjectActorEventsContainer(props.ID, "", []sdk.Event{}, false)
+						@ProjectActorEventsContainer(props.ID, "", make(types.EventList, 0), false)
 					}
 				</div>
 			</div>
@@ -77,11 +76,11 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 	</div>
 }
 
-templ ProjectActorNumEvents(numEvents int) {
+templ ProjectActorNumEvents(numEvents int32) {
 	{ fmt.Sprintf("%d", numEvents) }
 }
 
-templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events []sdk.Event, lazyLoad bool) {
+templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows">
 			<thead>
@@ -107,13 +106,13 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events []sdk.
 	</div>
 }
 
-templ ProjectActorEvents(events []sdk.Event) {
+templ ProjectActorEvents(events types.EventList) {
 	for i := len(events)-1; i >= 0; i-- {
 		@projectActorEvent(events[i])
 	}
 }
 
-templ projectActorEvent(event sdk.Event) {
+templ projectActorEvent(event types.Event) {
 	<tr>
 		<td>
 			{ event.Timestamp.String() }

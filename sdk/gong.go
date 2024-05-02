@@ -27,9 +27,9 @@ var (
 )
 
 type Event struct {
-	MsgType   string
-	Timestamp time.Time
 	PID       string
+	Timestamp time.Time
+	MsgType   string
 	Level     slog.Level
 	Msg       string
 	Attr      map[string]any
