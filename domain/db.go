@@ -78,9 +78,13 @@ func sqlError(stmt Statement, err error) error {
 func (db *postgresDatabase) CreateEvent(event *types.Event) error {
 	m := model.Event{
 		ProjectID: event.ProjectID,
+		ActorPid:  event.PID,
 		Session:   event.Session,
 		Index:     event.Index,
-		ActorPid:  event.PID,
+		Timestamp: event.Timestamp,
+		Type:      event.MsgType,
+		Level:     int32(event.Level),
+		Msg:       event.Msg,
 	}
 
 	stmt := table.Event.INSERT(table.Event.AllColumns).MODEL(&m)
