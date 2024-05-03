@@ -10,9 +10,9 @@ import (
 templ Project(props domain.ProjectProps, actorIndex int) {
 	@Index() {
 		<div
- 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
- 			hx-ext="sse,debug"
- 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
+			hx-ext="sse,debug"
+			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 		>
 			<div class="border-b">
 				Project { props.ID.String() }
@@ -23,47 +23,64 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 						Actors
 					</div>
 					<div
- 						id="actors"
- 						class="flex flex-col"
- 						sse-swap={ types.SseTypeNewActor }
- 						hx-swap="afterbegin"
+						id="actors"
+						class="flex flex-col"
+						sse-swap={ types.SseTypeNewActor }
+						hx-swap="afterbegin"
 					>
 						for _, actorProps := range props.ActorProps {
 							@ProjectActorListItem(actorProps, props.ID)
 						}
 					</div>
 				</div>
-				<div class="flex flex-col grow min-h-full min-w-0">
-					if actorIndex >= 0 {
-						@actorContent(props.ID, props.ActorProps[actorIndex])
-					} else {
-						@actorContent(props.ID, domain.ProjectActorProps{})
-					}
-				</div>
+				if actorIndex >= 0 {
+					@actorContent(props.ID, props.ActorProps[actorIndex])
+				} else {
+					@actorContent(props.ID, domain.ProjectActorProps{})
+				}
 			</div>
 		</div>
 	}
 }
 
+const (
+	tabLabelEvents = "Events"
+	tabLabelTest   = "Test"
+)
+
 templ actorContent(projectID uuid.UUID, props domain.ProjectActorProps) {
-	<div role="tablist" class="tabs tabs-lifted h-full max-h-full">
-		@actorTab("Events")
-		@actorTabContent() {
+	<div
+		class="flex flex-col grow max-h-full min-h-full min-w-0"
+		x-data={ fmt.Sprintf("{ active: '%s' }", tabLabelEvents) }
+	>
+		<div
+			role="tablist"
+			class="tabs tabs-bordered"
+		>
+			@actorTab(tabLabelEvents)
+			@actorTab(tabLabelTest)
+		</div>
+		@actorTabContent(tabLabelEvents) {
 			@ProjectActorEventsContainer(projectID, props.PID, make(types.EventList, 0), true)
 		}
 	</div>
 }
 
 templ actorTab(label string) {
-	<input type="radio" name="my_tabs_2" role="tab" class="tab tab-active" aria-label={ label }/>
+	<a
+		role="tab"
+		@click={ fmt.Sprintf("active = '%s'", label) }
+		:class={ fmt.Sprintf("active === '%s' ? 'tab tab-active' : 'tab'", label) }
+	>{ label }</a>
 }
 
-templ actorTabContent() {
-	<span role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-		<div class="flex grow min-h-0">
-			{ children... }
-		</div>
-	</span>
+templ actorTabContent(label string) {
+	<div
+		class="grow min-h-0"
+		x-show={ fmt.Sprintf("active === '%s'", label) }
+	>
+		{ children... }
+	</div>
 }
 
 func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
@@ -72,20 +89,20 @@ func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
 
 templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
 	<div
- 		sse-swap={ types.SseTypeDeleteActor + props.PID }
- 		hx-swap="outerHTML"
+		sse-swap={ types.SseTypeDeleteActor + props.PID }
+		hx-swap="outerHTML"
 	>
 		<div
- 			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
- 			hx-trigger="click"
- 			hx-swap="none"
+			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
+			hx-trigger="click"
+			hx-swap="none"
 		>
 			<div class="flex flex-row items-center justify-between w-full">
 				{ props.PID }
 				<div
- 					class="badge badge-secondary"
- 					sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
- 					hx-swap="innerHTML"
+					class="badge badge-secondary"
+					sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
+					hx-swap="innerHTML"
 				>
 					@ProjectActorNumEvents(props.NumEvents)
 				</div>
@@ -95,15 +112,15 @@ templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) 
 }
 
 templ ProjectActorNumEvents(numEvents int32) {
-	if numEvents > 100 {
-		{ "100+" }
+	if numEvents > 999 {
+		{ "999+" }
 	} else {
 		{ fmt.Sprintf("%d", numEvents) }
 	}
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
-	<div class="overflow-x-auto">
+	<div class="overflow-x-auto max-h-full">
 		<table class="table table-pin-rows">
 			<thead>
 				<tr>
@@ -114,11 +131,11 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 				</tr>
 			</thead>
 			<tbody
- 				id="events-container"
- 				sse-swap={ types.SseTypeNewEvents + pid }
- 				hx-swap="afterbegin"
- 				hx-swap-oob="true"
- 				if lazyLoad {
+				id="events-container"
+				sse-swap={ types.SseTypeNewEvents + pid }
+				hx-swap="afterbegin"
+				hx-swap-oob="true"
+				if lazyLoad {
 					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
 				}
 			>
