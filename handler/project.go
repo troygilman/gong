@@ -141,7 +141,7 @@ listenerLoop:
 							PID:       pid,
 							NumEvents: int32(len(events)),
 						}
-						if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActor(props, projectID)); err != nil {
+						if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(props, projectID)); err != nil {
 							return err
 						}
 					case types.SseTypeNewEvents:

@@ -29,18 +29,15 @@ templ Project(props domain.ProjectProps, actorIndex int) {
  						hx-swap="afterbegin"
 					>
 						for _, actorProps := range props.ActorProps {
-							@ProjectActor(actorProps, props.ID)
+							@ProjectActorListItem(actorProps, props.ID)
 						}
 					</div>
 				</div>
 				<div class="flex flex-col grow min-h-full min-w-0">
-					<div class="border-b">
-						Events
-					</div>
 					if actorIndex >= 0 {
-						@ProjectActorEventsContainer(props.ID, props.ActorProps[actorIndex].PID, make(types.EventList, 0), true)
+						@actorContent(props.ID, props.ActorProps[actorIndex])
 					} else {
-						@ProjectActorEventsContainer(props.ID, "", make(types.EventList, 0), false)
+						@actorContent(props.ID, domain.ProjectActorProps{})
 					}
 				</div>
 			</div>
@@ -48,11 +45,32 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 	}
 }
 
+templ actorContent(projectID uuid.UUID, props domain.ProjectActorProps) {
+	<div role="tablist" class="tabs tabs-lifted h-full max-h-full">
+		@actorTab("Events")
+		@actorTabContent() {
+			@ProjectActorEventsContainer(projectID, props.PID, make(types.EventList, 0), true)
+		}
+	</div>
+}
+
+templ actorTab(label string) {
+	<input type="radio" name="my_tabs_2" role="tab" class="tab tab-active" aria-label={ label }/>
+}
+
+templ actorTabContent() {
+	<span role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+		<div class="flex grow min-h-0">
+			{ children... }
+		</div>
+	</span>
+}
+
 func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
 	return fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), actorPID)
 }
 
-templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
+templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
 	<div
  		sse-swap={ types.SseTypeDeleteActor + props.PID }
  		hx-swap="outerHTML"
@@ -62,10 +80,10 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
  			hx-trigger="click"
  			hx-swap="none"
 		>
-			<div class="flex flex-row">
+			<div class="flex flex-row items-center justify-between w-full">
 				{ props.PID }
 				<div
- 					class="ml-2"
+ 					class="badge badge-secondary"
  					sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
  					hx-swap="innerHTML"
 				>
@@ -77,7 +95,11 @@ templ ProjectActor(props domain.ProjectActorProps, projectID uuid.UUID) {
 }
 
 templ ProjectActorNumEvents(numEvents int32) {
-	{ fmt.Sprintf("%d", numEvents) }
+	if numEvents > 100 {
+		{ "100+" }
+	} else {
+		{ fmt.Sprintf("%d", numEvents) }
+	}
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
