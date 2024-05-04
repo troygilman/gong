@@ -17,15 +17,18 @@ func StartClient() {
 
 	gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")), "gong")
 
-	pid := engine.Spawn(newClient(), "client1", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid1 := engine.Spawn(newClient(), "client1", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid2 := engine.Spawn(newClient(), "client2", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
 	for range 100 {
-		engine.Send(pid, testMsg{})
+		engine.Send(pid1, testMsg{})
+		engine.Send(pid2, testMsg{})
 		time.Sleep(100 * time.Millisecond)
 	}
-	engine.Poison(pid)
+	engine.Poison(pid1)
+	engine.Poison(pid2)
 
 	time.Sleep(1 * time.Second)
-	engine.Send(pid, testMsg{})
+	engine.Send(pid1, testMsg{})
 	time.Sleep(1 * time.Second)
 
 	engine.Stop(gongPID)

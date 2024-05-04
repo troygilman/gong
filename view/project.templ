@@ -9,10 +9,12 @@ import (
 
 templ Project(props domain.ProjectProps, actorIndex int) {
 	@Index() {
+		@initStore(props.ID.String(), "", tabLabelEvents)
 		<div
 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
-			hx-ext="sse,debug"
+			hx-ext="sse"
 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+			x-data
 		>
 			<div class="border-b">
 				Project { props.ID.String() }
@@ -43,6 +45,53 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 	}
 }
 
+script initStore(projectID string, actor string, tab string) {
+	document.addEventListener('alpine:init', () => {
+		Alpine.store('projectID', projectID);
+        Alpine.store('params', {
+            params: { 
+				'actor': actor,
+				'tab': tab,
+			},
+ 
+            set(key, val) {
+                this.params[key] = val;
+
+				const url = new URL(window.location.href);
+				url.searchParams.set(key, val);
+				history.pushState({ "params": {...this.params} }, "", url);
+            },
+
+			get(key) {
+				return this.params[key];
+			},
+
+			setAll(params) {
+				const props = {};
+				for (var prop in this.params) {
+					if (params[prop]) {
+						this.params[prop] = params[prop];
+						props[prop] = true;
+					} else {
+						delete this.params[prop];
+					}
+				}
+				for (var prop in params) {
+					if (!props[prop]) {
+						this.params[prop] = params[prop];
+					}
+				}
+			},
+        });
+    });
+
+	window.addEventListener("popstate", (e) => {
+    	if(e.state && e.state.params){
+			Alpine.store('params').setAll(e.state.params)
+    	}
+	});
+}
+
 const (
 	tabLabelEvents = "Events"
 	tabLabelTest   = "Test"
@@ -50,8 +99,8 @@ const (
 
 templ actorContent(projectID uuid.UUID, props domain.ProjectActorProps) {
 	<div
+		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
-		x-data={ fmt.Sprintf("{ active: '%s' }", tabLabelEvents) }
 	>
 		<div
 			role="tablist"
@@ -69,15 +118,15 @@ templ actorContent(projectID uuid.UUID, props domain.ProjectActorProps) {
 templ actorTab(label string) {
 	<a
 		role="tab"
-		@click={ fmt.Sprintf("active = '%s'", label) }
-		:class={ fmt.Sprintf("active === '%s' ? 'tab tab-active' : 'tab'", label) }
+		@click={ fmt.Sprintf("$store.params.set('tab', '%s')", label) }
+		:class={ fmt.Sprintf("$store.params.get('tab') === '%s' ? 'tab tab-active' : 'tab'", label) }
 	>{ label }</a>
 }
 
 templ actorTabContent(label string) {
 	<div
 		class="grow min-h-0"
-		x-show={ fmt.Sprintf("active === '%s'", label) }
+		x-show={ fmt.Sprintf("$store.params.get('tab') === '%s'", label) }
 	>
 		{ children... }
 	</div>
@@ -89,13 +138,12 @@ func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
 
 templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
 	<div
+		class="cursor-pointer"
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
 	>
 		<div
-			hx-get={ fmtProjectEventsEndpoint(projectID, props.PID) }
-			hx-trigger="click"
-			hx-swap="none"
+			@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
 		>
 			<div class="flex flex-row items-center justify-between w-full">
 				{ props.PID }
@@ -121,6 +169,11 @@ templ ProjectActorNumEvents(numEvents int32) {
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
 	<div class="overflow-x-auto max-h-full">
+		<script>
+			function updateActor(projectID, pid) {
+				htmx.ajax("GET", "/project/" + projectID + "/events?actor=" + pid, "#events-container")
+			}
+		</script>
 		<table class="table table-pin-rows">
 			<thead>
 				<tr>
@@ -138,6 +191,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 				if lazyLoad {
 					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
 				}
+				x-init="$watch('$store.params.params.actor', a => updateActor($store.projectID, a))"
 			>
 				@ProjectActorEvents(events)
 			</tbody>
