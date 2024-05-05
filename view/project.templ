@@ -9,7 +9,7 @@ import (
 
 templ Project(props domain.ProjectProps, actorIndex int) {
 	@Index() {
-		@initStore(props.ID.String(), "", tabLabelEvents)
+		@initStore("", tabLabelEvents)
 		<div
 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
 			hx-ext="sse"
@@ -45,18 +45,24 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 	}
 }
 
-script initStore(projectID string, actor string, tab string) {
+script initStore(actor string, tab string) {
 	document.addEventListener('alpine:init', () => {
-		Alpine.store('projectID', projectID);
         Alpine.store('params', {
             params: { 
 				'actor': actor,
 				'tab': tab,
 			},
+
+			init() {
+				const url = new URL(window.location.href);
+				history.replaceState({ "params": {...this.params} }, "", url);
+			},
  
             set(key, val) {
+				if (val === this.params[key]) {
+					return;
+				}
                 this.params[key] = val;
-
 				const url = new URL(window.location.href);
 				url.searchParams.set(key, val);
 				history.pushState({ "params": {...this.params} }, "", url);
@@ -67,22 +73,11 @@ script initStore(projectID string, actor string, tab string) {
 			},
 
 			setAll(params) {
-				const props = {};
-				for (var prop in this.params) {
-					if (params[prop]) {
-						this.params[prop] = params[prop];
-						props[prop] = true;
-					} else {
-						delete this.params[prop];
-					}
-				}
-				for (var prop in params) {
-					if (!props[prop]) {
-						this.params[prop] = params[prop];
-					}
-				}
+				this.params = params
 			},
         });
+
+		Alpine.store('params').init();
     });
 
 	window.addEventListener("popstate", (e) => {
@@ -130,10 +125,6 @@ templ actorTabContent(label string) {
 	>
 		{ children... }
 	</div>
-}
-
-func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
-	return fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), actorPID)
 }
 
 templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
@@ -191,12 +182,16 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 				if lazyLoad {
 					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
 				}
-				x-init="$watch('$store.params.params.actor', a => updateActor($store.projectID, a))"
+				x-init={ fmt.Sprintf("$watch('$store.params.params.actor', a => updateActor('%s', a))", projectID.String()) }
 			>
 				@ProjectActorEvents(events)
 			</tbody>
 		</table>
 	</div>
+}
+
+func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
+	return fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), actorPID)
 }
 
 templ ProjectActorEvents(events types.EventList) {
