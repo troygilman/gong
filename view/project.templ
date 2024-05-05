@@ -138,24 +138,24 @@ templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) 
 		>
 			<div class="flex flex-row items-center justify-between w-full">
 				{ props.PID }
-				<div
-					class="badge badge-secondary"
-					sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
-					hx-swap="innerHTML"
-				>
-					@ProjectActorNumEvents(props.NumEvents)
-				</div>
+				@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
 			</div>
 		</div>
 	</div>
 }
 
-templ ProjectActorNumEvents(numEvents int32) {
-	if numEvents > 999 {
-		{ "999+" }
-	} else {
-		{ fmt.Sprintf("%d", numEvents) }
-	}
+templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
+	<div
+		class={ "badge",  templ.KV("badge-secondary", alive), templ.KV("badge-neutral", !alive) }
+		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
+		hx-swap="outerHTML"
+	>
+		if numEvents > 999 {
+			{ "999+" }
+		} else {
+			{ fmt.Sprintf("%d", numEvents) }
+		}
+	</div>
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {

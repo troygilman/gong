@@ -127,9 +127,11 @@ listenerLoop:
 				err := func() error {
 					var sseType string = types.SseTypeNewEvents
 					var numEvents int32
+					var actorAlive bool
 
 					if len(events) > 0 {
 						numEvents = events[len(events)-1].Index + 1
+						actorAlive = events[len(events)-1].MsgType != domain.ActorStopped
 						if events[0].Index == 0 {
 							sseType = types.SseTypeNewActor
 						}
@@ -148,7 +150,7 @@ listenerLoop:
 						if err := writeServerSentEvent(ctx, types.SseTypeNewEvents+pid, view.ProjectActorEvents(events)); err != nil {
 							return err
 						}
-						if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorNumEvents(numEvents)); err != nil {
+						if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorBadge(pid, numEvents, actorAlive)); err != nil {
 							return err
 						}
 					case types.SseTypeDeleteActor:

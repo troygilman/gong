@@ -65,9 +65,14 @@ func (p *project) receive(ctx *actor.Context) error {
 			ActorProps: make([]ProjectActorProps, 0, len(p.actors)),
 		}
 		for pid, events := range p.actors {
+			var alive bool
+			if len(events) > 0 {
+				alive = events[len(events)-1].MsgType != ActorStopped
+			}
 			props.ActorProps = append(props.ActorProps, ProjectActorProps{
 				PID:       pid,
 				NumEvents: int32(len(events)),
+				Alive:     alive,
 			})
 		}
 		ctx.Respond(RspGetProjectProps{

@@ -24,4 +24,5 @@ type ProjectProps struct {
 type ProjectActorProps struct {
 	PID       string
 	NumEvents int32
+	Alive     bool
 }
