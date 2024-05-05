@@ -16,12 +16,12 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 			x-data
 		>
-			<div class="flex flex-row border-b py-2 px-4 w-full items-center justify-center">
+			<div class="flex flex-row border-b py-2 px-4 w-full items-center justify-center drop-shadow z-50">
 				<div class="flex text-md font-bold items-center justify-center">
 					Project
 				</div>
 				<div class="dropdown ml-2">
-					<div tabindex="0" role="button" class="btn btn-sm no-animation">{ props.ID.String() }</div>
+					<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation">{ props.ID.String() }</div>
 					<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full">
 						<li><a>Item 1</a></li>
 						<li><a>Item 2</a></li>
@@ -138,14 +138,11 @@ templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) 
 		class="btn btn-sm no-animation rounded-none cursor-pointer"
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
+		@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
 	>
-		<div
-			@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
-		>
-			<div class="flex flex-row items-center justify-between w-full">
-				<div class="mr-2">{ props.PID }</div>
-				@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
-			</div>
+		<div class="flex flex-row items-center justify-between w-full">
+			<div class="mr-2">{ props.PID }</div>
+			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
 		</div>
 	</div>
 }

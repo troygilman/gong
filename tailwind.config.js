@@ -3,6 +3,6 @@ module.exports = {
     content: ["./view/**/*.templ"],
     plugins: [require("daisyui")],
     daisyui: {
-        themes: ["dracula"],
+        themes: ["dracula", "light"],
     },
 };
