@@ -16,7 +16,7 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 			x-data
 		>
-			<div class="flex flex-row border-b py-2 px-4 w-full items-center justify-center drop-shadow z-50">
+			<div class="flex flex-row border-b border-neutral py-2 px-4 w-full items-center justify-center drop-shadow z-50">
 				<div class="flex text-md font-bold items-center justify-center">
 					Project
 				</div>
@@ -29,17 +29,19 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 				</div>
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
-				<div class="flex flex-col w-64 h-full border-r">
-					<div
+				<div class="flex flex-col w-64 h-full border-r border-neutral">
+					<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
+					<div class="divider divider-neutral px-6 m-0"></div>
+					<ul
 						id="actors"
-						class="flex flex-col"
+						class="menu menu-sm"
 						sse-swap={ types.SseTypeNewActor }
 						hx-swap="afterbegin"
 					>
 						for _, actorProps := range props.ActorProps {
 							@ProjectActorListItem(actorProps, props.ID)
 						}
-					</div>
+					</ul>
 				</div>
 				if actorIndex >= 0 {
 					@actorContent(props.ID, props.ActorProps[actorIndex])
@@ -134,22 +136,24 @@ templ actorTabContent(label string) {
 }
 
 templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
-	<div
-		class="btn btn-sm no-animation rounded-none cursor-pointer"
+	<li
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
 		@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
 	>
-		<div class="flex flex-row items-center justify-between w-full">
+		<a
+			class="flex flex-row items-center justify-between w-full"
+			:class={ fmt.Sprintf("$store.params.get('actor') === '%s' ? 'active' : ''", props.PID) }
+		>
 			<div class="mr-2">{ props.PID }</div>
 			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
-		</div>
-	</div>
+		</a>
+	</li>
 }
 
 templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 	<div
-		class={ "badge",  templ.KV("badge-secondary", alive), templ.KV("badge-neutral", !alive) }
+		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
 		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
 		hx-swap="outerHTML"
 	>
@@ -162,7 +166,7 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
-	<div class="overflow-x-auto max-h-full">
+	<div class="overflow-x-auto max-h-full h-full">
 		<script>
 			function updateActor(projectID, pid) {
 				htmx.ajax("GET", "/project/" + projectID + "/events?actor=" + pid, "#events-container")
