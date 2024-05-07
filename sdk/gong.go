@@ -28,6 +28,7 @@ var (
 
 type Event struct {
 	PID       string
+	Sender    string
 	Timestamp time.Time
 	MsgType   string
 	Level     slog.Level
@@ -38,26 +39,35 @@ type Event struct {
 func GongMiddleware() actor.MiddlewareFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
+
+			sender := ""
+			if ctx.Sender() != nil {
+				sender = ctx.Sender().String()
+			}
+
 			switch msg := ctx.Message().(type) {
 			case actor.EventLogger:
 				level, logMsg, attr := msg.Log()
 				ctx.Send(gongPID, Event{
-					MsgType:   fmt.Sprintf("%T", msg),
-					Timestamp: time.Now(),
 					PID:       ctx.PID().String(),
+					Sender:    sender,
+					Timestamp: time.Now(),
+					MsgType:   fmt.Sprintf("%T", msg),
 					Level:     level,
 					Msg:       logMsg,
 					Attr:      createAttrMap(attr),
 				})
 			case actor.Initialized, actor.Started, actor.Stopped:
 				ctx.Send(gongPID, Event{
-					MsgType:   fmt.Sprintf("%T", msg),
-					Timestamp: time.Now(),
 					PID:       ctx.PID().String(),
+					Sender:    sender,
+					Timestamp: time.Now(),
+					MsgType:   fmt.Sprintf("%T", msg),
 					Level:     slog.LevelInfo,
 					Attr:      make(map[string]any),
 				})
 			}
+
 			next(ctx)
 		}
 	}
@@ -112,6 +122,10 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			Level:   level,
 			Msg:     logMsg,
 			Attr:    createAttrMap(attr),
+		}
+
+		if ctx.Sender() != nil {
+			event.Sender = ctx.Sender().String()
 		}
 
 		switch event.MsgType {

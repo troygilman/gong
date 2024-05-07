@@ -177,6 +177,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 				<tr>
 					<th>Timestamp</th>
 					<th>Type</th>
+					<th>Sender</th>
 					<th>Level</th>
 					<th>Message</th>
 				</tr>
@@ -214,6 +215,9 @@ templ projectActorEvent(event types.Event) {
 		</td>
 		<td>
 			{ event.MsgType }
+		</td>
+		<td>
+			{ event.Event.Sender }
 		</td>
 		<td>
 			{ event.Level.String() }

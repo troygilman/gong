@@ -142,6 +142,7 @@ listenerLoop:
 						props := domain.ProjectActorProps{
 							PID:       pid,
 							NumEvents: int32(len(events)),
+							Alive:     actorAlive,
 						}
 						if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(props, projectID)); err != nil {
 							return err
