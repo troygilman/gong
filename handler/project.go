@@ -39,6 +39,37 @@ func GetProject(ctx echo.Context) error {
 	return renderView(ctx, view.Project(response.Props, -1))
 }
 
+func GetProjectActor(ctx echo.Context) error {
+	app := mustApp(ctx)
+
+	projectID, err := uuid.Parse(ctx.Param("projectID"))
+	if err != nil {
+		return err
+	}
+
+	actorPID := ctx.QueryParam("pid")
+	if actorPID == "" {
+		return errors.New("actor must be non-empty")
+	}
+
+	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	msg := domain.MsgGetProjectActorProps{
+		ActorPID: actorPID,
+	}
+
+	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
+	response, err := utils.HandleResponse[domain.RspGetProjectActorProps](r)
+	if err != nil {
+		return err
+	}
+
+	return renderView(ctx, view.ActorContent(projectID, response.Props))
+}
+
 func GetProjectEvents(ctx echo.Context) error {
 	app := mustApp(ctx)
 
@@ -47,7 +78,7 @@ func GetProjectEvents(ctx echo.Context) error {
 		return err
 	}
 
-	actorPID := ctx.QueryParam("actor")
+	actorPID := ctx.QueryParam("pid")
 	if actorPID == "" {
 		return errors.New("actor must be non-empty")
 	}
@@ -67,7 +98,7 @@ func GetProjectEvents(ctx echo.Context) error {
 		return err
 	}
 
-	return renderView(ctx, view.ProjectActorEventsContainer(projectID, actorPID, response.Events, false))
+	return renderView(ctx, view.ProjectActorEvents(response.Events))
 }
 
 func ConnectProjectSSE(ctx echo.Context) error {

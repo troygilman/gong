@@ -27,7 +27,10 @@ templ Project(props types.ProjectProps, actorIndex int) {
 					</ul>
 				</div>
 			</div>
-			<div class="flex flex-row grow min-w-full min-h-0">
+			<div
+				class="flex flex-row grow min-w-full min-h-0"
+				x-init={ fmt.Sprintf("$watch('$store.params.params.pid', pid => updateActor('%s', pid))", props.ID.String()) }
+			>
 				<div class="flex flex-col w-64 h-full border-r border-neutral">
 					<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
 					<div class="divider divider-neutral px-6 m-0"></div>
@@ -42,21 +45,26 @@ templ Project(props types.ProjectProps, actorIndex int) {
 						}
 					</ul>
 				</div>
+				<script>
+					function updateActor(projectID, pid) {
+						htmx.ajax("GET", "/project/" + projectID + "/actor?pid=" + pid, {target:'#actor-content', swap:'outerHTML'});
+					}
+				</script>
 				if actorIndex >= 0 {
-					@actorContent(props.ID, props.ActorProps[actorIndex])
+					@ActorContent(props.ID, props.ActorProps[actorIndex])
 				} else {
-					@actorContent(props.ID, types.ProjectActorProps{})
+					@ActorContent(props.ID, types.ProjectActorProps{})
 				}
 			</div>
 		</div>
 	}
 }
 
-script initStore(actor string, tab string) {
+script initStore(pid string, tab string) {
 	document.addEventListener('alpine:init', () => {
         Alpine.store('params', {
             params: { 
-				'actor': actor,
+				'pid': pid,
 				'tab': tab,
 			},
 
@@ -99,12 +107,12 @@ const (
 	tabLabelTest   = "Test"
 )
 
-templ actorContent(projectID uuid.UUID, props types.ProjectActorProps) {
+templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 	>
-		<div class="font-bold">{ props.PID }</div>
+		<div class="p-2 font-bold">{ props.PID }</div>
 		<div
 			role="tablist"
 			class="tabs tabs-bordered"
@@ -113,7 +121,7 @@ templ actorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 			@actorTab(tabLabelTest)
 		</div>
 		@actorTabContent(tabLabelEvents) {
-			@ProjectActorEventsContainer(projectID, props.PID, make(types.EventList, 0), true)
+			@ProjectActorEventsContainer(projectID, props.PID)
 		}
 	</div>
 }
@@ -140,11 +148,11 @@ templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 		class="max-w-full"
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
-		@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
+		@click={ fmt.Sprintf("$store.params.set('pid', '%s')", props.PID) }
 	>
 		<a
 			class="flex flex-row items-center justify-between w-full"
-			:class={ fmt.Sprintf("$store.params.get('actor') === '%s' ? 'active' : ''", props.PID) }
+			:class={ fmt.Sprintf("$store.params.get('pid') === '%s' ? 'active' : ''", props.PID) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
 			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
@@ -166,17 +174,19 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 	</div>
 }
 
-templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.EventList, lazyLoad bool) {
+templ ProjectActorEventsContainer(projectID uuid.UUID, pid string) {
 	<div class="overflow-x-auto max-h-full h-full">
 		<script>
-			function updateActor(projectID, pid) {
-				htmx.ajax("GET", "/project/" + projectID + "/events?actor=" + pid, "#events-container")
+			function resizeContainer() {
+				const container = document.getElementById("events-container")
+				while (container.children.length > 100) {
+					container.removeChild(container.lastChild);
+				}
 			}
-			function handleTableUpdate() {
-				const events = document.getElementById("events-container");
-				console.log(events);
-				while (events.children.length > 100) {
-					events.removeChild(events.lastChild)
+			function handleTableUpdate(event) {
+				const target = event.detail.target;
+				if (target && (target.id == "events-container" || target.id == "events-container-data-loader")) {
+					resizeContainer();
 				}
 			}
 		</script>
@@ -184,6 +194,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 			<thead>
 				<tr>
 					<th>Timestamp</th>
+					<th>PID</th>
 					<th>Type</th>
 					<th>Sender</th>
 					<th>Level</th>
@@ -192,23 +203,19 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 			</thead>
 			<tbody
 				id="events-container"
-				sse-swap={ types.SseTypeNewEvents + pid }
 				hx-swap="afterbegin"
-				hx-swap-oob="true"
-				if lazyLoad {
-					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
-				}
-				x-init={ fmt.Sprintf("$watch('$store.params.params.actor', a => updateActor('%s', a))", projectID.String()) }
-				@htmx:sse-message="handleTableUpdate()"
+				sse-swap={ types.SseTypeNewEvents + pid }
+				@htmx:after-settle="handleTableUpdate($event)"
 			>
-				@ProjectActorEvents(events)
+				<tr
+					id="events-container-data-loader"
+					hx-get={ fmt.Sprintf("/project/%s/events?pid=%s", projectID.String(), pid) }
+					hx-trigger="load"
+					hx-swap="outerHTML"
+				></tr>
 			</tbody>
 		</table>
 	</div>
-}
-
-func fmtProjectEventsEndpoint(projectID uuid.UUID, actorPID string) string {
-	return fmt.Sprintf("/project/%s/events?actor=%s", projectID.String(), actorPID)
 }
 
 templ ProjectActorEvents(events types.EventList) {
@@ -221,6 +228,9 @@ templ projectActorEvent(event types.Event) {
 	<tr>
 		<td>
 			{ event.Timestamp.String() }
+		</td>
+		<td>
+			{ event.Event.PID }
 		</td>
 		<td>
 			{ event.MsgType }

@@ -19,6 +19,14 @@ type RspGetProjectProps struct {
 	Props types.ProjectProps
 }
 
+type MsgGetProjectActorProps struct {
+	ActorPID string
+}
+
+type RspGetProjectActorProps struct {
+	Props types.ProjectActorProps
+}
+
 type MsgGetProjectEvents struct {
 	ActorPID string
 }

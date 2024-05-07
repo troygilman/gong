@@ -79,6 +79,20 @@ func (p *project) receive(ctx *actor.Context) error {
 		ctx.Respond(RspGetProjectProps{
 			Props: props,
 		})
+	case MsgGetProjectActorProps:
+		events := p.actors[msg.ActorPID]
+		var alive bool
+		if len(events) > 0 {
+			alive = isActorAlive(events[len(events)-1].MsgType)
+		}
+		props := types.ProjectActorProps{
+			PID:       msg.ActorPID,
+			NumEvents: int32(len(events)),
+			Alive:     alive,
+		}
+		ctx.Respond(RspGetProjectActorProps{
+			Props: props,
+		})
 	case MsgGetProjectEvents:
 		events := slices.Clone(p.actors[msg.ActorPID])
 		ctx.Respond(RspGetProjectEvents{

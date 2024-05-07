@@ -68,6 +68,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 
 	case actor.Stopped:
 		close(l.timerStop)
+		close(l.sse)
 
 	case MsgEvent:
 		event := msg.Event
@@ -120,7 +121,9 @@ func (l *listener) receive(ctx *actor.Context) error {
 			if err != nil {
 				return fmt.Errorf("error while writing SSE: %s", err.Error())
 			}
+		}
 
+		for pid := range l.batch {
 			delete(l.batch, pid)
 		}
 
