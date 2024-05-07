@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ActorKindProject = "Project"
+	ActorKindProject = "project"
 	ActorInitialized = "actor.Initialized"
 	ActorStarted     = "actor.Started"
 	ActorStopped     = "actor.Stopped"
@@ -20,7 +20,7 @@ const (
 type project struct {
 	commonActorData
 	actors    map[string]types.EventList
-	listeners map[string]chan<- types.Event
+	listeners map[string]*actor.PID
 	session   int32
 }
 
@@ -54,22 +54,22 @@ func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.EventList)
-		p.listeners = make(map[string]chan<- types.Event)
-	case MsgEvent:
-		if err := p.handleEvent(msg.Event); err != nil {
+		p.listeners = make(map[string]*actor.PID)
+	case MsgSdkEvent:
+		if err := p.handleEvent(ctx, msg.Event); err != nil {
 			return err
 		}
 	case MsgGetProjectProps:
-		props := ProjectProps{
+		props := types.ProjectProps{
 			ID:         p.id,
-			ActorProps: make([]ProjectActorProps, 0, len(p.actors)),
+			ActorProps: make([]types.ProjectActorProps, 0, len(p.actors)),
 		}
 		for pid, events := range p.actors {
 			var alive bool
 			if len(events) > 0 {
 				alive = events[len(events)-1].MsgType != ActorStopped
 			}
-			props.ActorProps = append(props.ActorProps, ProjectActorProps{
+			props.ActorProps = append(props.ActorProps, types.ProjectActorProps{
 				PID:       pid,
 				NumEvents: int32(len(events)),
 				Alive:     alive,
@@ -84,9 +84,14 @@ func (p *project) receive(ctx *actor.Context) error {
 			Events: events,
 		})
 	case MsgEventsListenStart:
-		p.listeners[msg.ID] = msg.Events
+		pid := ctx.Engine().Spawn(newListener(p.id, msg.SSE), ActorKindListener)
+		p.listeners[msg.ID] = pid
 	case MsgEventsListenStop:
-		delete(p.listeners, msg.ID)
+		pid, ok := p.listeners[msg.ID]
+		if ok {
+			ctx.Engine().Poison(pid)
+			delete(p.listeners, msg.ID)
+		}
 	default:
 		_ = msg
 	}
@@ -106,7 +111,7 @@ func (p *project) create(id uuid.UUID) error {
 	return nil
 }
 
-func (p *project) handleEvent(sdkEvent sdk.Event) error {
+func (p *project) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
 	event := types.Event{
 		ProjectID: p.id,
 		Session:   p.session,
@@ -122,11 +127,8 @@ func (p *project) handleEvent(sdkEvent sdk.Event) error {
 	events.Push(event)
 	p.actors[event.PID] = events
 
-	for _, c := range p.listeners {
-		select {
-		case c <- event:
-		default:
-		}
+	for _, pid := range p.listeners {
+		ctx.Send(pid, MsgEvent{Event: event})
 	}
 
 	if err := p.app.DB().CreateEvent(&event); err != nil {

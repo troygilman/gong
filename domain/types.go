@@ -15,14 +15,3 @@ type commonActorData struct {
 	app         App
 	poisonTimer actor_utils.PoisonTimer
 }
-
-type ProjectProps struct {
-	ID         uuid.UUID
-	ActorProps []ProjectActorProps
-}
-
-type ProjectActorProps struct {
-	PID       string
-	NumEvents int32
-	Alive     bool
-}

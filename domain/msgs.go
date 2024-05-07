@@ -5,14 +5,18 @@ import (
 	"gong/types"
 )
 
-type MsgEvent struct {
+type MsgSdkEvent struct {
 	Event sdk.Event
+}
+
+type MsgEvent struct {
+	Event types.Event
 }
 
 type MsgGetProjectProps struct{}
 
 type RspGetProjectProps struct {
-	Props ProjectProps
+	Props types.ProjectProps
 }
 
 type MsgGetProjectEvents struct {
@@ -24,10 +28,12 @@ type RspGetProjectEvents struct {
 }
 
 type MsgEventsListenStart struct {
-	ID     string
-	Events chan<- types.Event
+	ID  string
+	SSE chan<- string
 }
 
 type MsgEventsListenStop struct {
 	ID string
 }
+
+type MsgListenerSendBatch struct{}

@@ -31,3 +31,14 @@ func (l *EventList) Push(e Event) {
 	copy((*l)[i+1:], (*l)[i:])
 	(*l)[i] = e
 }
+
+type ProjectProps struct {
+	ID         uuid.UUID
+	ActorProps []ProjectActorProps
+}
+
+type ProjectActorProps struct {
+	PID       string
+	NumEvents int32
+	Alive     bool
+}

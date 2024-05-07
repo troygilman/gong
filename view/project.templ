@@ -2,12 +2,11 @@ package view
 
 import (
 	"fmt"
-	"gong/domain"
 	"github.com/google/uuid"
 	"gong/types"
 )
 
-templ Project(props domain.ProjectProps, actorIndex int) {
+templ Project(props types.ProjectProps, actorIndex int) {
 	@Index() {
 		@initStore("", tabLabelEvents)
 		<div
@@ -46,7 +45,7 @@ templ Project(props domain.ProjectProps, actorIndex int) {
 				if actorIndex >= 0 {
 					@actorContent(props.ID, props.ActorProps[actorIndex])
 				} else {
-					@actorContent(props.ID, domain.ProjectActorProps{})
+					@actorContent(props.ID, types.ProjectActorProps{})
 				}
 			</div>
 		</div>
@@ -100,7 +99,7 @@ const (
 	tabLabelTest   = "Test"
 )
 
-templ actorContent(projectID uuid.UUID, props domain.ProjectActorProps) {
+templ actorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
@@ -135,7 +134,7 @@ templ actorTabContent(label string) {
 	</div>
 }
 
-templ ProjectActorListItem(props domain.ProjectActorProps, projectID uuid.UUID) {
+templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	<li
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
