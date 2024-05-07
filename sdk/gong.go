@@ -139,22 +139,27 @@ func (g *Gong) Receive(ctx *actor.Context) {
 
 		switch msg := msg.(type) {
 		case actor.ActorInitializedEvent:
+			event.PID = msg.PID.String()
 			event.Timestamp = msg.Timestamp
 		case actor.ActorStartedEvent:
+			event.PID = msg.PID.String()
 			event.Timestamp = msg.Timestamp
 		case actor.ActorStoppedEvent:
+			event.PID = msg.PID.String()
 			event.Timestamp = msg.Timestamp
 		case actor.ActorRestartedEvent:
+			event.PID = msg.PID.String()
 			event.Timestamp = msg.Timestamp
 		case actor.ActorMaxRestartsExceededEvent:
+			event.PID = msg.PID.String()
 			event.Timestamp = msg.Timestamp
 		default:
 			event.Timestamp = time.Now()
 		}
 
-		// if err := g.pushEvent(event); err != nil {
-		// 	log.Println(err)
-		// }
+		if err := g.pushEvent(event); err != nil {
+			log.Println(err)
+		}
 	case Event:
 		if err := g.pushEvent(msg); err != nil {
 			log.Println(err)

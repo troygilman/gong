@@ -52,10 +52,13 @@ func (s server) Receive(ctx *actor.Context) {
 		for range 100 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 		ctx.Engine().Poison(s.pids[0])
 		ctx.Engine().Poison(s.pids[1])
+		// nums := []int{}
+		// num := nums[0]
+		// _ = num
 	}
 }
 

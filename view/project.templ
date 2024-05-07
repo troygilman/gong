@@ -104,6 +104,7 @@ templ actorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 	>
+		<div class="font-bold">{ props.PID }</div>
 		<div
 			role="tablist"
 			class="tabs tabs-bordered"
@@ -136,6 +137,7 @@ templ actorTabContent(label string) {
 
 templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	<li
+		class="max-w-full"
 		sse-swap={ types.SseTypeDeleteActor + props.PID }
 		hx-swap="outerHTML"
 		@click={ fmt.Sprintf("$store.params.set('actor', '%s')", props.PID) }
@@ -144,7 +146,7 @@ templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 			class="flex flex-row items-center justify-between w-full"
 			:class={ fmt.Sprintf("$store.params.get('actor') === '%s' ? 'active' : ''", props.PID) }
 		>
-			<div class="mr-2">{ props.PID }</div>
+			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
 			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
 		</a>
 	</li>
@@ -170,6 +172,13 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 			function updateActor(projectID, pid) {
 				htmx.ajax("GET", "/project/" + projectID + "/events?actor=" + pid, "#events-container")
 			}
+			function handleTableUpdate() {
+				const events = document.getElementById("events-container");
+				console.log(events);
+				while (events.children.length > 100) {
+					events.removeChild(events.lastChild)
+				}
+			}
 		</script>
 		<table class="table table-pin-rows">
 			<thead>
@@ -190,6 +199,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string, events types.
 					hx-get={ fmtProjectEventsEndpoint(projectID, pid) }
 				}
 				x-init={ fmt.Sprintf("$watch('$store.params.params.actor', a => updateActor('%s', a))", projectID.String()) }
+				@htmx:sse-message="handleTableUpdate()"
 			>
 				@ProjectActorEvents(events)
 			</tbody>

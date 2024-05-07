@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	ActorKindProject = "project"
-	ActorInitialized = "actor.Initialized"
-	ActorStarted     = "actor.Started"
-	ActorStopped     = "actor.Stopped"
+	ActorKindProject  = "project"
+	ActorInitialized  = "actor.Initialized"
+	ActorStarted      = "actor.Started"
+	ActorStopped      = "actor.Stopped"
+	ActorStoppedEvent = "actor.ActorStoppedEvent"
 )
 
 type project struct {
@@ -67,7 +68,7 @@ func (p *project) receive(ctx *actor.Context) error {
 		for pid, events := range p.actors {
 			var alive bool
 			if len(events) > 0 {
-				alive = events[len(events)-1].MsgType != ActorStopped
+				alive = isActorAlive(events[len(events)-1].MsgType)
 			}
 			props.ActorProps = append(props.ActorProps, types.ProjectActorProps{
 				PID:       pid,
@@ -136,4 +137,8 @@ func (p *project) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
 	}
 
 	return nil
+}
+
+func isActorAlive(eventType string) bool {
+	return eventType != ActorStopped && eventType != ActorStoppedEvent
 }
