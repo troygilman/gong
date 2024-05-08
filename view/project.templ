@@ -175,7 +175,35 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 }
 
 templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorProps) {
-	<div id="events-container" class="overflow-x-auto max-h-full h-full">
+	<div
+		id="events-container"
+		class="overflow-x-auto max-h-full h-full"
+		x-data="{ scrollTop: 0 }"
+		@scroll="$data.scrollTop = handleScroll($event, $data)"
+	>
+		<script>
+			function handleScroll(event, { scrollTop }) {
+				const container = document.getElementById("events-container");
+				if (container.scrollTop < scrollTop) {
+					if (loadNext(container)) {
+						htmx.trigger('#events-top-data-loader', 'load-next', {})
+					}
+				} else if (container.scrollTop > scrollTop) {
+					if (loadPrev(container)) {
+						htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
+					}
+				}
+				return container.scrollTop;
+			}
+
+			function loadNext(container) {
+				return container.scrollTop <= container.scrollHeight * 0.1;
+			}
+
+			function loadPrev(container) {
+				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+			}
+		</script>
 		<table id="events-table" class="table table-pin-rows">
 			<thead>
 				<tr>
@@ -202,9 +230,9 @@ templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, 
 		id="events-top-data-loader"
 		hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, 10) }
 		if moreEvents {
-			hx-trigger="intersect once"
+			hx-trigger="load-next once, intersect once"
 		} else {
-			hx-trigger="every 1s [isVisible()]"
+			hx-trigger="every 1s [load()]"
 		}
 		hx-swap="outerHTML"
 		if oob {
@@ -212,18 +240,9 @@ templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, 
 		}
 	>
 		<script>
-			function isVisible() {
-				const loader = document.getElementById("events-top-data-loader");
+			function load() {
 				const container = document.getElementById("events-container");
-
-				var containerTop = container.scrollTop;
-				var containerBottom = containerTop + container.offsetHeight;
-
-				var loaderTop = loader.offsetTop;
-				var loaderBottom = loaderTop + loader.offsetHeight;
-
-				console.log(loaderBottom, containerBottom, loaderTop, containerTop);
-				return ((loaderBottom <= containerBottom) && (loaderTop >= containerTop));
+				return loadNext(container);
 			}
 		</script>
 	</tr>
@@ -234,7 +253,7 @@ templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int3
 		<tr
 			id="events-bottom-data-loader"
 			hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, -10) }
-			hx-trigger="intersect once"
+			hx-trigger="load-prev once, intersect once"
 			hx-swap="outerHTML"
 			if oob {
 				hx-swap-oob="true"
