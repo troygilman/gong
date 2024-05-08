@@ -25,7 +25,8 @@ type EventList []Event
 
 func (l *EventList) Push(e Event) {
 	i := sort.Search(len(*l), func(i int) bool {
-		return e.Timestamp.Before((*l)[i].Timestamp)
+		return e.Index < (*l)[i].Index
+		//return e.Timestamp.Before((*l)[i].Timestamp)
 	})
 	*l = append(*l, Event{})
 	copy((*l)[i+1:], (*l)[i:])

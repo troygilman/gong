@@ -121,7 +121,7 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 			@actorTab(tabLabelTest)
 		</div>
 		@actorTabContent(tabLabelEvents) {
-			@ProjectActorEventsContainer(projectID, props.PID)
+			@ProjectActorEventsContainer(projectID, props)
 		}
 	</div>
 }
@@ -174,23 +174,9 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 	</div>
 }
 
-templ ProjectActorEventsContainer(projectID uuid.UUID, pid string) {
-	<div class="overflow-x-auto max-h-full h-full">
-		<script>
-			function resizeContainer() {
-				const container = document.getElementById("events-container")
-				while (container.children.length > 100) {
-					container.removeChild(container.lastChild);
-				}
-			}
-			function handleTableUpdate(event) {
-				const target = event.detail.target;
-				if (target && (target.id == "events-container" || target.id == "events-container-data-loader")) {
-					resizeContainer();
-				}
-			}
-		</script>
-		<table class="table table-pin-rows">
+templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorProps) {
+	<div id="events-container" class="overflow-x-auto max-h-full h-full">
+		<table id="events-table" class="table table-pin-rows">
 			<thead>
 				<tr>
 					<th>Timestamp</th>
@@ -203,29 +189,75 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, pid string) {
 			</thead>
 			<tbody
 				id="events-container"
-				hx-swap="afterbegin"
-				sse-swap={ types.SseTypeNewEvents + pid }
-				@htmx:after-settle="handleTableUpdate($event)"
 			>
-				<tr
-					id="events-container-data-loader"
-					hx-get={ fmt.Sprintf("/project/%s/events?pid=%s", projectID.String(), pid) }
-					hx-trigger="load"
-					hx-swap="outerHTML"
-				></tr>
+				@eventsTopDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false, false)
+				@eventsBottomDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false)
 			</tbody>
 		</table>
 	</div>
 }
 
-templ ProjectActorEvents(events types.EventList) {
-	for i := len(events)-1; i >= 0; i-- {
-		@projectActorEvent(events[i])
+templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool, moreEvents bool) {
+	<tr
+		id="events-top-data-loader"
+		hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, 10) }
+		if moreEvents {
+			hx-trigger="intersect once"
+		} else {
+			hx-trigger="every 1s [isVisible()]"
+		}
+		hx-swap="outerHTML"
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		<script>
+			function isVisible() {
+				const loader = document.getElementById("events-top-data-loader");
+				const container = document.getElementById("events-container");
+
+				var containerTop = container.scrollTop;
+				var containerBottom = containerTop + container.offsetHeight;
+
+				var loaderTop = loader.offsetTop;
+				var loaderBottom = loaderTop + loader.offsetHeight;
+
+				console.log(loaderBottom, containerBottom, loaderTop, containerTop);
+				return ((loaderBottom <= containerBottom) && (loaderTop >= containerTop));
+			}
+		</script>
+	</tr>
+}
+
+templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool) {
+	if startIdx > 0 {
+		<tr
+			id="events-bottom-data-loader"
+			hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, -10) }
+			hx-trigger="intersect once"
+			hx-swap="outerHTML"
+			if oob {
+				hx-swap-oob="true"
+			}
+		></tr>
+	} else {
+		<tr id="events-bottom-data-loader"></tr>
 	}
 }
 
+templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
+	@eventsTopDataLoader(projectID, actorPID, startIdx, endIdx, !appendEnd, moreEvents)
+	for i := len(events)-1; i >= 0; i-- {
+		@projectActorEvent(events[i])
+	}
+	for _, i := range delete {
+		@projectActorEventDelete(i)
+	}
+	@eventsBottomDataLoader(projectID, actorPID, startIdx, endIdx, appendEnd)
+}
+
 templ projectActorEvent(event types.Event) {
-	<tr>
+	<tr id={ fmt.Sprintf("event-%d", event.Index) }>
 		<td>
 			{ event.Timestamp.String() }
 		</td>
@@ -245,4 +277,8 @@ templ projectActorEvent(event types.Event) {
 			{ event.Msg }
 		</td>
 	</tr>
+}
+
+templ projectActorEventDelete(index int32) {
+	<tr id={ fmt.Sprintf("event-%d", index) } hx-swap-oob="delete"></tr>
 }

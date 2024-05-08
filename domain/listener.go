@@ -103,9 +103,6 @@ func (l *listener) receive(ctx *actor.Context) error {
 						return err
 					}
 				case types.SseTypeNewEvents:
-					if err := writeServerSentEvent(ctx.Context(), builder, types.SseTypeNewEvents+pid, view.ProjectActorEvents(events)); err != nil {
-						return err
-					}
 					if err := writeServerSentEvent(ctx.Context(), builder, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorBadge(pid, numEvents, actorAlive)); err != nil {
 						return err
 					}

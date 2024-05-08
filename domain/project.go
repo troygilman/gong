@@ -94,10 +94,19 @@ func (p *project) receive(ctx *actor.Context) error {
 			Props: props,
 		})
 	case MsgGetProjectEvents:
-		events := slices.Clone(p.actors[msg.ActorPID])
-		ctx.Respond(RspGetProjectEvents{
-			Events: events,
-		})
+		events, ok := p.actors[msg.ActorPID]
+		if ok {
+			startIdx := max(msg.StartIdx, 0)
+			endIdx := min(msg.EndIdx, int32(len(events)))
+			ctx.Respond(RspGetProjectEvents{
+				Events:         slices.Clone(events[startIdx:endIdx]),
+				NumTotalEvents: int32(len(events)),
+			})
+		} else {
+			ctx.Respond(RspGetProjectEvents{
+				Events: make(types.EventList, 0),
+			})
+		}
 	case MsgEventsListenStart:
 		pid := ctx.Engine().Spawn(newListener(p.id, msg.SSE), ActorKindListener)
 		p.listeners[msg.ID] = pid

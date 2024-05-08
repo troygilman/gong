@@ -29,10 +29,13 @@ type RspGetProjectActorProps struct {
 
 type MsgGetProjectEvents struct {
 	ActorPID string
+	StartIdx int32
+	EndIdx   int32
 }
 
 type RspGetProjectEvents struct {
-	Events types.EventList
+	Events         types.EventList
+	NumTotalEvents int32
 }
 
 type MsgEventsListenStart struct {
