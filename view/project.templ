@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"gong/types"
+	"strings"
 )
 
 templ Project(props types.ProjectProps, actorIndex int) {
@@ -179,18 +180,18 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 		id="events-container"
 		class="overflow-x-auto max-h-full h-full"
 		x-data="{ scrollTop: 0 }"
-		@scroll="$data.scrollTop = handleScroll($event, $data)"
+		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(props.PID)) }
 	>
 		<script>
-			function handleScroll(event, { scrollTop }) {
+			function handleScroll(pid, { scrollTop }) {
 				const container = document.getElementById("events-container");
 				if (container.scrollTop < scrollTop) {
 					if (loadNext(container)) {
-						htmx.trigger('#events-top-data-loader', 'load-next', {})
+						htmx.trigger('#events-top-data-loader-' + pid , 'load-next', {})
 					}
 				} else if (container.scrollTop > scrollTop) {
 					if (loadPrev(container)) {
-						htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
+						htmx.trigger('#events-bottom-data-loader-' + pid, 'load-prev', {})
 					}
 				}
 				return container.scrollTop;
@@ -227,7 +228,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 
 templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool, moreEvents bool) {
 	<tr
-		id="events-top-data-loader"
+		id={ "events-top-data-loader-" + formatActorPID(actorPID) }
 		hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, 10) }
 		if moreEvents {
 			hx-trigger="load-next once, intersect once"
@@ -251,7 +252,7 @@ templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, 
 templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool) {
 	if startIdx > 0 {
 		<tr
-			id="events-bottom-data-loader"
+			id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }
 			hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, -10) }
 			hx-trigger="load-prev once, intersect once"
 			hx-swap="outerHTML"
@@ -260,8 +261,12 @@ templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int3
 			}
 		></tr>
 	} else {
-		<tr id="events-bottom-data-loader"></tr>
+		<tr id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }></tr>
 	}
+}
+
+func formatActorPID(pid string) string {
+	return strings.ReplaceAll(pid, "/", "-")
 }
 
 templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
