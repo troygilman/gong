@@ -67,11 +67,12 @@ script initStore(pid string, tab string) {
             params: { 
 				'pid': pid,
 				'tab': tab,
+				'filters': "",
 			},
 
 			init() {
 				const url = new URL(window.location.href);
-				history.replaceState({ "params": {...this.params} }, "", url);
+				history.replaceState({ "params": {...this.params}, "filters": {...this.filters} }, "", url);
 			},
  
             set(key, val) {
@@ -93,12 +94,42 @@ script initStore(pid string, tab string) {
 			},
         });
 
+		Alpine.store('filters', {
+			filters: {},
+
+			set(key, val) {
+				if (val === this.filters[key]) {
+					return;
+				}
+				this.filters[key] = val;
+				console.log(JSON.stringify(this.filters))
+				Alpine.store('params').set('filters', JSON.stringify(this.filters));
+			},
+
+			get(key) {
+				return this.filters[key];
+			},
+
+			delete(key) {
+				delete this.filters[key];
+				Alpine.store('params').set('filters', JSON.stringify(this.filters));
+			},
+
+			parse(filters) {
+				this.filters = JSON.parse(filters);
+			}
+		});
+
 		Alpine.store('params').init();
     });
 
 	window.addEventListener("popstate", (e) => {
     	if(e.state && e.state.params){
-			Alpine.store('params').setAll(e.state.params)
+			const params = e.state.params;
+			Alpine.store('params').setAll(params);
+			if (params['filters']) {
+				Alpine.store('filters').parse(params['filters']);
+			}
     	}
 	});
 }
@@ -230,15 +261,23 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 templ eventsFilter() {
 	<div
 		class="join border rounded-lg m-4 w-fit"
-		x-data="{ type: '' }"
 	>
-		@eventsFilterItem("Type", "type !== ''", "type = ''") {
+		@eventsFilterItem("Type", "$store.filters.get('type')", "$store.filters.delete('type')") {
+			<script>
+				function onFocusOut(value) {
+					if (value !== '') {
+						Alpine.store('filters').set('type', value);
+					} else {
+						Alpine.store('filters').delete('type');
+					}
+				}
+			</script>
 			<input
 				type="text"
 				placeholder="actor.Started"
 				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
-				x-bind:value="type"
-				@focusout="type = $el.value"
+				x-bind:value="$store.filters.get('type')"
+				@focusout="onFocusOut($el.value)"
 				@keyup.enter="document.activeElement.blur()"
 			/>
 		}
