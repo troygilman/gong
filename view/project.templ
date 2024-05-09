@@ -122,6 +122,7 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 			@actorTab(tabLabelTest)
 		</div>
 		@actorTabContent(tabLabelEvents) {
+			@eventsFilter()
 			@ProjectActorEventsContainer(projectID, props)
 		}
 	</div>
@@ -137,7 +138,7 @@ templ actorTab(label string) {
 
 templ actorTabContent(label string) {
 	<div
-		class="grow min-h-0"
+		class="flex flex-col grow min-h-0"
 		x-show={ fmt.Sprintf("$store.params.get('tab') === '%s'", label) }
 	>
 		{ children... }
@@ -178,7 +179,7 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorProps) {
 	<div
 		id="events-container"
-		class="overflow-x-auto max-h-full h-full"
+		class="grow min-h-0 max-w-full overflow-x-auto"
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(props.PID)) }
 	>
@@ -205,7 +206,6 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
 			}
 		</script>
-		@eventsFilter()
 		<table id="events-table" class="table table-pin-rows">
 			<thead>
 				<tr>
@@ -229,7 +229,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 
 templ eventsFilter() {
 	<div
-		class="join border rounded-lg m-4"
+		class="join border rounded-lg m-4 w-fit"
 		x-data="{ type: '' }"
 	>
 		@eventsFilterItem("Type", "type !== ''", "type = ''") {
@@ -239,6 +239,7 @@ templ eventsFilter() {
 				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
 				x-bind:value="type"
 				@focusout="type = $el.value"
+				@keyup.enter="document.activeElement.blur()"
 			/>
 		}
 	</div>
