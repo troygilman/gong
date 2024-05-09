@@ -205,6 +205,7 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
 			}
 		</script>
+		@eventsFilter()
 		<table id="events-table" class="table table-pin-rows">
 			<thead>
 				<tr>
@@ -223,6 +224,37 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 				@eventsBottomDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false)
 			</tbody>
 		</table>
+	</div>
+}
+
+templ eventsFilter() {
+	<div
+		class="join border rounded-lg m-4"
+		x-data="{ type: '' }"
+	>
+		@eventsFilterItem("Type", "type !== ''", "type = ''") {
+			<input
+				type="text"
+				placeholder="actor.Started"
+				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
+				x-bind:value="type"
+				@focusout="type = $el.value"
+			/>
+		}
+	</div>
+}
+
+templ eventsFilterItem(label string, show string, clear string) {
+	<div class="join-item indicator">
+		<span class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0" x-cloak x-show={ show } @click={ clear }>
+			@closeIcon("inline-block w-4 h-4 stroke-current")
+		</span>
+		<div class="dropdown">
+			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation rounded-none">{ label }</div>
+			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-box w-64">
+				{ children... }
+			</div>
+		</div>
 	</div>
 }
 
