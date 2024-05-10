@@ -40,7 +40,7 @@ type RspGetProjectEvents struct {
 
 type MsgEventsListenStart struct {
 	ID  string
-	SSE chan<- string
+	SSE chan<- any
 }
 
 type MsgEventsListenStop struct {
@@ -48,3 +48,15 @@ type MsgEventsListenStop struct {
 }
 
 type MsgListenerSendBatch struct{}
+
+type MsgSsePing struct{}
+
+type MsgSseNewActor struct {
+	ActorProps types.ProjectActorProps
+}
+
+type MsgSseNewEvents struct {
+	ActorPID   string
+	NumEvents  int32
+	ActorAlive bool
+}

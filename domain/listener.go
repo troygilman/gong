@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"gong/types"
-	"gong/view"
 	"io"
 	"strings"
 	"time"
@@ -23,12 +22,12 @@ const (
 
 type listener struct {
 	projectID uuid.UUID
-	sse       chan<- string
+	sse       chan<- any
 	batch     map[string]types.EventList
 	timerStop chan<- struct{}
 }
 
-func newListener(projectID uuid.UUID, sse chan<- string) actor.Producer {
+func newListener(projectID uuid.UUID, sse chan<- any) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
 			projectID: projectID,
@@ -77,46 +76,35 @@ func (l *listener) receive(ctx *actor.Context) error {
 		l.batch[event.Event.PID] = events
 
 	case MsgListenerSendBatch:
-		builder := &strings.Builder{}
 		for pid, events := range l.batch {
-			err := func() error {
-				var sseType string = types.SseTypeNewEvents
-				var numEvents int32
-				var actorAlive bool
+			var sseType string = types.SseTypeNewEvents
+			var numEvents int32
+			var actorAlive bool
 
-				if len(events) > 0 {
-					numEvents = events[len(events)-1].Index + 1
-					actorAlive = isActorAlive(events[len(events)-1].MsgType)
-					if events[0].Index == 0 {
-						sseType = types.SseTypeNewActor
-					}
+			if len(events) > 0 {
+				numEvents = events[len(events)-1].Index + 1
+				actorAlive = isActorAlive(events[len(events)-1].MsgType)
+				if events[0].Index == 0 {
+					sseType = types.SseTypeNewActor
 				}
+			}
 
-				switch sseType {
-				case types.SseTypeNewActor:
-					props := types.ProjectActorProps{
-						PID:       pid,
-						NumEvents: int32(len(events)),
-						Alive:     actorAlive,
-					}
-					if err := writeServerSentEvent(ctx.Context(), builder, types.SseTypeNewActor, view.ProjectActorListItem(props, l.projectID)); err != nil {
-						return err
-					}
-				case types.SseTypeNewEvents:
-					if err := writeServerSentEvent(ctx.Context(), builder, types.SseTypeUpdateActorNumEvents+pid, view.ProjectActorBadge(pid, numEvents, actorAlive)); err != nil {
-						return err
-					}
-				case types.SseTypeDeleteActor:
-					if err := writeServerSentEvent(ctx.Context(), builder, types.SseTypeDeleteActor+pid, nil); err != nil {
-						return err
-					}
+			switch sseType {
+			case types.SseTypeNewActor:
+				props := types.ProjectActorProps{
+					PID:       pid,
+					NumEvents: int32(len(events)),
+					Alive:     actorAlive,
 				}
-
-				return nil
-			}()
-
-			if err != nil {
-				return fmt.Errorf("error while writing SSE: %s", err.Error())
+				l.sse <- MsgSseNewActor{
+					ActorProps: props,
+				}
+			case types.SseTypeNewEvents:
+				l.sse <- MsgSseNewEvents{
+					ActorPID:   pid,
+					NumEvents:  numEvents,
+					ActorAlive: actorAlive,
+				}
 			}
 		}
 
@@ -124,11 +112,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 			delete(l.batch, pid)
 		}
 
-		if err := writeServerSentEvent(ctx.Context(), builder, "ping", nil); err != nil {
-			return err
-		}
-
-		l.sse <- builder.String()
+		l.sse <- MsgSsePing{}
 	}
 
 	return nil

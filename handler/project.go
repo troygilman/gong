@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"gong/domain"
 	"gong/sdk"
+	"gong/types"
 	"gong/view"
 	"log"
 	"net/http"
@@ -170,7 +170,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
-	sse := make(chan string, 100)
+	sse := make(chan any, 100)
 	app.Engine().Send(projectPID, domain.MsgEventsListenStart{
 		ID:  requestID(ctx),
 		SSE: sse,
@@ -181,8 +181,19 @@ func ConnectProjectSSE(ctx echo.Context) error {
 	})
 
 	for msg := range sse {
-		if _, err := fmt.Fprint(ctx.Response().Writer, msg); err != nil {
-			return fmt.Errorf("error while writing SSE: %s", err.Error())
+		switch msg := msg.(type) {
+		case domain.MsgSsePing:
+			if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
+				return err
+			}
+		case domain.MsgSseNewActor:
+			if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
+				return err
+			}
+		case domain.MsgSseNewEvents:
+			if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
+				return err
+			}
 		}
 		flusher.Flush()
 	}
