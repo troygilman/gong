@@ -170,7 +170,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
-	sse := make(chan any, 100)
+	sse := make(chan domain.MsgSse, 100)
 	app.Engine().Send(projectPID, domain.MsgEventsListenStart{
 		ID:  requestID(ctx),
 		SSE: sse,
@@ -180,19 +180,21 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		ID: requestID(ctx),
 	})
 
-	for msg := range sse {
-		switch msg := msg.(type) {
-		case domain.MsgSsePing:
-			if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
-				return err
-			}
-		case domain.MsgSseNewActor:
-			if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
-				return err
-			}
-		case domain.MsgSseNewEvents:
-			if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
-				return err
+	for msgs := range sse {
+		for _, msg := range msgs.Msgs {
+			switch msg := msg.(type) {
+			case domain.MsgSsePing:
+				if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
+					return err
+				}
+			case domain.MsgSseNewActor:
+				if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
+					return err
+				}
+			case domain.MsgSseNewEvents:
+				if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
+					return err
+				}
 			}
 		}
 		flusher.Flush()

@@ -22,12 +22,12 @@ const (
 
 type listener struct {
 	projectID uuid.UUID
-	sse       chan<- any
+	sse       chan<- MsgSse
 	batch     map[string]types.EventList
 	timerStop chan<- struct{}
 }
 
-func newListener(projectID uuid.UUID, sse chan<- any) actor.Producer {
+func newListener(projectID uuid.UUID, sse chan<- MsgSse) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
 			projectID: projectID,
@@ -76,6 +76,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 		l.batch[event.Event.PID] = events
 
 	case MsgListenerSendBatch:
+		msgs := make([]any, 0)
 		for pid, events := range l.batch {
 			var sseType string = types.SseTypeNewEvents
 			var numEvents int32
@@ -96,15 +97,15 @@ func (l *listener) receive(ctx *actor.Context) error {
 					NumEvents: int32(len(events)),
 					Alive:     actorAlive,
 				}
-				l.sse <- MsgSseNewActor{
+				msgs = append(msgs, MsgSseNewActor{
 					ActorProps: props,
-				}
+				})
 			case types.SseTypeNewEvents:
-				l.sse <- MsgSseNewEvents{
+				msgs = append(msgs, MsgSseNewEvents{
 					ActorPID:   pid,
 					NumEvents:  numEvents,
 					ActorAlive: actorAlive,
-				}
+				})
 			}
 		}
 
@@ -112,7 +113,11 @@ func (l *listener) receive(ctx *actor.Context) error {
 			delete(l.batch, pid)
 		}
 
-		l.sse <- MsgSsePing{}
+		msgs = append(msgs, MsgSsePing{})
+
+		l.sse <- MsgSse{
+			Msgs: msgs,
+		}
 	}
 
 	return nil
