@@ -39,8 +39,7 @@ type RspGetProjectEvents struct {
 }
 
 type MsgEventsListenStart struct {
-	ID  string
-	SSE chan<- MsgSse
+	ID string
 }
 
 type MsgEventsListenStop struct {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -170,36 +171,40 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
-	sse := make(chan domain.MsgSse, 100)
-	app.Engine().Send(projectPID, domain.MsgEventsListenStart{
-		ID:  requestID(ctx),
-		SSE: sse,
-	})
-
-	defer app.Engine().Send(projectPID, domain.MsgEventsListenStop{
-		ID: requestID(ctx),
-	})
-
-	for msgs := range sse {
-		for _, msg := range msgs.Msgs {
-			switch msg := msg.(type) {
-			case domain.MsgSsePing:
-				if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
-					return err
-				}
-			case domain.MsgSseNewActor:
-				if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
-					return err
-				}
-			case domain.MsgSseNewEvents:
-				if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
-					return err
+	done := make(chan error)
+	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
+		switch msg := actorCtx.Message().(type) {
+		case actor.Started:
+			actorCtx.Send(projectPID, domain.MsgEventsListenStart{ID: requestID(ctx)})
+		case actor.Stopped:
+			actorCtx.Send(projectPID, domain.MsgEventsListenStop{ID: requestID(ctx)})
+		case domain.MsgSse:
+			if msg.Msgs == nil {
+				done <- nil
+			}
+			for _, msg := range msg.Msgs {
+				switch msg := msg.(type) {
+				case domain.MsgSsePing:
+					if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
+						done <- err
+					}
+				case domain.MsgSseNewActor:
+					if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
+						done <- err
+					}
+				case domain.MsgSseNewEvents:
+					if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
+						done <- err
+					}
 				}
 			}
+			flusher.Flush()
 		}
-		flusher.Flush()
-	}
-	return nil
+	}, "sse-handler", actor.WithID(requestID(ctx)))
+
+	err = <-done
+	app.Engine().Poison(pid)
+	return err
 }
 
 var upgrader = websocket.Upgrader{}

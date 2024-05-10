@@ -22,16 +22,16 @@ const (
 
 type listener struct {
 	projectID uuid.UUID
-	sse       chan<- MsgSse
+	consumer  *actor.PID
 	batch     map[string]types.EventList
 	timerStop chan<- struct{}
 }
 
-func newListener(projectID uuid.UUID, sse chan<- MsgSse) actor.Producer {
+func newListener(projectID uuid.UUID, consumer *actor.PID) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
 			projectID: projectID,
-			sse:       sse,
+			consumer:  consumer,
 			batch:     make(map[string]types.EventList),
 		}
 	}
@@ -67,7 +67,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 
 	case actor.Stopped:
 		close(l.timerStop)
-		close(l.sse)
+		ctx.Send(l.consumer, MsgSse{})
 
 	case MsgEvent:
 		event := msg.Event
@@ -115,9 +115,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 
 		msgs = append(msgs, MsgSsePing{})
 
-		l.sse <- MsgSse{
-			Msgs: msgs,
-		}
+		ctx.Send(l.consumer, MsgSse{Msgs: msgs})
 	}
 
 	return nil

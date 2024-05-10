@@ -108,7 +108,7 @@ func (p *project) receive(ctx *actor.Context) error {
 			})
 		}
 	case MsgEventsListenStart:
-		pid := ctx.Engine().Spawn(newListener(p.id, msg.SSE), ActorKindListener)
+		pid := ctx.Engine().Spawn(newListener(p.id, ctx.Sender()), ActorKindListener)
 		p.listeners[msg.ID] = pid
 	case MsgEventsListenStop:
 		pid, ok := p.listeners[msg.ID]
