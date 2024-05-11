@@ -38,11 +38,13 @@ func run() error {
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 
-	e.GET("/project/:projectID", handler.GetProject)
-	e.GET("/project/:projectID/actor", handler.GetProjectActor)
-	e.GET("/project/:projectID/events", handler.GetProjectEvents)
-	e.GET("/project/:projectID/connect", handler.ConnectProject)
-	e.GET("/project/:projectID/sse", handler.ConnectProjectSSE)
+	newGroup(e, "/project/:projectID", func(e *echo.Group) {
+		e.GET("", handler.GetProject)
+		e.GET("/actor", handler.GetProjectActor)
+		e.GET("/events", handler.GetProjectEvents)
+		e.GET("/sse", handler.ConnectProjectSSE)
+		e.GET("/connect", handler.ConnectProject)
+	}, handler.MiddlewareProjectContext())
 
 	return e.Start(":8080")
 }
@@ -58,7 +60,7 @@ type groupable interface {
 	Group(string, ...echo.MiddlewareFunc) *echo.Group
 }
 
-func newGroup(e groupable, path string, f func(group *echo.Group), middlewares ...echo.MiddlewareFunc) {
+func newGroup(e groupable, path string, f func(e *echo.Group), middlewares ...echo.MiddlewareFunc) {
 	group := e.Group(path, middlewares...)
 	f(group)
 }

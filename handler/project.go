@@ -13,7 +13,6 @@ import (
 	"strconv"
 
 	"github.com/anthdm/hollywood/actor"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/troygilman0/utils"
@@ -21,11 +20,7 @@ import (
 
 func GetProject(ctx echo.Context) error {
 	app := mustApp(ctx)
-
-	projectID, err := uuid.Parse(ctx.Param("projectID"))
-	if err != nil {
-		return err
-	}
+	projectID := mustProjectID(ctx)
 
 	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
 	if err != nil {
@@ -40,7 +35,7 @@ func GetProject(ctx echo.Context) error {
 
 	return renderView(
 		ctx,
-		buildContext(ctx).with(types.CtxProject, projectID).build(),
+		ctx.Request().Context(),
 		view.Project(response.Props, -1),
 	)
 }
@@ -48,24 +43,15 @@ func GetProject(ctx echo.Context) error {
 func GetProjectActor(ctx echo.Context) error {
 	app := mustApp(ctx)
 
-	projectID, err := uuid.Parse(ctx.Param("projectID"))
-	if err != nil {
-		return err
-	}
-
-	actorPID := ctx.QueryParam("pid")
-	if actorPID == "" {
-		return errors.New("actor must be non-empty")
-	}
-
-	tab := ctx.QueryParam("tab")
-	if tab == "" {
-		tab = "Events"
-	}
-
+	projectID := mustProjectID(ctx)
 	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
 	if err != nil {
 		return err
+	}
+
+	actorPID, ok := actorPID(ctx)
+	if !ok {
+		return errors.New("actorPID is empty")
 	}
 
 	msg := domain.MsgGetProjectActorProps{
@@ -80,7 +66,7 @@ func GetProjectActor(ctx echo.Context) error {
 
 	return renderView(
 		ctx,
-		buildContext(ctx).with(types.CtxProject, projectID).with(types.CtxPID, actorPID).with(types.CtxTab, tab).build(),
+		ctx.Request().Context(),
 		view.ActorContent(projectID, response.Props),
 	)
 }
@@ -88,14 +74,15 @@ func GetProjectActor(ctx echo.Context) error {
 func GetProjectEvents(ctx echo.Context) error {
 	app := mustApp(ctx)
 
-	projectID, err := uuid.Parse(ctx.Param("projectID"))
+	projectID := mustProjectID(ctx)
+	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
 	if err != nil {
 		return err
 	}
 
-	actorPID := ctx.QueryParam("pid")
-	if actorPID == "" {
-		return errors.New("'pid' must be non-empty")
+	actorPID, ok := actorPID(ctx)
+	if !ok {
+		return errors.New("actorPID is empty")
 	}
 
 	startIdx, err := strconv.Atoi(ctx.QueryParam("start"))
@@ -113,11 +100,6 @@ func GetProjectEvents(ctx echo.Context) error {
 		return errors.New("'n' must be non-empty")
 	}
 	appendEnd := n > 0
-
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
 
 	msg := domain.MsgGetProjectEvents{
 		ActorPID: actorPID,
@@ -163,7 +145,7 @@ func GetProjectEvents(ctx echo.Context) error {
 
 	return renderView(
 		ctx,
-		buildContext(ctx).with(types.CtxProject, projectID).with(types.CtxPID, actorPID).build(),
+		ctx.Request().Context(),
 		view.ProjectActorEvents(projectID, actorPID, response.Events, deleteIdxs, int32(newStartIdx), int32(newEndIdx), appendEnd, moreEvents),
 	)
 }
@@ -177,20 +159,15 @@ func ConnectProjectSSE(ctx echo.Context) error {
 
 	app := mustApp(ctx)
 
-	projectID, err := uuid.Parse(ctx.Param("projectID"))
-	if err != nil {
-		return err
-	}
-
+	projectID := mustProjectID(ctx)
 	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
 	if err != nil {
 		return err
 	}
 
 	writer := ctx.Response().Writer
-	cb := buildContext(ctx).with(types.CtxProject, projectID)
-
 	done := make(chan error)
+
 	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
 		switch msg := actorCtx.Message().(type) {
 		case actor.Started:
@@ -204,15 +181,30 @@ func ConnectProjectSSE(ctx echo.Context) error {
 			for _, msg := range msg.Msgs {
 				switch msg := msg.(type) {
 				case domain.MsgSsePing:
-					if err := writeServerSentEvent(cb.build(), writer, "ping", nil); err != nil {
+					if err := writeServerSentEvent(
+						ctx.Request().Context(),
+						writer,
+						"ping",
+						nil,
+					); err != nil {
 						done <- err
 					}
 				case domain.MsgSseNewActor:
-					if err := writeServerSentEvent(cb.build(), writer, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
+					if err := writeServerSentEvent(
+						ctx.Request().Context(),
+						writer,
+						types.SseTypeNewActor,
+						view.ProjectActorListItem(msg.ActorProps, projectID),
+					); err != nil {
 						done <- err
 					}
 				case domain.MsgSseNewEvents:
-					if err := writeServerSentEvent(cb.build(), writer, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
+					if err := writeServerSentEvent(
+						ctx.Request().Context(),
+						writer,
+						types.SseTypeUpdateActorNumEvents+msg.ActorPID,
+						view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive),
+					); err != nil {
 						done <- err
 					}
 				}
@@ -231,11 +223,7 @@ var upgrader = websocket.Upgrader{}
 func ConnectProject(ctx echo.Context) error {
 	app := mustApp(ctx)
 
-	projectID, err := uuid.Parse(ctx.Param("projectID"))
-	if err != nil {
-		return err
-	}
-
+	projectID := mustProjectID(ctx)
 	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
 	if err != nil {
 		return err

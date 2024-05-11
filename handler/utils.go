@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -53,6 +54,20 @@ func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data a
 
 func requestID(ctx echo.Context) string {
 	return ctx.Response().Header().Get(echo.HeaderXRequestID)
+}
+
+func mustProjectID(ctx echo.Context) uuid.UUID {
+	return ctx.Request().Context().Value(types.CtxProject).(uuid.UUID)
+}
+
+func actorPID(ctx echo.Context) (string, bool) {
+	actorPID, ok := ctx.Request().Context().Value(types.CtxPID).(string)
+	return actorPID, ok
+}
+
+func tab(ctx echo.Context) (string, bool) {
+	tab, ok := ctx.Request().Context().Value(types.CtxTab).(string)
+	return tab, ok
 }
 
 type contextBuilder struct {
