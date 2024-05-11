@@ -48,26 +48,26 @@ func MiddlewareJWT(app domain.App) echo.MiddlewareFunc {
 func MiddlewareProjectContext() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			cb := buildContext(ctx)
+			cb := types.NewContextBuilder(ctx.Request().Context())
 
 			projectID, err := uuid.Parse(ctx.Param("projectID"))
 			if err != nil {
 				return errors.New("projectID is empty")
 			}
-			cb = cb.with(types.CtxProject, projectID)
+			cb = cb.With(types.CtxProject, projectID)
 
 			actorPID := ctx.QueryParam("pid")
 			if actorPID != "" {
-				cb = cb.with(types.CtxPID, actorPID)
+				cb = cb.With(types.CtxPID, actorPID)
 			}
 
 			tab := ctx.QueryParam("tab")
 			if tab == "" {
 				tab = "Events"
 			}
-			cb = cb.with(types.CtxTab, tab)
+			cb = cb.With(types.CtxTab, tab)
 
-			ctx.SetRequest(ctx.Request().WithContext(cb.build()))
+			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}
 	}

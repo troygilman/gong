@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"gong/sdk"
 	"sort"
 
@@ -40,6 +41,25 @@ func (l *EventList) Push(e Event) {
 	*l = append(*l, Event{})
 	copy((*l)[i+1:], (*l)[i:])
 	(*l)[i] = e
+}
+
+type ContextBuilder struct {
+	ctx context.Context
+}
+
+func NewContextBuilder(ctx context.Context) ContextBuilder {
+	return ContextBuilder{
+		ctx: ctx,
+	}
+}
+
+func (cb ContextBuilder) With(key CtxKey, val any) ContextBuilder {
+	cb.ctx = context.WithValue(cb.ctx, key, val)
+	return cb
+}
+
+func (cb ContextBuilder) Build() context.Context {
+	return cb.ctx
 }
 
 type ProjectProps struct {

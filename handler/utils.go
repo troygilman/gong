@@ -69,22 +69,3 @@ func tab(ctx echo.Context) (string, bool) {
 	tab, ok := ctx.Request().Context().Value(types.CtxTab).(string)
 	return tab, ok
 }
-
-type contextBuilder struct {
-	ctx context.Context
-}
-
-func buildContext(ctx echo.Context) contextBuilder {
-	return contextBuilder{
-		ctx: ctx.Request().Context(),
-	}
-}
-
-func (cb contextBuilder) with(key types.CtxKey, val any) contextBuilder {
-	cb.ctx = context.WithValue(cb.ctx, key, val)
-	return cb
-}
-
-func (cb contextBuilder) build() context.Context {
-	return cb.ctx
-}
