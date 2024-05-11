@@ -187,6 +187,9 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		return err
 	}
 
+	writer := ctx.Response().Writer
+	cb := buildContext(ctx).with(types.CtxProject, projectID)
+
 	done := make(chan error)
 	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
 		switch msg := actorCtx.Message().(type) {
@@ -201,15 +204,15 @@ func ConnectProjectSSE(ctx echo.Context) error {
 			for _, msg := range msg.Msgs {
 				switch msg := msg.(type) {
 				case domain.MsgSsePing:
-					if err := writeServerSentEvent(ctx, "ping", nil); err != nil {
+					if err := writeServerSentEvent(cb.build(), writer, "ping", nil); err != nil {
 						done <- err
 					}
 				case domain.MsgSseNewActor:
-					if err := writeServerSentEvent(ctx, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
+					if err := writeServerSentEvent(cb.build(), writer, types.SseTypeNewActor, view.ProjectActorListItem(msg.ActorProps, projectID)); err != nil {
 						done <- err
 					}
 				case domain.MsgSseNewEvents:
-					if err := writeServerSentEvent(ctx, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
+					if err := writeServerSentEvent(cb.build(), writer, types.SseTypeUpdateActorNumEvents+msg.ActorPID, view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive)); err != nil {
 						done <- err
 					}
 				}

@@ -8,7 +8,7 @@ import (
 
 templ Project(props types.ProjectProps, actorIndex int) {
 	@Index() {
-		@initStore("", tabLabelEvents)
+		@initProject()
 		<div
  			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
  			hx-ext="sse"
@@ -27,29 +27,31 @@ templ Project(props types.ProjectProps, actorIndex int) {
 					</ul>
 				</div>
 			</div>
-			<div
- 				class="flex flex-row grow min-w-full min-h-0"
- 				x-init={ fmt.Sprintf("$watch('$store.params.params.pid', pid => updateActor('%s', pid))", props.ID.String()) }
-			>
+			<div class="flex flex-row grow min-w-full min-h-0">
 				<div class="flex flex-col w-64 h-full border-r border-neutral">
 					<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
 					<div class="divider divider-neutral px-6 m-0"></div>
 					<ul
- 						id="actors"
+ 						id="actor-list"
  						class="menu menu-sm"
  						sse-swap={ types.SseTypeNewActor }
  						hx-swap="afterbegin"
+ 						x-data="{ active: ''}"
 					>
+						<script>
+							function resetActive() {
+								console.log("resetActive")
+								const activeElem = document.getElementById('actor-list').querySelector('.active');
+								if (activeElem) {
+									activeElem.classList.remove('active');
+								}
+							}
+						</script>
 						for _, actorProps := range props.ActorProps {
 							@ProjectActorListItem(actorProps, props.ID)
 						}
 					</ul>
 				</div>
-				<script>
-					function updateActor(projectID, pid) {
-						htmx.ajax("GET", "/project/" + projectID + "/actor?pid=" + pid, {target:'#actor-content', swap:'outerHTML'});
-					}
-				</script>
 				if actorIndex >= 0 {
 					@ActorContent(props.ID, props.ActorProps[actorIndex])
 				} else {
@@ -60,29 +62,30 @@ templ Project(props types.ProjectProps, actorIndex int) {
 	}
 }
 
+script initProject() {
+	window.addEventListener("popstate", (e) => {
+    	if(e.state && e.state.html){
+     		document.body.innerHTML = e.state.html;
+       		htmx.process(document.body);
+    	}
+	});
+}
+
 templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	<li
  		class="max-w-full"
- 		hx-get={ fmt.Sprintf("/project/%s/actor?pid=%s", projectID.String(), props.PID) }
+ 		hx-get={ formatActorUrl(context.WithValue(ctx, types.CtxPID, props.PID)) }
+ 		hx-swap="none"
  		sse-swap={ types.SseTypeDeleteActor + props.PID }
- 		hx-swap="outerHTML"
 	>
 		<a
  			class="flex flex-row items-center justify-between w-full"
- 			:class={ fmt.Sprintf("$store.params.get('pid') === '%s' ? 'active' : ''", props.PID) }
+ 			@click="resetActive(); $el.classList.add('active');"
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
 			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
 		</a>
 	</li>
-}
-
-script initStore(pid string, tab string) {
-	window.addEventListener("popstate", (e) => {
-    	if(e.state && e.state.html){
-     		document.body.innerHTML = e.state.html;
-    	}
-	});
 }
 
 const (
@@ -130,6 +133,7 @@ templ actorTab(projectID uuid.UUID, actorPID string, label string) {
 			class="tab"
 		}
  		hx-get={ fmt.Sprintf("/project/%s/actor?pid=%s&tab=%s", projectID.String(), actorPID, label) }
+ 		hx-trigger="click"
  		hx-target="#actor-content"
 	>{ label }</a>
 }

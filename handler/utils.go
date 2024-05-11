@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gong/domain"
 	"gong/types"
+	"io"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -24,7 +25,7 @@ func renderView(echoCtx echo.Context, ctx context.Context, view templ.Component)
 	return view.Render(ctx, echoCtx.Response())
 }
 
-func writeServerSentEvent(ctx echo.Context, event string, data any) error {
+func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data any) error {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("event: %s\n", event))
 
@@ -32,7 +33,7 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 	switch data := data.(type) {
 	case templ.Component:
 		buff := bytes.NewBuffer([]byte{})
-		if err := data.Render(ctx.Request().Context(), buff); err != nil {
+		if err := data.Render(ctx, buff); err != nil {
 			return err
 		}
 		d = strings.ReplaceAll(buff.String(), "\n", "")
@@ -43,7 +44,7 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 	}
 
 	sb.WriteString(fmt.Sprintf("data: %s\n\n", d))
-	if _, err := fmt.Fprint(ctx.Response().Writer, sb.String()); err != nil {
+	if _, err := fmt.Fprint(w, sb.String()); err != nil {
 		return err
 	}
 
