@@ -81,7 +81,7 @@ func GetProjectActor(ctx echo.Context) error {
 	return renderView(
 		ctx,
 		buildContext(ctx).with(types.CtxProject, projectID).with(types.CtxPID, actorPID).with(types.CtxTab, tab).build(),
-		view.ActorContent(projectID, response.Props, tab),
+		view.ActorContent(projectID, response.Props),
 	)
 }
 

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"gong/types"
-	"strings"
-	"net/url"
 )
 
 templ Project(props types.ProjectProps, actorIndex int) {
@@ -53,13 +51,30 @@ templ Project(props types.ProjectProps, actorIndex int) {
 					}
 				</script>
 				if actorIndex >= 0 {
-					@ActorContent(props.ID, props.ActorProps[actorIndex], "Events")
+					@ActorContent(props.ID, props.ActorProps[actorIndex])
 				} else {
-					@ActorContent(props.ID, types.ProjectActorProps{}, "Events")
+					@ActorContent(props.ID, types.ProjectActorProps{})
 				}
 			</div>
 		</div>
 	}
+}
+
+templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
+	<li
+ 		class="max-w-full"
+ 		hx-get={ fmt.Sprintf("/project/%s/actor?pid=%s", projectID.String(), props.PID) }
+ 		sse-swap={ types.SseTypeDeleteActor + props.PID }
+ 		hx-swap="outerHTML"
+	>
+		<a
+ 			class="flex flex-row items-center justify-between w-full"
+ 			:class={ fmt.Sprintf("$store.params.get('pid') === '%s' ? 'active' : ''", props.PID) }
+		>
+			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
+			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
+		</a>
+	</li>
 }
 
 script initStore(pid string, tab string) {
@@ -76,24 +91,26 @@ const (
 )
 
 script onActorContentLoad(url string) {
-	history.pushState({html: document.body.innerHTML}, '', url);
+	console.log("onActorContentLoad", url);
+	history.pushState({html: document.body.innerHTML}, "", url);
 }
 
-templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps, tab string) {
+templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 	<div
  		id="actor-content"
  		class="flex flex-col grow max-h-full min-h-full min-w-0"
-   		onload={ onActorContentLoad(formatURL(ctx)) }
+ 		hx-swap-oob="true"
 	>
+		@onActorContentLoad(formatUrl(ctx))
 		<div class="p-2 font-bold">{ props.PID }</div>
 		<div
  			role="tablist"
  			class="tabs tabs-bordered"
 		>
-			@actorTab(projectID, props.PID, tabLabelEvents, tab)
-			@actorTab(projectID, props.PID, tabLabelTest, tab)
+			@actorTab(projectID, props.PID, tabLabelEvents)
+			@actorTab(projectID, props.PID, tabLabelTest)
 		</div>
-		@actorTabContent(tabLabelEvents, tab) {
+		@actorTabContent(tabLabelEvents) {
 			if filter, ok := ctx.Value(types.CtxFilter).(EventsFilter); ok {
 				@eventsFilter(filter)
 			} else {
@@ -104,10 +121,10 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps, tab strin
 	</div>
 }
 
-templ actorTab(projectID uuid.UUID, actorPID string, label string, activeTab string) {
+templ actorTab(projectID uuid.UUID, actorPID string, label string) {
 	<a
  		role="tab"
- 		if label == activeTab {
+ 		if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && activeTab == label {
 			class="tab tab-active"
 		} else {
 			class="tab"
@@ -117,32 +134,14 @@ templ actorTab(projectID uuid.UUID, actorPID string, label string, activeTab str
 	>{ label }</a>
 }
 
-templ actorTabContent(label string, activeTab string) {
-	if label == activeTab {
+templ actorTabContent(label string) {
+	if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && label == activeTab {
 		<div
  			class="flex flex-col grow min-h-0"
 		>
 			{ children... }
 		</div>
 	}
-}
-
-templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
-	<li
- 		class="max-w-full"
- 		sse-swap={ types.SseTypeDeleteActor + props.PID }
- 		hx-swap="outerHTML"
- 		@click={ fmt.Sprintf("$store.params.set('pid', '%s')", props.PID) }
-	>
-		<a
- 			class="flex flex-row items-center justify-between w-full"
- 			:class={ fmt.Sprintf("$store.params.get('pid') === '%s' ? 'active' : ''", props.PID)}
-
->
-			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
-			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
-		</a>
-	</li>
 }
 
 templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
@@ -157,28 +156,4 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 			{ fmt.Sprintf("%d", numEvents) }
 		}
 	</div>
-}
-
-func contextToValues(ctx context.Context) url.Values {
-	values := url.Values{}
-	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
-		values.Set("pid", pid)
-	}
-	if tab, ok := ctx.Value(types.CtxTab).(string); ok {
-		values.Set("tab", tab)
-	}
-	if filter, ok := ctx.Value(types.CtxFilter).(EventsFilter); ok {
-		filter.setValues(values)
-	}
-	return values
-}
-
-func formatUrl(ctx context.Context) string {
-	values := contextToValues(ctx)
-	return fmt.Sprintf("/project/%s?%s", ctx.Value(types.CtxProject).(uuid.UUID).String(), values.Encode())
-}
-
-func formatActorUrl(ctx context.Context) string {
-	values := contextToValues(ctx)
-	return fmt.Sprintf("/project/%s/actor?%s", ctx.Value(types.CtxProject).(uuid.UUID).String(), values.Encode())
 }
