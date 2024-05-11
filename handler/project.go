@@ -38,7 +38,11 @@ func GetProject(ctx echo.Context) error {
 		return err
 	}
 
-	return renderView(ctx, view.Project(response.Props, -1))
+	return renderView(
+		ctx,
+		buildContext(ctx).with(types.CtxProject, projectID).build(),
+		view.Project(response.Props, -1),
+	)
 }
 
 func GetProjectActor(ctx echo.Context) error {
@@ -52,6 +56,11 @@ func GetProjectActor(ctx echo.Context) error {
 	actorPID := ctx.QueryParam("pid")
 	if actorPID == "" {
 		return errors.New("actor must be non-empty")
+	}
+
+	tab := ctx.QueryParam("tab")
+	if tab == "" {
+		tab = "Events"
 	}
 
 	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
@@ -69,7 +78,11 @@ func GetProjectActor(ctx echo.Context) error {
 		return err
 	}
 
-	return renderView(ctx, view.ActorContent(projectID, response.Props))
+	return renderView(
+		ctx,
+		buildContext(ctx).with(types.CtxProject, projectID).with(types.CtxPID, actorPID).with(types.CtxTab, tab).build(),
+		view.ActorContent(projectID, response.Props, tab),
+	)
 }
 
 func GetProjectEvents(ctx echo.Context) error {
@@ -148,8 +161,11 @@ func GetProjectEvents(ctx echo.Context) error {
 
 	moreEvents := int32(newEndIdx) < response.NumTotalEvents-1
 
-	log.Println(len(response.Events), deleteIdxs, newStartIdx, newEndIdx, appendEnd)
-	return renderView(ctx, view.ProjectActorEvents(projectID, actorPID, response.Events, deleteIdxs, int32(newStartIdx), int32(newEndIdx), appendEnd, moreEvents))
+	return renderView(
+		ctx,
+		buildContext(ctx).with(types.CtxProject, projectID).with(types.CtxPID, actorPID).build(),
+		view.ProjectActorEvents(projectID, actorPID, response.Events, deleteIdxs, int32(newStartIdx), int32(newEndIdx), appendEnd, moreEvents),
+	)
 }
 
 func ConnectProjectSSE(ctx echo.Context) error {

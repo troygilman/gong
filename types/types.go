@@ -14,6 +14,15 @@ const (
 	SseTypeUpdateActorNumEvents = "update-actor-num-events:"
 )
 
+type CtxKey string
+
+const (
+	CtxProject CtxKey = "project"
+	CtxPID     CtxKey = "pid"
+	CtxTab     CtxKey = "tab"
+	CtxFilter  CtxKey = "filter"
+)
+
 type Event struct {
 	ProjectID uuid.UUID
 	Session   int32
