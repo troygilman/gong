@@ -67,7 +67,7 @@ func GetProjectActor(ctx echo.Context) error {
 	return renderView(
 		ctx,
 		ctx.Request().Context(),
-		view.ActorContent(projectID, response.Props),
+		view.ProjectActor(response.Props),
 	)
 }
 
@@ -194,7 +194,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 						ctx.Request().Context(),
 						writer,
 						types.SseTypeNewActor,
-						view.ProjectActorListItem(msg.ActorProps, projectID),
+						view.ProjectActorListItem(msg.ActorProps, false),
 					); err != nil {
 						done <- err
 					}

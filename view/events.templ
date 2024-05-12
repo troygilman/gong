@@ -21,7 +21,7 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
  		id="events-container"
  		class="grow min-h-0 max-w-full overflow-x-auto"
  		x-data="{ scrollTop: 0 }"
- 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(ctx)) }
+ 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
 	>
 		<script>
 			function handleScroll(pid, { scrollTop }) {
@@ -137,7 +137,7 @@ templ eventsFilterItem(label string, name string, active bool) {
 
 templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents bool) {
 	<tr
- 		id={ "events-top-data-loader-" + formatActorPID(ctx) }
+ 		id={ "events-top-data-loader-" + formatActorPIDCtx(ctx) }
  		hx-get={ formatProjectUrl(ctx, "/events") }
  		hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, 10) }
  		hx-include={ includes }
@@ -163,7 +163,7 @@ templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents boo
 templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
 	if startIdx > 0 {
 		<tr
- 			id={ "events-bottom-data-loader-" + formatActorPID(ctx) }
+ 			id={ "events-bottom-data-loader-" + formatActorPIDCtx(ctx) }
  			hx-get={ formatProjectUrl(ctx, "/events") }
  			hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, -10) }
  			hx-include={ includes }
@@ -174,15 +174,19 @@ templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
 			}
 		></tr>
 	} else {
-		<tr id={ "events-bottom-data-loader-" + formatActorPID(ctx) }></tr>
+		<tr id={ "events-bottom-data-loader-" + formatActorPIDCtx(ctx) }></tr>
 	}
 }
 
-func formatActorPID(ctx context.Context) string {
+func formatActorPIDCtx(ctx context.Context) string {
 	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
-		return strings.ReplaceAll(pid, "/", "-")
+		return formatActorPID(pid)
 	}
 	return ""
+}
+
+func formatActorPID(pid string) string {
+	return strings.ReplaceAll(pid, "/", "-")
 }
 
 templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
