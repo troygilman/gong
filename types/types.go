@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"gong/sdk"
+	"net/url"
 	"sort"
 
 	"github.com/google/uuid"
@@ -71,4 +72,18 @@ type ProjectActorProps struct {
 	PID       string
 	NumEvents int32
 	Alive     bool
+}
+
+type EventsFilter struct {
+	Type   string
+	Sender string
+}
+
+func (f EventsFilter) SetValues(values url.Values) {
+	if f.Type != "" {
+		values.Set("filter_type", f.Type)
+	}
+	if f.Sender != "" {
+		values.Set("filter_sender", f.Sender)
+	}
 }

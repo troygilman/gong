@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"fmt"
 	"gong/types"
-	"net/url"
 	"strings"
 )
 
@@ -59,26 +58,12 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 	</div>
 }
 
-type EventsFilter struct {
-	Type   string
-	Sender string
-}
-
-func (f EventsFilter) setValues(values url.Values) {
-	if f.Type != "" {
-		values.Set("filter_type", f.Type)
-	}
-	if f.Sender != "" {
-		values.Set("filter_sender", f.Sender)
-	}
-}
-
-templ eventsFilter(filter EventsFilter) {
+templ eventsFilter(filter types.EventsFilter) {
 	<form
  		id="events-filter"
  		class="join border rounded-lg m-4 w-fit"
  		hx-get={ formatActorUrl(ctx) }
- 		hx-target={ "#actor-content" }
+ 		hx-include={ includes }
  		hx-trigger="submit"
 	>
 		<script>
@@ -88,8 +73,7 @@ templ eventsFilter(filter EventsFilter) {
 					if (input.value !== input.defaultValue) {
 						htmx.trigger('#events-filter', 'submit', {});
 					}
-
-}
+				}
 			}
 		</script>
 		@eventsFilterItem("Type", "filter_type", filter.Type != "") {
@@ -99,6 +83,7 @@ templ eventsFilter(filter EventsFilter) {
  				placeholder="actor.Started"
  				value={ filter.Type }
  				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
+ 				@keydown.enter="updateFilter()"
  				@focusout="updateFilter()"
 			/>
 		}
@@ -109,6 +94,7 @@ templ eventsFilter(filter EventsFilter) {
  				placeholder="actor.Started"
  				value={ filter.Sender }
  				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
+ 				@keydown.enter="updateFilter()"
  				@focusout="updateFilter()"
 			/>
 		}
@@ -121,8 +107,8 @@ templ eventsFilterItem(label string, name string, active bool) {
 			<span
  				class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0"
  				hx-get={ formatActorUrl(ctx) }
- 				hx-include={ "#events-filter" }
- 				hx-params={ fmt.Sprintf("not %s", name) }
+ 				hx-include={ includes }
+ 				hx-params={ "not " + name }
  				hx-trigger="click"
 			>
 				@closeIcon("inline-block w-4 h-4 stroke-current")

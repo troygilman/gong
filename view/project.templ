@@ -75,6 +75,8 @@ templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	<li
  		class="max-w-full"
  		hx-get={ formatActorUrl(context.WithValue(ctx, types.CtxPID, props.PID)) }
+ 		hx-include={ includes }
+ 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, props.PID) }
  		hx-swap="none"
  		sse-swap={ types.SseTypeDeleteActor + props.PID }
 	>
@@ -105,6 +107,8 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
  		hx-swap-oob="true"
 	>
 		@onActorContentLoad(formatUrl(ctx))
+		<input id="actor-pid" type="hidden" name="pid" value={ props.PID }/>
+		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
 		<div class="p-2 font-bold">{ props.PID }</div>
 		<div
  			role="tablist"
@@ -114,10 +118,10 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 			@actorTab(projectID, props.PID, tabLabelTest)
 		</div>
 		@actorTabContent(tabLabelEvents) {
-			if filter, ok := ctx.Value(types.CtxFilter).(EventsFilter); ok {
+			if filter, ok := ctx.Value(types.CtxFilter).(types.EventsFilter); ok {
 				@eventsFilter(filter)
 			} else {
-				@eventsFilter(EventsFilter{})
+				@eventsFilter(types.EventsFilter{})
 			}
 			@ProjectActorEventsContainer(projectID, props)
 		}
@@ -132,9 +136,10 @@ templ actorTab(projectID uuid.UUID, actorPID string, label string) {
 		} else {
 			class="tab"
 		}
- 		hx-get={ fmt.Sprintf("/project/%s/actor?pid=%s&tab=%s", projectID.String(), actorPID, label) }
+ 		hx-get={ formatActorUrl(context.WithValue(ctx, types.CtxTab, label)) }
+ 		hx-include={ includes }
+ 		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
  		hx-trigger="click"
- 		hx-target="#actor-content"
 	>{ label }</a>
 }
 
