@@ -28,30 +28,7 @@ templ Project(props types.ProjectProps, actorIndex int) {
 				</div>
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
-				<div class="flex flex-col w-64 h-full border-r border-neutral">
-					<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
-					<div class="divider divider-neutral px-6 m-0"></div>
-					<ul
- 						id="actor-list"
- 						class="menu menu-sm"
- 						sse-swap={ types.SseTypeNewActor }
- 						hx-swap="afterbegin"
- 						x-data="{ active: ''}"
-					>
-						<script>
-							function resetActive() {
-								console.log("resetActive")
-								const activeElem = document.getElementById('actor-list').querySelector('.active');
-								if (activeElem) {
-									activeElem.classList.remove('active');
-								}
-							}
-						</script>
-						for _, actorProps := range props.ActorProps {
-							@ProjectActorListItem(actorProps, props.ID)
-						}
-					</ul>
-				</div>
+				@ProjectActorList(props)
 				if actorIndex >= 0 {
 					@ActorContent(props.ID, props.ActorProps[actorIndex])
 				} else {
@@ -69,6 +46,33 @@ script initProject() {
        		htmx.process(document.body);
     	}
 	});
+}
+
+templ ProjectActorList(props types.ProjectProps) {
+	<div class="flex flex-col w-64 h-full border-r border-neutral">
+		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
+		<div class="divider divider-neutral px-6 m-0"></div>
+		<ul
+ 			id="actor-list"
+ 			class="menu menu-sm"
+ 			sse-swap={ types.SseTypeNewActor }
+ 			hx-swap="afterbegin"
+ 			x-data="{ active: ''}"
+		>
+			<script>
+				function resetActive() {
+					console.log("resetActive")
+					const activeElem = document.getElementById('actor-list').querySelector('.active');
+					if (activeElem) {
+						activeElem.classList.remove('active');
+					}
+				}
+			</script>
+			for _, actorProps := range props.ActorProps {
+				@ProjectActorListItem(actorProps, props.ID)
+			}
+		</ul>
+	</div>
 }
 
 templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
@@ -90,15 +94,24 @@ templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	</li>
 }
 
+templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
+	<div
+ 		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
+ 		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
+ 		hx-swap="outerHTML"
+	>
+		if numEvents > 999 {
+			{ "999+" }
+		} else {
+			{ fmt.Sprintf("%d", numEvents) }
+		}
+	</div>
+}
+
 const (
 	tabLabelEvents = "Events"
 	tabLabelTest   = "Test"
 )
-
-script onActorContentLoad(url string) {
-	console.log("onActorContentLoad", url);
-	history.pushState({html: document.body.innerHTML}, "", url);
-}
 
 templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 	<div
@@ -128,6 +141,11 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 	</div>
 }
 
+script onActorContentLoad(url string) {
+	console.log("onActorContentLoad", url);
+	history.pushState({html: document.body.innerHTML}, "", url);
+}
+
 templ actorTab(projectID uuid.UUID, actorPID string, label string) {
 	<a
  		role="tab"
@@ -140,6 +158,7 @@ templ actorTab(projectID uuid.UUID, actorPID string, label string) {
  		hx-include={ includes }
  		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
  		hx-trigger="click"
+ 		hx-swap="none"
 	>{ label }</a>
 }
 
@@ -151,18 +170,4 @@ templ actorTabContent(label string) {
 			{ children... }
 		</div>
 	}
-}
-
-templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
-	<div
- 		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
- 		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
- 		hx-swap="outerHTML"
-	>
-		if numEvents > 999 {
-			{ "999+" }
-		} else {
-			{ fmt.Sprintf("%d", numEvents) }
-		}
-	</div>
 }

@@ -65,6 +65,7 @@ templ eventsFilter(filter types.EventsFilter) {
  		hx-get={ formatActorUrl(ctx) }
  		hx-include={ includes }
  		hx-trigger="submit"
+ 		hx-swap="none"
 	>
 		<script>
 			function updateFilter() {
@@ -87,6 +88,7 @@ templ eventsFilter(filter types.EventsFilter) {
  				@focusout="updateFilter()"
 			/>
 		}
+		<div class="h-full border w-0"></div>
 		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "") {
 			<input
  				name="filter_sender"
@@ -110,6 +112,7 @@ templ eventsFilterItem(label string, name string, active bool) {
  				hx-include={ includes }
  				hx-params={ "not " + name }
  				hx-trigger="click"
+ 				hx-swap="none"
 			>
 				@closeIcon("inline-block w-4 h-4 stroke-current")
 			</span>
