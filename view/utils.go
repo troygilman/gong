@@ -24,14 +24,14 @@ func contextToValues(ctx context.Context) url.Values {
 	return values
 }
 
-func formatUrl(ctx context.Context) string {
+func formatProjectUrlWithParams(ctx context.Context) string {
 	values := contextToValues(ctx)
 	url := fmt.Sprintf("/project/%s?%s", ctx.Value(types.CtxProject).(uuid.UUID).String(), values.Encode())
 	return string(templ.URL(url))
 }
 
-func formatActorUrl(ctx context.Context) string {
-	url := fmt.Sprintf("/project/%s/actor", ctx.Value(types.CtxProject).(uuid.UUID).String())
+func formatProjectUrl(ctx context.Context, path string) string {
+	url := fmt.Sprintf("/project/%s%s", ctx.Value(types.CtxProject).(uuid.UUID).String(), path)
 	return string(templ.URL(url))
 }
 

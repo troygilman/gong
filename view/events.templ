@@ -7,12 +7,21 @@ import (
 	"strings"
 )
 
-templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorProps) {
+templ eventsTabContent(props types.ProjectActorProps) {
+	if filter, ok := ctx.Value(types.CtxFilter).(types.EventsFilter); ok {
+		@eventsFilter(filter)
+	} else {
+		@eventsFilter(types.EventsFilter{})
+	}
+	@ProjectActorEventsContainer(props)
+}
+
+templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 	<div
  		id="events-container"
  		class="grow min-h-0 max-w-full overflow-x-auto"
  		x-data="{ scrollTop: 0 }"
- 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(props.PID)) }
+ 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(ctx)) }
 	>
 		<script>
 			function handleScroll(pid, { scrollTop }) {
@@ -51,8 +60,8 @@ templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorP
 			<tbody
  				id="events-container"
 			>
-				@eventsTopDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false, false)
-				@eventsBottomDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false)
+				@eventsTopDataLoader(props.NumEvents, props.NumEvents, false, false)
+				@eventsBottomDataLoader(props.NumEvents, props.NumEvents, false)
 			</tbody>
 		</table>
 	</div>
@@ -62,7 +71,7 @@ templ eventsFilter(filter types.EventsFilter) {
 	<form
  		id="events-filter"
  		class="join border rounded-lg m-4 w-fit"
- 		hx-get={ formatActorUrl(ctx) }
+ 		hx-get={ formatProjectUrl(ctx, "/actor") }
  		hx-include={ includes }
  		hx-trigger="submit"
  		hx-swap="none"
@@ -108,7 +117,7 @@ templ eventsFilterItem(label string, name string, active bool) {
 		if active {
 			<span
  				class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0"
- 				hx-get={ formatActorUrl(ctx) }
+ 				hx-get={ formatProjectUrl(ctx, "/actor") }
  				hx-include={ includes }
  				hx-params={ "not " + name }
  				hx-trigger="click"
@@ -126,16 +135,18 @@ templ eventsFilterItem(label string, name string, active bool) {
 	</div>
 }
 
-templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool, moreEvents bool) {
+templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents bool) {
 	<tr
- 		id={ "events-top-data-loader-" + formatActorPID(actorPID) }
- 		hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, 10) }
+ 		id={ "events-top-data-loader-" + formatActorPID(ctx) }
+ 		hx-get={ formatProjectUrl(ctx, "/events") }
+ 		hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, 10) }
+ 		hx-include={ includes }
+ 		hx-swap="outerHTML"
  		if moreEvents {
 			hx-trigger="load-next once, intersect once"
 		} else {
 			hx-trigger="every 1s [load()]"
 		}
- 		hx-swap="outerHTML"
  		if oob {
 			hx-swap-oob="true"
 		}
@@ -149,35 +160,40 @@ templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, 
 	</tr>
 }
 
-templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool) {
+templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
 	if startIdx > 0 {
 		<tr
- 			id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }
- 			hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, -10) }
- 			hx-trigger="load-prev once, intersect once"
+ 			id={ "events-bottom-data-loader-" + formatActorPID(ctx) }
+ 			hx-get={ formatProjectUrl(ctx, "/events") }
+ 			hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, -10) }
+ 			hx-include={ includes }
  			hx-swap="outerHTML"
+ 			hx-trigger="load-prev once, intersect once"
  			if oob {
 				hx-swap-oob="true"
 			}
 		></tr>
 	} else {
-		<tr id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }></tr>
+		<tr id={ "events-bottom-data-loader-" + formatActorPID(ctx) }></tr>
 	}
 }
 
-func formatActorPID(pid string) string {
-	return strings.ReplaceAll(pid, "/", "-")
+func formatActorPID(ctx context.Context) string {
+	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+		return strings.ReplaceAll(pid, "/", "-")
+	}
+	return ""
 }
 
 templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
-	@eventsTopDataLoader(projectID, actorPID, startIdx, endIdx, !appendEnd, moreEvents)
+	@eventsTopDataLoader(startIdx, endIdx, !appendEnd, moreEvents)
 	for i := len(events)-1; i >= 0; i-- {
 		@projectActorEvent(events[i])
 	}
 	for _, i := range delete {
 		@projectActorEventDelete(i)
 	}
-	@eventsBottomDataLoader(projectID, actorPID, startIdx, endIdx, appendEnd)
+	@eventsBottomDataLoader(startIdx, endIdx, appendEnd)
 }
 
 templ projectActorEvent(event types.Event) {
