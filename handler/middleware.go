@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"gong/domain"
+	"gong/types"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -37,6 +40,45 @@ func MiddlewareJWT(app domain.App) echo.MiddlewareFunc {
 				return err
 			}
 			ctx.Set("claims", claims)
+			return next(ctx)
+		}
+	}
+}
+
+func MiddlewareProjectContext() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			cb := types.NewContextBuilder(ctx.Request().Context())
+
+			projectID, err := uuid.Parse(ctx.Param("projectID"))
+			if err != nil {
+				return errors.New("projectID is empty")
+			}
+			cb = cb.With(types.CtxProject, projectID)
+
+			actorPID := ctx.QueryParam("pid")
+			if actorPID != "" {
+				cb = cb.With(types.CtxPID, actorPID)
+			}
+
+			tab := ctx.QueryParam("tab")
+			if tab == "" {
+				tab = "Events"
+			}
+			cb = cb.With(types.CtxTab, tab)
+
+			filter := types.EventsFilter{}
+			for key, vals := range ctx.QueryParams() {
+				if key == "filter_type" {
+					filter.Type = vals[len(vals)-1]
+				}
+				if key == "filter_sender" {
+					filter.Sender = vals[len(vals)-1]
+				}
+			}
+			cb = cb.With(types.CtxFilter, filter)
+
+			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}
 	}

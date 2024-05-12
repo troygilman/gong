@@ -2,11 +2,15 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"gong/domain"
+	"gong/types"
+	"io"
 	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,11 +22,11 @@ func mustApp(ctx echo.Context) domain.App {
 	return app
 }
 
-func renderView(ctx echo.Context, view templ.Component) error {
-	return view.Render(ctx.Request().Context(), ctx.Response())
+func renderView(echoCtx echo.Context, ctx context.Context, view templ.Component) error {
+	return view.Render(ctx, echoCtx.Response())
 }
 
-func writeServerSentEvent(ctx echo.Context, event string, data any) error {
+func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data any) error {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("event: %s\n", event))
 
@@ -30,7 +34,7 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 	switch data := data.(type) {
 	case templ.Component:
 		buff := bytes.NewBuffer([]byte{})
-		if err := data.Render(ctx.Request().Context(), buff); err != nil {
+		if err := data.Render(ctx, buff); err != nil {
 			return err
 		}
 		d = strings.ReplaceAll(buff.String(), "\n", "")
@@ -41,7 +45,7 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 	}
 
 	sb.WriteString(fmt.Sprintf("data: %s\n\n", d))
-	if _, err := fmt.Fprint(ctx.Response().Writer, sb.String()); err != nil {
+	if _, err := fmt.Fprint(w, sb.String()); err != nil {
 		return err
 	}
 
@@ -50,4 +54,18 @@ func writeServerSentEvent(ctx echo.Context, event string, data any) error {
 
 func requestID(ctx echo.Context) string {
 	return ctx.Response().Header().Get(echo.HeaderXRequestID)
+}
+
+func mustProjectID(ctx echo.Context) uuid.UUID {
+	return ctx.Request().Context().Value(types.CtxProject).(uuid.UUID)
+}
+
+func actorPID(ctx echo.Context) (string, bool) {
+	actorPID, ok := ctx.Request().Context().Value(types.CtxPID).(string)
+	return actorPID, ok
+}
+
+func tab(ctx echo.Context) (string, bool) {
+	tab, ok := ctx.Request().Context().Value(types.CtxTab).(string)
+	return tab, ok
 }

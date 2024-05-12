@@ -1,7 +1,9 @@
 package types
 
 import (
+	"context"
 	"gong/sdk"
+	"net/url"
 	"sort"
 
 	"github.com/google/uuid"
@@ -12,6 +14,15 @@ const (
 	SseTypeNewEvents            = "new-events:"
 	SseTypeDeleteActor          = "delete-actor:"
 	SseTypeUpdateActorNumEvents = "update-actor-num-events:"
+)
+
+type CtxKey string
+
+const (
+	CtxProject CtxKey = "project"
+	CtxPID     CtxKey = "pid"
+	CtxTab     CtxKey = "tab"
+	CtxFilter  CtxKey = "filter"
 )
 
 type Event struct {
@@ -33,13 +44,46 @@ func (l *EventList) Push(e Event) {
 	(*l)[i] = e
 }
 
+type ContextBuilder struct {
+	ctx context.Context
+}
+
+func NewContextBuilder(ctx context.Context) ContextBuilder {
+	return ContextBuilder{
+		ctx: ctx,
+	}
+}
+
+func (cb ContextBuilder) With(key CtxKey, val any) ContextBuilder {
+	cb.ctx = context.WithValue(cb.ctx, key, val)
+	return cb
+}
+
+func (cb ContextBuilder) Build() context.Context {
+	return cb.ctx
+}
+
 type ProjectProps struct {
 	ID         uuid.UUID
-	ActorProps []ProjectActorProps
+	ActorProps map[string]ProjectActorProps
 }
 
 type ProjectActorProps struct {
 	PID       string
 	NumEvents int32
 	Alive     bool
+}
+
+type EventsFilter struct {
+	Type   string
+	Sender string
+}
+
+func (f EventsFilter) SetValues(values url.Values) {
+	if f.Type != "" {
+		values.Set("filter_type", f.Type)
+	}
+	if f.Sender != "" {
+		values.Set("filter_sender", f.Sender)
+	}
 }

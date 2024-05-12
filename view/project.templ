@@ -2,19 +2,17 @@ package view
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"gong/types"
-	"strings"
 )
 
-templ Project(props types.ProjectProps, actorIndex int) {
+templ Project(props types.ProjectProps) {
 	@Index() {
-		@initStore("", tabLabelEvents)
+		@overrideHtmxHistory(formatProjectUrl(ctx, ""))
 		<div
-			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
-			hx-ext="sse"
-			sse-connect={ "/project/" + props.ID.String() + "/sse" }
-			x-data
+ 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
+ 			hx-ext="sse"
+ 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+ 			x-data
 		>
 			<div class="flex flex-row border-b border-neutral py-2 px-4 w-full items-center justify-center drop-shadow z-50">
 				<div class="flex text-md font-bold items-center justify-center">
@@ -28,176 +26,100 @@ templ Project(props types.ProjectProps, actorIndex int) {
 					</ul>
 				</div>
 			</div>
-			<div
-				class="flex flex-row grow min-w-full min-h-0"
-				x-init={ fmt.Sprintf("$watch('$store.params.params.pid', pid => updateActor('%s', pid))", props.ID.String()) }
-			>
-				<div class="flex flex-col w-64 h-full border-r border-neutral">
-					<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
-					<div class="divider divider-neutral px-6 m-0"></div>
-					<ul
-						id="actors"
-						class="menu menu-sm"
-						sse-swap={ types.SseTypeNewActor }
-						hx-swap="afterbegin"
-					>
-						for _, actorProps := range props.ActorProps {
-							@ProjectActorListItem(actorProps, props.ID)
-						}
-					</ul>
-				</div>
-				<script>
-					function updateActor(projectID, pid) {
-						htmx.ajax("GET", "/project/" + projectID + "/actor?pid=" + pid, {target:'#actor-content', swap:'outerHTML'});
-					}
-				</script>
-				if actorIndex >= 0 {
-					@ActorContent(props.ID, props.ActorProps[actorIndex])
+			<div class="flex flex-row grow min-w-full min-h-0">
+				@ProjectActorList(props)
+				if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+					@ActorContent(props.ActorProps[pid])
 				} else {
-					@ActorContent(props.ID, types.ProjectActorProps{})
+					@ActorContent(types.ProjectActorProps{})
 				}
 			</div>
 		</div>
 	}
 }
 
-script initStore(pid string, tab string) {
-	document.addEventListener('alpine:init', () => {
-        Alpine.store('params', {
-            params: { 
-				'pid': pid,
-				'tab': tab,
-				'filters': "",
-			},
-
-			init() {
-				const url = new URL(window.location.href);
-				history.replaceState({ "params": {...this.params}, "filters": {...this.filters} }, "", url);
-			},
- 
-            set(key, val) {
-				if (val === this.params[key]) {
-					return;
-				}
-                this.params[key] = val;
-				const url = new URL(window.location.href);
-				url.searchParams.set(key, val);
-				history.pushState({ "params": {...this.params} }, "", url);
-            },
-
-			get(key) {
-				return this.params[key];
-			},
-
-			setAll(params) {
-				this.params = params
-			},
-        });
-
-		Alpine.store('filters', {
-			filters: {},
-
-			set(key, val) {
-				if (val === this.filters[key]) {
-					return;
-				}
-				this.filters[key] = val;
-				console.log(JSON.stringify(this.filters))
-				Alpine.store('params').set('filters', JSON.stringify(this.filters));
-			},
-
-			get(key) {
-				return this.filters[key];
-			},
-
-			delete(key) {
-				delete this.filters[key];
-				Alpine.store('params').set('filters', JSON.stringify(this.filters));
-			},
-
-			parse(filters) {
-				this.filters = JSON.parse(filters);
-			}
-		});
-
-		Alpine.store('params').init();
-    });
-
-	window.addEventListener("popstate", (e) => {
-    	if(e.state && e.state.params){
-			const params = e.state.params;
-			Alpine.store('params').setAll(params);
-			if (params['filters']) {
-				Alpine.store('filters').parse(params['filters']);
-			}
-    	}
+script overrideHtmxHistory(path string) {
+	htmx.on("htmx:before-history-update", function(e) {
+		console.log(e.detail)
+		const url = e.detail.history.path.split("?");
+		if (url.length > 1) {
+			e.detail.history.path = path + "?" + url[1];
+		} else {
+			a.detail.history.path = path;
+		}
 	});
 }
 
-const (
-	tabLabelEvents = "Events"
-	tabLabelTest   = "Test"
-)
-
-templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
-	<div
-		id="actor-content"
-		class="flex flex-col grow max-h-full min-h-full min-w-0"
-	>
-		<div class="p-2 font-bold">{ props.PID }</div>
-		<div
-			role="tablist"
-			class="tabs tabs-bordered"
+templ ProjectActorList(props types.ProjectProps) {
+	<div class="flex flex-col w-64 h-full border-r border-neutral">
+		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
+		<div class="divider divider-neutral px-6 m-0"></div>
+		<ul
+ 			id="actor-list"
+ 			class="menu menu-sm"
+ 			sse-swap={ types.SseTypeNewActor }
+ 			hx-swap="afterbegin"
+ 			x-data="{ active: ''}"
 		>
-			@actorTab(tabLabelEvents)
-			@actorTab(tabLabelTest)
-		</div>
-		@actorTabContent(tabLabelEvents) {
-			@eventsFilter()
-			@ProjectActorEventsContainer(projectID, props)
+			for _, actorProps := range props.ActorProps {
+				@ProjectActorListItem(actorProps, false)
+			}
+		</ul>
+	</div>
+}
+
+func isCurrentPID(ctx context.Context, actorPID string) bool {
+	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+		return pid == actorPID
+	}
+	return false
+}
+
+script resetActiveListItem(id string) {
+	console.log("reset", id)
+	const activeElems = document.getElementById('actor-list').querySelectorAll('.active');
+	for (const elem of activeElems) {
+		if (elem.parentNode.id !== id) {
+			elem.classList.remove('active');
+			const scripts = elem.querySelectorAll('script');
+			for (const script of scripts) {
+				htmx.remove(script);
+			}
 		}
-	</div>
+	}
 }
 
-templ actorTab(label string) {
-	<a
-		role="tab"
-		@click={ fmt.Sprintf("$store.params.set('tab', '%s')", label) }
-		:class={ fmt.Sprintf("$store.params.get('tab') === '%s' ? 'tab tab-active' : 'tab'", label) }
-	>{ label }</a>
-}
-
-templ actorTabContent(label string) {
-	<div
-		class="flex flex-col grow min-h-0"
-		x-show={ fmt.Sprintf("$store.params.get('tab') === '%s'", label) }
-	>
-		{ children... }
-	</div>
-}
-
-templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
+templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
 	<li
-		class="max-w-full"
-		sse-swap={ types.SseTypeDeleteActor + props.PID }
-		hx-swap="outerHTML"
-		@click={ fmt.Sprintf("$store.params.set('pid', '%s')", props.PID) }
+ 		id={ "actor-list-item-" + formatActorPID(props.PID) }
+ 		class="max-w-full"
+ 		hx-get={ formatProjectUrl(ctx, "/actor") }
+ 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, props.PID) }
+ 		hx-include={ includes }
+ 		hx-trigger="click"
+ 		hx-push-url="true"
+ 		if oob {
+			hx-swap-oob="true"
+		}
 	>
 		<a
-			class="flex flex-row items-center justify-between w-full"
-			:class={ fmt.Sprintf("$store.params.get('pid') === '%s' ? 'active' : ''", props.PID) }
+ 			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, props.PID)) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
 			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
+			if isCurrentPID(ctx, props.PID) {
+				@resetActiveListItem("actor-list-item-" + formatActorPID(props.PID))
+			}
 		</a>
 	</li>
 }
 
 templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 	<div
-		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
-		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
-		hx-swap="outerHTML"
+ 		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
+ 		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
+ 		hx-target="this"
+ 		hx-swap="outerHTML"
 	>
 		if numEvents > 999 {
 			{ "999+" }
@@ -207,174 +129,61 @@ templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
 	</div>
 }
 
-templ ProjectActorEventsContainer(projectID uuid.UUID, props types.ProjectActorProps) {
-	<div
-		id="events-container"
-		class="grow min-h-0 max-w-full overflow-x-auto"
-		x-data="{ scrollTop: 0 }"
-		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPID(props.PID)) }
-	>
-		<script>
-			function handleScroll(pid, { scrollTop }) {
-				const container = document.getElementById("events-container");
-				if (container.scrollTop < scrollTop) {
-					if (loadNext(container)) {
-						htmx.trigger('#events-top-data-loader-' + pid , 'load-next', {})
-					}
-				} else if (container.scrollTop > scrollTop) {
-					if (loadPrev(container)) {
-						htmx.trigger('#events-bottom-data-loader-' + pid, 'load-prev', {})
-					}
-				}
-				return container.scrollTop;
-			}
+const (
+	tabLabelEvents = "Events"
+	tabLabelTest   = "Test"
+)
 
-			function loadNext(container) {
-				return container.scrollTop <= container.scrollHeight * 0.1;
-			}
-
-			function loadPrev(container) {
-				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
-			}
-		</script>
-		<table id="events-table" class="table table-pin-rows">
-			<thead>
-				<tr>
-					<th>Timestamp</th>
-					<th>PID</th>
-					<th>Type</th>
-					<th>Sender</th>
-					<th>Level</th>
-					<th>Message</th>
-				</tr>
-			</thead>
-			<tbody
-				id="events-container"
-			>
-				@eventsTopDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false, false)
-				@eventsBottomDataLoader(projectID, props.PID, props.NumEvents, props.NumEvents, false)
-			</tbody>
-		</table>
-	</div>
+templ ProjectActor(props types.ProjectActorProps) {
+	@ActorContent(props)
+	@ProjectActorListItem(props, true)
 }
 
-templ eventsFilter() {
+templ ActorContent(props types.ProjectActorProps) {
 	<div
-		class="join border rounded-lg m-4 w-fit"
+ 		id="actor-content"
+ 		class="flex flex-col grow max-h-full min-h-full min-w-0"
+ 		hx-swap-oob="true"
 	>
-		@eventsFilterItem("Type", "$store.filters.get('type')", "$store.filters.delete('type')") {
-			<script>
-				function onFocusOut(value) {
-					if (value !== '') {
-						Alpine.store('filters').set('type', value);
-					} else {
-						Alpine.store('filters').delete('type');
-					}
-				}
-			</script>
-			<input
-				type="text"
-				placeholder="actor.Started"
-				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
-				x-bind:value="$store.filters.get('type')"
-				@focusout="onFocusOut($el.value)"
-				@keyup.enter="document.activeElement.blur()"
-			/>
-		}
-	</div>
-}
-
-templ eventsFilterItem(label string, show string, clear string) {
-	<div class="join-item indicator">
-		<span class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0" x-cloak x-show={ show } @click={ clear }>
-			@closeIcon("inline-block w-4 h-4 stroke-current")
-		</span>
-		<div class="dropdown">
-			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation rounded-none">{ label }</div>
-			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-box w-64">
-				{ children... }
-			</div>
+		<input id="actor-pid" type="hidden" name="pid" value={ props.PID }/>
+		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
+		<div class="p-2 font-bold">{ props.PID }</div>
+		<div
+ 			role="tablist"
+ 			class="tabs tabs-bordered"
+		>
+			@actorTab(tabLabelEvents)
+			@actorTab(tabLabelTest)
 		</div>
+		@actorTabContent(tabLabelEvents) {
+			@eventsTabContent(props)
+		}
 	</div>
 }
 
-templ eventsTopDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool, moreEvents bool) {
-	<tr
-		id={ "events-top-data-loader-" + formatActorPID(actorPID) }
-		hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, 10) }
-		if moreEvents {
-			hx-trigger="load-next once, intersect once"
+templ actorTab(label string) {
+	<a
+ 		role="tab"
+ 		if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && activeTab == label {
+			class="tab tab-active"
 		} else {
-			hx-trigger="every 1s [load()]"
+			class="tab"
 		}
-		hx-swap="outerHTML"
-		if oob {
-			hx-swap-oob="true"
-		}
-	>
-		<script>
-			function load() {
-				const container = document.getElementById("events-container");
-				return loadNext(container);
-			}
-		</script>
-	</tr>
+ 		hx-get={ formatProjectUrl(ctx, "/actor") }
+ 		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
+ 		hx-include={ includes }
+ 		hx-push-url="true"
+ 		hx-trigger="click"
+ 		hx-swap="none"
+	>{ label }</a>
 }
 
-templ eventsBottomDataLoader(projectID uuid.UUID, actorPID string, startIdx int32, endIdx int32, oob bool) {
-	if startIdx > 0 {
-		<tr
-			id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }
-			hx-get={ fmt.Sprintf("/project/%s/events?pid=%s&start=%d&end=%d&n=%d", projectID.String(), actorPID, startIdx, endIdx, -10) }
-			hx-trigger="load-prev once, intersect once"
-			hx-swap="outerHTML"
-			if oob {
-				hx-swap-oob="true"
-			}
-		></tr>
-	} else {
-		<tr id={ "events-bottom-data-loader-" + formatActorPID(actorPID) }></tr>
+templ actorTabContent(label string) {
+	if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && label == activeTab {
+		<div
+ 			class="flex flex-col grow min-h-0"
+		>
+			{ children... }
+		</div>
 	}
-}
-
-func formatActorPID(pid string) string {
-	return strings.ReplaceAll(pid, "/", "-")
-}
-
-templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
-	@eventsTopDataLoader(projectID, actorPID, startIdx, endIdx, !appendEnd, moreEvents)
-	for i := len(events)-1; i >= 0; i-- {
-		@projectActorEvent(events[i])
-	}
-	for _, i := range delete {
-		@projectActorEventDelete(i)
-	}
-	@eventsBottomDataLoader(projectID, actorPID, startIdx, endIdx, appendEnd)
-}
-
-templ projectActorEvent(event types.Event) {
-	<tr id={ fmt.Sprintf("event-%d", event.Index) }>
-		<td>
-			{ event.Timestamp.String() }
-		</td>
-		<td>
-			{ event.Event.PID }
-		</td>
-		<td>
-			{ event.MsgType }
-		</td>
-		<td>
-			{ event.Event.Sender }
-		</td>
-		<td>
-			{ event.Level.String() }
-		</td>
-		<td>
-			{ event.Msg }
-		</td>
-	</tr>
-}
-
-templ projectActorEventDelete(index int32) {
-	<tr id={ fmt.Sprintf("event-%d", index) } hx-swap-oob="delete"></tr>
 }
