@@ -75,6 +75,7 @@ templ eventsFilter(filter types.EventsFilter) {
  		hx-include={ includes }
  		hx-trigger="submit"
  		hx-swap="none"
+ 		hx-push-url="true"
 	>
 		<script>
 			function updateFilter() {
@@ -122,6 +123,7 @@ templ eventsFilterItem(label string, name string, active bool) {
  				hx-params={ "not " + name }
  				hx-trigger="click"
  				hx-swap="none"
+ 				hx-push-url="true"
 			>
 				@closeIcon("inline-block w-4 h-4 stroke-current")
 			</span>

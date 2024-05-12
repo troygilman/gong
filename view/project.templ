@@ -61,17 +61,6 @@ templ ProjectActorList(props types.ProjectProps) {
  			hx-swap="afterbegin"
  			x-data="{ active: ''}"
 		>
-			<script>
-				function resetActiveListItem(id) {
-					console.log("reset", id)
-					const activeElems = document.getElementById('actor-list').querySelectorAll('.active');
-					for (const elem of activeElems) {
-						if (elem.parentNode.id !== id) {
-							elem.classList.remove('active');
-						}
-					}
-				}
-			</script>
 			for _, actorProps := range props.ActorProps {
 				@ProjectActorListItem(actorProps, false)
 			}
@@ -183,6 +172,7 @@ templ actorTab(label string) {
  		hx-get={ formatProjectUrl(ctx, "/actor") }
  		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
  		hx-include={ includes }
+ 		hx-push-url="true"
  		hx-trigger="click"
  		hx-swap="none"
 	>{ label }</a>
