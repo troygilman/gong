@@ -36,7 +36,7 @@ func GetProject(ctx echo.Context) error {
 	return renderView(
 		ctx,
 		ctx.Request().Context(),
-		view.Project(response.Props, -1),
+		view.Project(response.Props),
 	)
 }
 

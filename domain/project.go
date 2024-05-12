@@ -63,18 +63,18 @@ func (p *project) receive(ctx *actor.Context) error {
 	case MsgGetProjectProps:
 		props := types.ProjectProps{
 			ID:         p.id,
-			ActorProps: make([]types.ProjectActorProps, 0, len(p.actors)),
+			ActorProps: make(map[string]types.ProjectActorProps, 0),
 		}
 		for pid, events := range p.actors {
 			var alive bool
 			if len(events) > 0 {
 				alive = isActorAlive(events[len(events)-1].MsgType)
 			}
-			props.ActorProps = append(props.ActorProps, types.ProjectActorProps{
+			props.ActorProps[pid] = types.ProjectActorProps{
 				PID:       pid,
 				NumEvents: int32(len(events)),
 				Alive:     alive,
-			})
+			}
 		}
 		ctx.Respond(RspGetProjectProps{
 			Props: props,

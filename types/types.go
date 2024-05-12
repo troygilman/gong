@@ -65,7 +65,7 @@ func (cb ContextBuilder) Build() context.Context {
 
 type ProjectProps struct {
 	ID         uuid.UUID
-	ActorProps []ProjectActorProps
+	ActorProps map[string]ProjectActorProps
 }
 
 type ProjectActorProps struct {

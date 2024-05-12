@@ -6,7 +6,7 @@ import (
 	"gong/types"
 )
 
-templ Project(props types.ProjectProps, actorIndex int) {
+templ Project(props types.ProjectProps) {
 	@Index() {
 		@initProject()
 		<div
@@ -29,8 +29,8 @@ templ Project(props types.ProjectProps, actorIndex int) {
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
 				@ProjectActorList(props)
-				if actorIndex >= 0 {
-					@ActorContent(props.ID, props.ActorProps[actorIndex])
+				if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+					@ActorContent(props.ID, props.ActorProps[pid])
 				} else {
 					@ActorContent(props.ID, types.ProjectActorProps{})
 				}
@@ -42,6 +42,7 @@ templ Project(props types.ProjectProps, actorIndex int) {
 script initProject() {
 	window.addEventListener("popstate", (e) => {
     	if(e.state && e.state.html){
+     		console.log('popState', history.length);
      		document.body.innerHTML = e.state.html;
        		htmx.process(document.body);
     	}
@@ -61,7 +62,6 @@ templ ProjectActorList(props types.ProjectProps) {
 		>
 			<script>
 				function resetActive() {
-					console.log("resetActive")
 					const activeElem = document.getElementById('actor-list').querySelector('.active');
 					if (activeElem) {
 						activeElem.classList.remove('active');
@@ -75,6 +75,13 @@ templ ProjectActorList(props types.ProjectProps) {
 	</div>
 }
 
+func isCurrentPID(ctx context.Context, actorPID string) bool {
+	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+		return pid == actorPID
+	}
+	return false
+}
+
 templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
 	<li
  		class="max-w-full"
@@ -85,7 +92,7 @@ templ ProjectActorListItem(props types.ProjectActorProps, projectID uuid.UUID) {
  		sse-swap={ types.SseTypeDeleteActor + props.PID }
 	>
 		<a
- 			class="flex flex-row items-center justify-between w-full"
+ 			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, props.PID)) }
  			@click="resetActive(); $el.classList.add('active');"
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
@@ -137,7 +144,7 @@ templ ActorContent(projectID uuid.UUID, props types.ProjectActorProps) {
 }
 
 script onActorContentLoad(url string) {
-	console.log("onActorContentLoad", url);
+	console.log("pushState", url);
 	history.pushState({html: document.body.innerHTML}, "", url);
 }
 
