@@ -84,7 +84,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 
 			if len(events) > 0 {
 				numEvents = events[len(events)-1].Index + 1
-				actorAlive = isActorAlive(events[len(events)-1].MsgType)
+				actorAlive = isActorAlive(events[len(events)-1].Type)
 				if events[0].Index == 0 {
 					sseType = types.SseTypeNewActor
 				}

@@ -29,7 +29,6 @@ const (
 type Event struct {
 	ID        ulid.ULID
 	ProjectID uuid.UUID
-	Session   int32
 	Index     int32
 	sdk.Event
 }
@@ -71,9 +70,11 @@ type ProjectProps struct {
 }
 
 type ProjectActorProps struct {
-	PID       string
-	NumEvents int32
-	Alive     bool
+	PID          string
+	NumEvents    int32
+	Alive        bool
+	FirstEventID ulid.ULID
+	LastEventID  ulid.ULID
 }
 
 type EventsFilter struct {

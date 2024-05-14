@@ -193,7 +193,7 @@ func formatActorPID(pid string) string {
 
 templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
 	@eventsTopDataLoader(startIdx, endIdx, !appendEnd, moreEvents)
-	for i := len(events)-1; i >= 0; i-- {
+	for i := 0; i < len(events); i++ {
 		@projectActorEvent(events[i])
 	}
 	for _, i := range delete {
@@ -211,7 +211,7 @@ templ projectActorEvent(event types.Event) {
 			{ event.ID.String() }
 		</td>
 		<td>
-			{ event.MsgType }
+			{ event.Type }
 		</td>
 		<td>
 			{ event.Event.Sender }

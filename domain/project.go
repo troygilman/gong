@@ -1,10 +1,10 @@
 package domain
 
 import (
+	"errors"
 	"gong/sdk"
 	"gong/types"
 	"math/rand"
-	"slices"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -23,9 +23,8 @@ const (
 
 type project struct {
 	commonActorData
-	actors    map[string]types.EventList
+	actors    map[string]types.ProjectActorProps
 	listeners map[string]*actor.PID
-	session   int32
 	entropy   ulid.MonotonicReader
 }
 
@@ -58,7 +57,7 @@ func (p *project) Receive(ctx *actor.Context) {
 func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]types.EventList)
+		p.actors = make(map[string]types.ProjectActorProps)
 		p.listeners = make(map[string]*actor.PID)
 		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 	case MsgSdkEvent:
@@ -70,42 +69,36 @@ func (p *project) receive(ctx *actor.Context) error {
 			ID:         p.id,
 			ActorProps: make(map[string]types.ProjectActorProps, 0),
 		}
-		for pid, events := range p.actors {
-			var alive bool
-			if len(events) > 0 {
-				alive = isActorAlive(events[len(events)-1].MsgType)
-			}
-			props.ActorProps[pid] = types.ProjectActorProps{
-				PID:       pid,
-				NumEvents: int32(len(events)),
-				Alive:     alive,
-			}
+		for pid, actorProps := range p.actors {
+			props.ActorProps[pid] = actorProps
 		}
 		ctx.Respond(RspGetProjectProps{
 			Props: props,
 		})
 	case MsgGetProjectActorProps:
-		events := p.actors[msg.ActorPID]
-		var alive bool
-		if len(events) > 0 {
-			alive = isActorAlive(events[len(events)-1].MsgType)
-		}
-		props := types.ProjectActorProps{
-			PID:       msg.ActorPID,
-			NumEvents: int32(len(events)),
-			Alive:     alive,
-		}
-		ctx.Respond(RspGetProjectActorProps{
-			Props: props,
-		})
-	case MsgGetProjectEvents:
-		events, ok := p.actors[msg.ActorPID]
+		props, ok := p.actors[msg.ActorPID]
 		if ok {
-			startIdx := max(msg.StartIdx, 0)
-			endIdx := min(msg.EndIdx, int32(len(events)))
+			ctx.Respond(RspGetProjectActorProps{
+				Props: props,
+			})
+		} else {
+			return errors.New("actor pid does not exist")
+		}
+	case MsgGetProjectEvents:
+		actorProps, ok := p.actors[msg.ActorPID]
+		if ok {
+			events, err := p.app.DB().QueryEvents(eventsQuery{
+				projectID: p.id,
+				actorPID:  msg.ActorPID,
+				startIdx:  msg.StartIdx,
+				endIdx:    msg.EndIdx,
+			})
+			if err != nil {
+				return err
+			}
 			ctx.Respond(RspGetProjectEvents{
-				Events:         slices.Clone(events[startIdx:endIdx]),
-				NumTotalEvents: int32(len(events)),
+				Events:         events,
+				NumTotalEvents: actorProps.NumEvents,
 			})
 		} else {
 			ctx.Respond(RspGetProjectEvents{
@@ -129,9 +122,6 @@ func (p *project) receive(ctx *actor.Context) error {
 
 func (p *project) load(id uuid.UUID) error {
 	p.id = id
-	if session, err := p.app.DB().QuerySession(p.id); err == nil {
-		p.session = session + 1
-	}
 	return nil
 }
 
@@ -149,18 +139,26 @@ func (p *project) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
 	event := types.Event{
 		ID:        id,
 		ProjectID: p.id,
-		Session:   p.session,
 		Event:     sdkEvent,
 	}
 
-	events, ok := p.actors[event.PID]
+	actorProps, ok := p.actors[event.PID]
 	if !ok {
-		events = make(types.EventList, 0)
+		actorProps = types.ProjectActorProps{
+			PID:       event.PID,
+			NumEvents: 0,
+			Alive:     false,
+		}
 	}
 
-	event.Index = int32(len(events))
-	events.Push(event)
-	p.actors[event.PID] = events
+	event.Index = int32(actorProps.NumEvents)
+
+	actorProps.NumEvents++
+	if event.ID.Compare(actorProps.LastEventID) > 0 {
+		actorProps.Alive = isActorAlive(event.Type)
+		actorProps.LastEventID = event.ID
+	}
+	p.actors[event.PID] = actorProps
 
 	for _, pid := range p.listeners {
 		ctx.Send(pid, MsgEvent{Event: event})
