@@ -46,11 +46,11 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
 			}
 		</script>
-		<table id="events-table" class="table table-pin-rows">
+		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
 				<tr>
 					<th>Timestamp</th>
-					<th>PID</th>
+					<th>ID</th>
 					<th>Type</th>
 					<th>Sender</th>
 					<th>Level</th>
@@ -203,12 +203,12 @@ templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.Even
 }
 
 templ projectActorEvent(event types.Event) {
-	<tr id={ fmt.Sprintf("event-%d", event.Index) }>
+	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="text-nowrap">
 		<td>
 			{ event.Timestamp.String() }
 		</td>
 		<td>
-			{ event.Event.PID }
+			{ event.ID.String() }
 		</td>
 		<td>
 			{ event.MsgType }

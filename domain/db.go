@@ -77,6 +77,7 @@ func sqlError(stmt Statement, err error) error {
 
 func (db *postgresDatabase) CreateEvent(event *types.Event) error {
 	m := model.Event{
+		ID:        uuid.UUID(event.ID),
 		ProjectID: event.ProjectID,
 		ActorPid:  event.PID,
 		Session:   event.Session,

@@ -3,10 +3,13 @@ package domain
 import (
 	"gong/sdk"
 	"gong/types"
+	"math/rand"
 	"slices"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 	actor_utils "github.com/troygilman0/utils"
 )
 
@@ -23,6 +26,7 @@ type project struct {
 	actors    map[string]types.EventList
 	listeners map[string]*actor.PID
 	session   int32
+	entropy   ulid.MonotonicReader
 }
 
 func NewProjectProducer() actor.Producer {
@@ -56,6 +60,7 @@ func (p *project) receive(ctx *actor.Context) error {
 	case actor.Initialized:
 		p.actors = make(map[string]types.EventList)
 		p.listeners = make(map[string]*actor.PID)
+		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 	case MsgSdkEvent:
 		if err := p.handleEvent(ctx, msg.Event); err != nil {
 			return err
@@ -136,7 +141,13 @@ func (p *project) create(id uuid.UUID) error {
 }
 
 func (p *project) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
+	id, err := ulid.New(ulid.Timestamp(sdkEvent.Timestamp), p.entropy)
+	if err != nil {
+		return err
+	}
+
 	event := types.Event{
+		ID:        id,
 		ProjectID: p.id,
 		Session:   p.session,
 		Event:     sdkEvent,

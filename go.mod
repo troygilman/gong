@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/troygilman0/utils v0.0.0-20240223031254-a41c95ea2efc
 )
 

@@ -1,11 +1,12 @@
 CREATE TABLE IF NOT EXISTS event(
+	id UUID,
     project_id UUID,
-    actor_pid TEXT,
-    session INTEGER,
-    index INTEGER,
+    actor_pid TEXT NOT NULL,
+    session INTEGER NOT NULL,
+    index INTEGER NOT NULL,
     timestamp TIMESTAMP NOT NULL,
     type TEXT NOT NULL,
     level INTEGER NOT NULL,
     msg TEXT NOT NULL,
-    PRIMARY KEY (project_id, actor_pid, session, index)
+    PRIMARY KEY (id, project_id)
 );

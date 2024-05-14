@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 )
 
 const (
@@ -26,6 +27,7 @@ const (
 )
 
 type Event struct {
+	ID        ulid.ULID
 	ProjectID uuid.UUID
 	Session   int32
 	Index     int32
