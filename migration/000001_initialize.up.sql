@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS event(
-	id UUID,
+	id VARCHAR(26),
     project_id UUID,
     actor_pid TEXT NOT NULL,
     index INTEGER NOT NULL,

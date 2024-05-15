@@ -122,6 +122,16 @@ func (p *project) receive(ctx *actor.Context) error {
 
 func (p *project) load(id uuid.UUID) error {
 	p.id = id
+
+	actorProps, err := p.app.DB().QueryActorProps(id)
+	if err != nil {
+		return err
+	}
+
+	for _, props := range actorProps {
+		p.actors[props.PID] = props
+	}
+
 	return nil
 }
 

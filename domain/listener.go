@@ -94,7 +94,7 @@ func (l *listener) receive(ctx *actor.Context) error {
 			case types.SseTypeNewActor:
 				props := types.ProjectActorProps{
 					PID:       pid,
-					NumEvents: int32(len(events)),
+					NumEvents: numEvents,
 					Alive:     actorAlive,
 				}
 				msgs = append(msgs, MsgSseNewActor{

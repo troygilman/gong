@@ -19,6 +19,7 @@ import (
 type Database interface {
 	CreateEvent(event *types.Event) error
 	QueryEvents(query eventsQuery) ([]types.Event, error)
+	QueryActorProps(projectID uuid.UUID) ([]types.ProjectActorProps, error)
 }
 
 type eventsQuery struct {
@@ -86,7 +87,7 @@ func sqlError(stmt Statement, err error) error {
 
 func (db *postgresDatabase) CreateEvent(event *types.Event) error {
 	m := model.Event{
-		ID:        uuid.UUID(event.ID),
+		ID:        event.ID.String(),
 		ProjectID: event.ProjectID,
 		ActorPid:  event.PID,
 		Index:     event.Index,
@@ -117,9 +118,13 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		return nil, err
 	}
 
+	var err error
 	events := make([]types.Event, len(m))
 	for idx := range m {
-		events[idx].ID = ulid.ULID(m[idx].ID)
+		events[idx].ID, err = ulid.Parse(m[idx].ID)
+		if err != nil {
+			return nil, err
+		}
 		events[idx].ProjectID = m[idx].ProjectID
 		events[idx].Index = m[idx].Index
 		events[idx].PID = m[idx].ActorPid
@@ -131,4 +136,50 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	}
 
 	return events, nil
+}
+
+func (db *postgresDatabase) QueryActorProps(projectID uuid.UUID) ([]types.ProjectActorProps, error) {
+	var m []struct {
+		ActorPID      string
+		NumEvents     int32
+		FirstEventID  string
+		LastEventID   string
+		LastEventType string
+	}
+
+	subQuery := SELECT(
+		table.Event.ActorPid.AS("actor_pid"),
+		COUNT(table.Event.ID).AS("num_events"),
+		MIN(table.Event.ID).AS("first_event_id"),
+		MAX(table.Event.ID).AS("last_event_id"),
+	).FROM(table.Event).GROUP_BY(table.Event.ProjectID, table.Event.ActorPid).AsTable("sub")
+
+	stmt := SELECT(subQuery.AllColumns(), table.Event.Type.AS("last_event_type")).FROM(table.Event.RIGHT_JOIN(
+		subQuery,
+		table.Event.ID.EQ(StringColumn("last_event_id"))))
+
+	if err := stmt.Query(db.conn, &m); err != nil {
+		return nil, sqlError(stmt, err)
+	}
+
+	props := make([]types.ProjectActorProps, len(m))
+	for idx, mItem := range m {
+		firstEventID, err := ulid.Parse(mItem.FirstEventID)
+		if err != nil {
+			return nil, err
+		}
+		lastEventID, err := ulid.Parse(mItem.LastEventID)
+		if err != nil {
+			return nil, err
+		}
+		props[idx] = types.ProjectActorProps{
+			PID:          mItem.ActorPID,
+			NumEvents:    mItem.NumEvents,
+			Alive:        isActorAlive(mItem.LastEventType),
+			FirstEventID: firstEventID,
+			LastEventID:  lastEventID,
+		}
+	}
+
+	return props, nil
 }
