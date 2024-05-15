@@ -55,8 +55,6 @@ type MsgSse struct {
 	Msgs []any
 }
 
-type MsgSsePing struct{}
-
 type MsgSseNewActor struct {
 	ActorProps types.ProjectActorProps
 }

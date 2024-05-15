@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/gorilla/websocket"
@@ -131,6 +132,12 @@ func GetProjectEvents(ctx echo.Context) error {
 	)
 }
 
+const (
+	ssePingInterval = 100 * time.Millisecond
+)
+
+type msgSsePing struct{}
+
 func ConnectProjectSSE(ctx echo.Context) error {
 	flusher, ok := ctx.Response().Writer.(http.Flusher)
 	if !ok {
@@ -149,27 +156,26 @@ func ConnectProjectSSE(ctx echo.Context) error {
 	writer := ctx.Response().Writer
 	done := make(chan error)
 
+	var repeater actor.SendRepeater
 	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
 		switch msg := actorCtx.Message().(type) {
 		case actor.Started:
 			actorCtx.Send(projectPID, domain.MsgEventsListenStart{ID: requestID(ctx)})
+			repeater = actorCtx.SendRepeat(actorCtx.PID(), msgSsePing{}, ssePingInterval)
 		case actor.Stopped:
 			actorCtx.Send(projectPID, domain.MsgEventsListenStop{ID: requestID(ctx)})
+			repeater.Stop()
+		case msgSsePing:
+			if err := writeServerSentEvent(ctx.Request().Context(), writer, "ping", nil); err != nil {
+				done <- err
+			}
+			flusher.Flush()
 		case domain.MsgSse:
 			if msg.Msgs == nil {
 				done <- nil
 			}
 			for _, msg := range msg.Msgs {
 				switch msg := msg.(type) {
-				case domain.MsgSsePing:
-					if err := writeServerSentEvent(
-						ctx.Request().Context(),
-						writer,
-						"ping",
-						nil,
-					); err != nil {
-						done <- err
-					}
 				case domain.MsgSseNewActor:
 					if err := writeServerSentEvent(
 						ctx.Request().Context(),

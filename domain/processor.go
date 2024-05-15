@@ -13,16 +13,16 @@ import (
 )
 
 const (
-	ActorKindProcessor    = "processor"
-	listenerTimerDuration = 50 * time.Millisecond
+	ActorKindProcessor  = "processor"
+	sendUpdatesInterval = 100 * time.Millisecond
 )
 
 type processor struct {
 	commonActorData
-	actors    map[string]types.ProjectActorProps
-	entropy   ulid.MonotonicReader
-	updates   map[string]struct{}
-	timerStop chan<- struct{}
+	actors   map[string]types.ProjectActorProps
+	entropy  ulid.MonotonicReader
+	updates  map[string]struct{}
+	repeater actor.SendRepeater
 }
 
 func NewProcessorProducer() actor.Producer {
@@ -58,20 +58,9 @@ func (p *processor) receive(ctx *actor.Context) error {
 		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 		p.updates = make(map[string]struct{})
 	case actor.Started:
-		timerStop := make(chan struct{})
-		p.timerStop = timerStop
-		go func(engine *actor.Engine, pid *actor.PID) {
-			timer := time.NewTimer(listenerTimerDuration)
-			for {
-				select {
-				case <-timer.C:
-					timer.Reset(listenerTimerDuration)
-					engine.Send(pid, MsgSendUpdates{})
-				case <-timerStop:
-					return
-				}
-			}
-		}(ctx.Engine(), ctx.PID())
+		p.repeater = ctx.SendRepeat(ctx.PID(), MsgSendUpdates{}, sendUpdatesInterval)
+	case actor.Stopped:
+		p.repeater.Stop()
 	case MsgSdkEvent:
 		if err := p.handleEvent(ctx, msg.Event); err != nil {
 			return err
@@ -81,8 +70,11 @@ func (p *processor) receive(ctx *actor.Context) error {
 		props := make([]types.ProjectActorProps, 0)
 		for pid := range p.updates {
 			props = append(props, p.actors[pid])
+			delete(p.updates, pid)
 		}
-		ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
+		if len(props) > 0 {
+			ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
+		}
 	}
 	return nil
 }

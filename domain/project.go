@@ -91,8 +91,6 @@ func (p *project) receive(ctx *actor.Context) error {
 			p.actors[props.PID] = props
 		}
 
-		msgs = append(msgs, MsgSsePing{})
-
 		for _, pid := range p.listeners {
 			ctx.Send(pid, MsgSse{Msgs: msgs})
 		}
