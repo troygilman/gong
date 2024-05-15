@@ -67,14 +67,9 @@ func MiddlewareProjectContext() echo.MiddlewareFunc {
 			}
 			cb = cb.With(types.CtxTab, tab)
 
-			filter := types.EventsFilter{}
-			for key, vals := range ctx.QueryParams() {
-				if key == "filter_type" {
-					filter.Type = vals[len(vals)-1]
-				}
-				if key == "filter_sender" {
-					filter.Sender = vals[len(vals)-1]
-				}
+			filter := types.EventsFilter{
+				Type:   ctx.QueryParam("filter_type"),
+				Sender: ctx.QueryParam("filter_sender"),
 			}
 			cb = cb.With(types.CtxFilter, filter)
 
