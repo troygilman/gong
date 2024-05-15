@@ -9,6 +9,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"slices"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
@@ -109,10 +110,12 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	var m []model.Event
 
 	whereExpression := table.Event.ProjectID.EQ(UUID(query.projectID)).AND(table.Event.ActorPid.EQ(String(query.actorPID)))
+	orderClause := table.Event.ID.DESC()
 
 	if query.eventID.Compare(ulid.ULID{}) != 0 {
 		if query.numEvents > 0 {
 			whereExpression = whereExpression.AND(table.Event.ID.GT(String(query.eventID.String())))
+			orderClause = table.Event.ID.ASC()
 		} else {
 			whereExpression = whereExpression.AND(table.Event.ID.LT(String(query.eventID.String())))
 		}
@@ -122,11 +125,15 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
 		whereExpression).
-		ORDER_BY(table.Event.ID.DESC()).
+		ORDER_BY(orderClause).
 		LIMIT(int64(n))
 
 	if err := stmt.Query(db.conn, &m); err != nil {
 		return nil, err
+	}
+
+	if query.numEvents > 0 {
+		slices.Reverse(m)
 	}
 
 	var err error

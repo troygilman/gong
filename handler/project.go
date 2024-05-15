@@ -109,13 +109,14 @@ func GetProjectEvents(ctx echo.Context) error {
 	}
 
 	appendTop := n > 0
-	moreTop := false
+	moreTop := true
 	moreBottom := true
 
 	if appendTop {
-		if len(response.Events) > 0 {
-			moreTop = response.Props.LastEventID.Compare(response.Events[len(response.Events)-1].ID) > 0
-		}
+		moreTop = len(response.Events) > 0
+		// if len(response.Events) > 0 {
+		// 	moreTop = response.Props.LastEventID.Compare(response.Events[len(response.Events)-1].ID) > 0
+		// }
 	} else {
 		moreBottom = len(response.Events) > 0
 	}

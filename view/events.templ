@@ -21,17 +21,18 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 		class="grow min-h-0 max-w-full overflow-x-auto"
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
+		@htmx:after-request="onAfterRequest($event)"
 	>
 		<script>
 			function handleScroll(pid, { scrollTop }) {
 				const container = document.getElementById("events-container");
 				if (container.scrollTop < scrollTop) {
 					if (loadNext(container)) {
-						htmx.trigger('#events-top-data-loader-' + pid , 'load-next', {})
+						htmx.trigger('#events-top-data-loader', 'load-next', {})
 					}
 				} else if (container.scrollTop > scrollTop) {
 					if (loadPrev(container)) {
-						htmx.trigger('#events-bottom-data-loader-' + pid, 'load-prev', {})
+						htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
 					}
 				}
 				return container.scrollTop;
@@ -43,6 +44,28 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 
 			function loadPrev(container) {
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+			}
+
+			function onAfterRequest(e) {
+				const maxEvents = 100;
+				const container = document.getElementById("events-container");
+				const events = container.querySelectorAll(".event");
+				const overflow = events.length - maxEvents;
+				if (e.detail.target.id === "events-top-data-loader") {
+					if (overflow > 0) {
+						for (let i = maxEvents; i < events.length; i++) {
+							htmx.remove(events[i]);
+						}
+					}
+					console.log("event swap top - overflow:", overflow)
+				} else if (e.detail.target.id === "events-bottom-data-loader") {
+					if (overflow > 0) {
+						for (let i = 0; i < overflow; i++) {
+							htmx.remove(events[i]);
+						}
+					}
+					console.log("event swap bottom - overflow:", overflow)
+				}
 			}
 		</script>
 		<table id="events-table" class="table table-pin-rows table-sm">
@@ -58,6 +81,7 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 			</thead>
 			<tbody
 				id="events-container"
+				hx-sync="this"
 			>
 				@eventsTopDataLoader(false, false)
 				@eventsBottomDataLoader(false, true)
@@ -138,13 +162,13 @@ templ eventsFilterItem(label string, name string, active bool) {
 
 templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
-		id={ "events-top-data-loader-" + formatActorPIDCtx(ctx) }
+		id="events-top-data-loader"
 		hx-get={ formatProjectUrl(ctx, "/events") }
 		hx-vals={ fmt.Sprintf(`js:{ "id": topID(), "n": %d }`, 10) }
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="load-next once, intersect once"
+			hx-trigger="every 1s [load()], load-next once, intersect once delay:10ms"
 		} else {
 			hx-trigger="every 1s [load()]"
 		}
@@ -160,7 +184,6 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 			function topID() {
 				const events = document.getElementById("events-container").querySelectorAll(".event");
 				if (events.length > 0) {
-					console.log("topID")
 					return events[0].querySelector("input").value;
 				} else {
 					return "";
@@ -172,7 +195,7 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 
 templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 	<tr
-		id={ "events-bottom-data-loader-" + formatActorPIDCtx(ctx) }
+		id="events-bottom-data-loader"
 		if moreEvents {
 			hx-get={ formatProjectUrl(ctx, "/events") }
 			hx-vals={ fmt.Sprintf(`js:{ "id": bottomID(), "n": %d }`, -10) }
@@ -188,7 +211,6 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 			function bottomID() {
 				const events = document.getElementById("events-container").querySelectorAll(".event");
 				if (events.length > 0) {
-					console.log("bottomID")
 					return events[events.length-1].querySelector("input").value;
 				} else {
 					return "";
@@ -210,11 +232,15 @@ func formatActorPID(pid string) string {
 }
 
 templ ProjectActorEvents(events types.EventList, appendTop bool, moreTop bool, moreBottom bool) {
-	@eventsTopDataLoader(!appendTop, moreTop)
+	if appendTop || (!appendTop && moreBottom) {
+		@eventsTopDataLoader(!appendTop, moreTop)
+	}
 	for i := 0; i < len(events); i++ {
 		@projectActorEvent(events[i])
 	}
-	@eventsBottomDataLoader(appendTop, moreBottom)
+	if !appendTop || (appendTop && moreTop) {
+		@eventsBottomDataLoader(appendTop, moreBottom)
+	}
 }
 
 templ projectActorEvent(event types.Event) {
