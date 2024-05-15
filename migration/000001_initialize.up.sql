@@ -10,3 +10,6 @@ CREATE TABLE IF NOT EXISTS event(
     msg TEXT NOT NULL,
     PRIMARY KEY (id, project_id)
 );
+
+CREATE INDEX IF NOT EXISTS index_actor_pid
+ON event(actor_pid);

@@ -26,24 +26,48 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 		<script>
 			function handleScroll(pid, { scrollTop }) {
 				const container = document.getElementById("events-container");
-				if (container.scrollTop < scrollTop) {
-					if (loadNext(container)) {
-						htmx.trigger('#events-top-data-loader', 'load-next', {})
+				try {
+					if (container.scrollTop < scrollTop) {
+						if (shouldLoadTop()) {
+							htmx.trigger('#events-top-data-loader', 'load-next', {})
+						}
+					} else if (container.scrollTop > scrollTop) {
+						if (shouldLoadBottom()) {
+							htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
+						}
 					}
-				} else if (container.scrollTop > scrollTop) {
-					if (loadPrev(container)) {
-						htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
-					}
+				} catch (error) {
+					console.log(error);
 				}
 				return container.scrollTop;
 			}
 
-			function loadNext(container) {
+			function shouldLoadTop() {
+				const container = document.getElementById("events-container");
 				return container.scrollTop <= container.scrollHeight * 0.1;
 			}
 
-			function loadPrev(container) {
+			function shouldLoadBottom() {
+				const container = document.getElementById("events-container");
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+			}
+
+			function getTopID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					return events[0].querySelector("input").value;
+				} else {
+					return "";
+				}
+			}
+
+			function getBottomID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					return events[events.length-1].querySelector("input").value;
+				} else {
+					return "";
+				}
 			}
 
 			function onAfterRequest(e) {
@@ -168,33 +192,18 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
 		hx-get={ formatProjectUrl(ctx, "/events") }
-		hx-vals={ fmt.Sprintf(`js:{ "id": topID(), "n": %d }`, 10) }
+		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 10) }
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="every 1s [load()], load-next once, intersect once delay:10ms"
+			hx-trigger="every 1s [shouldLoadTop()], load-next once, intersect once delay:20ms"
 		} else {
-			hx-trigger="every 1s [load()]"
+			hx-trigger="every 1s [shouldLoadTop()]"
 		}
 		if oob {
 			hx-swap-oob="true"
 		}
-	>
-		<script>
-			function load() {
-				const container = document.getElementById("events-container");
-				return loadNext(container);
-			}
-			function topID() {
-				const events = document.getElementById("events-container").querySelectorAll(".event");
-				if (events.length > 0) {
-					return events[0].querySelector("input").value;
-				} else {
-					return "";
-				}
-			}
-		</script>
-	</tr>
+	></tr>
 }
 
 templ eventsBottomDataLoader(oob bool, moreEvents bool) {
@@ -202,7 +211,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 		id="events-bottom-data-loader"
 		if moreEvents {
 			hx-get={ formatProjectUrl(ctx, "/events") }
-			hx-vals={ fmt.Sprintf(`js:{ "id": bottomID(), "n": %d }`, -10) }
+			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -10) }
 			hx-include={ includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
@@ -210,18 +219,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 		if oob {
 			hx-swap-oob="true"
 		}
-	>
-		<script>
-			function bottomID() {
-				const events = document.getElementById("events-container").querySelectorAll(".event");
-				if (events.length > 0) {
-					return events[events.length-1].querySelector("input").value;
-				} else {
-					return "";
-				}
-			}
-		</script>
-	</tr>
+	></tr>
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
@@ -269,8 +267,4 @@ templ projectActorEvent(event types.Event) {
 			{ event.Msg }
 		</td>
 	</tr>
-}
-
-templ projectActorEventDelete(index int32) {
-	<tr id={ fmt.Sprintf("event-%d", index) } hx-swap-oob="delete"></tr>
 }

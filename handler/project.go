@@ -111,7 +111,7 @@ func GetProjectEvents(ctx echo.Context) error {
 	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
 	response, err := utils.HandleResponse[domain.RspGetProjectEvents](r)
 	if err != nil {
-		return err
+		response.Events = make(types.EventList, 0)
 	}
 
 	appendTop := n > 0
