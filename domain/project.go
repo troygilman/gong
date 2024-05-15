@@ -2,14 +2,10 @@ package domain
 
 import (
 	"errors"
-	"gong/sdk"
 	"gong/types"
-	"math/rand"
-	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 	actor_utils "github.com/troygilman0/utils"
 )
 
@@ -25,7 +21,6 @@ type project struct {
 	commonActorData
 	actors    map[string]types.ProjectActorProps
 	listeners map[string]*actor.PID
-	entropy   ulid.MonotonicReader
 }
 
 func NewProjectProducer() actor.Producer {
@@ -59,11 +54,6 @@ func (p *project) receive(ctx *actor.Context) error {
 	case actor.Initialized:
 		p.actors = make(map[string]types.ProjectActorProps)
 		p.listeners = make(map[string]*actor.PID)
-		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
-	case MsgSdkEvent:
-		if err := p.handleEvent(ctx, msg.Event); err != nil {
-			return err
-		}
 	case MsgGetProjectProps:
 		props := types.ProjectProps{
 			ID:         p.id,
@@ -84,6 +74,29 @@ func (p *project) receive(ctx *actor.Context) error {
 		} else {
 			return errors.New("actor pid does not exist")
 		}
+	case MsgUpdateProjectActorProps:
+		msgs := make([]any, 0)
+
+		for _, props := range msg.Props {
+			_, exists := p.actors[props.PID]
+			if exists {
+				msgs = append(msgs, MsgSseNewEvents{
+					ActorProps: props,
+				})
+			} else {
+				msgs = append(msgs, MsgSseNewActor{
+					ActorProps: props,
+				})
+			}
+			p.actors[props.PID] = props
+		}
+
+		msgs = append(msgs, MsgSsePing{})
+
+		for _, pid := range p.listeners {
+			ctx.Send(pid, MsgSse{Msgs: msgs})
+		}
+
 	case MsgGetProjectEvents:
 		actorProps, ok := p.actors[msg.ActorPID]
 		if ok {
@@ -108,14 +121,15 @@ func (p *project) receive(ctx *actor.Context) error {
 			})
 		}
 	case MsgEventsListenStart:
-		pid := ctx.Engine().Spawn(newListener(p.id, ctx.Sender()), ActorKindListener)
-		p.listeners[msg.ID] = pid
+		//pid := ctx.Engine().Spawn(newListener(p.id, ctx.Sender()), ActorKindListener)
+		p.listeners[msg.ID] = ctx.Sender()
 	case MsgEventsListenStop:
-		pid, ok := p.listeners[msg.ID]
-		if ok {
-			ctx.Engine().Poison(pid)
-			delete(p.listeners, msg.ID)
-		}
+		delete(p.listeners, msg.ID)
+		// pid, ok := p.listeners[msg.ID]
+		// if ok {
+		// 	ctx.Engine().Poison(pid)
+		// 	delete(p.listeners, msg.ID)
+		// }
 	default:
 		_ = msg
 	}
@@ -139,47 +153,6 @@ func (p *project) load(id uuid.UUID) error {
 
 func (p *project) create(id uuid.UUID) error {
 	p.id = id
-	return nil
-}
-
-func (p *project) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
-	id, err := ulid.New(ulid.Timestamp(sdkEvent.Timestamp), p.entropy)
-	if err != nil {
-		return err
-	}
-
-	event := types.Event{
-		ID:        id,
-		ProjectID: p.id,
-		Event:     sdkEvent,
-	}
-
-	actorProps, ok := p.actors[event.PID]
-	if !ok {
-		actorProps = types.ProjectActorProps{
-			PID:       event.PID,
-			NumEvents: 0,
-			Alive:     false,
-		}
-	}
-
-	event.Index = int32(actorProps.NumEvents)
-
-	actorProps.NumEvents++
-	if event.ID.Compare(actorProps.LastEventID) > 0 {
-		actorProps.Alive = isActorAlive(event.Type)
-		actorProps.LastEventID = event.ID
-	}
-	p.actors[event.PID] = actorProps
-
-	for _, pid := range p.listeners {
-		ctx.Send(pid, MsgEvent{Event: event})
-	}
-
-	if err := p.app.DB().CreateEvent(&event); err != nil {
-		return err
-	}
-
 	return nil
 }
 

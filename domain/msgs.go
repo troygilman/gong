@@ -49,7 +49,7 @@ type MsgEventsListenStop struct {
 	ID string
 }
 
-type MsgListenerSendBatch struct{}
+type MsgSendUpdates struct{}
 
 type MsgSse struct {
 	Msgs []any
@@ -62,7 +62,9 @@ type MsgSseNewActor struct {
 }
 
 type MsgSseNewEvents struct {
-	ActorPID   string
-	NumEvents  int32
-	ActorAlive bool
+	ActorProps types.ProjectActorProps
+}
+
+type MsgUpdateProjectActorProps struct {
+	Props []types.ProjectActorProps
 }

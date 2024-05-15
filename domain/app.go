@@ -55,6 +55,7 @@ func NewDefaultApp() (App, error) {
 	app.producerFuncs = make(map[string]producerFunc)
 
 	app.producerFuncs[ActorKindProject] = NewProjectProducerWithApp
+	app.producerFuncs[ActorKindProcessor] = NewProcessorProducerWithApp
 
 	return app, nil
 }

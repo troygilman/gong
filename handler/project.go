@@ -180,11 +180,12 @@ func ConnectProjectSSE(ctx echo.Context) error {
 						done <- err
 					}
 				case domain.MsgSseNewEvents:
+					log.Printf("%+v", msg.ActorProps)
 					if err := writeServerSentEvent(
 						ctx.Request().Context(),
 						writer,
-						types.SseTypeUpdateActorNumEvents+msg.ActorPID,
-						view.ProjectActorBadge(msg.ActorPID, msg.NumEvents, msg.ActorAlive),
+						types.SseTypeUpdateActorNumEvents+msg.ActorProps.PID,
+						view.ProjectActorBadge(msg.ActorProps),
 					); err != nil {
 						done <- err
 					}
@@ -205,7 +206,7 @@ func ConnectProject(ctx echo.Context) error {
 	app := mustApp(ctx)
 
 	projectID := mustProjectID(ctx)
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
+	processorPID, err := app.PID(domain.ActorKindProcessor, projectID.String())
 	if err != nil {
 		return err
 	}
@@ -229,7 +230,7 @@ func ConnectProject(ctx echo.Context) error {
 			break
 		}
 
-		app.Engine().Send(projectPID, domain.MsgSdkEvent{
+		app.Engine().Send(processorPID, domain.MsgSdkEvent{
 			Event: event,
 		})
 	}

@@ -106,7 +106,7 @@ templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
 			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, props.PID)) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
-			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
+			@ProjectActorBadge(props)
 			if isCurrentPID(ctx, props.PID) {
 				@resetActiveListItem("actor-list-item-" + formatActorPID(props.PID))
 			}
@@ -114,17 +114,17 @@ templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
 	</li>
 }
 
-templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
+templ ProjectActorBadge(props types.ProjectActorProps) {
 	<div
-		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
-		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
+		class={ "badge",  templ.KV("badge-success", props.Alive), templ.KV("badge-error", !props.Alive) }
+		sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
 		hx-target="this"
 		hx-swap="outerHTML"
 	>
-		if numEvents > 999 {
+		if props.NumEvents > 999 {
 			{ "999+" }
 		} else {
-			{ fmt.Sprintf("%d", numEvents) }
+			{ fmt.Sprintf("%d", props.NumEvents) }
 		}
 	</div>
 }
