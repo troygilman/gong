@@ -28,6 +28,7 @@ type eventsQuery struct {
 	actorPID  string
 	eventID   ulid.ULID
 	numEvents int
+	filter    types.EventsFilter
 }
 
 const (
@@ -93,6 +94,7 @@ func (db *postgresDatabase) CreateEvent(event *types.Event) error {
 		ActorPid:  event.PID,
 		Index:     event.Index,
 		Timestamp: event.Timestamp,
+		Sender:    event.Sender,
 		Type:      event.Type,
 		Level:     int32(event.Level),
 		Msg:       event.Msg,
@@ -121,12 +123,17 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		}
 	}
 
-	n := max(query.numEvents, -query.numEvents)
+	if query.filter.Type != nil {
+		whereExpression = whereExpression.AND(table.Event.Type.LIKE(String("%" + *query.filter.Type + "%")))
+	}
+	if query.filter.Sender != nil {
+		whereExpression = whereExpression.AND(table.Event.Sender.LIKE(String("%" + *query.filter.Sender + "%")))
+	}
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
 		whereExpression).
 		ORDER_BY(orderClause).
-		LIMIT(int64(n))
+		LIMIT(int64(max(query.numEvents, -query.numEvents)))
 
 	if err := stmt.Query(db.conn, &m); err != nil {
 		return nil, err

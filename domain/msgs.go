@@ -33,6 +33,7 @@ type MsgGetProjectEvents struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	NumEvents int
+	Filter    types.EventsFilter
 }
 
 type RspGetProjectEvents struct {

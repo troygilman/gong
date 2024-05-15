@@ -78,15 +78,15 @@ type ProjectActorProps struct {
 }
 
 type EventsFilter struct {
-	Type   string
-	Sender string
+	Type   *string
+	Sender *string
 }
 
 func (f EventsFilter) SetValues(values url.Values) {
-	if f.Type != "" {
-		values.Set("filter_type", f.Type)
+	if f.Type != nil {
+		values.Set("filter_type", *f.Type)
 	}
-	if f.Sender != "" {
-		values.Set("filter_sender", f.Sender)
+	if f.Sender != nil {
+		values.Set("filter_sender", *f.Sender)
 	}
 }

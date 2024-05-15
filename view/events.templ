@@ -110,24 +110,28 @@ templ eventsFilter(filter types.EventsFilter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("Type", "filter_type", filter.Type != "") {
+		@eventsFilterItem("Type", "filter_type", filter.Type != nil) {
 			<input
 				name="filter_type"
 				type="text"
 				placeholder="actor.Started"
-				value={ filter.Type }
+				if filter.Type != nil {
+					value={ *filter.Type }
+				}
 				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"
 			/>
 		}
 		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "") {
+		@eventsFilterItem("Sender", "filter_sender", filter.Sender != nil) {
 			<input
 				name="filter_sender"
 				type="text"
 				placeholder="actor.Started"
-				value={ filter.Sender }
+				if filter.Sender != nil {
+					value={ *filter.Sender }
+				}
 				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"

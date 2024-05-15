@@ -96,10 +96,16 @@ func GetProjectEvents(ctx echo.Context) error {
 		return errors.New("'n' must be non-empty")
 	}
 
+	filter, ok := ctx.Request().Context().Value(types.CtxFilter).(types.EventsFilter)
+	if !ok {
+		return errors.New("filter is empty")
+	}
+
 	msg := domain.MsgGetProjectEvents{
 		ActorPID:  actorPID,
 		EventID:   eventID,
 		NumEvents: n,
+		Filter:    filter,
 	}
 
 	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)

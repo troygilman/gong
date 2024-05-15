@@ -92,6 +92,7 @@ func (p *project) receive(ctx *actor.Context) error {
 				actorPID:  msg.ActorPID,
 				eventID:   msg.EventID,
 				numEvents: msg.NumEvents,
+				filter:    msg.Filter,
 			}
 			events, err := p.app.DB().QueryEvents(query)
 			if err != nil {
