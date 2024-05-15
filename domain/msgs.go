@@ -3,6 +3,8 @@ package domain
 import (
 	"gong/sdk"
 	"gong/types"
+
+	"github.com/oklog/ulid/v2"
 )
 
 type MsgSdkEvent struct {
@@ -28,14 +30,14 @@ type RspGetProjectActorProps struct {
 }
 
 type MsgGetProjectEvents struct {
-	ActorPID string
-	StartIdx int32
-	EndIdx   int32
+	ActorPID  string
+	EventID   ulid.ULID
+	NumEvents int
 }
 
 type RspGetProjectEvents struct {
-	Events         types.EventList
-	NumTotalEvents int32
+	Events types.EventList
+	Props  types.ProjectActorProps
 }
 
 type MsgEventsListenStart struct {

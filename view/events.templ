@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/google/uuid"
 	"fmt"
 	"gong/types"
 	"strings"
@@ -60,8 +59,8 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 			<tbody
 				id="events-container"
 			>
-				@eventsTopDataLoader(props.NumEvents, props.NumEvents, false, false)
-				@eventsBottomDataLoader(props.NumEvents, props.NumEvents, false)
+				@eventsTopDataLoader(false, false)
+				@eventsBottomDataLoader(false, true)
 			</tbody>
 		</table>
 	</div>
@@ -137,11 +136,11 @@ templ eventsFilterItem(label string, name string, active bool) {
 	</div>
 }
 
-templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents bool) {
+templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id={ "events-top-data-loader-" + formatActorPIDCtx(ctx) }
 		hx-get={ formatProjectUrl(ctx, "/events") }
-		hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, 10) }
+		hx-vals={ fmt.Sprintf(`js:{ "id": topID(), "n": %d }`, 10) }
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
@@ -158,16 +157,25 @@ templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents boo
 				const container = document.getElementById("events-container");
 				return loadNext(container);
 			}
+			function topID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					console.log("topID")
+					return events[0].querySelector("input").value;
+				} else {
+					return "";
+				}
+			}
 		</script>
 	</tr>
 }
 
-templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
+templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id={ "events-bottom-data-loader-" + formatActorPIDCtx(ctx) }
-		if startIdx > 0 {
+		if moreEvents {
 			hx-get={ formatProjectUrl(ctx, "/events") }
-			hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, -10) }
+			hx-vals={ fmt.Sprintf(`js:{ "id": bottomID(), "n": %d }`, -10) }
 			hx-include={ includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
@@ -175,7 +183,19 @@ templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
 		if oob {
 			hx-swap-oob="true"
 		}
-	></tr>
+	>
+		<script>
+			function bottomID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					console.log("bottomID")
+					return events[events.length-1].querySelector("input").value;
+				} else {
+					return "";
+				}
+			}
+		</script>
+	</tr>
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
@@ -189,19 +209,17 @@ func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")
 }
 
-templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
-	@eventsTopDataLoader(startIdx, endIdx, !appendEnd, moreEvents)
+templ ProjectActorEvents(events types.EventList, appendTop bool, moreTop bool, moreBottom bool) {
+	@eventsTopDataLoader(!appendTop, moreTop)
 	for i := 0; i < len(events); i++ {
 		@projectActorEvent(events[i])
 	}
-	for _, i := range delete {
-		@projectActorEventDelete(i)
-	}
-	@eventsBottomDataLoader(startIdx, endIdx, appendEnd)
+	@eventsBottomDataLoader(appendTop, moreBottom)
 }
 
 templ projectActorEvent(event types.Event) {
-	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="text-nowrap">
+	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="event">
+		<input type="hidden" value={ event.ID.String() }/>
 		<td>
 			{ event.Timestamp.String() }
 		</td>

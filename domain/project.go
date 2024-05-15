@@ -87,18 +87,19 @@ func (p *project) receive(ctx *actor.Context) error {
 	case MsgGetProjectEvents:
 		actorProps, ok := p.actors[msg.ActorPID]
 		if ok {
-			events, err := p.app.DB().QueryEvents(eventsQuery{
+			query := eventsQuery{
 				projectID: p.id,
 				actorPID:  msg.ActorPID,
-				startIdx:  msg.StartIdx,
-				endIdx:    msg.EndIdx,
-			})
+				eventID:   msg.EventID,
+				numEvents: msg.NumEvents,
+			}
+			events, err := p.app.DB().QueryEvents(query)
 			if err != nil {
 				return err
 			}
 			ctx.Respond(RspGetProjectEvents{
-				Events:         events,
-				NumTotalEvents: actorProps.NumEvents,
+				Events: events,
+				Props:  actorProps,
 			})
 		} else {
 			ctx.Respond(RspGetProjectEvents{

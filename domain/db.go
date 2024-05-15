@@ -25,8 +25,8 @@ type Database interface {
 type eventsQuery struct {
 	projectID uuid.UUID
 	actorPID  string
-	startIdx  int32
-	endIdx    int32
+	eventID   ulid.ULID
+	numEvents int
 }
 
 const (
@@ -108,11 +108,22 @@ func (db *postgresDatabase) CreateEvent(event *types.Event) error {
 func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error) {
 	var m []model.Event
 
+	whereExpression := table.Event.ProjectID.EQ(UUID(query.projectID)).AND(table.Event.ActorPid.EQ(String(query.actorPID)))
+
+	if query.eventID.Compare(ulid.ULID{}) != 0 {
+		if query.numEvents > 0 {
+			whereExpression = whereExpression.AND(table.Event.ID.GT(String(query.eventID.String())))
+		} else {
+			whereExpression = whereExpression.AND(table.Event.ID.LT(String(query.eventID.String())))
+		}
+	}
+
+	n := max(query.numEvents, -query.numEvents)
+
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
-		table.Event.ProjectID.EQ(UUID(query.projectID)).
-			AND(table.Event.ActorPid.EQ(String(query.actorPID))).
-			AND(table.Event.Index.BETWEEN(Int32(query.startIdx), Int32(query.endIdx)))).
-		ORDER_BY(table.Event.ID.DESC())
+		whereExpression).
+		ORDER_BY(table.Event.ID.DESC()).
+		LIMIT(int64(n))
 
 	if err := stmt.Query(db.conn, &m); err != nil {
 		return nil, err

@@ -2,7 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {}
+@layer components {
+    .event {
+        @apply text-nowrap
+    }
+}
 
 [x-cloak] {
     display: none !important;

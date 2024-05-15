@@ -15,6 +15,7 @@ import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/oklog/ulid/v2"
 	"github.com/troygilman0/utils"
 )
 
@@ -85,32 +86,20 @@ func GetProjectEvents(ctx echo.Context) error {
 		return errors.New("actorPID is empty")
 	}
 
-	startIdx, err := strconv.Atoi(ctx.QueryParam("start"))
+	eventID, err := ulid.Parse(ctx.QueryParam("id"))
 	if err != nil {
-		return errors.New("'start' must be non-empty")
-	}
-
-	endIdx, err := strconv.Atoi(ctx.QueryParam("end"))
-	if err != nil {
-		return errors.New("'end' must be non-empty")
+		eventID = ulid.ULID{}
 	}
 
 	n, err := strconv.Atoi(ctx.QueryParam("n"))
 	if err != nil {
 		return errors.New("'n' must be non-empty")
 	}
-	appendEnd := n > 0
 
 	msg := domain.MsgGetProjectEvents{
-		ActorPID: actorPID,
-	}
-
-	if appendEnd {
-		msg.StartIdx = int32(endIdx)
-		msg.EndIdx = msg.StartIdx + int32(n)
-	} else {
-		msg.EndIdx = int32(startIdx)
-		msg.StartIdx = msg.EndIdx + int32(n)
+		ActorPID:  actorPID,
+		EventID:   eventID,
+		NumEvents: n,
 	}
 
 	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
@@ -119,34 +108,22 @@ func GetProjectEvents(ctx echo.Context) error {
 		return err
 	}
 
-	const maxEvents = 100
+	appendTop := n > 0
+	moreTop := false
+	moreBottom := true
 
-	newStartIdx := startIdx
-	newEndIdx := endIdx
-	deleteIdxs := []int32{}
-
-	if appendEnd {
-		newEndIdx += len(response.Events)
-		overflow := max(newEndIdx-newStartIdx-maxEvents, 0)
-		newStartIdx += overflow
-		for idx := range overflow {
-			deleteIdxs = append(deleteIdxs, int32(startIdx+idx))
+	if appendTop {
+		if len(response.Events) > 0 {
+			moreTop = response.Props.LastEventID.Compare(response.Events[len(response.Events)-1].ID) > 0
 		}
 	} else {
-		newStartIdx -= len(response.Events)
-		overflow := max(newEndIdx-newStartIdx-maxEvents, 0)
-		newEndIdx -= overflow
-		for idx := range overflow {
-			deleteIdxs = append(deleteIdxs, int32(endIdx-idx-1))
-		}
+		moreBottom = len(response.Events) > 0
 	}
-
-	moreEvents := int32(newEndIdx) < response.NumTotalEvents-1
 
 	return renderView(
 		ctx,
 		ctx.Request().Context(),
-		view.ProjectActorEvents(projectID, actorPID, response.Events, deleteIdxs, int32(newStartIdx), int32(newEndIdx), appendEnd, moreEvents),
+		view.ProjectActorEvents(response.Events, appendTop, moreTop, moreBottom),
 	)
 }
 
