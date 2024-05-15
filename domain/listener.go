@@ -1,15 +1,9 @@
 package domain
 
 import (
-	"bytes"
-	"context"
-	"fmt"
 	"gong/types"
-	"io"
-	"strings"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
 	actor_utils "github.com/troygilman0/utils"
@@ -116,32 +110,6 @@ func (l *listener) receive(ctx *actor.Context) error {
 		msgs = append(msgs, MsgSsePing{})
 
 		ctx.Send(l.consumer, MsgSse{Msgs: msgs})
-	}
-
-	return nil
-}
-
-func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data any) error {
-	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("event: %s\n", event))
-
-	var d string
-	switch data := data.(type) {
-	case templ.Component:
-		buff := bytes.NewBuffer([]byte{})
-		if err := data.Render(ctx, buff); err != nil {
-			return err
-		}
-		d = strings.ReplaceAll(buff.String(), "\n", "")
-	default:
-		if data == nil {
-			d = ""
-		}
-	}
-
-	sb.WriteString(fmt.Sprintf("data: %s\n\n", d))
-	if _, err := fmt.Fprint(w, sb.String()); err != nil {
-		return err
 	}
 
 	return nil
