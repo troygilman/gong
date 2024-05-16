@@ -211,7 +211,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<div
 				tabindex="0"
 				role="button"
-				class={ "border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
+				class={ "event-filter-button-container", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
 			>
 				<div class="event-filter-button">{ label }</div>
 			</div>

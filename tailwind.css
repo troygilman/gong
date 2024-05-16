@@ -14,6 +14,10 @@
     .event-filter-button {
         @apply btn btn-sm btn-ghost rounded-none no-animation;
     }
+
+    .event-filter-button-container {
+        @apply border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0 transition-all outline-none;
+    }
 }
 
 [x-cloak] {
