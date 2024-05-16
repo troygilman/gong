@@ -134,42 +134,36 @@ templ eventsFilter(filter types.EventsFilter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", "filter_id", filter.ID != nil) {
+		@eventsFilterItem("ID", "filter_id", filter.ID != "") {
 			<input
 				name="filter_id"
 				type="text"
 				placeholder="01HXZJN46DQJPWYBAM"
-				if filter.ID != nil {
-					value={ *filter.ID }
-				}
+				value={ filter.ID }
 				class="event-filter-input"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"
 			/>
 		}
 		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Type", "filter_type", filter.Type != nil) {
+		@eventsFilterItem("Type", "filter_type", filter.Type != "") {
 			<input
 				name="filter_type"
 				type="text"
 				placeholder="actor.Started"
-				if filter.Type != nil {
-					value={ *filter.Type }
-				}
+				value={ filter.Type }
 				class="event-filter-input"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"
 			/>
 		}
 		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != nil) {
+		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "") {
 			<input
 				name="filter_sender"
 				type="text"
 				placeholder="local/server/primary"
-				if filter.Sender != nil {
-					value={ *filter.Sender }
-				}
+				value={ filter.Sender }
 				class="event-filter-input"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"

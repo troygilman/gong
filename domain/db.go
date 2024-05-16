@@ -123,14 +123,14 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		}
 	}
 
-	if query.filter.ID != nil {
-		whereExpression = whereExpression.AND(table.Event.ID.LIKE(String("%" + *query.filter.ID + "%")))
+	if query.filter.ID != "" {
+		whereExpression = whereExpression.AND(table.Event.ID.LIKE(String("%" + query.filter.ID + "%")))
 	}
-	if query.filter.Type != nil {
-		whereExpression = whereExpression.AND(table.Event.Type.LIKE(String("%" + *query.filter.Type + "%")))
+	if query.filter.Type != "" {
+		whereExpression = whereExpression.AND(table.Event.Type.LIKE(String("%" + query.filter.Type + "%")))
 	}
-	if query.filter.Sender != nil {
-		whereExpression = whereExpression.AND(table.Event.Sender.LIKE(String("%" + *query.filter.Sender + "%")))
+	if query.filter.Sender != "" {
+		whereExpression = whereExpression.AND(table.Event.Sender.LIKE(String("%" + query.filter.Sender + "%")))
 	}
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
