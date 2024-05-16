@@ -119,7 +119,7 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 templ eventsFilter(filter types.EventsFilter) {
 	<form
 		id="events-filter"
-		class="join border rounded-lg m-4 w-fit"
+		class="join m-4 w-fit"
 		hx-get={ formatProjectUrl(ctx, "/actor") }
 		hx-include={ includes }
 		hx-trigger="submit"
@@ -137,44 +137,35 @@ templ eventsFilter(filter types.EventsFilter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", "filter_id", filter.ID != "", "rounded-l-lg") {
+		@eventsFilterItem("ID", "filter_id", filter.ID != "", -1) {
 			<input
 				name="filter_id"
 				type="text"
 				placeholder="01HXZJN46DQJPWYBAM"
 				value={ filter.ID }
 				class="event-filter-input"
-				@keydown.enter="updateFilter()"
-				@focusout="updateFilter()"
 			/>
 		}
-		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Type", "filter_type", filter.Type != "", "") {
+		@eventsFilterItem("Type", "filter_type", filter.Type != "", 0) {
 			<input
 				name="filter_type"
 				type="text"
 				placeholder="actor.Started"
 				value={ filter.Type }
 				class="event-filter-input"
-				@keydown.enter="updateFilter()"
-				@focusout="updateFilter()"
 			/>
 		}
-		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "", "") {
+		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "", 0) {
 			<input
 				name="filter_sender"
 				type="text"
 				placeholder="local/server/primary"
 				value={ filter.Sender }
 				class="event-filter-input"
-				@keydown.enter="updateFilter()"
-				@focusout="updateFilter()"
 			/>
 		}
-		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Level", "filter_level", filter.Level != slog.LevelDebug, "rounded-r-lg") {
-			<div class="px-2 py-1" @focusout="updateFilter()">
+		@eventsFilterItem("Level", "filter_level", filter.Level != slog.LevelDebug, 1) {
+			<div class="px-2 py-1">
 				@eventsFilterLevelOption("Debug", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("Info", slog.LevelInfo, filter.Level)
 				@eventsFilterLevelOption("Warn", slog.LevelWarn, filter.Level)
@@ -201,7 +192,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 	</div>
 }
 
-templ eventsFilterItem(label string, name string, active bool, class string) {
+templ eventsFilterItem(label string, name string, active bool, placement int) {
 	<div class="join-item indicator">
 		if active {
 			<span
@@ -216,9 +207,20 @@ templ eventsFilterItem(label string, name string, active bool, class string) {
 				@closeIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
-		<div class="dropdown">
-			<div tabindex="0" role="button" class={ "btn btn-ghost btn-sm no-animation rounded-none", class }>{ label }</div>
-			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none  w-64 border">
+		<div class="dropdown group" @focus="console.log('FOCUS')">
+			<div
+				tabindex="0"
+				role="button"
+				class={ "border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
+			>
+				<div class="event-filter-button">{ label }</div>
+			</div>
+			<div
+				tabindex="0"
+				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border"
+				@focusout="updateFilter()"
+				@keydown.enter="updateFilter()"
+			>
 				{ children... }
 			</div>
 		</div>

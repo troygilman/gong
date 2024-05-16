@@ -10,6 +10,10 @@
     .event-filter-input {
         @apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent;
     }
+
+    .event-filter-button {
+        @apply btn btn-sm btn-ghost rounded-none no-animation;
+    }
 }
 
 [x-cloak] {
