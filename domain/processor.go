@@ -62,7 +62,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 	case actor.Stopped:
 		p.repeater.Stop()
 	case MsgSdkEvent:
-		if err := p.handleEvent(ctx, msg.Event); err != nil {
+		if err := p.handleEvent(msg.Event); err != nil {
 			return err
 		}
 	case MsgSendUpdates:
@@ -79,7 +79,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 	return nil
 }
 
-func (p *processor) handleEvent(ctx *actor.Context, sdkEvent sdk.Event) error {
+func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 	eventID, err := ulid.New(ulid.Timestamp(sdkEvent.Timestamp), p.entropy)
 	if err != nil {
 		return err

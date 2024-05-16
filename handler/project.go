@@ -160,10 +160,10 @@ func ConnectProjectSSE(ctx echo.Context) error {
 	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
 		switch msg := actorCtx.Message().(type) {
 		case actor.Started:
-			actorCtx.Send(projectPID, domain.MsgEventsListenStart{ID: requestID(ctx)})
+			actorCtx.Send(projectPID, domain.MsgEventsListenStart{})
 			repeater = actorCtx.SendRepeat(actorCtx.PID(), msgSsePing{}, ssePingInterval)
 		case actor.Stopped:
-			actorCtx.Send(projectPID, domain.MsgEventsListenStop{ID: requestID(ctx)})
+			actorCtx.Send(projectPID, domain.MsgEventsListenStop{})
 			repeater.Stop()
 		case msgSsePing:
 			if err := writeServerSentEvent(ctx.Request().Context(), writer, "ping", nil); err != nil {

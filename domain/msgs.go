@@ -41,13 +41,9 @@ type RspGetProjectEvents struct {
 	Props  types.ProjectActorProps
 }
 
-type MsgEventsListenStart struct {
-	ID string
-}
+type MsgEventsListenStart struct{}
 
-type MsgEventsListenStop struct {
-	ID string
-}
+type MsgEventsListenStop struct{}
 
 type MsgSendUpdates struct{}
 

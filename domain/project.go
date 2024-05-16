@@ -20,7 +20,7 @@ const (
 type project struct {
 	commonActorData
 	actors    map[string]types.ProjectActorProps
-	listeners map[string]*actor.PID
+	listeners map[*actor.PID]struct{}
 }
 
 func NewProjectProducer() actor.Producer {
@@ -53,7 +53,7 @@ func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.ProjectActorProps)
-		p.listeners = make(map[string]*actor.PID)
+		p.listeners = make(map[*actor.PID]struct{})
 	case MsgGetProjectProps:
 		props := types.ProjectProps{
 			ID:         p.id,
@@ -91,7 +91,7 @@ func (p *project) receive(ctx *actor.Context) error {
 			p.actors[props.PID] = props
 		}
 
-		for _, pid := range p.listeners {
+		for pid := range p.listeners {
 			ctx.Send(pid, MsgSse{Msgs: msgs})
 		}
 
@@ -119,17 +119,9 @@ func (p *project) receive(ctx *actor.Context) error {
 			})
 		}
 	case MsgEventsListenStart:
-		//pid := ctx.Engine().Spawn(newListener(p.id, ctx.Sender()), ActorKindListener)
-		p.listeners[msg.ID] = ctx.Sender()
+		p.listeners[ctx.Sender()] = struct{}{}
 	case MsgEventsListenStop:
-		delete(p.listeners, msg.ID)
-		// pid, ok := p.listeners[msg.ID]
-		// if ok {
-		// 	ctx.Engine().Poison(pid)
-		// 	delete(p.listeners, msg.ID)
-		// }
-	default:
-		_ = msg
+		delete(p.listeners, ctx.Sender())
 	}
 	return nil
 }
