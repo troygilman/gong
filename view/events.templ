@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"gong/types"
 	"strings"
+	"log/slog"
+	"strconv"
 )
 
 templ eventsTabContent(props types.ProjectActorProps) {
@@ -126,15 +128,16 @@ templ eventsFilter(filter types.EventsFilter) {
 	>
 		<script>
 			function updateFilter() {
-				const form = document.getElementById('events-filter');
-				for (const input of form.elements) {
-					if (input.value !== input.defaultValue) {
+				console.log("updateFilter()");
+				const inputs = document.getElementById('events-filter').querySelectorAll("input");
+				for (const input of inputs) {
+					if (input.value !== input.defaultValue || input.checked !== input.defaultChecked) {
 						htmx.trigger('#events-filter', 'submit', {});
 					}
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", "filter_id", filter.ID != "") {
+		@eventsFilterItem("ID", "filter_id", filter.ID != "", "rounded-l-lg") {
 			<input
 				name="filter_id"
 				type="text"
@@ -146,7 +149,7 @@ templ eventsFilter(filter types.EventsFilter) {
 			/>
 		}
 		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Type", "filter_type", filter.Type != "") {
+		@eventsFilterItem("Type", "filter_type", filter.Type != "", "") {
 			<input
 				name="filter_type"
 				type="text"
@@ -158,7 +161,7 @@ templ eventsFilter(filter types.EventsFilter) {
 			/>
 		}
 		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "") {
+		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "", "") {
 			<input
 				name="filter_sender"
 				type="text"
@@ -169,10 +172,36 @@ templ eventsFilter(filter types.EventsFilter) {
 				@focusout="updateFilter()"
 			/>
 		}
+		<div class="h-full border w-0"></div>
+		@eventsFilterItem("Level", "filter_level", filter.Level != slog.LevelDebug, "rounded-r-lg") {
+			<div class="px-2 py-1" @focusout="updateFilter()">
+				@eventsFilterLevelOption("Debug", slog.LevelDebug, filter.Level)
+				@eventsFilterLevelOption("Info", slog.LevelInfo, filter.Level)
+				@eventsFilterLevelOption("Warn", slog.LevelWarn, filter.Level)
+				@eventsFilterLevelOption("Error", slog.LevelError, filter.Level)
+			</div>
+		}
 	</form>
 }
 
-templ eventsFilterItem(label string, name string, active bool) {
+templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Level) {
+	<div class="form-control">
+		<label class="label cursor-pointer py-1">
+			<span class="label-text">{ label }</span>
+			<input
+				type="radio"
+				name="filter_level"
+				class="radio"
+				value={ strconv.Itoa(int(level)) }
+				if selected == level {
+					checked
+				}
+			/>
+		</label>
+	</div>
+}
+
+templ eventsFilterItem(label string, name string, active bool, class string) {
 	<div class="join-item indicator">
 		if active {
 			<span
@@ -188,8 +217,8 @@ templ eventsFilterItem(label string, name string, active bool) {
 			</span>
 		}
 		<div class="dropdown">
-			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation rounded-none">{ label }</div>
-			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-box w-64">
+			<div tabindex="0" role="button" class={ "btn btn-ghost btn-sm no-animation rounded-none", class }>{ label }</div>
+			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none  w-64 border">
 				{ children... }
 			</div>
 		</div>

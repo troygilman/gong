@@ -3,7 +3,9 @@ package types
 import (
 	"context"
 	"gong/sdk"
+	"log/slog"
 	"sort"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -81,12 +83,19 @@ type EventsFilter struct {
 	ID     string
 	Type   string
 	Sender string
+	Level  slog.Level
 }
 
 func NewEventsFilter(ctx echo.Context) EventsFilter {
+	level, err := strconv.Atoi(ctx.QueryParam("filter_level"))
+	if err != nil {
+		level = int(slog.LevelDebug)
+	}
+
 	return EventsFilter{
 		ID:     ctx.QueryParam("filter_id"),
 		Type:   ctx.QueryParam("filter_type"),
 		Sender: ctx.QueryParam("filter_sender"),
+		Level:  slog.Level(level),
 	}
 }

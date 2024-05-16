@@ -8,7 +8,7 @@
     }
 
     .event-filter-input {
-        @apply input input-bordered input-sm w-full max-w-xs focus:outline-none;
+        @apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent;
     }
 }
 

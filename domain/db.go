@@ -132,6 +132,9 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	if query.filter.Sender != "" {
 		whereExpression = whereExpression.AND(table.Event.Sender.LIKE(String("%" + query.filter.Sender + "%")))
 	}
+	if query.filter.Level > slog.LevelDebug {
+		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(query.filter.Level))))
+	}
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
 		whereExpression).
