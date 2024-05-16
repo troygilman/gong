@@ -167,34 +167,45 @@ func ConnectProjectSSE(ctx echo.Context) error {
 			repeater.Stop()
 		case msgSsePing:
 			if err := writeServerSentEvent(ctx.Request().Context(), writer, "ping", nil); err != nil {
-				done <- err
+				select {
+				case done <- err:
+				default:
+				}
 			}
 			flusher.Flush()
 		case domain.MsgSse:
 			if msg.Msgs == nil {
 				done <- nil
 			}
-			for _, msg := range msg.Msgs {
-				switch msg := msg.(type) {
-				case domain.MsgSseNewActor:
-					if err := writeServerSentEvent(
-						ctx.Request().Context(),
-						writer,
-						types.SseTypeNewActor,
-						view.ProjectActorListItem(msg.ActorProps, false),
-					); err != nil {
-						done <- err
+			if err := func() error {
+				for _, msg := range msg.Msgs {
+					switch msg := msg.(type) {
+					case domain.MsgSseNewActor:
+						if err := writeServerSentEvent(
+							ctx.Request().Context(),
+							writer,
+							types.SseTypeNewActor,
+							view.ProjectActorListItem(msg.ActorProps, false),
+						); err != nil {
+							return err
+						}
+					case domain.MsgSseNewEvents:
+						log.Printf("%+v", msg.ActorProps)
+						if err := writeServerSentEvent(
+							ctx.Request().Context(),
+							writer,
+							types.SseTypeUpdateActorNumEvents+msg.ActorProps.PID,
+							view.ProjectActorBadge(msg.ActorProps),
+						); err != nil {
+							return err
+						}
 					}
-				case domain.MsgSseNewEvents:
-					log.Printf("%+v", msg.ActorProps)
-					if err := writeServerSentEvent(
-						ctx.Request().Context(),
-						writer,
-						types.SseTypeUpdateActorNumEvents+msg.ActorProps.PID,
-						view.ProjectActorBadge(msg.ActorProps),
-					); err != nil {
-						done <- err
-					}
+				}
+				return nil
+			}(); err != nil {
+				select {
+				case done <- err:
+				default:
 				}
 			}
 			flusher.Flush()
