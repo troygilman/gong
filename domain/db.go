@@ -123,6 +123,9 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		}
 	}
 
+	if query.filter.ID != nil {
+		whereExpression = whereExpression.AND(table.Event.ID.LIKE(String("%" + *query.filter.ID + "%")))
+	}
 	if query.filter.Type != nil {
 		whereExpression = whereExpression.AND(table.Event.Type.LIKE(String("%" + *query.filter.Type + "%")))
 	}

@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -78,11 +79,29 @@ type ProjectActorProps struct {
 }
 
 type EventsFilter struct {
+	ID     *string
 	Type   *string
 	Sender *string
 }
 
+func NewEventsFilter(ctx echo.Context) EventsFilter {
+	var filter EventsFilter
+	if filterID := ctx.QueryParam("filter_id"); filterID != "" {
+		filter.ID = &filterID
+	}
+	if filterType := ctx.QueryParam("filter_type"); filterType != "" {
+		filter.Type = &filterType
+	}
+	if filterSender := ctx.QueryParam("filter_sender"); filterSender != "" {
+		filter.Sender = &filterSender
+	}
+	return filter
+}
+
 func (f EventsFilter) SetValues(values url.Values) {
+	if f.ID != nil {
+		values.Set("filter_id", *f.ID)
+	}
 	if f.Type != nil {
 		values.Set("filter_type", *f.Type)
 	}

@@ -133,7 +133,7 @@ func GetProjectEvents(ctx echo.Context) error {
 }
 
 const (
-	ssePingInterval = 100 * time.Millisecond
+	ssePingInterval = 200 * time.Millisecond
 )
 
 type msgSsePing struct{}

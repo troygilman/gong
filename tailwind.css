@@ -4,7 +4,11 @@
 
 @layer components {
     .event {
-        @apply text-nowrap
+        @apply text-nowrap;
+    }
+
+    .event-filter-input {
+        @apply input input-bordered input-sm w-full max-w-xs focus:outline-none;
     }
 }
 

@@ -14,7 +14,7 @@ import (
 
 const (
 	ActorKindProcessor  = "processor"
-	sendUpdatesInterval = 100 * time.Millisecond
+	sendUpdatesInterval = 200 * time.Millisecond
 )
 
 type processor struct {

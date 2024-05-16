@@ -71,7 +71,7 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 			}
 
 			function onAfterRequest(e) {
-				const maxEvents = 100;
+				const maxEvents = 200;
 				const container = document.getElementById("events-container");
 				const events = container.querySelectorAll(".event");
 				const overflow = events.length - maxEvents;
@@ -134,6 +134,20 @@ templ eventsFilter(filter types.EventsFilter) {
 				}
 			}
 		</script>
+		@eventsFilterItem("ID", "filter_id", filter.ID != nil) {
+			<input
+				name="filter_id"
+				type="text"
+				placeholder="01HXZJN46DQJPWYBAM"
+				if filter.ID != nil {
+					value={ *filter.ID }
+				}
+				class="event-filter-input"
+				@keydown.enter="updateFilter()"
+				@focusout="updateFilter()"
+			/>
+		}
+		<div class="h-full border w-0"></div>
 		@eventsFilterItem("Type", "filter_type", filter.Type != nil) {
 			<input
 				name="filter_type"
@@ -142,7 +156,7 @@ templ eventsFilter(filter types.EventsFilter) {
 				if filter.Type != nil {
 					value={ *filter.Type }
 				}
-				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
+				class="event-filter-input"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"
 			/>
@@ -152,11 +166,11 @@ templ eventsFilter(filter types.EventsFilter) {
 			<input
 				name="filter_sender"
 				type="text"
-				placeholder="actor.Started"
+				placeholder="local/server/primary"
 				if filter.Sender != nil {
 					value={ *filter.Sender }
 				}
-				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
+				class="event-filter-input"
 				@keydown.enter="updateFilter()"
 				@focusout="updateFilter()"
 			/>
@@ -192,7 +206,7 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
 		hx-get={ formatProjectUrl(ctx, "/events") }
-		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 10) }
+		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
@@ -211,7 +225,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 		id="events-bottom-data-loader"
 		if moreEvents {
 			hx-get={ formatProjectUrl(ctx, "/events") }
-			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -10) }
+			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
 			hx-include={ includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"

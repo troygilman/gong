@@ -15,7 +15,8 @@ func StartClient() {
 		log.Fatal(err)
 	}
 
-	gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")), "gong")
+	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
+	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
 
 	pid1 := engine.Spawn(newClient(), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
 	pid2 := engine.Spawn(newClient(), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
@@ -52,7 +53,7 @@ func (s server) Receive(ctx *actor.Context) {
 		for range 1000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			time.Sleep(1 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 		ctx.Engine().Poison(s.pids[0])
 		ctx.Engine().Poison(s.pids[1])
