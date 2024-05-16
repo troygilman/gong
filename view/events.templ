@@ -166,10 +166,10 @@ templ eventsFilter(filter types.EventsFilter) {
 		}
 		@eventsFilterItem("Level", "filter_level", filter.Level != slog.LevelDebug, 1) {
 			<div class="px-2 py-1">
-				@eventsFilterLevelOption("Debug", slog.LevelDebug, filter.Level)
-				@eventsFilterLevelOption("Info", slog.LevelInfo, filter.Level)
-				@eventsFilterLevelOption("Warn", slog.LevelWarn, filter.Level)
-				@eventsFilterLevelOption("Error", slog.LevelError, filter.Level)
+				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
+				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
+				@eventsFilterLevelOption("WARN", slog.LevelWarn, filter.Level)
+				@eventsFilterLevelOption("ERROR", slog.LevelError, filter.Level)
 			</div>
 		}
 	</form>
@@ -183,6 +183,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 				type="radio"
 				name="filter_level"
 				class="radio"
+				@submit="console.log('SUMBIT')"
 				value={ strconv.Itoa(int(level)) }
 				if selected == level {
 					checked
@@ -207,7 +208,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 				@closeIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
-		<div class="dropdown group" @focus="console.log('FOCUS')">
+		<div class="dropdown group">
 			<div
 				tabindex="0"
 				role="button"
@@ -218,7 +219,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<div
 				tabindex="0"
 				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border"
-				@focusout="updateFilter()"
+				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
 				@keydown.enter="updateFilter()"
 			>
 				{ children... }
