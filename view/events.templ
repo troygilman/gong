@@ -183,7 +183,6 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 				type="radio"
 				name="filter_level"
 				class="radio"
-				@submit="console.log('SUMBIT')"
 				value={ strconv.Itoa(int(level)) }
 				if selected == level {
 					checked
