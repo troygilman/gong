@@ -16,7 +16,7 @@
     }
 
     .event-filter-button-container {
-        @apply border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0 transition-all outline-none;
+        @apply border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0;
     }
 }
 

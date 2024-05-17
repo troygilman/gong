@@ -190,7 +190,6 @@ func ConnectProjectSSE(ctx echo.Context) error {
 							return err
 						}
 					case domain.MsgSseNewEvents:
-						log.Printf("%+v", msg.ActorProps)
 						if err := writeServerSentEvent(
 							ctx.Request().Context(),
 							writer,

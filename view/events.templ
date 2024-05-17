@@ -235,7 +235,7 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="every 1s [shouldLoadTop()], load-next once, intersect once delay:20ms"
+			hx-trigger="every 1s [shouldLoadTop()], load-next once, intersect once delay:100ms"
 		} else {
 			hx-trigger="every 1s [shouldLoadTop()]"
 		}

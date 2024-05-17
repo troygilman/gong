@@ -22,6 +22,7 @@ type processor struct {
 	actors   map[string]types.ProjectActorProps
 	entropy  ulid.MonotonicReader
 	updates  map[string]struct{}
+	batch    []types.Event
 	repeater actor.SendRepeater
 }
 
@@ -42,12 +43,9 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 }
 
 func (p *processor) Receive(ctx *actor.Context) {
-	actor_utils.LogActorMsg(ctx)
+	//actor_utils.LogActorMsg(ctx)
 	if err := p.receive(ctx); err != nil {
 		actor_utils.LogActorError(ctx, err)
-		if ctx.Sender() != nil {
-			ctx.Respond(err)
-		}
 	}
 }
 
@@ -57,24 +55,15 @@ func (p *processor) receive(ctx *actor.Context) error {
 		p.actors = make(map[string]types.ProjectActorProps)
 		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 		p.updates = make(map[string]struct{})
+		p.batch = make([]types.Event, 0)
 	case actor.Started:
 		p.repeater = ctx.SendRepeat(ctx.PID(), MsgSendUpdates{}, sendUpdatesInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case MsgSdkEvent:
-		if err := p.handleEvent(msg.Event); err != nil {
-			return err
-		}
+		return p.handleEvent(msg.Event)
 	case MsgSendUpdates:
-		projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
-		props := make([]types.ProjectActorProps, 0)
-		for pid := range p.updates {
-			props = append(props, p.actors[pid])
-			delete(p.updates, pid)
-		}
-		if len(props) > 0 {
-			ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
-		}
+		return p.processUpdates(ctx)
 	}
 	return nil
 }
@@ -111,8 +100,28 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 
 	p.updates[event.PID] = struct{}{}
 
-	if err := p.app.DB().CreateEvent(&event); err != nil {
+	p.batch = append(p.batch, event)
+
+	return nil
+}
+
+func (p *processor) processUpdates(ctx *actor.Context) error {
+	defer func() {
+		p.batch = make([]types.Event, 0)
+		p.updates = make(map[string]struct{})
+	}()
+
+	if err := p.app.DB().CreateEvents(p.batch); err != nil {
 		return err
+	}
+
+	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
+	props := make([]types.ProjectActorProps, 0)
+	for pid := range p.updates {
+		props = append(props, p.actors[pid])
+	}
+	if len(props) > 0 {
+		ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
 	}
 
 	return nil

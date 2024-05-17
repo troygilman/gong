@@ -168,7 +168,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 }
 
 func (g *Gong) pushEvent(e Event) error {
-	log.Printf("%T %+v", e, e)
+	//log.Printf("%T %+v", e, e)
 	g.events <- e
 	return nil
 }
@@ -254,20 +254,4 @@ func createAttrMap(attr []any) map[string]any {
 		m[fmt.Sprintf("%+v", attr[i])] = val
 	}
 	return m
-}
-
-func parsePIDString(a any) (string, bool) {
-	m, ok := a.(map[string]any)
-	if !ok {
-		return "", false
-	}
-	address, ok := m["address"].(string)
-	if !ok {
-		return "", false
-	}
-	id, ok := m["ID"].(string)
-	if !ok {
-		return "", false
-	}
-	return actor.NewPID(address, id).String(), true
 }

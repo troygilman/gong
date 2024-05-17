@@ -4,7 +4,7 @@ import (
 	"gong/sdk"
 	"log"
 	"log/slog"
-	"time"
+	"sync"
 
 	"github.com/anthdm/hollywood/actor"
 )
@@ -16,16 +16,17 @@ func StartClient() {
 	}
 
 	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
+	config.Logger = nil
 	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
 
-	pid1 := engine.Spawn(newClient(), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
-	pid2 := engine.Spawn(newClient(), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
+	wg := &sync.WaitGroup{}
+	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
 	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
 
-	time.Sleep(10 * time.Second)
-
-	engine.Stop(gongPID)
-	time.Sleep(time.Second)
+	wg.Wait()
+	engine.Poison(gongPID, wg)
+	wg.Wait()
 }
 
 type testMsg struct {
@@ -50,10 +51,10 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 1000 {
+		for range 1000000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			time.Sleep(10 * time.Millisecond)
+			//time.Sleep(10 * time.Millisecond)
 		}
 		ctx.Engine().Poison(s.pids[0])
 		ctx.Engine().Poison(s.pids[1])
@@ -63,13 +64,23 @@ func (s server) Receive(ctx *actor.Context) {
 	}
 }
 
-type client struct{}
+type client struct {
+	wg *sync.WaitGroup
+}
 
-func newClient() actor.Producer {
+func newClient(wg *sync.WaitGroup) actor.Producer {
 	return func() actor.Receiver {
-		return client{}
+		return client{
+			wg: wg,
+		}
 	}
 }
 
 func (c client) Receive(ctx *actor.Context) {
+	switch ctx.Message().(type) {
+	case actor.Started:
+		c.wg.Add(1)
+	case actor.Stopped:
+		c.wg.Done()
+	}
 }

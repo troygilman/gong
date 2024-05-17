@@ -9,6 +9,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"reflect"
 	"slices"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -18,7 +19,7 @@ import (
 )
 
 type Database interface {
-	CreateEvent(event *types.Event) error
+	CreateEvents(events []types.Event) error
 	QueryEvents(query eventsQuery) ([]types.Event, error)
 	QueryActorProps(projectID uuid.UUID) ([]types.ProjectActorProps, error)
 }
@@ -87,22 +88,35 @@ func sqlError(stmt Statement, err error) error {
 	return fmt.Errorf("%s - %s", err.Error(), stmt.DebugSql())
 }
 
-func (db *postgresDatabase) CreateEvent(event *types.Event) error {
-	m := model.Event{
-		ID:        event.ID.String(),
-		ProjectID: event.ProjectID,
-		ActorPid:  event.PID,
-		Index:     event.Index,
-		Timestamp: event.Timestamp,
-		Sender:    event.Sender,
-		Type:      event.Type,
-		Level:     int32(event.Level),
-		Msg:       event.Msg,
+func (db *postgresDatabase) CreateEvents(events []types.Event) error {
+	m := make([]model.Event, len(events))
+	for i := range len(events) {
+		m[i].ID = events[i].ID.String()
+		m[i].ProjectID = events[i].ProjectID
+		m[i].ActorPid = events[i].PID
+		m[i].Index = events[i].Index
+		m[i].Timestamp = events[i].Timestamp
+		m[i].Sender = events[i].Sender
+		m[i].Type = events[i].Type
+		m[i].Level = int32(events[i].Level)
+		m[i].Msg = events[i].Msg
 	}
 
-	stmt := table.Event.INSERT(table.Event.AllColumns).MODEL(&m)
-	if _, err := stmt.Exec(db.conn); err != nil {
-		return sqlError(stmt, err)
+	if len(m) > 0 {
+		// The number of placeholders allowed in a query is capped at 2^16, therefore,
+		// divide 2^16 by the number of fields in the struct, and that is the max
+		// number of bulk inserts possible. Use that number to chunk the inserts.
+		v := reflect.ValueOf(m[0])
+		maxBulkInsert := ((1 << 16) / v.NumField()) - 1
+
+		// send batch requests
+		for i := 0; i < len(m); i += maxBulkInsert {
+			batch := m[i:min(i+maxBulkInsert, len(m))]
+			stmt := table.Event.INSERT(table.Event.AllColumns).MODELS(&batch)
+			if _, err := stmt.Exec(db.conn); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
