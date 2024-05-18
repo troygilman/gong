@@ -14,7 +14,7 @@ import (
 
 const (
 	ActorKindProcessor  = "processor"
-	sendUpdatesInterval = 200 * time.Millisecond
+	sendUpdatesInterval = 50 * time.Millisecond
 )
 
 type processor struct {
@@ -44,7 +44,7 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
-	case MsgSdkEvent, MsgSendUpdates:
+	case MsgSdkEvents, MsgSendUpdates:
 	default:
 		actor_utils.LogActorMsg(ctx)
 	}
@@ -65,8 +65,13 @@ func (p *processor) receive(ctx *actor.Context) error {
 		p.repeater = ctx.SendRepeat(ctx.PID(), MsgSendUpdates{}, sendUpdatesInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
-	case MsgSdkEvent:
-		return p.handleEvent(msg.Event)
+		return p.processUpdates(ctx)
+	case MsgSdkEvents:
+		for _, event := range msg.Events {
+			if err := p.handleEvent(event); err != nil {
+				return err
+			}
+		}
 	case MsgSendUpdates:
 		return p.processUpdates(ctx)
 	}
@@ -119,8 +124,13 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		p.updates = make(map[string]bool)
 	}()
 
-	if err := p.app.DB().CreateEvents(p.batch); err != nil {
-		return err
+	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
+	props := make([]types.ProjectActorProps, 0)
+	for pid := range p.updates {
+		props = append(props, p.actors[pid])
+	}
+	if len(props) > 0 {
+		ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
 	}
 
 	for pid, actorExists := range p.updates {
@@ -135,13 +145,8 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		}
 	}
 
-	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
-	props := make([]types.ProjectActorProps, 0)
-	for pid := range p.updates {
-		props = append(props, p.actors[pid])
-	}
-	if len(props) > 0 {
-		ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
+	if err := p.app.DB().CreateEvents(p.batch); err != nil {
+		return err
 	}
 
 	return nil

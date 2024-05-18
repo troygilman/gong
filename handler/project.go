@@ -246,11 +246,9 @@ func ConnectProject(ctx echo.Context) error {
 			break
 		}
 
-		for _, event := range events {
-			app.Engine().Send(processorPID, domain.MsgSdkEvent{
-				Event: event,
-			})
-		}
+		app.Engine().Send(processorPID, domain.MsgSdkEvents{
+			Events: events,
+		})
 	}
 	return nil
 }

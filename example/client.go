@@ -63,7 +63,7 @@ func (s server) Receive(ctx *actor.Context) {
 		for range 1000000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			//time.Sleep(10 * time.Millisecond)
+			//time.Sleep(1 * time.Millisecond)
 		}
 		fmt.Println("Finished sending msgs")
 		ctx.Engine().Poison(s.pids[0])

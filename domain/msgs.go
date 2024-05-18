@@ -7,8 +7,8 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-type MsgSdkEvent struct {
-	Event sdk.Event
+type MsgSdkEvents struct {
+	Events []sdk.Event
 }
 
 type MsgEvent struct {
