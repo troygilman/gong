@@ -8,6 +8,9 @@ import (
 	"log"
 	"os"
 
+	"net/http"
+	"net/http/pprof"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -31,6 +34,12 @@ func run() error {
 
 	e := echo.New()
 	e.HTTPErrorHandler = httpErrorHandler
+
+	e.Any("/debug/pprof/", makeHandler(pprof.Index))
+	e.Any("/debug/pprof/cmdline", makeHandler(pprof.Cmdline))
+	e.Any("/debug/pprof/profile", makeHandler(pprof.Profile))
+	e.Any("/debug/pprof/symbol", makeHandler(pprof.Symbol))
+	e.Any("/debug/pprof/trace", makeHandler(pprof.Trace))
 
 	e.Use(middleware.RequestID())
 	e.Use(handler.MiddlewareLogRequest())
@@ -63,4 +72,11 @@ type groupable interface {
 func newGroup(e groupable, path string, f func(e *echo.Group), middlewares ...echo.MiddlewareFunc) {
 	group := e.Group(path, middlewares...)
 	f(group)
+}
+
+func makeHandler(handler http.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		handler(c.Response().Writer, c.Request())
+		return nil
+	}
 }

@@ -3,6 +3,7 @@ package domain
 import (
 	"gong/sdk"
 	"gong/types"
+	"log"
 	"math/rand"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 const (
 	ActorKindProcessor  = "processor"
-	sendUpdatesInterval = 50 * time.Millisecond
+	sendUpdatesInterval = 100 * time.Millisecond
 )
 
 type processor struct {
@@ -145,9 +146,11 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		}
 	}
 
+	start := time.Now()
 	if err := p.app.DB().CreateEvents(p.batch); err != nil {
 		return err
 	}
+	log.Printf("Create Events - %d events %d ms", len(p.batch), time.Since(start).Milliseconds())
 
 	return nil
 }

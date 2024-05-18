@@ -25,3 +25,12 @@ up:
 
 down:
 	@migrate -path ./migration -database postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}?sslmode=disable down
+
+profile:
+	@go tool pprof -png http://localhost:8080/debug/pprof/profile > out.png
+
+test:
+	@go test -v ./domain
+
+bench:
+	@go test -v -run=XXX -bench=BenchmarkCreateEvents -o=tmp -benchmem -cpuprofile=tmp/cpu.prof -memprofile=tmp/mem.prof ./domain

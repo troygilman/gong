@@ -9,7 +9,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"reflect"
 	"slices"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -105,19 +104,33 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 	}
 
 	if len(m) > 0 {
-		// The number of placeholders allowed in a query is capped at 2^16, therefore,
-		// divide 2^16 by the number of fields in the struct, and that is the max
-		// number of bulk inserts possible. Use that number to chunk the inserts.
-		v := reflect.ValueOf(m[0])
-		maxBulkInsert := ((1 << 16) / v.NumField()) - 1
+		tx, err := db.conn.Begin()
+		if err != nil {
+			return err
+		}
 
-		// send batch requests
-		for i := 0; i < len(m); i += maxBulkInsert {
-			batch := m[i:min(i+maxBulkInsert, len(m))]
-			stmt := table.Event.INSERT(table.Event.AllColumns).MODELS(&batch)
-			if _, err := stmt.Exec(db.conn); err != nil {
-				return sqlError(stmt, err)
+		stmt, err := tx.Prepare("COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg) FROM STDIN")
+		if err != nil {
+			return err
+		}
+
+		for _, e := range m {
+			_, err = stmt.Exec(e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg)
+			if err != nil {
+				return err
 			}
+		}
+
+		if _, err := stmt.Exec(); err != nil {
+			return err
+		}
+
+		if err := stmt.Close(); err != nil {
+			return err
+		}
+
+		if err := tx.Commit(); err != nil {
+			return err
 		}
 	}
 
