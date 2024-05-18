@@ -129,7 +129,7 @@ func (p *project) receive(ctx *actor.Context) error {
 func (p *project) load(id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActorProps(id)
+	actorProps, err := p.app.DB().QueryActors(id)
 	if err != nil {
 		return err
 	}

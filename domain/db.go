@@ -19,9 +19,11 @@ import (
 )
 
 type Database interface {
-	CreateEvents(events []types.Event) error
 	QueryEvents(query eventsQuery) ([]types.Event, error)
-	QueryActorProps(projectID uuid.UUID) ([]types.ProjectActorProps, error)
+	CreateEvents(events []types.Event) error
+	QueryActors(projectID uuid.UUID) ([]types.ProjectActorProps, error)
+	CreateActor(types.ProjectActorProps) error
+	UpdateActor(types.ProjectActorProps) error
 }
 
 type eventsQuery struct {
@@ -114,7 +116,7 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 			batch := m[i:min(i+maxBulkInsert, len(m))]
 			stmt := table.Event.INSERT(table.Event.AllColumns).MODELS(&batch)
 			if _, err := stmt.Exec(db.conn); err != nil {
-				return err
+				return sqlError(stmt, err)
 			}
 		}
 	}
@@ -156,7 +158,7 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		LIMIT(int64(max(query.numEvents, -query.numEvents)))
 
 	if err := stmt.Query(db.conn, &m); err != nil {
-		return nil, err
+		return nil, sqlError(stmt, err)
 	}
 
 	if query.numEvents > 0 {
@@ -183,48 +185,59 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	return events, nil
 }
 
-func (db *postgresDatabase) QueryActorProps(projectID uuid.UUID) ([]types.ProjectActorProps, error) {
-	var m []struct {
-		ActorPID      string
-		NumEvents     int32
-		FirstEventID  string
-		LastEventID   string
-		LastEventType string
-	}
+func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.ProjectActorProps, error) {
+	var m []model.Actor
 
-	subQuery := SELECT(
-		table.Event.ActorPid.AS("actor_pid"),
-		COUNT(table.Event.ID).AS("num_events"),
-		MIN(table.Event.ID).AS("first_event_id"),
-		MAX(table.Event.ID).AS("last_event_id"),
-	).FROM(table.Event).GROUP_BY(table.Event.ProjectID, table.Event.ActorPid).AsTable("sub")
-
-	stmt := SELECT(subQuery.AllColumns(), table.Event.Type.AS("last_event_type")).FROM(table.Event.RIGHT_JOIN(
-		subQuery,
-		table.Event.ID.EQ(StringColumn("last_event_id"))))
-
+	stmt := table.Actor.SELECT(table.Actor.AllColumns).WHERE(table.Actor.ProjectID.EQ(UUID(projectID)))
 	if err := stmt.Query(db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
+	var err error
 	props := make([]types.ProjectActorProps, len(m))
 	for idx, mItem := range m {
-		firstEventID, err := ulid.Parse(mItem.FirstEventID)
+		props[idx].PID = mItem.Pid
+		props[idx].NumEvents = mItem.NumEvents
+		props[idx].Alive = mItem.Alive
+		props[idx].LastEventID, err = ulid.Parse(mItem.LastEventID)
 		if err != nil {
 			return nil, err
-		}
-		lastEventID, err := ulid.Parse(mItem.LastEventID)
-		if err != nil {
-			return nil, err
-		}
-		props[idx] = types.ProjectActorProps{
-			PID:          mItem.ActorPID,
-			NumEvents:    mItem.NumEvents,
-			Alive:        isActorAlive(mItem.LastEventType),
-			FirstEventID: firstEventID,
-			LastEventID:  lastEventID,
 		}
 	}
 
 	return props, nil
+}
+
+func (db *postgresDatabase) CreateActor(actor types.ProjectActorProps) error {
+	var m model.Actor
+
+	m.Pid = actor.PID
+	m.ProjectID = actor.ProjectID
+	m.NumEvents = actor.NumEvents
+	m.Alive = actor.Alive
+	m.LastEventID = actor.LastEventID.String()
+
+	stmt := table.Actor.INSERT(table.Actor.AllColumns).MODEL(&m)
+	if _, err := stmt.Exec(db.conn); err != nil {
+		return sqlError(stmt, err)
+	}
+
+	return nil
+}
+
+func (db *postgresDatabase) UpdateActor(actor types.ProjectActorProps) error {
+	var m model.Actor
+
+	m.Pid = actor.PID
+	m.ProjectID = actor.ProjectID
+	m.NumEvents = actor.NumEvents
+	m.Alive = actor.Alive
+	m.LastEventID = actor.LastEventID.String()
+
+	stmt := table.Actor.UPDATE(table.Actor.AllColumns).MODEL(&m).WHERE(table.Actor.ProjectID.EQ(UUID(actor.ProjectID)).AND(table.Actor.Pid.EQ(String(actor.PID))))
+	if _, err := stmt.Exec(db.conn); err != nil {
+		return sqlError(stmt, err)
+	}
+
+	return nil
 }

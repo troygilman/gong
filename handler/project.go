@@ -2,7 +2,7 @@ package handler
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/gob"
 	"errors"
 	"gong/domain"
 	"gong/sdk"
@@ -240,15 +240,17 @@ func ConnectProject(ctx echo.Context) error {
 			break
 		}
 
-		var event sdk.Event
-		if err := json.NewDecoder(bytes.NewReader(message)).Decode(&event); err != nil {
+		var events []sdk.Event
+		if err := gob.NewDecoder(bytes.NewReader(message)).Decode(&events); err != nil {
 			log.Println(err)
 			break
 		}
 
-		app.Engine().Send(processorPID, domain.MsgSdkEvent{
-			Event: event,
-		})
+		for _, event := range events {
+			app.Engine().Send(processorPID, domain.MsgSdkEvent{
+				Event: event,
+			})
+		}
 	}
 	return nil
 }

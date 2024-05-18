@@ -11,5 +11,11 @@ CREATE TABLE IF NOT EXISTS event(
     PRIMARY KEY (id, project_id)
 );
 
-CREATE INDEX IF NOT EXISTS index_actor_pid
-ON event(actor_pid);
+CREATE TABLE IF NOT EXISTS actor(
+    pid TEXT,
+    project_id UUID,
+    num_events INTEGER NOT NULL,
+    last_event_id VARCHAR(26) NOT NULL,
+    alive BOOLEAN NOT NULL,
+    PRIMARY KEY (pid, project_id)
+);

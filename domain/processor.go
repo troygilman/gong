@@ -21,7 +21,7 @@ type processor struct {
 	commonActorData
 	actors   map[string]types.ProjectActorProps
 	entropy  ulid.MonotonicReader
-	updates  map[string]struct{}
+	updates  map[string]bool
 	batch    []types.Event
 	repeater actor.SendRepeater
 }
@@ -43,7 +43,12 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 }
 
 func (p *processor) Receive(ctx *actor.Context) {
-	//actor_utils.LogActorMsg(ctx)
+	switch ctx.Message().(type) {
+	case MsgSdkEvent, MsgSendUpdates:
+	default:
+		actor_utils.LogActorMsg(ctx)
+	}
+
 	if err := p.receive(ctx); err != nil {
 		actor_utils.LogActorError(ctx, err)
 	}
@@ -54,7 +59,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 	case actor.Initialized:
 		p.actors = make(map[string]types.ProjectActorProps)
 		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
-		p.updates = make(map[string]struct{})
+		p.updates = make(map[string]bool)
 		p.batch = make([]types.Event, 0)
 	case actor.Started:
 		p.repeater = ctx.SendRepeat(ctx.PID(), MsgSendUpdates{}, sendUpdatesInterval)
@@ -80,10 +85,11 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		Event:     sdkEvent,
 	}
 
-	actorProps, ok := p.actors[event.PID]
-	if !ok {
+	actorProps, actorExists := p.actors[event.PID]
+	if !actorExists {
 		actorProps = types.ProjectActorProps{
 			PID:       event.PID,
+			ProjectID: p.id,
 			NumEvents: 0,
 			Alive:     false,
 		}
@@ -98,7 +104,9 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 	}
 	p.actors[event.PID] = actorProps
 
-	p.updates[event.PID] = struct{}{}
+	if _, ok := p.updates[event.PID]; !ok {
+		p.updates[event.PID] = actorExists
+	}
 
 	p.batch = append(p.batch, event)
 
@@ -108,11 +116,23 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 func (p *processor) processUpdates(ctx *actor.Context) error {
 	defer func() {
 		p.batch = make([]types.Event, 0)
-		p.updates = make(map[string]struct{})
+		p.updates = make(map[string]bool)
 	}()
 
 	if err := p.app.DB().CreateEvents(p.batch); err != nil {
 		return err
+	}
+
+	for pid, actorExists := range p.updates {
+		var err error
+		if actorExists {
+			err = p.app.DB().UpdateActor(p.actors[pid])
+		} else {
+			err = p.app.DB().CreateActor(p.actors[pid])
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
@@ -130,7 +150,7 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 func (p *processor) load(id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActorProps(id)
+	actorProps, err := p.app.DB().QueryActors(id)
 	if err != nil {
 		return err
 	}
