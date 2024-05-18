@@ -197,6 +197,7 @@ func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.ProjectAct
 	props := make([]types.ProjectActorProps, len(m))
 	for idx, mItem := range m {
 		props[idx].PID = mItem.Pid
+		props[idx].ProjectID = mItem.ProjectID
 		props[idx].NumEvents = mItem.NumEvents
 		props[idx].Alive = mItem.Alive
 		props[idx].LastEventID, err = ulid.Parse(mItem.LastEventID)
