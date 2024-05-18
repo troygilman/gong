@@ -1,33 +1,69 @@
 package example
 
 import (
+	"flag"
 	"fmt"
 	"gong/sdk"
 	"log"
 	"log/slog"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	"sync"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 )
 
-func StartClient() {
-	start := time.Now()
+var _ = flag.Bool("c", false, "run example client")
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
+func StartClient() {
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	startClient()
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
+}
+
+func startClient() {
 	engine, err := actor.NewEngine(actor.NewEngineConfig())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
-	config.QueueSize = 10000
+	config.QueueSize = 100000
 	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
 	time.Sleep(time.Second)
 
+	start := time.Now()
 	wg := &sync.WaitGroup{}
 	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
 	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
-	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
+	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("primary")) //, actor.WithMiddleware(sdk.GongMiddleware()))
 
 	wg.Wait()
 	fmt.Println("Clients stopped")

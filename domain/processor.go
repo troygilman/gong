@@ -15,7 +15,7 @@ import (
 
 const (
 	ActorKindProcessor  = "processor"
-	sendUpdatesInterval = 100 * time.Millisecond
+	sendUpdatesInterval = 200 * time.Millisecond
 )
 
 type processor struct {
@@ -146,11 +146,14 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		}
 	}
 
-	start := time.Now()
-	if err := p.app.DB().CreateEvents(p.batch); err != nil {
-		return err
-	}
-	log.Printf("Create Events - %d events %d ms", len(p.batch), time.Since(start).Milliseconds())
+	go func(batch []types.Event) {
+		start := time.Now()
+		if err := p.app.DB().CreateEvents(batch); err != nil {
+			log.Println(err)
+		}
+		log.Printf("Create Events - %d events %d ms", len(batch), time.Since(start).Milliseconds())
+
+	}(p.batch)
 
 	return nil
 }

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"gong/domain"
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -236,19 +236,16 @@ func ConnectProject(ctx echo.Context) error {
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
-			break
+			return fmt.Errorf("read: %s", err)
 		}
 
 		var events []sdk.Event
 		if err := gob.NewDecoder(bytes.NewReader(message)).Decode(&events); err != nil {
-			log.Println(err)
-			break
+			return fmt.Errorf("decode: %s", err)
 		}
 
 		app.Engine().Send(processorPID, domain.MsgSdkEvents{
 			Events: events,
 		})
 	}
-	return nil
 }

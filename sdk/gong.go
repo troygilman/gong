@@ -49,11 +49,13 @@ func GongMiddleware() actor.MiddlewareFunc {
 			switch msg := ctx.Message().(type) {
 			case actor.EventLogger:
 				level, logMsg, attr := msg.Log()
-				attrStr, err := encodeAttrMap(createAttrMap(attr))
-				if err != nil {
-					attrStr = ""
-				}
-				ctx.Send(gongPID, &Event{
+				// attrStr, err := encodeAttrMap(createAttrMap(attr))
+				// if err != nil {
+				// 	attrStr = ""
+				// }
+				_ = attr
+				attrStr := ""
+				ctx.Send(gongPID, Event{
 					PID:       ctx.PID().String(),
 					Sender:    sender,
 					Timestamp: time.Now(),
@@ -63,7 +65,7 @@ func GongMiddleware() actor.MiddlewareFunc {
 					Attr:      attrStr,
 				})
 			case actor.Initialized, actor.Started, actor.Stopped:
-				ctx.Send(gongPID, &Event{
+				ctx.Send(gongPID, Event{
 					PID:       ctx.PID().String(),
 					Sender:    sender,
 					Timestamp: time.Now(),
@@ -94,7 +96,7 @@ func NewDefaultGongConfig(projectID string) GongConfig {
 
 type Gong struct {
 	config GongConfig
-	events chan<- *Event
+	events chan<- Event
 	done   <-chan struct{}
 }
 
@@ -112,7 +114,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		gongPID = ctx.PID()
 		ctx.Engine().Subscribe(ctx.PID())
 	case actor.Started:
-		events := make(chan *Event, g.config.QueueSize)
+		events := make(chan Event, g.config.QueueSize)
 		g.events = events
 
 		done := make(chan struct{})
@@ -135,7 +137,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			attrStr = ""
 		}
 
-		event := &Event{
+		event := Event{
 			Type:  fmt.Sprintf("%T", msg),
 			Level: level,
 			Msg:   logMsg,
@@ -178,23 +180,23 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		if err := g.pushEvent(event); err != nil {
 			log.Println(err)
 		}
-	case *Event:
+	case Event:
 		if err := g.pushEvent(msg); err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func (g *Gong) pushEvent(e *Event) error {
+func (g *Gong) pushEvent(e Event) error {
 	select {
 	case g.events <- e:
 	default:
-		slog.Warn("Cant push event", "event", e)
+		//slog.Warn("Cant push event", "event", e)
 	}
 	return nil
 }
 
-func connect(projectID string, events <-chan *Event, logErr func(err error), done chan<- struct{}) {
+func connect(projectID string, events <-chan Event, logErr func(err error), done chan<- struct{}) {
 	defer close(done)
 
 	interrupt := make(chan os.Signal, 1)
@@ -244,15 +246,16 @@ func connect(projectID string, events <-chan *Event, logErr func(err error), don
 		return nil
 	}
 
+	var buff bytes.Buffer
 	send := func(e []Event) error {
 		if len(e) > 0 {
-			var buff bytes.Buffer
 			if err := gob.NewEncoder(&buff).Encode(&e); err != nil {
 				return err
 			}
 			if err := c.WriteMessage(websocket.TextMessage, buff.Bytes()); err != nil {
 				return err
 			}
+			buff.Reset()
 		}
 		return nil
 	}
@@ -281,7 +284,7 @@ func connect(projectID string, events <-chan *Event, logErr func(err error), don
 				}
 				return
 			}
-			batch[numEvents] = *event
+			batch[numEvents] = event
 			numEvents++
 			if numEvents >= batchSize {
 				if err := send(batch[:numEvents]); err != nil {
