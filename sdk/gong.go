@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -36,48 +35,6 @@ type Event struct {
 	Level     slog.Level
 	Msg       string
 	Attr      string
-}
-
-func GongMiddleware() actor.MiddlewareFunc {
-	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
-		return func(ctx *actor.Context) {
-			sender := ""
-			if ctx.Sender() != nil {
-				sender = ctx.Sender().String()
-			}
-
-			switch msg := ctx.Message().(type) {
-			case actor.EventLogger:
-				level, logMsg, attr := msg.Log()
-				// attrStr, err := encodeAttrMap(createAttrMap(attr))
-				// if err != nil {
-				// 	attrStr = ""
-				// }
-				_ = attr
-				attrStr := ""
-				ctx.Send(gongPID, Event{
-					PID:       ctx.PID().String(),
-					Sender:    sender,
-					Timestamp: time.Now(),
-					Type:      fmt.Sprintf("%T", msg),
-					Level:     level,
-					Msg:       logMsg,
-					Attr:      attrStr,
-				})
-			case actor.Initialized, actor.Started, actor.Stopped:
-				ctx.Send(gongPID, Event{
-					PID:       ctx.PID().String(),
-					Sender:    sender,
-					Timestamp: time.Now(),
-					Type:      fmt.Sprintf("%T", msg),
-					Level:     slog.LevelInfo,
-					Attr:      "",
-				})
-			}
-
-			next(ctx)
-		}
-	}
 }
 
 type GongConfig struct {
@@ -120,7 +77,20 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		done := make(chan struct{})
 		g.done = done
 
-		go connect(g.config.ProjectID, events, func(err error) {
+		var err error
+		var conn *websocket.Conn
+		for conn == nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			u := url.URL{Scheme: "ws", Host: serverHost, Path: fmt.Sprintf("project/%s/connect", g.config.ProjectID)}
+			conn, _, err = websocket.DefaultDialer.DialContext(ctx, u.String(), nil)
+			if err != nil {
+				fmt.Printf("dial: %s\n", err.Error())
+			}
+			cancel()
+		}
+
+		fmt.Println("Gong connected")
+		go connect(conn, events, func(err error) {
 			if g.config.Logger != nil {
 				g.config.Logger.Error("Gong: " + err.Error())
 			}
@@ -196,32 +166,18 @@ func (g *Gong) pushEvent(e Event) error {
 	return nil
 }
 
-func connect(projectID string, events <-chan Event, logErr func(err error), done chan<- struct{}) {
+func connect(conn *websocket.Conn, events <-chan Event, logErr func(err error), done chan<- struct{}) {
+	defer conn.Close()
 	defer close(done)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	var c *websocket.Conn
-	{
-		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		u := url.URL{Scheme: "ws", Host: serverHost, Path: fmt.Sprintf("project/%s/connect", projectID)}
-		c, _, err = websocket.DefaultDialer.DialContext(ctx, u.String(), nil)
-		cancel()
-		if err != nil {
-			logErr(fmt.Errorf("dial: %s", err.Error()))
-			return
-		}
-	}
-	defer c.Close()
-	fmt.Println("Gong connected")
-
 	readerDone := make(chan struct{})
 	go func() {
 		defer close(readerDone)
 		for {
-			_, message, err := c.ReadMessage()
+			_, message, err := conn.ReadMessage()
 			if err != nil {
 				if err != websocket.ErrCloseSent {
 					logErr(fmt.Errorf("read: %s", err.Error()))
@@ -235,7 +191,7 @@ func connect(projectID string, events <-chan Event, logErr func(err error), done
 	close := func() error {
 		// Cleanly close the connection by sending a close message and then
 		// waiting (with timeout) for the server to close the connection.
-		err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		if err != nil {
 			return err
 		}
@@ -252,7 +208,7 @@ func connect(projectID string, events <-chan Event, logErr func(err error), done
 			if err := gob.NewEncoder(&buff).Encode(&e); err != nil {
 				return err
 			}
-			if err := c.WriteMessage(websocket.TextMessage, buff.Bytes()); err != nil {
+			if err := conn.WriteMessage(websocket.TextMessage, buff.Bytes()); err != nil {
 				return err
 			}
 			buff.Reset()
@@ -260,7 +216,7 @@ func connect(projectID string, events <-chan Event, logErr func(err error), done
 		return nil
 	}
 
-	batchSize := 1000
+	batchSize := 10000
 	batch := make([]Event, batchSize)
 	numEvents := 0
 	for {
@@ -302,25 +258,4 @@ func connect(projectID string, events <-chan Event, logErr func(err error), done
 			time.Sleep(time.Millisecond)
 		}
 	}
-}
-
-func createAttrMap(attr []any) map[string]any {
-	m := make(map[string]any)
-	for i := 0; i < len(attr); i += 2 {
-		var val any = nil
-		if i+1 < len(attr) {
-			val = attr[i+1]
-		}
-		m[fmt.Sprintf("%+v", attr[i])] = val
-	}
-	return m
-}
-
-func encodeAttrMap(attr map[string]any) (string, error) {
-	var buffer bytes.Buffer
-	if err := json.NewEncoder(&buffer).Encode(attr); err != nil {
-		return "", err
-	}
-	return buffer.String(), nil
-
 }

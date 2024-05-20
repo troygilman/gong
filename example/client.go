@@ -57,7 +57,6 @@ func startClient() {
 	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	config.QueueSize = 100000
 	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
-	time.Sleep(time.Second)
 
 	start := time.Now()
 	wg := &sync.WaitGroup{}
@@ -75,10 +74,11 @@ func startClient() {
 }
 
 type testMsg struct {
+	id string
 }
 
 func (m testMsg) Log() (slog.Level, string, []any) {
-	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi"}
+	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi", "pid", actor.NewPID("hello", "123")}
 }
 
 type server struct {
@@ -96,7 +96,7 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 1000000 {
+		for range 500000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
 			//time.Sleep(1 * time.Millisecond)
