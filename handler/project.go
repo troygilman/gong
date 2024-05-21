@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"
@@ -246,4 +248,42 @@ func ConnectProject(ctx echo.Context) error {
 			Events: events,
 		})
 	}
+}
+
+var graphNodes = []opts.GraphNode{
+	{Name: "Node1"},
+	{Name: "Node2"},
+	{Name: "Node3"},
+	{Name: "Node4"},
+	{Name: "Node5"},
+	{Name: "Node6"},
+	{Name: "Node7"},
+	{Name: "Node8"},
+}
+
+func genLinks() []opts.GraphLink {
+	links := make([]opts.GraphLink, 0)
+	for i := 0; i < len(graphNodes); i++ {
+		for j := 0; j < len(graphNodes); j++ {
+			links = append(links, opts.GraphLink{Source: graphNodes[i].Name, Target: graphNodes[j].Name})
+		}
+	}
+	return links
+}
+
+func GetActorChart(ctx echo.Context) error {
+	graph := charts.NewGraph()
+	graph.SetGlobalOptions(
+		charts.WithInitializationOpts(opts.Initialization{
+			ChartID: "my_chart",
+		}),
+		charts.WithTitleOpts(opts.Title{Title: "basic graph example"}),
+	)
+	graph.AddSeries("graph", graphNodes, genLinks(),
+		charts.WithGraphChartOpts(
+			opts.GraphChart{Force: &opts.GraphForce{Repulsion: 8000}},
+		),
+	)
+
+	return graph.Render(ctx.Response().Writer)
 }

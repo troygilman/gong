@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/a-h/templ v0.2.663
 	github.com/anthdm/hollywood v0.0.0-20240115210651-dd34702ee21f
+	github.com/go-echarts/go-echarts/v2 v2.3.3
 	github.com/go-jet/jet/v2 v2.11.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0

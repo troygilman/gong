@@ -146,6 +146,9 @@ templ ActorContent(actor types.Actor) {
 		@actorTabContent(tabLabelEvents) {
 			@eventsTabContent(actor)
 		}
+		@actorTabContent(tabLabelTest) {
+			<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load"></div>
+		}
 	</div>
 }
 
