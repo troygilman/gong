@@ -29,9 +29,9 @@ templ Project(props types.ProjectProps) {
 			<div class="flex flex-row grow min-w-full min-h-0">
 				@ProjectActorList(props)
 				if pid, ok := ctx.Value(types.CtxPID).(string); ok {
-					@ActorContent(props.ActorProps[pid])
+					@ActorContent(props.Actors[pid])
 				} else {
-					@ActorContent(types.ProjectActorProps{})
+					@ActorContent(types.Actor{})
 				}
 			</div>
 		</div>
@@ -61,8 +61,8 @@ templ ProjectActorList(props types.ProjectProps) {
 			hx-swap="afterbegin"
 			x-data="{ active: ''}"
 		>
-			for _, actorProps := range props.ActorProps {
-				@ProjectActorListItem(actorProps, false)
+			for _, actor := range props.Actors {
+				@ProjectActorListItem(actor, false)
 			}
 		</ul>
 	</div>
@@ -89,12 +89,12 @@ script resetActiveListItem(id string) {
 	}
 }
 
-templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
+templ ProjectActorListItem(actor types.Actor, oob bool) {
 	<li
-		id={ "actor-list-item-" + formatActorPID(props.PID) }
+		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
 		hx-get={ formatProjectUrl(ctx, "/actor") }
-		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, props.PID) }
+		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
 		hx-include={ includes }
 		hx-trigger="click"
 		hx-push-url="true"
@@ -103,28 +103,28 @@ templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
 		}
 	>
 		<a
-			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, props.PID)) }
+			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
 		>
-			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
-			@ProjectActorBadge(props)
-			if isCurrentPID(ctx, props.PID) {
-				@resetActiveListItem("actor-list-item-" + formatActorPID(props.PID))
+			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
+			@ProjectActorBadge(actor)
+			if isCurrentPID(ctx, actor.PID) {
+				@resetActiveListItem("actor-list-item-" + formatActorPID(actor.PID))
 			}
 		</a>
 	</li>
 }
 
-templ ProjectActorBadge(props types.ProjectActorProps) {
+templ ProjectActorBadge(actor types.Actor) {
 	<div
-		class={ "badge",  templ.KV("badge-success", props.Alive), templ.KV("badge-error", !props.Alive) }
-		sse-swap={ types.SseTypeUpdateActorNumEvents + props.PID }
+		class={ "badge",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
+		sse-swap={ types.SseTypeUpdateActorNumEvents + actor.PID }
 		hx-target="this"
 		hx-swap="outerHTML"
 	>
-		if props.NumEvents > 999 {
+		if actor.NumEvents > 999 {
 			{ "999+" }
 		} else {
-			{ fmt.Sprintf("%d", props.NumEvents) }
+			{ fmt.Sprintf("%d", actor.NumEvents) }
 		}
 	</div>
 }
@@ -134,20 +134,20 @@ const (
 	tabLabelTest   = "Test"
 )
 
-templ ProjectActor(props types.ProjectActorProps) {
-	@ActorContent(props)
-	@ProjectActorListItem(props, true)
+templ ProjectActor(actor types.Actor) {
+	@ActorContent(actor)
+	@ProjectActorListItem(actor, true)
 }
 
-templ ActorContent(props types.ProjectActorProps) {
+templ ActorContent(actor types.Actor) {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
-		<input id="actor-pid" type="hidden" name="pid" value={ props.PID }/>
+		<input id="actor-pid" type="hidden" name="pid" value={ actor.PID }/>
 		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
-		<div class="p-2 font-bold">{ props.PID }</div>
+		<div class="p-2 font-bold">{ actor.PID }</div>
 		<div
 			role="tablist"
 			class="tabs tabs-bordered"
@@ -156,7 +156,7 @@ templ ActorContent(props types.ProjectActorProps) {
 			@actorTab(tabLabelTest)
 		</div>
 		@actorTabContent(tabLabelEvents) {
-			@eventsTabContent(props)
+			@eventsTabContent(actor)
 		}
 	</div>
 }

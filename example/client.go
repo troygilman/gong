@@ -96,10 +96,10 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 500000 {
+		for range 1000000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			//time.Sleep(1 * time.Millisecond)
+			//time.Sleep(10 * time.Millisecond)
 		}
 		fmt.Println("Finished sending msgs")
 		ctx.Engine().Poison(s.pids[0])

@@ -16,13 +16,13 @@ const (
 	ActorStarted               = "actor.Started"
 	ActorStopped               = "actor.Stopped"
 	ActorStoppedEvent          = "actor.ActorStoppedEvent"
-	projectUpdatePropsInterval = 200 * time.Millisecond
+	projectUpdatePropsInterval = 100 * time.Millisecond
 )
 
 type project struct {
 	commonActorData
-	actors    map[string]types.ProjectActorProps
-	updates   map[string]types.ProjectActorProps
+	actors    map[string]types.Actor
+	updates   map[string]types.Actor
 	repeater  actor.SendRepeater
 	listeners map[*actor.PID]struct{}
 }
@@ -56,53 +56,53 @@ func (p *project) Receive(ctx *actor.Context) {
 func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]types.ProjectActorProps)
-		p.updates = make(map[string]types.ProjectActorProps)
+		p.actors = make(map[string]types.Actor)
+		p.updates = make(map[string]types.Actor)
 		p.listeners = make(map[*actor.PID]struct{})
 	case actor.Started:
-		p.repeater = ctx.SendRepeat(ctx.PID(), msgProjectUpdateProps{}, projectUpdatePropsInterval)
+		p.repeater = ctx.SendRepeat(ctx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case MsgGetProjectProps:
 		props := types.ProjectProps{
-			ID:         p.id,
-			ActorProps: make(map[string]types.ProjectActorProps, 0),
+			ID:     p.id,
+			Actors: make(map[string]types.Actor, 0),
 		}
-		for pid, actorProps := range p.actors {
-			props.ActorProps[pid] = actorProps
+		for pid, data := range p.actors {
+			props.Actors[pid] = data
 		}
 		ctx.Respond(RspGetProjectProps{
 			Props: props,
 		})
 	case MsgGetProjectActorProps:
-		props, ok := p.actors[msg.ActorPID]
+		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
-			ctx.Respond(RspGetProjectActorProps{
-				Props: props,
+			ctx.Respond(RspGetProjectActor{
+				Actor: actorData,
 			})
 		} else {
 			return errors.New("actor pid does not exist")
 		}
-	case MsgUpdateProjectActorProps:
-		for _, update := range msg.Props {
-			p.updates[update.PID] = update
+	case MsgUpdateProjectActors:
+		for _, actorData := range msg.Actors {
+			p.updates[actorData.PID] = actorData
 		}
 
-	case msgProjectUpdateProps:
+	case msgProjectUpdateState:
 		msgs := make([]any, 0)
 
-		for pid, props := range p.updates {
+		for pid, data := range p.updates {
 			_, exists := p.actors[pid]
 			if exists {
 				msgs = append(msgs, MsgSseNewEvents{
-					ActorProps: props,
+					Actor: data,
 				})
 			} else {
 				msgs = append(msgs, MsgSseNewActor{
-					ActorProps: props,
+					Actor: data,
 				})
 			}
-			p.actors[props.PID] = props
+			p.actors[pid] = data
 			delete(p.updates, pid)
 		}
 
@@ -111,7 +111,7 @@ func (p *project) receive(ctx *actor.Context) error {
 		}
 
 	case MsgGetProjectEvents:
-		actorProps, ok := p.actors[msg.ActorPID]
+		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := eventsQuery{
 				projectID: p.id,
@@ -126,7 +126,7 @@ func (p *project) receive(ctx *actor.Context) error {
 			}
 			ctx.Respond(RspGetProjectEvents{
 				Events: events,
-				Props:  actorProps,
+				Actor:  actorData,
 			})
 		} else {
 			ctx.Respond(RspGetProjectEvents{

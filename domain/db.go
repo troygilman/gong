@@ -20,9 +20,9 @@ import (
 type Database interface {
 	QueryEvents(query eventsQuery) ([]types.Event, error)
 	CreateEvents(events []types.Event) error
-	QueryActors(projectID uuid.UUID) ([]types.ProjectActorProps, error)
-	CreateActor(types.ProjectActorProps) error
-	UpdateActor(types.ProjectActorProps) error
+	QueryActors(projectID uuid.UUID) ([]types.Actor, error)
+	CreateActor(types.Actor) error
+	UpdateActor(types.Actor) error
 }
 
 type eventsQuery struct {
@@ -198,7 +198,7 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	return events, nil
 }
 
-func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.ProjectActorProps, error) {
+func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.Actor, error) {
 	var m []model.Actor
 
 	stmt := table.Actor.SELECT(table.Actor.AllColumns).WHERE(table.Actor.ProjectID.EQ(UUID(projectID)))
@@ -207,22 +207,22 @@ func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.ProjectAct
 	}
 
 	var err error
-	props := make([]types.ProjectActorProps, len(m))
+	actors := make([]types.Actor, len(m))
 	for idx, mItem := range m {
-		props[idx].PID = mItem.Pid
-		props[idx].ProjectID = mItem.ProjectID
-		props[idx].NumEvents = mItem.NumEvents
-		props[idx].Alive = mItem.Alive
-		props[idx].LastEventID, err = ulid.Parse(mItem.LastEventID)
+		actors[idx].PID = mItem.Pid
+		actors[idx].ProjectID = mItem.ProjectID
+		actors[idx].NumEvents = mItem.NumEvents
+		actors[idx].Alive = mItem.Alive
+		actors[idx].LastEventID, err = ulid.Parse(mItem.LastEventID)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return props, nil
+	return actors, nil
 }
 
-func (db *postgresDatabase) CreateActor(actor types.ProjectActorProps) error {
+func (db *postgresDatabase) CreateActor(actor types.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID
@@ -239,7 +239,7 @@ func (db *postgresDatabase) CreateActor(actor types.ProjectActorProps) error {
 	return nil
 }
 
-func (db *postgresDatabase) UpdateActor(actor types.ProjectActorProps) error {
+func (db *postgresDatabase) UpdateActor(actor types.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID

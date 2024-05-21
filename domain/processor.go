@@ -3,7 +3,6 @@ package domain
 import (
 	"gong/sdk"
 	"gong/types"
-	"log"
 	"math/rand"
 	"time"
 
@@ -20,7 +19,7 @@ const (
 
 type processor struct {
 	commonActorData
-	actors   map[string]types.ProjectActorProps
+	actors   map[string]types.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
 	batch    []types.Event
@@ -45,7 +44,7 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
-	case MsgSdkEvents, MsgSendUpdates:
+	case MsgSdkEvents, msgProcessorUpdateState:
 	default:
 		actor_utils.LogActorMsg(ctx)
 	}
@@ -58,12 +57,12 @@ func (p *processor) Receive(ctx *actor.Context) {
 func (p *processor) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]types.ProjectActorProps)
+		p.actors = make(map[string]types.Actor)
 		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 		p.updates = make(map[string]bool)
 		p.batch = make([]types.Event, 0)
 	case actor.Started:
-		p.repeater = ctx.SendRepeat(ctx.PID(), MsgSendUpdates{}, sendUpdatesInterval)
+		p.repeater = ctx.SendRepeat(ctx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 		return p.processUpdates(ctx)
@@ -73,7 +72,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 				return err
 			}
 		}
-	case MsgSendUpdates:
+	case msgProcessorUpdateState:
 		return p.processUpdates(ctx)
 	}
 	return nil
@@ -91,9 +90,9 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		Event:     sdkEvent,
 	}
 
-	actorProps, actorExists := p.actors[event.PID]
+	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorProps = types.ProjectActorProps{
+		actorData = types.Actor{
 			PID:       event.PID,
 			ProjectID: p.id,
 			NumEvents: 0,
@@ -101,14 +100,14 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		}
 	}
 
-	event.Index = int32(actorProps.NumEvents)
+	event.Index = int32(actorData.NumEvents)
 
-	actorProps.NumEvents++
-	if event.ID.Compare(actorProps.LastEventID) > 0 {
-		actorProps.Alive = isActorAlive(event.Type)
-		actorProps.LastEventID = event.ID
+	actorData.NumEvents++
+	if event.ID.Compare(actorData.LastEventID) > 0 {
+		actorData.Alive = isActorAlive(event.Type)
+		actorData.LastEventID = event.ID
 	}
-	p.actors[event.PID] = actorProps
+	p.actors[event.PID] = actorData
 
 	if _, ok := p.updates[event.PID]; !ok {
 		p.updates[event.PID] = actorExists
@@ -126,12 +125,12 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 	}()
 
 	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
-	props := make([]types.ProjectActorProps, 0)
+	actors := make([]types.Actor, 0)
 	for pid := range p.updates {
-		props = append(props, p.actors[pid])
+		actors = append(actors, p.actors[pid])
 	}
-	if len(props) > 0 {
-		ctx.Send(projectPID, MsgUpdateProjectActorProps{Props: props})
+	if len(actors) > 0 {
+		ctx.Send(projectPID, MsgUpdateProjectActors{Actors: actors})
 	}
 
 	for pid, actorExists := range p.updates {
@@ -146,12 +145,9 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		}
 	}
 
-	func(batch []types.Event) {
-		if err := p.app.DB().CreateEvents(batch); err != nil {
-			log.Println(err)
-		}
-
-	}(p.batch)
+	if err := p.app.DB().CreateEvents(p.batch); err != nil {
+		return err
+	}
 
 	return nil
 }

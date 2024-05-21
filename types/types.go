@@ -67,11 +67,11 @@ func (cb ContextBuilder) Build() context.Context {
 }
 
 type ProjectProps struct {
-	ID         uuid.UUID
-	ActorProps map[string]ProjectActorProps
+	ID     uuid.UUID
+	Actors map[string]Actor
 }
 
-type ProjectActorProps struct {
+type Actor struct {
 	PID         string
 	ProjectID   uuid.UUID
 	NumEvents   int32

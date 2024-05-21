@@ -25,8 +25,8 @@ type MsgGetProjectActorProps struct {
 	ActorPID string
 }
 
-type RspGetProjectActorProps struct {
-	Props types.ProjectActorProps
+type RspGetProjectActor struct {
+	Actor types.Actor
 }
 
 type MsgGetProjectEvents struct {
@@ -38,29 +38,29 @@ type MsgGetProjectEvents struct {
 
 type RspGetProjectEvents struct {
 	Events types.EventList
-	Props  types.ProjectActorProps
+	Actor  types.Actor
 }
 
 type MsgEventsListenStart struct{}
 
 type MsgEventsListenStop struct{}
 
-type MsgSendUpdates struct{}
+type msgProcessorUpdateState struct{}
 
 type MsgSse struct {
 	Msgs []any
 }
 
 type MsgSseNewActor struct {
-	ActorProps types.ProjectActorProps
+	Actor types.Actor
 }
 
 type MsgSseNewEvents struct {
-	ActorProps types.ProjectActorProps
+	Actor types.Actor
 }
 
-type MsgUpdateProjectActorProps struct {
-	Props []types.ProjectActorProps
+type MsgUpdateProjectActors struct {
+	Actors []types.Actor
 }
 
-type msgProjectUpdateProps struct{}
+type msgProjectUpdateState struct{}

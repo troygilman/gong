@@ -61,7 +61,7 @@ func GetProjectActor(ctx echo.Context) error {
 	}
 
 	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetProjectActorProps](r)
+	response, err := utils.HandleResponse[domain.RspGetProjectActor](r)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func GetProjectActor(ctx echo.Context) error {
 	return renderView(
 		ctx,
 		ctx.Request().Context(),
-		view.ProjectActor(response.Props),
+		view.ProjectActor(response.Actor),
 	)
 }
 
@@ -185,7 +185,7 @@ func ConnectProjectSSE(ctx echo.Context) error {
 							ctx.Request().Context(),
 							writer,
 							types.SseTypeNewActor,
-							view.ProjectActorListItem(msg.ActorProps, false),
+							view.ProjectActorListItem(msg.Actor, false),
 						); err != nil {
 							return err
 						}
@@ -193,8 +193,8 @@ func ConnectProjectSSE(ctx echo.Context) error {
 						if err := writeServerSentEvent(
 							ctx.Request().Context(),
 							writer,
-							types.SseTypeUpdateActorNumEvents+msg.ActorProps.PID,
-							view.ProjectActorBadge(msg.ActorProps),
+							types.SseTypeUpdateActorNumEvents+msg.Actor.PID,
+							view.ProjectActorBadge(msg.Actor),
 						); err != nil {
 							return err
 						}

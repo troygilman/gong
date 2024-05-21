@@ -8,16 +8,16 @@ import (
 	"strconv"
 )
 
-templ eventsTabContent(props types.ProjectActorProps) {
+templ eventsTabContent(actor types.Actor) {
 	if filter, ok := ctx.Value(types.CtxFilter).(types.EventsFilter); ok {
 		@eventsFilter(filter)
 	} else {
 		@eventsFilter(types.EventsFilter{})
 	}
-	@ProjectActorEventsContainer(props)
+	@ProjectActorEventsContainer(actor)
 }
 
-templ ProjectActorEventsContainer(props types.ProjectActorProps) {
+templ ProjectActorEventsContainer(actor types.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto"
