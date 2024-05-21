@@ -20,6 +20,10 @@ import (
 	"github.com/troygilman0/utils"
 )
 
+const (
+	projectViewActor = "actor"
+)
+
 func GetProject(ctx echo.Context) error {
 	app := mustApp(ctx)
 	projectID := mustProjectID(ctx)
@@ -29,48 +33,42 @@ func GetProject(ctx echo.Context) error {
 		return err
 	}
 
-	r := app.Engine().Request(projectPID, domain.MsgGetProjectProps{}, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetProjectProps](r)
-	if err != nil {
-		return err
+	switch ctx.Request().Header.Get("View") {
+	case projectViewActor:
+		actorPID, ok := actorPID(ctx)
+		if !ok {
+			return errors.New("actorPID is empty")
+		}
+
+		msg := domain.MsgGetProjectActorProps{
+			ActorPID: actorPID,
+		}
+
+		r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
+		response, err := utils.HandleResponse[domain.RspGetProjectActor](r)
+		if err != nil {
+			return err
+		}
+
+		return renderView(
+			ctx,
+			ctx.Request().Context(),
+			view.ProjectActor(response.Actor),
+		)
+
+	default:
+		r := app.Engine().Request(projectPID, domain.MsgGetProjectProps{}, domain.DefaultTimeout)
+		response, err := utils.HandleResponse[domain.RspGetProjectProps](r)
+		if err != nil {
+			return err
+		}
+
+		return renderView(
+			ctx,
+			ctx.Request().Context(),
+			view.Project(response.Props),
+		)
 	}
-
-	return renderView(
-		ctx,
-		ctx.Request().Context(),
-		view.Project(response.Props),
-	)
-}
-
-func GetProjectActor(ctx echo.Context) error {
-	app := mustApp(ctx)
-
-	projectID := mustProjectID(ctx)
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
-
-	actorPID, ok := actorPID(ctx)
-	if !ok {
-		return errors.New("actorPID is empty")
-	}
-
-	msg := domain.MsgGetProjectActorProps{
-		ActorPID: actorPID,
-	}
-
-	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetProjectActor](r)
-	if err != nil {
-		return err
-	}
-
-	return renderView(
-		ctx,
-		ctx.Request().Context(),
-		view.ProjectActor(response.Actor),
-	)
 }
 
 func GetProjectEvents(ctx echo.Context) error {

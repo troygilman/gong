@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func formatProjectUrl(ctx context.Context, path string) string {
-	url := fmt.Sprintf("/project/%s%s", ctx.Value(types.CtxProject).(uuid.UUID).String(), path)
+func formatProjectUrl(ctx context.Context) string {
+	url := fmt.Sprintf("/project/%s", ctx.Value(types.CtxProject).(uuid.UUID).String())
 	return string(templ.URL(url))
 }
 

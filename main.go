@@ -49,7 +49,6 @@ func run() error {
 
 	newGroup(e, "/project/:projectID", func(e *echo.Group) {
 		e.GET("", handler.GetProject)
-		e.GET("/actor", handler.GetProjectActor)
 		e.GET("/events", handler.GetProjectEvents)
 		e.GET("/sse", handler.ConnectProjectSSE)
 		e.GET("/connect", handler.ConnectProject)

@@ -120,8 +120,9 @@ templ eventsFilter(filter types.EventsFilter) {
 	<form
 		id="events-filter"
 		class="join m-4 w-fit"
-		hx-get={ formatProjectUrl(ctx, "/actor") }
+		hx-get={ formatProjectUrl(ctx) }
 		hx-include={ includes }
+		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
 		hx-push-url="true"
@@ -197,9 +198,10 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 		if active {
 			<span
 				class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ formatProjectUrl(ctx, "/actor") }
+				hx-get={ formatProjectUrl(ctx) }
 				hx-include={ includes }
 				hx-params={ "not " + name }
+				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
@@ -230,7 +232,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
-		hx-get={ formatProjectUrl(ctx, "/events") }
+		hx-get={ formatProjectUrl(ctx) + "/events" }
 		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
 		hx-include={ includes }
 		hx-swap="outerHTML"
@@ -249,7 +251,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-bottom-data-loader"
 		if moreEvents {
-			hx-get={ formatProjectUrl(ctx, "/events") }
+			hx-get={ formatProjectUrl(ctx) + "/events" }
 			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
 			hx-include={ includes }
 			hx-swap="outerHTML"
