@@ -62,3 +62,5 @@ type MsgSseNewEvents struct {
 type MsgUpdateProjectActorProps struct {
 	Props []types.ProjectActorProps
 }
+
+type msgProjectUpdateProps struct{}

@@ -146,12 +146,10 @@ func (p *processor) processUpdates(ctx *actor.Context) error {
 		}
 	}
 
-	go func(batch []types.Event) {
-		start := time.Now()
+	func(batch []types.Event) {
 		if err := p.app.DB().CreateEvents(batch); err != nil {
 			log.Println(err)
 		}
-		log.Printf("Create Events - %d events %d ms", len(batch), time.Since(start).Milliseconds())
 
 	}(p.batch)
 

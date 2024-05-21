@@ -147,9 +147,9 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			event.Timestamp = time.Now()
 		}
 
-		if err := g.pushEvent(event); err != nil {
-			log.Println(err)
-		}
+		// if err := g.pushEvent(event); err != nil {
+		// 	log.Println(err)
+		// }
 	case Event:
 		if err := g.pushEvent(msg); err != nil {
 			log.Println(err)

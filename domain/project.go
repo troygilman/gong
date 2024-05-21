@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"gong/types"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -10,16 +11,19 @@ import (
 )
 
 const (
-	ActorKindProject  = "project"
-	ActorInitialized  = "actor.Initialized"
-	ActorStarted      = "actor.Started"
-	ActorStopped      = "actor.Stopped"
-	ActorStoppedEvent = "actor.ActorStoppedEvent"
+	ActorKindProject           = "project"
+	ActorInitialized           = "actor.Initialized"
+	ActorStarted               = "actor.Started"
+	ActorStopped               = "actor.Stopped"
+	ActorStoppedEvent          = "actor.ActorStoppedEvent"
+	projectUpdatePropsInterval = 200 * time.Millisecond
 )
 
 type project struct {
 	commonActorData
 	actors    map[string]types.ProjectActorProps
+	updates   map[string]types.ProjectActorProps
+	repeater  actor.SendRepeater
 	listeners map[*actor.PID]struct{}
 }
 
@@ -53,7 +57,12 @@ func (p *project) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.ProjectActorProps)
+		p.updates = make(map[string]types.ProjectActorProps)
 		p.listeners = make(map[*actor.PID]struct{})
+	case actor.Started:
+		p.repeater = ctx.SendRepeat(ctx.PID(), msgProjectUpdateProps{}, projectUpdatePropsInterval)
+	case actor.Stopped:
+		p.repeater.Stop()
 	case MsgGetProjectProps:
 		props := types.ProjectProps{
 			ID:         p.id,
@@ -75,10 +84,15 @@ func (p *project) receive(ctx *actor.Context) error {
 			return errors.New("actor pid does not exist")
 		}
 	case MsgUpdateProjectActorProps:
+		for _, update := range msg.Props {
+			p.updates[update.PID] = update
+		}
+
+	case msgProjectUpdateProps:
 		msgs := make([]any, 0)
 
-		for _, props := range msg.Props {
-			_, exists := p.actors[props.PID]
+		for pid, props := range p.updates {
+			_, exists := p.actors[pid]
 			if exists {
 				msgs = append(msgs, MsgSseNewEvents{
 					ActorProps: props,
@@ -89,6 +103,7 @@ func (p *project) receive(ctx *actor.Context) error {
 				})
 			}
 			p.actors[props.PID] = props
+			delete(p.updates, pid)
 		}
 
 		for pid := range p.listeners {
