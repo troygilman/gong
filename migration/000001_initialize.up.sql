@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS event(
     type TEXT NOT NULL,
     level INTEGER NOT NULL,
     msg TEXT NOT NULL,
+    attrs JSONB NOT NULL,
     PRIMARY KEY (id, project_id)
 );
 

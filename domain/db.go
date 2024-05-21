@@ -101,6 +101,7 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 		m[i].Type = events[i].Type
 		m[i].Level = int32(events[i].Level)
 		m[i].Msg = events[i].Msg
+		m[i].Attrs = events[i].Attrs
 	}
 
 	if len(m) > 0 {
@@ -109,13 +110,13 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 			return err
 		}
 
-		stmt, err := tx.Prepare("COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg) FROM STDIN")
+		stmt, err := tx.Prepare("COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg, attrs) FROM STDIN")
 		if err != nil {
 			return err
 		}
 
 		for _, e := range m {
-			_, err = stmt.Exec(e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg)
+			_, err = stmt.Exec(e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
 			if err != nil {
 				return err
 			}
@@ -193,6 +194,7 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		events[idx].Type = m[idx].Type
 		events[idx].Level = slog.Level(m[idx].Level)
 		events[idx].Msg = m[idx].Msg
+		events[idx].Attrs = m[idx].Attrs
 	}
 
 	return events, nil

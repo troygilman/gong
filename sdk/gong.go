@@ -34,7 +34,7 @@ type Event struct {
 	Type      string
 	Level     slog.Level
 	Msg       string
-	Attr      string
+	Attrs     string
 }
 
 type GongConfig struct {
@@ -111,7 +111,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			Type:  fmt.Sprintf("%T", msg),
 			Level: level,
 			Msg:   logMsg,
-			Attr:  attrStr,
+			Attrs: attrStr,
 		}
 
 		if ctx.Sender() != nil {
