@@ -52,6 +52,7 @@ func run() error {
 		e.GET("/events", handler.GetProjectEvents)
 		e.GET("/sse", handler.ConnectProjectSSE)
 		e.GET("/chart", handler.GetActorChart)
+		e.GET("/tooltip", handler.GetActorChartTooltip)
 		e.GET("/connect", handler.ConnectProject)
 	}, handler.MiddlewareProjectContext())
 

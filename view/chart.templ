@@ -1,0 +1,99 @@
+package view
+
+type ChartProps struct {
+	ID     string
+	Width  string
+	Height string
+}
+
+css item(props ChartProps) {
+	width: { props.Width };
+	height: { props.Height };
+}
+
+templ chart(props ChartProps) {
+	<div id="chart">
+		<div class="container">
+			<div class={ "item", item(props) } id={ props.ID }></div>
+		</div>
+		<script>
+			function initChart(chartID, options) {
+				"use strict";
+				let elem = document.getElementById(chartID);
+				let chart = echarts.init(elem);
+				chart.setOption(options);
+			}
+		</script>
+		{ children... }
+	</div>
+}
+
+templ MyChart() {
+	<div class="grow min-h-0 max-w-full overflow-x-auto">
+		@chart(ChartProps{
+			ID:     "test",
+			Width:  "100%",
+			Height: "95vh",
+		}) {
+			@initMyChart("test", formatProjectUrl(ctx)+"/tooltip")
+		}
+	</div>
+}
+
+script initMyChart(chartID string, tooltipPath string) {
+	function tooltipHandler(params, ticket, callback) {
+		let handler = function(target, request) {
+			callback(ticket, request.xhr.responseText);
+		};
+		htmx.ajax("GET", tooltipPath, {handler: handler});
+		return 'Loading';
+	}
+
+	data = [{name: "flair", children: [{name:"bob", children: []}] }];
+
+	options = {
+      tooltip: {
+        trigger: 'item',
+        triggerOn: 'click',
+        formatter: tooltipHandler,
+      },
+      series: [
+        {
+          type: 'tree',
+          data: data,
+          top: '1%',
+          left: '15%',
+          bottom: '1%',
+          right: '7%',
+          symbolSize: 7,
+          orient: 'RL',
+          label: {
+            position: 'right',
+            verticalAlign: 'middle',
+            align: 'left'
+          },
+          leaves: {
+            label: {
+              position: 'left',
+              verticalAlign: 'middle',
+              align: 'right'
+            }
+          },
+          emphasis: {
+            focus: 'descendant'
+          },
+          expandAndCollapse: false,
+          animationDuration: 550,
+          animationDurationUpdate: 750
+        }
+      ]
+    };
+
+    initChart(chartID, options);
+}
+
+templ ChartTooltip() {
+	<div>
+		Actor!!!
+	</div>
+}
