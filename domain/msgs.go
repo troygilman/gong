@@ -64,3 +64,11 @@ type MsgUpdateProjectActors struct {
 }
 
 type msgProjectUpdateState struct{}
+
+type MsgGetActorSources struct {
+	ActorPID string
+}
+
+type RspGetActorSources struct {
+	Sources []string
+}

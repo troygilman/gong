@@ -9,6 +9,8 @@ import (
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
+	"gong/view/chart"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -152,10 +154,10 @@ func ConnectProjectSSE(ctx echo.Context) error {
 	}
 
 	writer := ctx.Response().Writer
-	done := make(chan error)
-
+	done := make(chan struct{})
 	var repeater actor.SendRepeater
-	pid := app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
+
+	app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
 		switch msg := actorCtx.Message().(type) {
 		case actor.Started:
 			actorCtx.Send(projectPID, domain.MsgEventsListenStart{})
@@ -163,17 +165,17 @@ func ConnectProjectSSE(ctx echo.Context) error {
 		case actor.Stopped:
 			actorCtx.Send(projectPID, domain.MsgEventsListenStop{})
 			repeater.Stop()
+			done <- struct{}{}
 		case msgSsePing:
 			if err := writeServerSentEvent(ctx.Request().Context(), writer, "ping", nil); err != nil {
-				select {
-				case done <- err:
-				default:
-				}
+				actorCtx.Engine().Stop(actorCtx.PID())
+				return
 			}
 			flusher.Flush()
 		case domain.MsgSse:
 			if msg.Msgs == nil {
-				done <- nil
+				actorCtx.Engine().Stop(actorCtx.PID())
+				return
 			}
 			if err := func() error {
 				for _, msg := range msg.Msgs {
@@ -200,18 +202,15 @@ func ConnectProjectSSE(ctx echo.Context) error {
 				}
 				return nil
 			}(); err != nil {
-				select {
-				case done <- err:
-				default:
-				}
+				actorCtx.Engine().Stop(actorCtx.PID())
+				return
 			}
 			flusher.Flush()
 		}
 	}, "sse-handler", actor.WithID(requestID(ctx)))
 
-	err = <-done
-	app.Engine().Poison(pid)
-	return err
+	<-done
+	return nil
 }
 
 var upgrader = websocket.Upgrader{}
@@ -249,8 +248,42 @@ func ConnectProject(ctx echo.Context) error {
 }
 
 func GetActorChart(ctx echo.Context) error {
+	app := mustApp(ctx)
+	projectID := mustProjectID(ctx)
 
-	return view.MyChart().Render(ctx.Request().Context(), ctx.Response().Writer)
+	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	actorPID, ok := actorPID(ctx)
+	if !ok {
+		return errors.New("actorPID is missing")
+	}
+
+	r := app.Engine().Request(projectPID, domain.MsgGetActorSources{ActorPID: actorPID}, domain.DefaultTimeout)
+	response, err := utils.HandleResponse[domain.RspGetActorSources](r)
+	if err != nil {
+		return err
+	}
+
+	log.Println(response)
+	head := chart.TreeDataNode{
+		Name:     actorPID,
+		Children: make([]chart.TreeDataNode, len(response.Sources)),
+	}
+
+	for i, source := range response.Sources {
+		head.Children[i] = chart.TreeDataNode{
+			Name: source,
+		}
+	}
+
+	data := []chart.TreeDataNode{
+		head,
+	}
+
+	return view.MyChart(data).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {

@@ -1,61 +1,50 @@
 package view
 
-type ChartProps struct {
-	ID     string
-	Width  string
-	Height string
-}
+import (
+	"gong/view/chart"
+)
 
-css item(props ChartProps) {
-	width: { props.Width };
-	height: { props.Height };
-}
-
-templ chart(props ChartProps) {
-	<div id="chart">
-		<div class="container">
-			<div class={ "item", item(props) } id={ props.ID }></div>
-		</div>
-		<script>
-			function initChart(chartID, options) {
-				"use strict";
-				let elem = document.getElementById(chartID);
-				let chart = echarts.init(elem);
-				chart.setOption(options);
-			}
-		</script>
-		{ children... }
-	</div>
-}
-
-templ MyChart() {
-	<div class="grow min-h-0 max-w-full overflow-x-auto">
-		@chart(ChartProps{
-			ID:     "test",
+templ MyChart(data []chart.TreeDataNode) {
+	<div
+		class="grow min-h-0 max-w-full overflow-x-auto"
+	>
+		@chart.Chart(chart.ChartProps{
+			ID:     "actor-sources",
 			Width:  "100%",
-			Height: "95vh",
+			Height: "100%",
 		}) {
-			@initMyChart("test", formatProjectUrl(ctx)+"/tooltip")
+			@initMyChart("actor-sources", formatProjectUrl(ctx), data)
 		}
 	</div>
 }
 
-script initMyChart(chartID string, tooltipPath string) {
-	function tooltipHandler(params, ticket, callback) {
-		let handler = function(target, request) {
-			callback(ticket, request.xhr.responseText);
-		};
-		htmx.ajax("GET", tooltipPath, {handler: handler});
-		return 'Loading';
-	}
+script initMyChart(chartID string, projectUrl string, data []chart.TreeDataNode) {
+    Alpine.store("chart", {
+        tooltipCache: {},
+    });
 
-	data = [{name: "flair", children: [{name:"bob", children: []}] }];
+	function tooltipHandler(params, ticket, callback) {
+		let cache = Alpine.store("chart").tooltipCache;
+		if (cache[params.name]) {
+			return cache[params.name];
+		}
+
+		let handler = function(target, request) {
+			let html = request.xhr.responseText;
+			cache[params.name] = html
+			callback(ticket, html);
+		};
+
+		htmx.ajax("GET", projectUrl + "/tooltip", {handler: handler});
+		return "...";
+	}
 
 	options = {
       tooltip: {
         trigger: 'item',
-        triggerOn: 'click',
+        triggerOn: 'mousemove',
         formatter: tooltipHandler,
+        enterable: true,
       },
       series: [
         {
@@ -70,21 +59,23 @@ script initMyChart(chartID string, tooltipPath string) {
           label: {
             position: 'right',
             verticalAlign: 'middle',
-            align: 'left'
+            align: 'left',
+            color: 'white',
           },
           leaves: {
             label: {
               position: 'left',
               verticalAlign: 'middle',
-              align: 'right'
+              align: 'right',
+              color: 'white',
             }
           },
           emphasis: {
             focus: 'descendant'
           },
           expandAndCollapse: false,
-          animationDuration: 550,
-          animationDurationUpdate: 750
+          animationDuration: 500,
+          animationDurationUpdate: 500
         }
       ]
     };

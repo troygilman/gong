@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"slices"
+	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ type Database interface {
 	QueryActors(projectID uuid.UUID) ([]types.Actor, error)
 	CreateActor(types.Actor) error
 	UpdateActor(types.Actor) error
+	QueryActorSources(actorSourcesQuery) ([]string, error)
 }
 
 type eventsQuery struct {
@@ -31,6 +33,13 @@ type eventsQuery struct {
 	eventID   ulid.ULID
 	numEvents int
 	filter    types.EventsFilter
+}
+
+type actorSourcesQuery struct {
+	projectID uuid.UUID
+	actorPID  string
+	minTime   time.Time
+	maxTime   time.Time
 }
 
 const (
@@ -256,4 +265,27 @@ func (db *postgresDatabase) UpdateActor(actor types.Actor) error {
 	}
 
 	return nil
+}
+
+func (db *postgresDatabase) QueryActorSources(query actorSourcesQuery) ([]string, error) {
+	var m []struct {
+		Sender string
+	}
+
+	stmt := table.Event.SELECT(table.Event.Sender.AS("sender")).WHERE(
+		table.Event.ActorPid.EQ(String(query.actorPID)).
+			AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime))).
+			AND(NOT(table.Event.Sender.EQ(String(""))))).
+		GROUP_BY(table.Event.Sender)
+
+	if err := stmt.Query(db.conn, &m); err != nil {
+		return nil, sqlError(stmt, err)
+	}
+
+	senders := make([]string, len(m))
+	for i, sender := range m {
+		senders[i] = sender.Sender
+	}
+
+	return senders, nil
 }

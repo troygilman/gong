@@ -133,6 +133,23 @@ func (p *project) receive(ctx *actor.Context) error {
 				Events: make(types.EventList, 0),
 			})
 		}
+	case MsgGetActorSources:
+		_, ok := p.actors[msg.ActorPID]
+		if ok {
+			query := actorSourcesQuery{
+				projectID: p.id,
+				actorPID:  msg.ActorPID,
+				minTime:   time.Now().Add(-24 * time.Hour),
+				maxTime:   time.Now(),
+			}
+			sources, err := p.app.DB().QueryActorSources(query)
+			if err != nil {
+				return err
+			}
+			ctx.Respond(RspGetActorSources{
+				Sources: sources,
+			})
+		}
 	case MsgEventsListenStart:
 		p.listeners[ctx.Sender()] = struct{}{}
 	case MsgEventsListenStop:
