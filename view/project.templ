@@ -118,8 +118,8 @@ templ ProjectActorBadge(actor types.Actor) {
 }
 
 const (
-	tabLabelEvents = "Events"
-	tabLabelTest   = "Test"
+	tabLabelOverview = "Overview"
+	tabLabelEvents   = "Events"
 )
 
 templ ProjectActor(actor types.Actor) {
@@ -140,19 +140,19 @@ templ ActorContent(actor types.Actor) {
 			role="tablist"
 			class="tabs tabs-bordered"
 		>
-			@actorTab(tabLabelEvents)
-			@actorTab(tabLabelTest)
+			@tab(tabLabelOverview)
+			@tab(tabLabelEvents)
 		</div>
-		@actorTabContent(tabLabelEvents) {
-			@eventsTabContent(actor)
+		@tabContent(tabLabelOverview) {
+			@overviewTabContent(actor)
 		}
-		@actorTabContent(tabLabelTest) {
-			<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load" hx-include={ includes }></div>
+		@tabContent(tabLabelEvents) {
+			@eventsTabContent(actor)
 		}
 	</div>
 }
 
-templ actorTab(label string) {
+templ tab(label string) {
 	<a
 		role="tab"
 		if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && activeTab == label {
@@ -170,7 +170,7 @@ templ actorTab(label string) {
 	>{ label }</a>
 }
 
-templ actorTabContent(label string) {
+templ tabContent(label string) {
 	if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && label == activeTab {
 		<div
 			class="flex flex-col grow min-h-0"

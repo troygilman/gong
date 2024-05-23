@@ -283,7 +283,7 @@ func GetActorChart(ctx echo.Context) error {
 		head,
 	}
 
-	return view.MyChart(data).Render(ctx.Request().Context(), ctx.Response().Writer)
+	return view.ActorSourcesChart(data).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {

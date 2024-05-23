@@ -4,21 +4,21 @@ import (
 	"gong/view/chart"
 )
 
-templ MyChart(data []chart.TreeDataNode) {
+templ ActorSourcesChart(data []chart.TreeDataNode) {
 	<div
-		class="grow min-h-0 max-w-full overflow-x-auto"
+		class="w-full h-full"
 	>
 		@chart.Chart(chart.ChartProps{
 			ID:     "actor-sources",
 			Width:  "100%",
 			Height: "100%",
 		}) {
-			@initMyChart("actor-sources", formatProjectUrl(ctx), data)
+			@initActorSourcesChart("actor-sources", formatProjectUrl(ctx), data)
 		}
 	</div>
 }
 
-script initMyChart(chartID string, projectUrl string, data []chart.TreeDataNode) {
+script initActorSourcesChart(chartID string, projectUrl string, data []chart.TreeDataNode) {
     Alpine.store("chart", {
         tooltipCache: {},
     });
@@ -51,23 +51,26 @@ script initMyChart(chartID string, projectUrl string, data []chart.TreeDataNode)
           type: 'tree',
           data: data,
           top: '1%',
-          left: '15%',
+          left: 150,
           bottom: '1%',
-          right: '7%',
+          right: 150,
+          symbol: "arrow",
+          symbolRotate: -90,
           symbolSize: 7,
           orient: 'RL',
           label: {
             position: 'right',
             verticalAlign: 'middle',
             align: 'left',
-            color: 'white',
+            color: "white",
+            width: 130,
+            overflow: "truncate",
           },
           leaves: {
             label: {
               position: 'left',
               verticalAlign: 'middle',
               align: 'right',
-              color: 'white',
             }
           },
           emphasis: {

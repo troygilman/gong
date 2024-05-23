@@ -17,6 +17,10 @@ templ Chart(props ChartProps) {
 				let elem = document.getElementById(chartID);
 				let chart = echarts.init(elem);
 				chart.setOption(options);
+
+				document.defaultView.addEventListener("resize", (e) => {
+					chart.resize();
+				});
 			}
 		</script>
 		{ children... }
@@ -26,6 +30,10 @@ templ Chart(props ChartProps) {
 css item(props ChartProps) {
 	width: { props.Width };
 	height: { props.Height };
+	max-width: { props.Width };
+	max-height: { props.Height };
+	min-width: { props.Width };
+	min-height: { props.Height };
 }
 
 type TreeDataNode struct {

@@ -62,7 +62,8 @@ func startClient() {
 	wg := &sync.WaitGroup{}
 	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
 	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
-	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("primary")) //, actor.WithMiddleware(sdk.GongMiddleware()))
+	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("1"))
+	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("2"))
 
 	wg.Wait()
 	fmt.Println("Clients stopped")
