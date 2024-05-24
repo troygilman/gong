@@ -5,8 +5,8 @@ import (
 )
 
 templ overviewTabContent(actor types.Actor) {
-	//<div class="grid grid-cols-3 gap-4 w-full h-full">
-	<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load" hx-include={ includes }></div>
-	//<div class="col-span-2">Detail</div>
-	//</div>
+	<div class="grid grid-cols-2 gap-4 w-full h-full max-h-full">
+		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load" hx-include={ includes }></div>
+		<div class="">Detail</div>
+	</div>
 }

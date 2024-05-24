@@ -97,29 +97,50 @@ templ ChartTooltip() {
 }
 
 templ ActorSourcesChart(data []chart.TreeDataNode) {
-	<div class="w-full h-full">
-		<div id="chart" class="w-full h-full"></div>
+	<div class="grow min-w-0 min-h-0">
+		<svg id="chart" class="w-full h-full"></svg>
 		@initActorChart()
 	</div>
 }
 
 script initActorChart() {
-	const width = 1000;
-	const height = 1000;
+	const width = 200;
+	const height = 200;
+
+	const sources = [
+		{"pid": "Source1"},
+		{"pid": "Source2"},
+		{"pid": "Source3"},
+		{"pid": "Source4"},
+		{"pid": "Source5"},
+		{"pid": "Source6"},
+		{"pid": "Source7"},
+		{"pid": "Source8"},
+		{"pid": "Source9"},
+		{"pid": "Source11"},
+		{"pid": "Source12"},
+		{"pid": "Source13"},
+		{"pid": "Source14"},
+		{"pid": "Source15"},
+		{"pid": "Source16"},
+		{"pid": "Source17"},
+		{"pid": "Source18"},
+		{"pid": "Source19"},
+	];
 
 	let data = {
 		"nodes": [
-			{"id": "Head", "group": 1, "fx": width - 100},
-			{"id": "Napoleon", "group": 2, "fx": 100},
-			{"id": "Mlle.Baptistine", "group": 2, "fx": 100},
-			{"id": "Mme.Magloire", "group": 2, "fx": 100},
+			{"id": "Head", "group": 1, "fx": width * 0.9, "fy": height / 2.0},
 		],
-		"links": [
-			{"source": "Napoleon", "target": "Head", "value": 1},
-			{"source": "Mlle.Baptistine", "target": "Head", "value": 1},
-			{"source": "Mme.Magloire", "target": "Head", "value": 1},
-		]
+		"links": [],
 	}
+
+	const sourcesInterval = (height * 0.8) / (sources.length - 1);
+	for (let i = 0; i < sources.length; i++) {
+		let source = sources[i];
+		data.nodes.push({"id": source.pid, "group": 2, "fx": width * 0.1, "fy": (height * 0.1) + (sourcesInterval * i)});
+		data.links.push({"source": source.pid, "target": "Head", "value": 1});
+	};
 
 	// Specify the color scale.
 	const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -134,23 +155,25 @@ script initActorChart() {
 		.force("link", d3.forceLink(links).id(d => d.id))
 	    .force("charge", d3.forceManyBody().strength(-1000))
 	    .force("center", d3.forceCenter(width / 2, height / 2))
+		.alphaDecay(0.1)
 	    .on("tick", ticked);
 
-	// Create the SVG container.
-	const svg = d3.select("#chart").append("svg")
-	    .attr("width", width)
-	    .attr("height", height)
-	    .attr("viewBox", [0, 0, width, height])
-	    .attr("style", "max-width: 100%; max-height: 100%;");
 
-	// Add a line for each link, and a circle for each node.
+	const zoom = d3.zoom().on("zoom", handleZoom);
+
+	// Create the SVG container.
+	const svg = d3.select("#chart")
+	    .attr("viewBox", [0, 0, width, height])
+		.call(zoom);
+
 	const link = svg.append("g")
-		.attr("stroke", "#999")
-		.attr("stroke-opacity", 0.6)
-		.selectAll()
-    	.data(links)
-     	.join("line")
-      	.attr("stroke-width", d => Math.sqrt(d.value));
+    	.attr("fill", "none")
+     	.attr("stroke-width", 1)
+      	.selectAll("path")
+       	.data(links)
+        .join("path")
+        .attr("stroke", "#999");
+        //.attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
 
   	const node = svg.append("g")
     	.attr("stroke", "#fff")
@@ -158,21 +181,31 @@ script initActorChart() {
        	.selectAll()
         .data(nodes)
         .join("circle")
-        .attr("r", 5)
+        .attr("r", 3)
         .attr("fill", d => color(d.group));
 
     node.append("title").text(d => d.id);
 
+    function linkArc(d) {
+      const r = 0;
+      return `
+        M${d.source.x},${d.source.y}
+        A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
+      `;
+    }
+
     // Set the position attributes of links and nodes each time the simulation ticks.
     function ticked() {
     	link
-        	.attr("x1", d => d.source.x)
-         	.attr("y1", d => d.source.y)
-          	.attr("x2", d => d.target.x)
-           	.attr("y2", d => d.target.y);
+        	.attr("d", linkArc);
 
         node
         	.attr("cx", d => d.x)
          	.attr("cy", d => d.y);
     };
+
+    function handleZoom(e) {
+    	svg.selectAll("svg g")
+     		.attr('transform', e.transform);
+    }
 }
