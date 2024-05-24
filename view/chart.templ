@@ -4,7 +4,7 @@ import (
 	"gong/view/chart"
 )
 
-templ ActorSourcesChart(data []chart.TreeDataNode) {
+templ ActorSourcesChart1(data []chart.TreeDataNode) {
 	<div
 		class="w-full h-full"
 	>
@@ -54,8 +54,8 @@ script initActorSourcesChart(chartID string, projectUrl string, data []chart.Tre
           left: 150,
           bottom: '1%',
           right: 150,
-          symbol: "arrow",
-          symbolRotate: -90,
+          //symbol: "arrow",
+          //symbolRotate: -90,
           symbolSize: 7,
           orient: 'RL',
           label: {
@@ -71,6 +71,10 @@ script initActorSourcesChart(chartID string, projectUrl string, data []chart.Tre
               position: 'left',
               verticalAlign: 'middle',
               align: 'right',
+              color: "white",
+              width: 130,
+              overflow: "truncate",
+              backgroundColor: "oklch(var(--b1))",
             }
           },
           emphasis: {
@@ -90,4 +94,85 @@ templ ChartTooltip() {
 	<div>
 		Actor!!!
 	</div>
+}
+
+templ ActorSourcesChart(data []chart.TreeDataNode) {
+	<div class="w-full h-full">
+		<div id="chart" class="w-full h-full"></div>
+		@initActorChart()
+	</div>
+}
+
+script initActorChart() {
+	const width = 1000;
+	const height = 1000;
+
+	let data = {
+		"nodes": [
+			{"id": "Head", "group": 1, "fx": width - 100},
+			{"id": "Napoleon", "group": 2, "fx": 100},
+			{"id": "Mlle.Baptistine", "group": 2, "fx": 100},
+			{"id": "Mme.Magloire", "group": 2, "fx": 100},
+		],
+		"links": [
+			{"source": "Napoleon", "target": "Head", "value": 1},
+			{"source": "Mlle.Baptistine", "target": "Head", "value": 1},
+			{"source": "Mme.Magloire", "target": "Head", "value": 1},
+		]
+	}
+
+	// Specify the color scale.
+	const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+	// The force simulation mutates links and nodes, so create a copy
+	// so that re-evaluating this cell produces the same result.
+	const links = data.links.map(d => ({...d}));
+	const nodes = data.nodes.map(d => ({...d}));
+
+	// Create a simulation with several forces.
+	const simulation = d3.forceSimulation(nodes)
+		.force("link", d3.forceLink(links).id(d => d.id))
+	    .force("charge", d3.forceManyBody().strength(-1000))
+	    .force("center", d3.forceCenter(width / 2, height / 2))
+	    .on("tick", ticked);
+
+	// Create the SVG container.
+	const svg = d3.select("#chart").append("svg")
+	    .attr("width", width)
+	    .attr("height", height)
+	    .attr("viewBox", [0, 0, width, height])
+	    .attr("style", "max-width: 100%; max-height: 100%;");
+
+	// Add a line for each link, and a circle for each node.
+	const link = svg.append("g")
+		.attr("stroke", "#999")
+		.attr("stroke-opacity", 0.6)
+		.selectAll()
+    	.data(links)
+     	.join("line")
+      	.attr("stroke-width", d => Math.sqrt(d.value));
+
+  	const node = svg.append("g")
+    	.attr("stroke", "#fff")
+      	.attr("stroke-width", 1.5)
+       	.selectAll()
+        .data(nodes)
+        .join("circle")
+        .attr("r", 5)
+        .attr("fill", d => color(d.group));
+
+    node.append("title").text(d => d.id);
+
+    // Set the position attributes of links and nodes each time the simulation ticks.
+    function ticked() {
+    	link
+        	.attr("x1", d => d.source.x)
+         	.attr("y1", d => d.source.y)
+          	.attr("x2", d => d.target.x)
+           	.attr("y2", d => d.target.y);
+
+        node
+        	.attr("cx", d => d.x)
+         	.attr("cy", d => d.y);
+    };
 }
