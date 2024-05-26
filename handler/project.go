@@ -9,8 +9,6 @@ import (
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
-	"gong/view/chart"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -267,23 +265,17 @@ func GetActorChart(ctx echo.Context) error {
 		return err
 	}
 
-	log.Println(response)
-	head := chart.TreeDataNode{
-		Name:     actorPID,
-		Children: make([]chart.TreeDataNode, len(response.Sources)),
-	}
-
-	for i, source := range response.Sources {
-		head.Children[i] = chart.TreeDataNode{
-			Name: source,
-		}
-	}
-
-	data := []chart.TreeDataNode{
-		head,
-	}
-
-	return view.ActorSourcesChart(data).Render(ctx.Request().Context(), ctx.Response().Writer)
+	response.Sources = append(response.Sources, []string{
+		"Test1",
+		"Test2",
+		"Test3",
+		"Test4",
+		"Test5",
+		"Test6",
+		"Test7",
+		"Test8",
+	}...)
+	return view.ActorSourcesChart(response.Sources).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {

@@ -96,50 +96,29 @@ templ ChartTooltip() {
 	</div>
 }
 
-templ ActorSourcesChart(data []chart.TreeDataNode) {
+templ ActorSourcesChart(sources []string) {
 	<div class="grow min-w-0 min-h-0">
 		<svg id="chart" class="w-full h-full"></svg>
-		@initActorChart()
+		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
+		@initActorChart(sources)
 	</div>
 }
 
-script initActorChart() {
+script initActorChart(sources []string) {
 	const width = 200;
 	const height = 200;
 
-	const sources = [
-		{"pid": "Source1"},
-		{"pid": "Source2"},
-		{"pid": "Source3"},
-		{"pid": "Source4"},
-		{"pid": "Source5"},
-		{"pid": "Source6"},
-		{"pid": "Source7"},
-		{"pid": "Source8"},
-		{"pid": "Source9"},
-		{"pid": "Source11"},
-		{"pid": "Source12"},
-		{"pid": "Source13"},
-		{"pid": "Source14"},
-		{"pid": "Source15"},
-		{"pid": "Source16"},
-		{"pid": "Source17"},
-		{"pid": "Source18"},
-		{"pid": "Source19"},
-	];
-
 	let data = {
 		"nodes": [
-			{"id": "Head", "group": 1, "fx": width * 0.9, "fy": height / 2.0},
+			{"id": "Head", "group": 1},
 		],
 		"links": [],
 	}
 
-	const sourcesInterval = (height * 0.8) / (sources.length - 1);
 	for (let i = 0; i < sources.length; i++) {
 		let source = sources[i];
-		data.nodes.push({"id": source.pid, "group": 2, "fx": width * 0.1, "fy": (height * 0.1) + (sourcesInterval * i)});
-		data.links.push({"source": source.pid, "target": "Head", "value": 1});
+		data.nodes.push({"id": source, "group": 2});
+		data.links.push({"source": source, "target": "Head", "value": 1});
 	};
 
 	// Specify the color scale.
@@ -166,30 +145,66 @@ script initActorChart() {
 	    .attr("viewBox", [0, 0, width, height])
 		.call(zoom);
 
+	svg.append("defs").append("marker")
+      	.attr("id", "arrow")
+       	.attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("fill", "#999")
+        .attr("d", "M0,-5L10,0L0,5");
+
 	const link = svg.append("g")
     	.attr("fill", "none")
      	.attr("stroke-width", 1)
       	.selectAll("path")
        	.data(links)
         .join("path")
-        .attr("stroke", "#999");
-        //.attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
+        .attr("stroke", "#999")
+        .attr("marker-mid", d => `url(${new URL(`#arrow`, location)})`);
 
   	const node = svg.append("g")
-    	.attr("stroke", "#fff")
-      	.attr("stroke-width", 1.5)
+   		.attr("stroke", "#fff")
+     	.attr("stroke-width", 1)
        	.selectAll()
         .data(nodes)
         .join("circle")
         .attr("r", 3)
-        .attr("fill", d => color(d.group));
+        .attr("fill", d => color(d.group))
+        .on("mouseover", revealTooltip)
+        .on("mousemove", revealTooltip)
+        .on("mouseleave", hideTooltip);
 
     node.append("title").text(d => d.id);
 
+    d3.select("#tooltip").on("mouseout", function() {
+    	d3.select('#tooltip').classed("hidden", true);
+    });
+
+    function revealTooltip(e, d) {
+     	d3.select('#tooltip')
+         	.style("left", (e.pageX + 10) + "px")
+          	.style("top", (e.pageY + 10) + "px")
+           	.html(d.id)
+            .classed("hidden", false);
+    };
+
+    function hideTooltip(e, d) {
+    	if (e.toElement.id != "tooltip") {
+     		d3.select('#tooltip').classed("hidden", true);
+       	}
+    };
+
     function linkArc(d) {
       const r = 0;
+      const midX = (d.source.x + d.target.x) / 2;
+      const midY = (d.source.y + d.target.y) / 2;
       return `
-        M${d.source.x},${d.source.y}
+      	M${d.source.x},${d.source.y}
+        A${r},${r} 0 0,1 ${midX},${midY}
         A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
       `;
     }
