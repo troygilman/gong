@@ -197,7 +197,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	<div class="join-item indicator">
 		if active {
 			<span
-				class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0"
+				class="indicator-item badge badge-warning badge-sm cursor-pointer pl-0 pr-0"
 				hx-get={ formatProjectUrl(ctx) }
 				hx-include={ includes }
 				hx-params={ "not " + name }
@@ -215,7 +215,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 				role="button"
 				class={ "event-filter-button-container", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
 			>
-				<div class="event-filter-button">{ label }</div>
+				<div class={ "event-filter-button", templ.KV("bg-neutral text-neutral-content", active) }>{ label }</div>
 			</div>
 			<div
 				tabindex="0"

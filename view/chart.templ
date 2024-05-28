@@ -167,7 +167,7 @@ script initActorChart(sources []string) {
         .attr("marker-mid", d => `url(${new URL(`#arrow`, location)})`);
 
   	const node = svg.append("g")
-   		.attr("stroke", "#fff")
+   		.attr("stroke", "oklch(var(--b1))")
      	.attr("stroke-width", 1)
        	.selectAll()
         .data(nodes)

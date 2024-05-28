@@ -12,11 +12,15 @@
     }
 
     .event-filter-button {
-        @apply btn btn-sm btn-ghost rounded-none no-animation;
+        @apply btn btn-sm btn-ghost hover:bg-base-content/10 hover:text-base-content rounded-none no-animation;
     }
 
     .event-filter-button-container {
-        @apply border overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0;
+        @apply border border-color overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0;
+    }
+
+    [data-theme="nord"] .border-color {
+        @apply border-gray-300;
     }
 }
 
