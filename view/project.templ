@@ -87,9 +87,9 @@ templ ProjectActorListItem(actor types.Actor, oob bool) {
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
 		hx-get={ formatProjectUrl(ctx) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
 		hx-include={ includes }
-		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="click"
 		hx-push-url="true"
 		if oob {
@@ -146,8 +146,10 @@ templ ActorContent(actor types.Actor) {
 			role="tablist"
 			class="tabs tabs-bordered"
 		>
-			@tab(tabLabelOverview)
-			@tab(tabLabelEvents)
+			if activeTab, ok := ctx.Value(types.CtxTab).(string); ok {
+				@tab(tabLabelOverview, activeTab)
+				@tab(tabLabelEvents, activeTab)
+			}
 		</div>
 		@tabContent(tabLabelOverview) {
 			@overviewTabContent(actor)
@@ -158,21 +160,19 @@ templ ActorContent(actor types.Actor) {
 	</div>
 }
 
-templ tab(label string) {
+templ tab(label string, active string) {
 	<a
 		role="tab"
-		if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && activeTab == label {
-			class="tab tab-active"
-		} else {
-			class="tab"
+		class={ "tab", templ.KV("tab-active", label == active) }
+		if label != active {
+			hx-get={ formatProjectUrl(ctx) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewActor) }
+			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
+			hx-include={ includes }
+			hx-push-url="true"
+			hx-trigger="click"
+			hx-swap="none"
 		}
-		hx-get={ formatProjectUrl(ctx) }
-		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
-		hx-include={ includes }
-		hx-headers={ `{"View": "actor"}` }
-		hx-push-url="true"
-		hx-trigger="click"
-		hx-swap="none"
 	>{ label }</a>
 }
 

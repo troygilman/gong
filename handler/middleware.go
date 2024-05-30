@@ -50,26 +50,42 @@ func MiddlewareProjectContext() echo.MiddlewareFunc {
 		return func(ctx echo.Context) error {
 			cb := types.NewContextBuilder(ctx.Request().Context())
 
-			projectID, err := uuid.Parse(ctx.Param("projectID"))
-			if err != nil {
-				return errors.New("projectID is empty")
-			}
-			cb = cb.With(types.CtxProject, projectID)
-
-			actorPID := ctx.QueryParam("pid")
-			if actorPID != "" {
-				cb = cb.With(types.CtxPID, actorPID)
+			{ // project ID
+				projectID, err := uuid.Parse(ctx.Param("projectID"))
+				if err != nil {
+					return errors.New("projectID is empty")
+				}
+				cb = cb.With(types.CtxProject, projectID)
 			}
 
-			tab := ctx.QueryParam("tab")
-			if tab == "" {
-				tab = "Events"
+			{ // actor PID
+				actorPID := ctx.QueryParam(string(types.CtxPID))
+				if actorPID != "" {
+					cb = cb.With(types.CtxPID, actorPID)
+				}
 			}
-			cb = cb.With(types.CtxTab, tab)
 
-			filter := types.NewEventsFilter(ctx)
-			cb = cb.With(types.CtxFilter, filter)
+			{ // tab
+				tab := ctx.QueryParam(string(types.CtxTab))
+				if tab == "" {
+					tab = "Events"
+				}
+				cb = cb.With(types.CtxTab, tab)
+			}
 
+			{ // flow chart type
+				flowType := ctx.QueryParam(string(types.CtxFlow))
+				if flowType == "" {
+					flowType = "Sources"
+				}
+				log.Println(flowType)
+				cb = cb.With(types.CtxFlow, flowType)
+			}
+
+			{ // events filter
+				filter := types.NewEventsFilter(ctx)
+				cb = cb.With(types.CtxFilter, filter)
+			}
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}

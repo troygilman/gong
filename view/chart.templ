@@ -1,95 +1,9 @@
 package view
 
 import (
-	"gong/view/chart"
 	"gong/types"
+	"fmt"
 )
-
-templ ActorSourcesChart1(data []chart.TreeDataNode) {
-	<div
-		class="w-full h-full"
-	>
-		@chart.Chart(chart.ChartProps{
-			ID:     "actor-sources",
-			Width:  "100%",
-			Height: "100%",
-		}) {
-			@initActorSourcesChart("actor-sources", formatProjectUrl(ctx), data)
-		}
-	</div>
-}
-
-script initActorSourcesChart(chartID string, projectUrl string, data []chart.TreeDataNode) {
-    Alpine.store("chart", {
-        tooltipCache: {},
-    });
-
-	function tooltipHandler(params, ticket, callback) {
-		let cache = Alpine.store("chart").tooltipCache;
-		if (cache[params.name]) {
-			return cache[params.name];
-		}
-
-		let handler = function(target, request) {
-			let html = request.xhr.responseText;
-			cache[params.name] = html
-			callback(ticket, html);
-		};
-
-		htmx.ajax("GET", projectUrl + "/tooltip", {handler: handler});
-		return "...";
-	}
-
-	options = {
-      tooltip: {
-        trigger: 'item',
-        triggerOn: 'mousemove',
-        formatter: tooltipHandler,
-        enterable: true,
-      },
-      series: [
-        {
-          type: 'tree',
-          data: data,
-          top: '1%',
-          left: 150,
-          bottom: '1%',
-          right: 150,
-          //symbol: "arrow",
-          //symbolRotate: -90,
-          symbolSize: 7,
-          orient: 'RL',
-          label: {
-            position: 'right',
-            verticalAlign: 'middle',
-            align: 'left',
-            color: "white",
-            width: 130,
-            overflow: "truncate",
-          },
-          leaves: {
-            label: {
-              position: 'left',
-              verticalAlign: 'middle',
-              align: 'right',
-              color: "white",
-              width: 130,
-              overflow: "truncate",
-              backgroundColor: "oklch(var(--b1))",
-            }
-          },
-          emphasis: {
-            focus: 'descendant'
-          },
-          expandAndCollapse: false,
-          animationDuration: 500,
-          animationDurationUpdate: 500
-        }
-      ]
-    };
-
-    initChart(chartID, options);
-}
 
 templ ChartTooltip() {
 	<div>
@@ -97,30 +11,45 @@ templ ChartTooltip() {
 	</div>
 }
 
-templ ActorSourcesChart(sources []string) {
-	<div class="w-full aspect-square border border-color rounded">
-		<div>
+templ ActorFlowChartWidget() {
+	<div id="actor-flow-chart-widget" class="w-full aspect-square border border-color rounded">
+		<div role="tablist" class="tabs tabs-boxed">
 			if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
-				@actorFlowChartFilter(flow)
-			} else {
-				@actorFlowChartFilter("sources")
+				<input id="flow" type="hidden" name="flow" value={ flow }/>
+				@actorFlowChartFilterItem("Sources", flow)
+				@actorFlowChartFilterItem("Sinks", flow)
 			}
 		</div>
+		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load" hx-include={ includes }></div>
+	</div>
+}
+
+templ ActorFlowChart(sources []string) {
+	<div>
 		<svg id="chart" class="grow min-w-0 min-h-0 border-t border-color"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
-		@initActorChart(sources)
+		@initActorFlowChart(sources)
 	</div>
 }
 
-templ actorFlowChartFilter(flow string) {
-	<div role="tablist" class="tabs tabs-boxed">
-		<input id="flow" type="hidden" name="flow" value={ flow }/>
-		<a role="tab" class={ "tab", templ.KV("tab-active", flow == "sources") }>Sources</a>
-		<a role="tab" class={ "tab", templ.KV("tab-active", flow == "sinks") }>Sinks</a>
-	</div>
+templ actorFlowChartFilterItem(label string, active string) {
+	<a
+		role="tab"
+		class={ "tab", templ.KV("tab-active", label == active) }
+		if label != active {
+			hx-get={ formatProjectUrl(ctx) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewFlowChart) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, types.CtxFlow, label) }
+			hx-include={ includes }
+			hx-push-url="true"
+			hx-trigger="click"
+			hx-target="#actor-flow-chart-widget"
+			hx-swap="outerHTML"
+		}
+	>{ label }</a>
 }
 
-script initActorChart(sources []string) {
+script initActorFlowChart(sources []string) {
 	const width = 200;
 	const height = 200;
 

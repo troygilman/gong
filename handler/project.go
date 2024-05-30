@@ -20,10 +20,6 @@ import (
 	"github.com/troygilman0/utils"
 )
 
-const (
-	projectViewActor = "actor"
-)
-
 func GetProject(ctx echo.Context) error {
 	app := mustApp(ctx)
 	projectID := mustProjectID(ctx)
@@ -34,7 +30,7 @@ func GetProject(ctx echo.Context) error {
 	}
 
 	switch ctx.Request().Header.Get("View") {
-	case projectViewActor:
+	case types.ProjectViewActor:
 		actorPID, ok := actorPID(ctx)
 		if !ok {
 			return errors.New("actorPID is empty")
@@ -56,6 +52,12 @@ func GetProject(ctx echo.Context) error {
 			view.ProjectActor(response.Actor),
 		)
 
+	case types.ProjectViewFlowChart:
+		return renderView(
+			ctx,
+			ctx.Request().Context(),
+			view.ActorFlowChartWidget(),
+		)
 	default:
 		r := app.Engine().Request(projectPID, domain.MsgGetProjectProps{}, domain.DefaultTimeout)
 		response, err := utils.HandleResponse[domain.RspGetProjectProps](r)
@@ -275,7 +277,7 @@ func GetActorChart(ctx echo.Context) error {
 		"Test7",
 		"Test8",
 	}...)
-	return view.ActorSourcesChart(response.Sources).Render(ctx.Request().Context(), ctx.Response().Writer)
+	return view.ActorFlowChart(response.Sources).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {

@@ -29,6 +29,11 @@ const (
 	CtxFlow    CtxKey = "flow"
 )
 
+const (
+	ProjectViewActor     = "actor"
+	ProjectViewFlowChart = "flow-chart"
+)
+
 type Event struct {
 	ID        ulid.ULID
 	ProjectID uuid.UUID
