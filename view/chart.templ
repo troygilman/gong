@@ -2,6 +2,7 @@ package view
 
 import (
 	"gong/view/chart"
+	"gong/types"
 )
 
 templ ActorSourcesChart1(data []chart.TreeDataNode) {
@@ -97,10 +98,25 @@ templ ChartTooltip() {
 }
 
 templ ActorSourcesChart(sources []string) {
-	<div class="grow min-w-0 min-h-0">
-		<svg id="chart" class="w-full h-full"></svg>
+	<div class="w-full aspect-square border border-color rounded">
+		<div>
+			if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
+				@actorFlowChartFilter(flow)
+			} else {
+				@actorFlowChartFilter("sources")
+			}
+		</div>
+		<svg id="chart" class="grow min-w-0 min-h-0 border-t border-color"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
 		@initActorChart(sources)
+	</div>
+}
+
+templ actorFlowChartFilter(flow string) {
+	<div role="tablist" class="tabs tabs-boxed">
+		<input id="flow" type="hidden" name="flow" value={ flow }/>
+		<a role="tab" class={ "tab", templ.KV("tab-active", flow == "sources") }>Sources</a>
+		<a role="tab" class={ "tab", templ.KV("tab-active", flow == "sinks") }>Sinks</a>
 	</div>
 }
 
@@ -154,16 +170,16 @@ script initActorChart(sources []string) {
         .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
-        .attr("fill", "#999")
+        .attr("fill", "oklch(var(--n))")
         .attr("d", "M0,-5L10,0L0,5");
 
 	const link = svg.append("g")
     	.attr("fill", "none")
-     	.attr("stroke-width", 1)
+     	.attr("stroke-width", 0.5)
       	.selectAll("path")
        	.data(links)
         .join("path")
-        .attr("stroke", "#999")
+        .attr("stroke", "oklch(var(--n))")
         .attr("marker-mid", d => `url(${new URL(`#arrow`, location)})`);
 
   	const node = svg.append("g")
@@ -172,8 +188,14 @@ script initActorChart(sources []string) {
        	.selectAll()
         .data(nodes)
         .join("circle")
-        .attr("r", 3)
-        .attr("fill", d => color(d.group))
+        .attr("r", 4)
+        .attr("fill", d => {
+        	if (d.group == 1) {
+         		return "oklch(var(--p))";
+         	} else {
+          		return "oklch(var(--in))";
+          	}
+        })
         .on("mouseover", revealTooltip)
         .on("mousemove", revealTooltip)
         .on("mouseleave", hideTooltip);

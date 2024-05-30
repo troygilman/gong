@@ -26,6 +26,7 @@ const (
 	CtxPID     CtxKey = "pid"
 	CtxTab     CtxKey = "tab"
 	CtxFilter  CtxKey = "filter"
+	CtxFlow    CtxKey = "flow"
 )
 
 type Event struct {
