@@ -1,9 +1,10 @@
 package domain
 
 import (
+	"crypto/rand"
 	"gong/sdk"
 	"gong/types"
-	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -58,7 +59,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.Actor)
-		p.entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
+		p.entropy = ulid.Monotonic(rand.Reader, 1)
 		p.updates = make(map[string]bool)
 		p.batch = make([]types.Event, 0)
 	case actor.Started:
@@ -67,6 +68,9 @@ func (p *processor) receive(ctx *actor.Context) error {
 		p.repeater.Stop()
 		return p.processUpdates(ctx)
 	case MsgSdkEvents:
+		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
+			return a.Timestamp.Compare(b.Timestamp)
+		})
 		for _, event := range msg.Events {
 			if err := p.handleEvent(event); err != nil {
 				return err

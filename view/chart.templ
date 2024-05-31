@@ -12,21 +12,23 @@ templ ChartTooltip() {
 }
 
 templ ActorFlowChartWidget() {
-	<div id="actor-flow-chart-widget" class="w-full aspect-square border border-color rounded">
-		<div role="tablist" class="tabs tabs-boxed">
-			if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
-				<input id="flow" type="hidden" name="flow" value={ flow }/>
-				@actorFlowChartFilterItem("Sources", flow)
-				@actorFlowChartFilterItem("Sinks", flow)
-			}
+	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded">
+		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-trigger="load" hx-include={ includes } class="aspect-square"></div>
+		<div class="border-l border-color">
+			<div role="tablist" class="tabs tabs-boxed">
+				if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
+					<input id="flow" type="hidden" name="flow" value={ flow }/>
+					@actorFlowChartFilterItem("Sources", flow)
+					@actorFlowChartFilterItem("Sinks", flow)
+				}
+			</div>
 		</div>
-		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-swap="outerHTML" hx-trigger="load" hx-include={ includes }></div>
 	</div>
 }
 
 templ ActorFlowChart(sources []string) {
-	<div>
-		<svg id="chart" class="grow min-w-0 min-h-0 border-t border-color"></svg>
+	<div class="grow min-h-0 min-w-0">
+		<svg id="chart" class="max-w-full max-h-full"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
 		@initActorFlowChart(sources)
 	</div>
@@ -95,8 +97,8 @@ script initActorFlowChart(sources []string) {
        	.attr("viewBox", "0 -5 10 10")
         .attr("refX", 15)
         .attr("refY", 0)
-        .attr("markerWidth", 8)
-        .attr("markerHeight", 8)
+        .attr("markerWidth", 4)
+        .attr("markerHeight", 4)
         .attr("orient", "auto")
         .append("path")
         .attr("fill", "oklch(var(--n))")
@@ -105,7 +107,8 @@ script initActorFlowChart(sources []string) {
 	const link = svg.append("g")
 		.attr("id", "links")
     	.attr("fill", "none")
-     	.attr("stroke-width", 2)
+     	.attr("stroke-width", 4)
+		.attr("opacity", 0.2)
       	.selectAll("path")
        	.data(links)
         .join("path")
@@ -115,19 +118,19 @@ script initActorFlowChart(sources []string) {
   	const node = svg.append("g")
 		.attr("id", "nodes")
    		.attr("stroke", "oklch(var(--b1))")
-     	.attr("stroke-width", 2)
+     	.attr("stroke-width", 4)
        	.selectAll("g")
         .data(nodes)
         .join("g");
 
 	node.append("circle")
 		.attr("class", "cursor-pointer")
-        .attr("r", 10)
+        .attr("r", 12)
         .attr("fill", d => {
         	if (d.group == 1) {
-         		return "oklch(var(--p))";
+         		return "oklch(var(--s))";
          	} else {
-          		return "oklch(var(--in))";
+          		return "oklch(var(--a))";
           	}
         })
         .on("mouseover", revealTooltip)

@@ -97,7 +97,7 @@ templ ProjectActorListItem(actor types.Actor, oob bool) {
 		}
 	>
 		<a
-			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
+			class={ "flex flex-row items-center justify-between w-full cursor-pointer", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
 			@ProjectActorBadge(actor)
@@ -141,7 +141,7 @@ templ ActorContent(actor types.Actor) {
 	>
 		<input id="actor-pid" type="hidden" name="pid" value={ actor.PID }/>
 		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
-		<div class="p-2 font-bold">{ actor.PID }</div>
+		<div class="p-4 font-bold">{ actor.PID }</div>
 		<div
 			role="tablist"
 			class="tabs tabs-bordered"
