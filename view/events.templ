@@ -197,7 +197,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	<div class="join-item indicator">
 		if active {
 			<span
-				class="indicator-item badge badge-warning badge-sm cursor-pointer pl-0 pr-0"
+				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
 				hx-get={ formatProjectUrl(ctx) }
 				hx-include={ includes }
 				hx-params={ "not " + name }

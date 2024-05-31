@@ -267,16 +267,6 @@ func GetActorChart(ctx echo.Context) error {
 		return err
 	}
 
-	response.Sources = append(response.Sources, []string{
-		"Test1",
-		"Test2",
-		"Test3",
-		"Test4",
-		"Test5",
-		"Test6",
-		"Test7",
-		"Test8",
-	}...)
 	return view.ActorFlowChart(response.Sources).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 

@@ -30,7 +30,9 @@ templ ActorFlowChart(sources []string) {
 	<div class="grow min-h-0 min-w-0">
 		<svg id="chart" class="max-w-full max-h-full"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
-		@initActorFlowChart(sources)
+		if actorPID, ok := ctx.Value(types.CtxPID).(string); ok {
+			@initActorFlowChart(actorPID, sources)
+		}
 	</div>
 }
 
@@ -51,13 +53,15 @@ templ actorFlowChartFilterItem(label string, active string) {
 	>{ label }</a>
 }
 
-script initActorFlowChart(sources []string) {
+script initActorFlowChart(actorPID string, sources []string) {
 	const width = 1000;
 	const height =  1000;
+	const circleRadius = 12;
+	const circleRadiusHover = 14;
 
 	let data = {
 		"nodes": [
-			{"id": "Head", "group": 1},
+			{"id": actorPID, "group": 1},
 		],
 		"links": [],
 	}
@@ -65,7 +69,7 @@ script initActorFlowChart(sources []string) {
 	for (let i = 0; i < sources.length; i++) {
 		let source = sources[i];
 		data.nodes.push({"id": source, "group": 2});
-		data.links.push({"source": source, "target": "Head", "value": 1});
+		data.links.push({"source": source, "target": actorPID, "value": 1});
 	};
 
 	// Specify the color scale.
@@ -81,7 +85,7 @@ script initActorFlowChart(sources []string) {
 		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
 	    .force("charge", d3.forceManyBody().strength(-10000))
 	    .force("center", d3.forceCenter(width / 2, height / 2))
-		.alphaDecay(0.1)
+		.velocityDecay(0.2)
 	    .on("tick", ticked);
 
 
@@ -125,7 +129,7 @@ script initActorFlowChart(sources []string) {
 
 	node.append("circle")
 		.attr("class", "cursor-pointer")
-        .attr("r", 12)
+        .attr("r", circleRadius)
         .attr("fill", d => {
         	if (d.group == 1) {
          		return "oklch(var(--s))";
@@ -153,6 +157,7 @@ script initActorFlowChart(sources []string) {
     });
 
     function revealTooltip(e, d) {
+		d3.select(this).attr("r", circleRadiusHover);
      	d3.select('#tooltip')
          	.style("left", (e.pageX + 10) + "px")
           	.style("top", (e.pageY + 10) + "px")
@@ -162,6 +167,7 @@ script initActorFlowChart(sources []string) {
 
     function hideTooltip(e, d) {
     	if (e.toElement.id != "tooltip") {
+			d3.select(this).attr("r", circleRadius);
      		d3.select('#tooltip').classed("hidden", true);
        	}
     };

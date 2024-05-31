@@ -11,8 +11,8 @@ dev:
 	@air
 
 client:
-	@go run . -c -cpuprofile=cpu.prof
-	@go tool pprof -png -output out.png cpu.prof
+	@go run . -c -cpuprofile=tmp/cpu.prof
+	@go tool pprof -png -output tmp/out.png tmp/cpu.prof
 
 migrate:
 	@make up
