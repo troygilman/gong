@@ -14,7 +14,7 @@ templ ChartTooltip() {
 templ ActorFlowChartWidget() {
 	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded">
 		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-trigger="load" hx-include={ includes } class="aspect-square"></div>
-		<div class="border-l border-color">
+		<div class="border-l border-color overflow-auto">
 			<div role="tablist" class="tabs tabs-boxed">
 				if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
 					<input id="flow" type="hidden" name="flow" value={ flow }/>
@@ -140,8 +140,8 @@ script initActorFlowChart(sources []string) {
 	node.append("text")
       	.attr("x", 16)
       	.attr("y", "0.31em")
-	  	.attr("stroke-width", 1)
-	  	.attr("class", "text-xl font-bold")
+	  	.attr("stroke-width", 0)
+	  	.attr("class", "text-lg font-normal")
       	.text(d => d.id)
     	.clone(true).lower()
       	.attr("fill", "none")
