@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const DefaultTimeout = time.Second
+const DefaultTimeout = 10 * time.Second
 
 type App interface {
 	Engine() *actor.Engine

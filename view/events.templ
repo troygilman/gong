@@ -20,7 +20,7 @@ templ eventsTabContent(actor types.Actor) {
 templ ProjectActorEventsContainer(actor types.Actor) {
 	<div
 		id="events-container"
-		class="grow min-h-0 max-w-full overflow-x-auto"
+		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
 		@htmx:after-request="onAfterRequest($event)"
@@ -110,9 +110,12 @@ templ ProjectActorEventsContainer(actor types.Actor) {
 				hx-sync="this"
 			>
 				@eventsTopDataLoader(false, false)
-				@eventsBottomDataLoader(false, true)
+				@eventsBottomDataLoader(false, true, true)
 			</tbody>
 		</table>
+		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
+			@spinnerIcon("size-1/3 pointer-events-none animate-spin")
+		</div>
 	</div>
 }
 
@@ -247,7 +250,7 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	></tr>
 }
 
-templ eventsBottomDataLoader(oob bool, moreEvents bool) {
+templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 	<tr
 		id="events-bottom-data-loader"
 		if moreEvents {
@@ -256,6 +259,9 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool) {
 			hx-include={ includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
+			if spinner {
+				hx-indicator="#spinner"
+			}
 		}
 		if oob {
 			hx-swap-oob="true"
@@ -282,7 +288,7 @@ templ ProjectActorEvents(events types.EventList, appendTop bool, moreTop bool, m
 		@projectActorEvent(events[i])
 	}
 	if !appendTop || (appendTop && moreTop) {
-		@eventsBottomDataLoader(appendTop, moreBottom)
+		@eventsBottomDataLoader(appendTop, moreBottom, false)
 	}
 }
 

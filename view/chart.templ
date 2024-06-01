@@ -134,7 +134,7 @@ script initActorFlowChart(actorPID string, sourcesSinks []string, isSources bool
         .attr("r", circleRadius)
         .attr("fill", d => {
         	if (d.group == 1) {
-         		return "oklch(var(--s))";
+         		return "oklch(var(--p))";
          	} else {
           		return "oklch(var(--a))";
           	}

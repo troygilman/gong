@@ -22,6 +22,14 @@
     [data-theme="nord"] .border-color {
         @apply border-gray-300;
     }
+
+    .spinner {
+        @apply hidden;
+    }
+
+    .htmx-request.spinner {
+        @apply flex;
+    }
 }
 
 [x-cloak] {
