@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"gong/domain/persistance"
 	"gong/types"
 	"time"
 
@@ -34,7 +35,7 @@ func NewProjectProducer() actor.Producer {
 	}
 }
 
-func NewProjectProducerWithApp(app App) actor.Producer {
+func NewProjectProducerWithApp(app *App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
 			commonActorData: commonActorData{
@@ -118,14 +119,14 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case MsgGetProjectEvents:
 		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
-			query := eventsQuery{
-				projectID: p.id,
-				actorPID:  msg.ActorPID,
-				eventID:   msg.EventID,
-				numEvents: msg.NumEvents,
-				filter:    msg.Filter,
+			query := persistance.EventsQuery{
+				ProjectID: p.id,
+				ActorPID:  msg.ActorPID,
+				EventID:   msg.EventID,
+				NumEvents: msg.NumEvents,
+				Filter:    msg.Filter,
 			}
-			events, err := p.app.DB().QueryEvents(ctx, query)
+			events, err := p.app.db.QueryEvents(ctx, query)
 			if err != nil {
 				return err
 			}
@@ -141,19 +142,19 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case MsgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
-			query := actorSourcesSinksQuery{
-				projectID: p.id,
-				actorPID:  msg.ActorPID,
-				minTime:   time.Now().Add(-24 * time.Hour),
-				maxTime:   time.Now(),
+			query := persistance.ActorSourcesSinksQuery{
+				ProjectID: p.id,
+				ActorPID:  msg.ActorPID,
+				MinTime:   time.Now().Add(-24 * time.Hour),
+				MaxTime:   time.Now(),
 			}
 			var sourcesSinks []string
 			var err error
 			switch msg.Flow {
 			case "Sources":
-				sourcesSinks, err = p.app.DB().QueryActorSources(ctx, query)
+				sourcesSinks, err = p.app.db.QueryActorSources(ctx, query)
 			case "Sinks":
-				sourcesSinks, err = p.app.DB().QueryActorSinks(ctx, query)
+				sourcesSinks, err = p.app.db.QueryActorSinks(ctx, query)
 			}
 			if err != nil {
 				return err
@@ -173,7 +174,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 func (p *project) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActors(ctx, id)
+	actorProps, err := p.app.db.QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}

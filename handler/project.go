@@ -17,102 +17,68 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"
-	"github.com/troygilman0/utils"
 )
 
-func GetProject(ctx echo.Context) error {
-	app := mustApp(ctx)
-	projectID := mustProjectID(ctx)
+func GetProject(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
+	projectID := mustProjectID(eCtx)
 
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
-
-	switch ctx.Request().Header.Get("View") {
+	switch eCtx.Request().Header.Get("View") {
 	case types.ProjectViewActor:
-		actorPID, ok := actorPID(ctx)
+		actorPID, ok := actorPID(eCtx)
 		if !ok {
 			return errors.New("actorPID is empty")
 		}
 
-		msg := domain.MsgGetProjectActorProps{
-			ActorPID: actorPID,
-		}
-
-		r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
-		response, err := utils.HandleResponse[domain.RspGetProjectActor](r)
+		actor, err := app.Actor(ctx, projectID, actorPID)
 		if err != nil {
 			return err
 		}
 
-		return renderView(
-			ctx,
-			ctx.Request().Context(),
-			view.ProjectActor(response.Actor),
-		)
+		return view.ProjectActor(actor).Render(ctx, eCtx.Response())
 
 	case types.ProjectViewFlowChart:
-		return renderView(
-			ctx,
-			ctx.Request().Context(),
-			view.ActorFlowChartWidget(),
-		)
+		return view.ActorFlowChartWidget().Render(ctx, eCtx.Response())
 	default:
-		r := app.Engine().Request(projectPID, domain.MsgGetProjectProps{}, domain.DefaultTimeout)
-		response, err := utils.HandleResponse[domain.RspGetProjectProps](r)
+		props, err := app.ProjectProps(ctx, projectID)
 		if err != nil {
 			return err
 		}
 
-		return renderView(
-			ctx,
-			ctx.Request().Context(),
-			view.Project(response.Props),
-		)
+		return view.Project(props).Render(ctx, eCtx.Response())
 	}
 }
 
-func GetProjectEvents(ctx echo.Context) error {
-	app := mustApp(ctx)
+func GetProjectEvents(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
 
-	projectID := mustProjectID(ctx)
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
+	projectID := mustProjectID(eCtx)
 
-	actorPID, ok := actorPID(ctx)
+	actorPID, ok := actorPID(eCtx)
 	if !ok {
 		return errors.New("actorPID is empty")
 	}
 
-	eventID, err := ulid.Parse(ctx.QueryParam("id"))
+	eventID, err := ulid.Parse(eCtx.QueryParam("id"))
 	if err != nil {
 		eventID = ulid.ULID{}
 	}
 
-	n, err := strconv.Atoi(ctx.QueryParam("n"))
+	n, err := strconv.Atoi(eCtx.QueryParam("n"))
 	if err != nil {
 		return errors.New("'n' must be non-empty")
 	}
 
-	filter, ok := ctx.Request().Context().Value(types.CtxFilter).(types.EventsFilter)
+	filter, ok := eCtx.Request().Context().Value(types.CtxFilter).(types.EventsFilter)
 	if !ok {
 		return errors.New("filter is empty")
 	}
 
-	msg := domain.MsgGetProjectEvents{
-		ActorPID:  actorPID,
-		EventID:   eventID,
-		NumEvents: n,
-		Filter:    filter,
-	}
-
-	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetProjectEvents](r)
+	events, err := app.Events(ctx, projectID, actorPID, eventID, n, filter)
 	if err != nil {
-		response.Events = make(types.EventList, 0)
+		events = make(types.EventList, 0)
 	}
 
 	appendTop := n > 0
@@ -120,16 +86,12 @@ func GetProjectEvents(ctx echo.Context) error {
 	moreBottom := true
 
 	if appendTop {
-		moreTop = len(response.Events) > 0
+		moreTop = len(events) > 0
 	} else {
-		moreBottom = len(response.Events) > 0
+		moreBottom = len(events) > 0
 	}
 
-	return renderView(
-		ctx,
-		ctx.Request().Context(),
-		view.ProjectActorEvents(response.Events, appendTop, moreTop, moreBottom),
-	)
+	return view.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }
 
 const (
@@ -215,16 +177,13 @@ func ConnectProjectSSE(ctx echo.Context) error {
 
 var upgrader = websocket.Upgrader{}
 
-func ConnectProject(ctx echo.Context) error {
-	app := mustApp(ctx)
+func ConnectProject(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
 
-	projectID := mustProjectID(ctx)
-	processorPID, err := app.PID(domain.ActorKindProcessor, projectID.String())
-	if err != nil {
-		return err
-	}
+	projectID := mustProjectID(eCtx)
 
-	c, err := upgrader.Upgrade(ctx.Response().Writer, ctx.Request(), nil)
+	c, err := upgrader.Upgrade(eCtx.Response().Writer, eCtx.Request(), nil)
 	if err != nil {
 		return err
 	}
@@ -241,46 +200,36 @@ func ConnectProject(ctx echo.Context) error {
 			return fmt.Errorf("decode: %s", err)
 		}
 
-		app.Engine().Send(processorPID, domain.MsgSdkEvents{
-			Events: events,
-		})
+		if err := app.ProcessEvents(ctx, projectID, events); err != nil {
+			return err
+		}
 	}
 }
 
-func GetActorChart(ctx echo.Context) error {
-	app := mustApp(ctx)
-	projectID := mustProjectID(ctx)
+func GetActorChart(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
+	projectID := mustProjectID(eCtx)
 
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
-
-	actorPID, ok := actorPID(ctx)
+	actorPID, ok := actorPID(eCtx)
 	if !ok {
 		return errors.New("actorPID is missing")
 	}
 
-	flowType, ok := ctx.Request().Context().Value(types.CtxFlow).(string)
+	flowType, ok := eCtx.Request().Context().Value(types.CtxFlow).(string)
 	if !ok {
 		return errors.New("flow is missing")
 	}
 
-	msg := domain.MsgGetActorSourcesSinks{
-		ActorPID: actorPID,
-		Flow:     flowType,
-	}
-
-	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetActorSourcesSinks](r)
+	pids, err := app.SourcesSinks(ctx, projectID, actorPID, flowType)
 	if err != nil {
 		return err
 	}
 
 	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
-	return view.ActorFlowChart(response.SourcesSinks).Render(ctx.Request().Context(), ctx.Response().Writer)
+	return view.ActorFlowChart(pids).Render(ctx, eCtx.Response())
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {
-	return view.ChartTooltip().Render(ctx.Request().Context(), ctx.Response().Writer)
+	return view.ChartTooltip().Render(ctx.Request().Context(), ctx.Response())
 }

@@ -27,7 +27,7 @@ func main() {
 }
 
 func run() error {
-	app, err := domain.NewDefaultApp()
+	app, err := domain.NewApp()
 	if err != nil {
 		return err
 	}

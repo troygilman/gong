@@ -1,4 +1,4 @@
-package domain
+package persistance
 
 import (
 	"context"
@@ -11,38 +11,12 @@ import (
 	"log/slog"
 	"os"
 	"slices"
-	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/oklog/ulid/v2"
 )
-
-type Database interface {
-	QueryEvents(ctx context.Context, query eventsQuery) ([]types.Event, error)
-	CreateEvents(ctx context.Context, events []types.Event) error
-	QueryActors(ctx context.Context, projectID uuid.UUID) ([]types.Actor, error)
-	CreateActor(ctx context.Context, actor types.Actor) error
-	UpdateActor(ctx context.Context, actor types.Actor) error
-	QueryActorSources(ctx context.Context, query actorSourcesSinksQuery) ([]string, error)
-	QueryActorSinks(ctx context.Context, query actorSourcesSinksQuery) ([]string, error)
-}
-
-type eventsQuery struct {
-	projectID uuid.UUID
-	actorPID  string
-	eventID   ulid.ULID
-	numEvents int
-	filter    types.EventsFilter
-}
-
-type actorSourcesSinksQuery struct {
-	projectID uuid.UUID
-	actorPID  string
-	minTime   time.Time
-	maxTime   time.Time
-}
 
 const (
 	envDatabaseHostname = "DB_HOSTNAME"
@@ -153,44 +127,44 @@ func (db *postgresDatabase) CreateEvents(ctx context.Context, events []types.Eve
 	return nil
 }
 
-func (db *postgresDatabase) QueryEvents(ctx context.Context, query eventsQuery) ([]types.Event, error) {
+func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]types.Event, error) {
 	var m []model.Event
 
-	whereExpression := table.Event.ProjectID.EQ(UUID(query.projectID)).AND(table.Event.ActorPid.EQ(String(query.actorPID)))
+	whereExpression := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID)))
 	orderClause := table.Event.ID.DESC()
 
-	if query.eventID.Compare(ulid.ULID{}) != 0 {
-		if query.numEvents > 0 {
-			whereExpression = whereExpression.AND(table.Event.ID.GT(String(query.eventID.String())))
+	if query.EventID.Compare(ulid.ULID{}) != 0 {
+		if query.NumEvents > 0 {
+			whereExpression = whereExpression.AND(table.Event.ID.GT(String(query.EventID.String())))
 			orderClause = table.Event.ID.ASC()
 		} else {
-			whereExpression = whereExpression.AND(table.Event.ID.LT(String(query.eventID.String())))
+			whereExpression = whereExpression.AND(table.Event.ID.LT(String(query.EventID.String())))
 		}
 	}
 
-	if query.filter.ID != "" {
-		whereExpression = whereExpression.AND(table.Event.ID.EQ(String(query.filter.ID)))
+	if query.Filter.ID != "" {
+		whereExpression = whereExpression.AND(table.Event.ID.EQ(String(query.Filter.ID)))
 	}
-	if query.filter.Type != "" {
-		whereExpression = whereExpression.AND(table.Event.Type.EQ(String(query.filter.Type)))
+	if query.Filter.Type != "" {
+		whereExpression = whereExpression.AND(table.Event.Type.EQ(String(query.Filter.Type)))
 	}
-	if query.filter.Sender != "" {
-		whereExpression = whereExpression.AND(table.Event.Sender.EQ(String(query.filter.Sender)))
+	if query.Filter.Sender != "" {
+		whereExpression = whereExpression.AND(table.Event.Sender.EQ(String(query.Filter.Sender)))
 	}
-	if query.filter.Level > slog.LevelDebug {
-		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(query.filter.Level))))
+	if query.Filter.Level > slog.LevelDebug {
+		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(query.Filter.Level))))
 	}
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(
 		whereExpression).
 		ORDER_BY(orderClause).
-		LIMIT(int64(max(query.numEvents, -query.numEvents)))
+		LIMIT(int64(max(query.NumEvents, -query.NumEvents)))
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
-	if query.numEvents > 0 {
+	if query.NumEvents > 0 {
 		slices.Reverse(m)
 	}
 
@@ -293,12 +267,12 @@ func buildDistinctColumnValueQuery(t ReadableTable, c ColumnString, alias string
 	return stmt
 }
 
-func (db *postgresDatabase) QueryActorSources(ctx context.Context, query actorSourcesSinksQuery) ([]string, error) {
+func (db *postgresDatabase) QueryActorSources(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
 		Source string
 	}
 
-	condition := table.Event.ActorPid.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
+	condition := table.Event.ActorPid.EQ(String(query.ActorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
 	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.Sender, "source", condition)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
@@ -315,12 +289,12 @@ func (db *postgresDatabase) QueryActorSources(ctx context.Context, query actorSo
 	return sources, nil
 }
 
-func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query actorSourcesSinksQuery) ([]string, error) {
+func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
 		Sink string
 	}
 
-	condition := table.Event.Sender.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
+	condition := table.Event.Sender.EQ(String(query.ActorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
 	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.ActorPid, "sink", condition)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {

@@ -19,7 +19,7 @@ func MiddlewareLogRequest() echo.MiddlewareFunc {
 	}
 }
 
-func MiddlewareWithApp(app domain.App) echo.MiddlewareFunc {
+func MiddlewareWithApp(app *domain.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			ctx.Set("app", app)
@@ -28,7 +28,7 @@ func MiddlewareWithApp(app domain.App) echo.MiddlewareFunc {
 	}
 }
 
-func MiddlewareJWT(app domain.App) echo.MiddlewareFunc {
+func MiddlewareJWT(app *domain.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			tokenCookie, err := ctx.Cookie("auth-token")

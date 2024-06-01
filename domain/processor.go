@@ -34,7 +34,7 @@ func NewProcessorProducer() actor.Producer {
 	}
 }
 
-func NewProcessorProducerWithApp(app App) actor.Producer {
+func NewProcessorProducerWithApp(app *App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
 			commonActorData: commonActorData{
@@ -144,16 +144,16 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
-			err = p.app.DB().UpdateActor(ctx, p.actors[pid])
+			err = p.app.db.UpdateActor(ctx, p.actors[pid])
 		} else {
-			err = p.app.DB().CreateActor(ctx, p.actors[pid])
+			err = p.app.db.CreateActor(ctx, p.actors[pid])
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := p.app.DB().CreateEvents(ctx, p.batch); err != nil {
+	if err := p.app.db.CreateEvents(ctx, p.batch); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 func (p *processor) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActors(ctx, id)
+	actorProps, err := p.app.db.QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}

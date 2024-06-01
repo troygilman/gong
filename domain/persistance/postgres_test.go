@@ -1,4 +1,4 @@
-package domain
+package persistance
 
 import (
 	"context"
