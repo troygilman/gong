@@ -69,7 +69,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
-	case MsgGetProjectProps:
+	case msgGetProjectProps:
 		props := types.ProjectProps{
 			ID:     p.id,
 			Actors: make(map[string]types.Actor, 0),
@@ -77,19 +77,19 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		for pid, data := range p.actors {
 			props.Actors[pid] = data
 		}
-		aCtx.Respond(RspGetProjectProps{
+		aCtx.Respond(rspGetProjectProps{
 			Props: props,
 		})
-	case MsgGetProjectActorProps:
+	case msgGetProjectActorProps:
 		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
-			aCtx.Respond(RspGetProjectActor{
+			aCtx.Respond(rspGetProjectActor{
 				Actor: actorData,
 			})
 		} else {
 			return errors.New("actor pid does not exist")
 		}
-	case MsgUpdateProjectActors:
+	case msgUpdateProjectActors:
 		for _, actorData := range msg.Actors {
 			p.updates[actorData.PID] = actorData
 		}
@@ -100,11 +100,11 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		for pid, data := range p.updates {
 			_, exists := p.actors[pid]
 			if exists {
-				msgs = append(msgs, MsgSseNewEvents{
+				msgs = append(msgs, types.SseNewEvents{
 					Actor: data,
 				})
 			} else {
-				msgs = append(msgs, MsgSseNewActor{
+				msgs = append(msgs, types.SseNewActor{
 					Actor: data,
 				})
 			}
@@ -122,7 +122,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			}(c, msgs)
 		}
 
-	case MsgGetProjectEvents:
+	case msgGetProjectEvents:
 		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := persistance.EventsQuery{
@@ -136,16 +136,16 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			if err != nil {
 				return err
 			}
-			aCtx.Respond(RspGetProjectEvents{
+			aCtx.Respond(rspGetProjectEvents{
 				Events: events,
 				Actor:  actorData,
 			})
 		} else {
-			aCtx.Respond(RspGetProjectEvents{
+			aCtx.Respond(rspGetProjectEvents{
 				Events: make(types.EventList, 0),
 			})
 		}
-	case MsgGetActorSourcesSinks:
+	case msgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := persistance.ActorSourcesSinksQuery{
@@ -165,7 +165,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			if err != nil {
 				return err
 			}
-			aCtx.Respond(RspGetActorSourcesSinks{
+			aCtx.Respond(rspGetActorSourcesSinks{
 				SourcesSinks: sourcesSinks,
 			})
 		}

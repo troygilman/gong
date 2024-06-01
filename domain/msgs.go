@@ -7,70 +7,50 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-type MsgSdkEvents struct {
+type msgSdkEvents struct {
 	Events []sdk.Event
 }
 
-type MsgEvent struct {
-	Event types.Event
-}
+type msgGetProjectProps struct{}
 
-type MsgGetProjectProps struct{}
-
-type RspGetProjectProps struct {
+type rspGetProjectProps struct {
 	Props types.ProjectProps
 }
 
-type MsgGetProjectActorProps struct {
+type msgGetProjectActorProps struct {
 	ActorPID string
 }
 
-type RspGetProjectActor struct {
+type rspGetProjectActor struct {
 	Actor types.Actor
 }
 
-type MsgGetProjectEvents struct {
+type msgGetProjectEvents struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	NumEvents int
 	Filter    types.EventsFilter
 }
 
-type RspGetProjectEvents struct {
+type rspGetProjectEvents struct {
 	Events types.EventList
 	Actor  types.Actor
 }
 
-type MsgEventsListenStart struct{}
-
-type MsgEventsListenStop struct{}
-
 type msgProcessorUpdateState struct{}
 
-type MsgSse struct {
-	Msgs []any
-}
-
-type MsgSseNewActor struct {
-	Actor types.Actor
-}
-
-type MsgSseNewEvents struct {
-	Actor types.Actor
-}
-
-type MsgUpdateProjectActors struct {
+type msgUpdateProjectActors struct {
 	Actors []types.Actor
 }
 
 type msgProjectUpdateState struct{}
 
-type MsgGetActorSourcesSinks struct {
+type msgGetActorSourcesSinks struct {
 	ActorPID string
 	Flow     string
 }
 
-type RspGetActorSourcesSinks struct {
+type rspGetActorSourcesSinks struct {
 	SourcesSinks []string
 }
 

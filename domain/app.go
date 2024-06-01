@@ -111,12 +111,12 @@ func (app *App) Actor(
 		return actor, err
 	}
 
-	msg := MsgGetProjectActorProps{
+	msg := msgGetProjectActorProps{
 		ActorPID: actorPID,
 	}
 
 	r := app.engine.Request(projectPID, msg, DefaultTimeout)
-	response, err := actor_utils.HandleResponse[RspGetProjectActor](r)
+	response, err := actor_utils.HandleResponse[rspGetProjectActor](r)
 	if err != nil {
 		return actor, err
 	}
@@ -133,8 +133,8 @@ func (app *App) ProjectProps(
 		return project, err
 	}
 
-	r := app.engine.Request(projectPID, MsgGetProjectProps{}, DefaultTimeout)
-	response, err := actor_utils.HandleResponse[RspGetProjectProps](r)
+	r := app.engine.Request(projectPID, msgGetProjectProps{}, DefaultTimeout)
+	response, err := actor_utils.HandleResponse[rspGetProjectProps](r)
 	if err != nil {
 		return project, err
 	}
@@ -155,7 +155,7 @@ func (app *App) Events(
 		return events, err
 	}
 
-	msg := MsgGetProjectEvents{
+	msg := msgGetProjectEvents{
 		ActorPID:  actorPID,
 		EventID:   eventID,
 		NumEvents: numEvents,
@@ -163,7 +163,7 @@ func (app *App) Events(
 	}
 
 	r := app.engine.Request(projectPID, msg, DefaultTimeout)
-	response, err := actor_utils.HandleResponse[RspGetProjectEvents](r)
+	response, err := actor_utils.HandleResponse[rspGetProjectEvents](r)
 	if err != nil {
 		return events, err
 	}
@@ -181,7 +181,7 @@ func (app *App) ProcessEvents(
 		return err
 	}
 
-	app.engine.Send(processorPID, MsgSdkEvents{
+	app.engine.Send(processorPID, msgSdkEvents{
 		Events: events,
 	})
 	return nil
@@ -198,13 +198,13 @@ func (app *App) SourcesSinks(
 		return pids, err
 	}
 
-	msg := MsgGetActorSourcesSinks{
+	msg := msgGetActorSourcesSinks{
 		ActorPID: actorPID,
 		Flow:     flowType,
 	}
 
 	r := app.engine.Request(projectPID, msg, DefaultTimeout)
-	response, err := actor_utils.HandleResponse[RspGetActorSourcesSinks](r)
+	response, err := actor_utils.HandleResponse[rspGetActorSourcesSinks](r)
 	if err != nil {
 		return pids, err
 	}

@@ -46,7 +46,7 @@ func NewProcessorProducerWithApp(app *App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case MsgSdkEvents, msgProcessorUpdateState:
+	case msgSdkEvents, msgProcessorUpdateState:
 	default:
 		actor_utils.LogActorMsg(aCtx)
 	}
@@ -71,7 +71,7 @@ func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
 	case actor.Stopped:
 		p.repeater.Stop()
 		return p.processUpdates(ctx, aCtx)
-	case MsgSdkEvents:
+	case msgSdkEvents:
 		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
 			return a.Timestamp.Compare(b.Timestamp)
 		})
@@ -138,7 +138,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		actors = append(actors, p.actors[pid])
 	}
 	if len(actors) > 0 {
-		aCtx.Send(projectPID, MsgUpdateProjectActors{Actors: actors})
+		aCtx.Send(projectPID, msgUpdateProjectActors{Actors: actors})
 	}
 
 	for pid, actorExists := range p.updates {

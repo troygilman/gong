@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"gong/domain"
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
@@ -129,7 +128,7 @@ func ConnectProjectSSE(eCtx echo.Context) error {
 			for _, sse := range sses {
 				if err := func() error {
 					switch sse := sse.(type) {
-					case domain.MsgSseNewActor:
+					case types.SseNewActor:
 						if err := writeServerSentEvent(
 							ctx,
 							eCtx.Response(),
@@ -138,7 +137,7 @@ func ConnectProjectSSE(eCtx echo.Context) error {
 						); err != nil {
 							return err
 						}
-					case domain.MsgSseNewEvents:
+					case types.SseNewEvents:
 						if err := writeServerSentEvent(
 							ctx,
 							eCtx.Response(),
