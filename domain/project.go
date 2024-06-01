@@ -26,7 +26,7 @@ type project struct {
 	actors    map[string]types.Actor
 	updates   map[string]types.Actor
 	repeater  actor.SendRepeater
-	listeners map[*actor.PID]struct{}
+	listeners map[string]chan<- []any
 }
 
 func NewProjectProducer() actor.Producer {
@@ -64,7 +64,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case actor.Initialized:
 		p.actors = make(map[string]types.Actor)
 		p.updates = make(map[string]types.Actor)
-		p.listeners = make(map[*actor.PID]struct{})
+		p.listeners = make(map[string]chan<- []any)
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
@@ -112,8 +112,14 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			delete(p.updates, pid)
 		}
 
-		for pid := range p.listeners {
-			aCtx.Send(pid, MsgSse{Msgs: msgs})
+		// attempt to push msgs to every listener concurrently
+		for _, c := range p.listeners {
+			go func(c chan<- []any, msgs []any) {
+				select {
+				case c <- msgs:
+				default:
+				}
+			}(c, msgs)
 		}
 
 	case MsgGetProjectEvents:
@@ -163,10 +169,13 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 				SourcesSinks: sourcesSinks,
 			})
 		}
-	case MsgEventsListenStart:
-		p.listeners[aCtx.Sender()] = struct{}{}
-	case MsgEventsListenStop:
-		delete(p.listeners, aCtx.Sender())
+	case msgListenStart:
+		p.listeners[msg.id] = msg.c
+	case msgListenStop:
+		if c, ok := p.listeners[msg.id]; ok {
+			close(c)
+			delete(p.listeners, msg.id)
+		}
 	}
 	return nil
 }

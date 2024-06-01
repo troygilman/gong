@@ -84,14 +84,6 @@ func (app *App) pid(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
-func (app *App) PID(kind string, id string) (*actor.PID, error) {
-	return app.pid(kind, id)
-}
-
-func (app *App) Engine() *actor.Engine {
-	return app.engine
-}
-
 func (app *App) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	var claims jwt.RegisteredClaims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
@@ -218,4 +210,38 @@ func (app *App) SourcesSinks(
 	}
 
 	return response.SourcesSinks, nil
+}
+
+func (app *App) ListenStart(
+	ctx context.Context,
+	projectID uuid.UUID,
+	id string,
+	c chan<- []any,
+) error {
+	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	app.engine.Send(projectPID, msgListenStart{
+		id: id,
+		c:  c,
+	})
+	return nil
+}
+
+func (app *App) ListenStop(
+	ctx context.Context,
+	projectID uuid.UUID,
+	id string,
+) error {
+	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	if err != nil {
+		return err
+	}
+
+	app.engine.Send(projectPID, msgListenStop{
+		id: id,
+	})
+	return nil
 }

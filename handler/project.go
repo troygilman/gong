@@ -9,11 +9,10 @@ import (
 	"gong/sdk"
 	"gong/types"
 	"gong/view"
+	"log"
 	"net/http"
 	"strconv"
-	"time"
 
-	"github.com/anthdm/hollywood/actor"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"
@@ -94,85 +93,69 @@ func GetProjectEvents(eCtx echo.Context) error {
 	return view.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }
 
-const (
-	ssePingInterval = 200 * time.Millisecond
-)
+func ConnectProjectSSE(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
 
-type msgSsePing struct{}
-
-func ConnectProjectSSE(ctx echo.Context) error {
-	flusher, ok := ctx.Response().Writer.(http.Flusher)
+	flusher, ok := eCtx.Response().Writer.(http.Flusher)
 	if !ok {
 		return errors.New("sse not supported")
 	}
-	ctx.Response().Header().Set("Content-Type", "text/event-stream")
 
-	app := mustApp(ctx)
+	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
 
-	projectID := mustProjectID(ctx)
-	projectPID, err := app.PID(domain.ActorKindProject, projectID.String())
-	if err != nil {
+	requestID := requestID(eCtx)
+
+	projectID := mustProjectID(eCtx)
+
+	sseChan := make(chan []any, 100)
+
+	if err := app.ListenStart(ctx, projectID, requestID, sseChan); err != nil {
 		return err
 	}
 
-	writer := ctx.Response().Writer
-	done := make(chan struct{})
-	var repeater actor.SendRepeater
+	defer func() {
+		if err := app.ListenStop(ctx, projectID, requestID); err != nil {
+			log.Println(err)
+		}
+		// flush the channel until closed
+		for range sseChan {
+		}
+	}()
 
-	app.Engine().SpawnFunc(func(actorCtx *actor.Context) {
-		switch msg := actorCtx.Message().(type) {
-		case actor.Started:
-			actorCtx.Send(projectPID, domain.MsgEventsListenStart{})
-			repeater = actorCtx.SendRepeat(actorCtx.PID(), msgSsePing{}, ssePingInterval)
-		case actor.Stopped:
-			actorCtx.Send(projectPID, domain.MsgEventsListenStop{})
-			repeater.Stop()
-			done <- struct{}{}
-		case msgSsePing:
-			if err := writeServerSentEvent(ctx.Request().Context(), writer, "ping", nil); err != nil {
-				actorCtx.Engine().Stop(actorCtx.PID())
-				return
-			}
-			flusher.Flush()
-		case domain.MsgSse:
-			if msg.Msgs == nil {
-				actorCtx.Engine().Stop(actorCtx.PID())
-				return
-			}
-			if err := func() error {
-				for _, msg := range msg.Msgs {
-					switch msg := msg.(type) {
+	for {
+		select {
+		case sses := <-sseChan:
+			for _, sse := range sses {
+				if err := func() error {
+					switch sse := sse.(type) {
 					case domain.MsgSseNewActor:
 						if err := writeServerSentEvent(
-							ctx.Request().Context(),
-							writer,
+							ctx,
+							eCtx.Response(),
 							types.SseTypeNewActor,
-							view.ProjectActorListItem(msg.Actor, false),
+							view.ProjectActorListItem(sse.Actor, false),
 						); err != nil {
 							return err
 						}
 					case domain.MsgSseNewEvents:
 						if err := writeServerSentEvent(
-							ctx.Request().Context(),
-							writer,
-							types.SseTypeUpdateActorNumEvents+msg.Actor.PID,
-							view.ProjectActorBadge(msg.Actor),
+							ctx,
+							eCtx.Response(),
+							types.SseTypeUpdateActorNumEvents+sse.Actor.PID,
+							view.ProjectActorBadge(sse.Actor),
 						); err != nil {
 							return err
 						}
 					}
+					return nil
+				}(); err != nil {
+					return err
 				}
-				return nil
-			}(); err != nil {
-				actorCtx.Engine().Stop(actorCtx.PID())
-				return
+				flusher.Flush()
 			}
-			flusher.Flush()
 		}
-	}, "sse-handler", actor.WithID(requestID(ctx)))
-
-	<-done
-	return nil
+	}
 }
 
 var upgrader = websocket.Upgrader{}

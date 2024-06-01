@@ -73,3 +73,12 @@ type MsgGetActorSourcesSinks struct {
 type RspGetActorSourcesSinks struct {
 	SourcesSinks []string
 }
+
+type msgListenStart struct {
+	id string
+	c  chan<- []any
+}
+
+type msgListenStop struct {
+	id string
+}
