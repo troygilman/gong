@@ -78,7 +78,6 @@ func MiddlewareProjectContext() echo.MiddlewareFunc {
 				if flowType == "" {
 					flowType = "Sources"
 				}
-				log.Println(flowType)
 				cb = cb.With(types.CtxFlow, flowType)
 			}
 

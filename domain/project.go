@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"gong/types"
 	"time"
@@ -43,24 +44,28 @@ func NewProjectProducerWithApp(app App) actor.Producer {
 	}
 }
 
-func (p *project) Receive(ctx *actor.Context) {
-	actor_utils.LogActorMsg(ctx)
-	if err := p.receive(ctx); err != nil {
-		actor_utils.LogActorError(ctx, err)
-		if ctx.Sender() != nil {
-			ctx.Respond(err)
+func (p *project) Receive(aCtx *actor.Context) {
+	actor_utils.LogActorMsg(aCtx)
+
+	ctx, cancel := context.WithTimeout(aCtx.Context(), 1*time.Second)
+	defer cancel()
+
+	if err := p.receive(ctx, aCtx); err != nil {
+		actor_utils.LogActorError(aCtx, err)
+		if aCtx.Sender() != nil {
+			aCtx.Respond(err)
 		}
 	}
 }
 
-func (p *project) receive(ctx *actor.Context) error {
-	switch msg := ctx.Message().(type) {
+func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
+	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.Actor)
 		p.updates = make(map[string]types.Actor)
 		p.listeners = make(map[*actor.PID]struct{})
 	case actor.Started:
-		p.repeater = ctx.SendRepeat(ctx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case MsgGetProjectProps:
@@ -71,13 +76,13 @@ func (p *project) receive(ctx *actor.Context) error {
 		for pid, data := range p.actors {
 			props.Actors[pid] = data
 		}
-		ctx.Respond(RspGetProjectProps{
+		aCtx.Respond(RspGetProjectProps{
 			Props: props,
 		})
 	case MsgGetProjectActorProps:
 		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
-			ctx.Respond(RspGetProjectActor{
+			aCtx.Respond(RspGetProjectActor{
 				Actor: actorData,
 			})
 		} else {
@@ -107,7 +112,7 @@ func (p *project) receive(ctx *actor.Context) error {
 		}
 
 		for pid := range p.listeners {
-			ctx.Send(pid, MsgSse{Msgs: msgs})
+			aCtx.Send(pid, MsgSse{Msgs: msgs})
 		}
 
 	case MsgGetProjectEvents:
@@ -120,16 +125,16 @@ func (p *project) receive(ctx *actor.Context) error {
 				numEvents: msg.NumEvents,
 				filter:    msg.Filter,
 			}
-			events, err := p.app.DB().QueryEvents(query)
+			events, err := p.app.DB().QueryEvents(ctx, query)
 			if err != nil {
 				return err
 			}
-			ctx.Respond(RspGetProjectEvents{
+			aCtx.Respond(RspGetProjectEvents{
 				Events: events,
 				Actor:  actorData,
 			})
 		} else {
-			ctx.Respond(RspGetProjectEvents{
+			aCtx.Respond(RspGetProjectEvents{
 				Events: make(types.EventList, 0),
 			})
 		}
@@ -146,29 +151,29 @@ func (p *project) receive(ctx *actor.Context) error {
 			var err error
 			switch msg.Flow {
 			case "Sources":
-				sourcesSinks, err = p.app.DB().QueryActorSources(query)
+				sourcesSinks, err = p.app.DB().QueryActorSources(ctx, query)
 			case "Sinks":
-				sourcesSinks, err = p.app.DB().QueryActorSinks(query)
+				sourcesSinks, err = p.app.DB().QueryActorSinks(ctx, query)
 			}
 			if err != nil {
 				return err
 			}
-			ctx.Respond(RspGetActorSourcesSinks{
+			aCtx.Respond(RspGetActorSourcesSinks{
 				SourcesSinks: sourcesSinks,
 			})
 		}
 	case MsgEventsListenStart:
-		p.listeners[ctx.Sender()] = struct{}{}
+		p.listeners[aCtx.Sender()] = struct{}{}
 	case MsgEventsListenStop:
-		delete(p.listeners, ctx.Sender())
+		delete(p.listeners, aCtx.Sender())
 	}
 	return nil
 }
 
-func (p *project) load(id uuid.UUID) error {
+func (p *project) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActors(id)
+	actorProps, err := p.app.DB().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -180,7 +185,7 @@ func (p *project) load(id uuid.UUID) error {
 	return nil
 }
 
-func (p *project) create(id uuid.UUID) error {
+func (p *project) create(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 	return nil
 }

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"gong/.gen/gong/public/model"
@@ -19,13 +20,13 @@ import (
 )
 
 type Database interface {
-	QueryEvents(query eventsQuery) ([]types.Event, error)
-	CreateEvents(events []types.Event) error
-	QueryActors(projectID uuid.UUID) ([]types.Actor, error)
-	CreateActor(types.Actor) error
-	UpdateActor(types.Actor) error
-	QueryActorSources(actorSourcesSinksQuery) ([]string, error)
-	QueryActorSinks(actorSourcesSinksQuery) ([]string, error)
+	QueryEvents(ctx context.Context, query eventsQuery) ([]types.Event, error)
+	CreateEvents(ctx context.Context, events []types.Event) error
+	QueryActors(ctx context.Context, projectID uuid.UUID) ([]types.Actor, error)
+	CreateActor(ctx context.Context, actor types.Actor) error
+	UpdateActor(ctx context.Context, actor types.Actor) error
+	QueryActorSources(ctx context.Context, query actorSourcesSinksQuery) ([]string, error)
+	QueryActorSinks(ctx context.Context, query actorSourcesSinksQuery) ([]string, error)
 }
 
 type eventsQuery struct {
@@ -89,6 +90,10 @@ func NewPostgresDatabase() Database {
 
 	conn.SetMaxOpenConns(5) // requred to not overwhelm db server
 
+	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
+		// TO-DO
+	})
+
 	log.Println("Database connection was successfully opened")
 	return &postgresDatabase{
 		conn: conn,
@@ -99,7 +104,7 @@ func sqlError(stmt Statement, err error) error {
 	return fmt.Errorf("%s - %s", err.Error(), stmt.DebugSql())
 }
 
-func (db *postgresDatabase) CreateEvents(events []types.Event) error {
+func (db *postgresDatabase) CreateEvents(ctx context.Context, events []types.Event) error {
 	m := make([]model.Event, len(events))
 	for i := range len(events) {
 		m[i].ID = events[i].ID.String()
@@ -115,24 +120,24 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 	}
 
 	if len(m) > 0 {
-		tx, err := db.conn.Begin()
+		tx, err := db.conn.BeginTx(ctx, nil)
 		if err != nil {
 			return err
 		}
 
-		stmt, err := tx.Prepare("COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg, attrs) FROM STDIN")
+		stmt, err := tx.PrepareContext(ctx, "COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg, attrs) FROM STDIN")
 		if err != nil {
 			return err
 		}
 
 		for _, e := range m {
-			_, err = stmt.Exec(e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
+			_, err = stmt.ExecContext(ctx, e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
 			if err != nil {
 				return err
 			}
 		}
 
-		if _, err := stmt.Exec(); err != nil {
+		if _, err := stmt.ExecContext(ctx); err != nil {
 			return err
 		}
 
@@ -148,7 +153,7 @@ func (db *postgresDatabase) CreateEvents(events []types.Event) error {
 	return nil
 }
 
-func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error) {
+func (db *postgresDatabase) QueryEvents(ctx context.Context, query eventsQuery) ([]types.Event, error) {
 	var m []model.Event
 
 	whereExpression := table.Event.ProjectID.EQ(UUID(query.projectID)).AND(table.Event.ActorPid.EQ(String(query.actorPID)))
@@ -181,7 +186,7 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 		ORDER_BY(orderClause).
 		LIMIT(int64(max(query.numEvents, -query.numEvents)))
 
-	if err := stmt.Query(db.conn, &m); err != nil {
+	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
@@ -210,11 +215,11 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	return events, nil
 }
 
-func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.Actor, error) {
+func (db *postgresDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]types.Actor, error) {
 	var m []model.Actor
 
 	stmt := table.Actor.SELECT(table.Actor.AllColumns).WHERE(table.Actor.ProjectID.EQ(UUID(projectID)))
-	if err := stmt.Query(db.conn, &m); err != nil {
+	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
@@ -234,7 +239,7 @@ func (db *postgresDatabase) QueryActors(projectID uuid.UUID) ([]types.Actor, err
 	return actors, nil
 }
 
-func (db *postgresDatabase) CreateActor(actor types.Actor) error {
+func (db *postgresDatabase) CreateActor(ctx context.Context, actor types.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID
@@ -244,14 +249,14 @@ func (db *postgresDatabase) CreateActor(actor types.Actor) error {
 	m.LastEventID = actor.LastEventID.String()
 
 	stmt := table.Actor.INSERT(table.Actor.AllColumns).MODEL(&m)
-	if _, err := stmt.Exec(db.conn); err != nil {
+	if _, err := stmt.ExecContext(ctx, db.conn); err != nil {
 		return sqlError(stmt, err)
 	}
 
 	return nil
 }
 
-func (db *postgresDatabase) UpdateActor(actor types.Actor) error {
+func (db *postgresDatabase) UpdateActor(ctx context.Context, actor types.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID
@@ -261,7 +266,7 @@ func (db *postgresDatabase) UpdateActor(actor types.Actor) error {
 	m.LastEventID = actor.LastEventID.String()
 
 	stmt := table.Actor.UPDATE(table.Actor.AllColumns).MODEL(&m).WHERE(table.Actor.ProjectID.EQ(UUID(actor.ProjectID)).AND(table.Actor.Pid.EQ(String(actor.PID))))
-	if _, err := stmt.Exec(db.conn); err != nil {
+	if _, err := stmt.ExecContext(ctx, db.conn); err != nil {
 		return sqlError(stmt, err)
 	}
 
@@ -288,7 +293,7 @@ func buildDistinctColumnValueQuery(t ReadableTable, c ColumnString, alias string
 	return stmt
 }
 
-func (db *postgresDatabase) QueryActorSources(query actorSourcesSinksQuery) ([]string, error) {
+func (db *postgresDatabase) QueryActorSources(ctx context.Context, query actorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
 		Source string
 	}
@@ -296,7 +301,7 @@ func (db *postgresDatabase) QueryActorSources(query actorSourcesSinksQuery) ([]s
 	condition := table.Event.ActorPid.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
 	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.Sender, "source", condition)
 
-	if err := stmt.Query(db.conn, &m); err != nil {
+	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
@@ -310,7 +315,7 @@ func (db *postgresDatabase) QueryActorSources(query actorSourcesSinksQuery) ([]s
 	return sources, nil
 }
 
-func (db *postgresDatabase) QueryActorSinks(query actorSourcesSinksQuery) ([]string, error) {
+func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query actorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
 		Sink string
 	}
@@ -318,7 +323,7 @@ func (db *postgresDatabase) QueryActorSinks(query actorSourcesSinksQuery) ([]str
 	condition := table.Event.Sender.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
 	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.ActorPid, "sink", condition)
 
-	if err := stmt.Query(db.conn, &m); err != nil {
+	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"gong/types"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func benchmarkCreateEvents(n int, createEvents func([]types.Event) error) error {
+func benchmarkCreateEvents(n int, createEvents func(context.Context, []types.Event) error) error {
 	projectID := uuid.MustParse("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 
 	events := make([]types.Event, n)
@@ -19,7 +20,7 @@ func benchmarkCreateEvents(n int, createEvents func([]types.Event) error) error 
 		}
 	}
 
-	return createEvents(events)
+	return createEvents(context.Background(), events)
 }
 
 func BenchmarkCreateEvents_10(b *testing.B) {

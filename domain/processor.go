@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"crypto/rand"
 	"gong/sdk"
 	"gong/types"
@@ -43,30 +44,33 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 	}
 }
 
-func (p *processor) Receive(ctx *actor.Context) {
-	switch ctx.Message().(type) {
+func (p *processor) Receive(aCtx *actor.Context) {
+	switch aCtx.Message().(type) {
 	case MsgSdkEvents, msgProcessorUpdateState:
 	default:
-		actor_utils.LogActorMsg(ctx)
+		actor_utils.LogActorMsg(aCtx)
 	}
 
-	if err := p.receive(ctx); err != nil {
-		actor_utils.LogActorError(ctx, err)
+	ctx, cancel := context.WithTimeout(aCtx.Context(), 1*time.Second)
+	defer cancel()
+
+	if err := p.receive(ctx, aCtx); err != nil {
+		actor_utils.LogActorError(aCtx, err)
 	}
 }
 
-func (p *processor) receive(ctx *actor.Context) error {
-	switch msg := ctx.Message().(type) {
+func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
+	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]types.Actor)
 		p.entropy = ulid.Monotonic(rand.Reader, 1)
 		p.updates = make(map[string]bool)
 		p.batch = make([]types.Event, 0)
 	case actor.Started:
-		p.repeater = ctx.SendRepeat(ctx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
-		return p.processUpdates(ctx)
+		return p.processUpdates(ctx, aCtx)
 	case MsgSdkEvents:
 		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
 			return a.Timestamp.Compare(b.Timestamp)
@@ -77,7 +81,7 @@ func (p *processor) receive(ctx *actor.Context) error {
 			}
 		}
 	case msgProcessorUpdateState:
-		return p.processUpdates(ctx)
+		return p.processUpdates(ctx, aCtx)
 	}
 	return nil
 }
@@ -122,44 +126,44 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 	return nil
 }
 
-func (p *processor) processUpdates(ctx *actor.Context) error {
+func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) error {
 	defer func() {
 		p.batch = make([]types.Event, 0)
 		p.updates = make(map[string]bool)
 	}()
 
-	projectPID := ctx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
+	projectPID := aCtx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
 	actors := make([]types.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}
 	if len(actors) > 0 {
-		ctx.Send(projectPID, MsgUpdateProjectActors{Actors: actors})
+		aCtx.Send(projectPID, MsgUpdateProjectActors{Actors: actors})
 	}
 
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
-			err = p.app.DB().UpdateActor(p.actors[pid])
+			err = p.app.DB().UpdateActor(ctx, p.actors[pid])
 		} else {
-			err = p.app.DB().CreateActor(p.actors[pid])
+			err = p.app.DB().CreateActor(ctx, p.actors[pid])
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := p.app.DB().CreateEvents(p.batch); err != nil {
+	if err := p.app.DB().CreateEvents(ctx, p.batch); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *processor) load(id uuid.UUID) error {
+func (p *processor) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.DB().QueryActors(id)
+	actorProps, err := p.app.DB().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -171,7 +175,7 @@ func (p *processor) load(id uuid.UUID) error {
 	return nil
 }
 
-func (p *processor) create(id uuid.UUID) error {
+func (p *processor) create(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 	return nil
 }

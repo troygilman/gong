@@ -1,13 +1,15 @@
 package domain
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	actor_utils "github.com/troygilman0/utils"
 )
 
 type persistentActor interface {
-	load(id uuid.UUID) error
-	create(id uuid.UUID) error
+	load(ctx context.Context, id uuid.UUID) error
+	create(ctx context.Context, id uuid.UUID) error
 }
 
 type commonActorData struct {
