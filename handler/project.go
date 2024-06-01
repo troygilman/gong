@@ -261,13 +261,24 @@ func GetActorChart(ctx echo.Context) error {
 		return errors.New("actorPID is missing")
 	}
 
-	r := app.Engine().Request(projectPID, domain.MsgGetActorSources{ActorPID: actorPID}, domain.DefaultTimeout)
-	response, err := utils.HandleResponse[domain.RspGetActorSources](r)
+	flowType, ok := ctx.Request().Context().Value(types.CtxFlow).(string)
+	if !ok {
+		return errors.New("flow is missing")
+	}
+
+	msg := domain.MsgGetActorSourcesSinks{
+		ActorPID: actorPID,
+		Flow:     flowType,
+	}
+
+	r := app.Engine().Request(projectPID, msg, domain.DefaultTimeout)
+	response, err := utils.HandleResponse[domain.RspGetActorSourcesSinks](r)
 	if err != nil {
 		return err
 	}
 
-	return view.ActorFlowChart(response.Sources).Render(ctx.Request().Context(), ctx.Response().Writer)
+	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
+	return view.ActorFlowChart(response.SourcesSinks).Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
 func GetActorChartTooltip(ctx echo.Context) error {

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS event(
 );
 
 CREATE INDEX IF NOT EXISTS index_actor_pid ON event(actor_pid);
+CREATE INDEX IF NOT EXISTS index_sender ON event(sender);
 
 CREATE TABLE IF NOT EXISTS actor(
     pid TEXT,

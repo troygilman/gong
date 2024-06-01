@@ -65,10 +65,11 @@ type MsgUpdateProjectActors struct {
 
 type msgProjectUpdateState struct{}
 
-type MsgGetActorSources struct {
+type MsgGetActorSourcesSinks struct {
 	ActorPID string
+	Flow     string
 }
 
-type RspGetActorSources struct {
-	Sources []string
+type RspGetActorSourcesSinks struct {
+	SourcesSinks []string
 }

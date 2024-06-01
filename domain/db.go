@@ -24,7 +24,8 @@ type Database interface {
 	QueryActors(projectID uuid.UUID) ([]types.Actor, error)
 	CreateActor(types.Actor) error
 	UpdateActor(types.Actor) error
-	QueryActorSources(actorSourcesQuery) ([]string, error)
+	QueryActorSources(actorSourcesSinksQuery) ([]string, error)
+	QueryActorSinks(actorSourcesSinksQuery) ([]string, error)
 }
 
 type eventsQuery struct {
@@ -35,7 +36,7 @@ type eventsQuery struct {
 	filter    types.EventsFilter
 }
 
-type actorSourcesQuery struct {
+type actorSourcesSinksQuery struct {
 	projectID uuid.UUID
 	actorPID  string
 	minTime   time.Time
@@ -267,25 +268,66 @@ func (db *postgresDatabase) UpdateActor(actor types.Actor) error {
 	return nil
 }
 
-func (db *postgresDatabase) QueryActorSources(query actorSourcesQuery) ([]string, error) {
+func buildDistinctColumnValueQuery(t ReadableTable, c ColumnString, alias string, condition BoolExpression) Statement {
+	cte := CTE("cte")
+	cteVal := c.From(cte)
+
+	l := LATERAL(
+		SELECT(c).FROM(t).WHERE(
+			c.GT(cteVal).AND(condition),
+		).ORDER_BY(c).LIMIT(1),
+	).AS("l")
+
+	sub := SELECT(c.From(l)).FROM(cte.CROSS_JOIN(l))
+
+	stmt := WITH_RECURSIVE(
+		cte.AS(
+			SELECT(c).FROM(t).WHERE(condition).ORDER_BY(c).LIMIT(1).
+				UNION_ALL(sub)))(SELECT(cteVal.AS(alias)).FROM(cte))
+
+	return stmt
+}
+
+func (db *postgresDatabase) QueryActorSources(query actorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
-		Sender string
+		Source string
 	}
 
-	stmt := table.Event.SELECT(table.Event.Sender.AS("sender")).WHERE(
-		table.Event.ActorPid.EQ(String(query.actorPID)).
-			AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime))).
-			AND(NOT(table.Event.Sender.EQ(String(""))))).
-		GROUP_BY(table.Event.Sender)
+	condition := table.Event.ActorPid.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
+	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.Sender, "source", condition)
 
 	if err := stmt.Query(db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
-	senders := make([]string, len(m))
-	for i, sender := range m {
-		senders[i] = sender.Sender
+	sources := make([]string, 0, len(m))
+	for _, source := range m {
+		if source.Source != "" {
+			sources = append(sources, source.Source)
+		}
 	}
 
-	return senders, nil
+	return sources, nil
+}
+
+func (db *postgresDatabase) QueryActorSinks(query actorSourcesSinksQuery) ([]string, error) {
+	var m []struct {
+		Sink string
+	}
+
+	condition := table.Event.Sender.EQ(String(query.actorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.minTime), TimestampzT(query.maxTime)))
+	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.ActorPid, "sink", condition)
+
+	if err := stmt.Query(db.conn, &m); err != nil {
+		return nil, sqlError(stmt, err)
+	}
+
+	sinks := make([]string, 0, len(m))
+	for _, sink := range m {
+		if sink.Sink != "" {
+			sinks = append(sinks, sink.Sink)
+		}
+	}
+
+	return sinks, nil
 }

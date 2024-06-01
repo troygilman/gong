@@ -133,21 +133,28 @@ func (p *project) receive(ctx *actor.Context) error {
 				Events: make(types.EventList, 0),
 			})
 		}
-	case MsgGetActorSources:
+	case MsgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
-			query := actorSourcesQuery{
+			query := actorSourcesSinksQuery{
 				projectID: p.id,
 				actorPID:  msg.ActorPID,
 				minTime:   time.Now().Add(-24 * time.Hour),
 				maxTime:   time.Now(),
 			}
-			sources, err := p.app.DB().QueryActorSources(query)
+			var sourcesSinks []string
+			var err error
+			switch msg.Flow {
+			case "Sources":
+				sourcesSinks, err = p.app.DB().QueryActorSources(query)
+			case "Sinks":
+				sourcesSinks, err = p.app.DB().QueryActorSinks(query)
+			}
 			if err != nil {
 				return err
 			}
-			ctx.Respond(RspGetActorSources{
-				Sources: sources,
+			ctx.Respond(RspGetActorSourcesSinks{
+				SourcesSinks: sourcesSinks,
 			})
 		}
 	case MsgEventsListenStart:

@@ -26,12 +26,14 @@ templ ActorFlowChartWidget() {
 	</div>
 }
 
-templ ActorFlowChart(sources []string) {
+templ ActorFlowChart(sourcesSinks []string) {
 	<div class="grow min-h-0 min-w-0">
 		<svg id="chart" class="max-w-full max-h-full"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
 		if actorPID, ok := ctx.Value(types.CtxPID).(string); ok {
-			@initActorFlowChart(actorPID, sources)
+			if flowType, ok := ctx.Value(types.CtxFlow).(string); ok {
+				@initActorFlowChart(actorPID, sourcesSinks, flowType == "Sources")
+			}
 		}
 	</div>
 }
@@ -53,7 +55,7 @@ templ actorFlowChartFilterItem(label string, active string) {
 	>{ label }</a>
 }
 
-script initActorFlowChart(actorPID string, sources []string) {
+script initActorFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 	const width = 1000;
 	const height =  1000;
 	const circleRadius = 12;
@@ -66,10 +68,10 @@ script initActorFlowChart(actorPID string, sources []string) {
 		"links": [],
 	}
 
-	for (let i = 0; i < sources.length; i++) {
-		let source = sources[i];
-		data.nodes.push({"id": source, "group": 2});
-		data.links.push({"source": source, "target": actorPID, "value": 1});
+	for (let i = 0; i < sourcesSinks.length; i++) {
+		let pid = sourcesSinks[i];
+		data.nodes.push({"id": pid, "group": 2});
+		data.links.push({"source": pid, "target": actorPID, "value": 1});
 	};
 
 	// Specify the color scale.
@@ -176,10 +178,16 @@ script initActorFlowChart(actorPID string, sources []string) {
       const r = 0;
       const midX = (d.source.x + d.target.x) / 2;
       const midY = (d.source.y + d.target.y) / 2;
+	  var node1 = d.source;
+	  var node2 = d.target;
+	  if (!isSources) {
+		node1 = d.target;
+		node2 = d.source;
+	  }
       return `
-      	M${d.source.x},${d.source.y}
+      	M${node1.x},${node1.y}
         A${r},${r} 0 0,1 ${midX},${midY}
-        A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
+        A${r},${r} 0 0,1 ${node2.x},${node2.y}
       `;
     }
 
