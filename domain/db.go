@@ -164,13 +164,13 @@ func (db *postgresDatabase) QueryEvents(query eventsQuery) ([]types.Event, error
 	}
 
 	if query.filter.ID != "" {
-		whereExpression = whereExpression.AND(table.Event.ID.LIKE(String("%" + query.filter.ID + "%")))
+		whereExpression = whereExpression.AND(table.Event.ID.EQ(String(query.filter.ID)))
 	}
 	if query.filter.Type != "" {
-		whereExpression = whereExpression.AND(table.Event.Type.LIKE(String("%" + query.filter.Type + "%")))
+		whereExpression = whereExpression.AND(table.Event.Type.EQ(String(query.filter.Type)))
 	}
 	if query.filter.Sender != "" {
-		whereExpression = whereExpression.AND(table.Event.Sender.LIKE(String("%" + query.filter.Sender + "%")))
+		whereExpression = whereExpression.AND(table.Event.Sender.EQ(String(query.filter.Sender)))
 	}
 	if query.filter.Level > slog.LevelDebug {
 		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(query.filter.Level))))
