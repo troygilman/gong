@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS event(
     PRIMARY KEY (id, project_id)
 );
 
-CREATE INDEX IF NOT EXISTS index_actor_pid ON event(actor_pid);
-CREATE INDEX IF NOT EXISTS index_sender ON event(sender);
+-- may need to add projectID, timestamp to these indexes
+CREATE INDEX IF NOT EXISTS event_actor_pid_sender_idx ON event(actor_pid, sender);
+CREATE INDEX IF NOT EXISTS event_sender_actor_pid_idx ON event(sender, actor_pid);
+
 CREATE INDEX IF NOT EXISTS index_type ON event(type);
 CREATE INDEX IF NOT EXISTS index_level ON event(level);
 

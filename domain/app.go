@@ -37,7 +37,11 @@ const (
 func NewApp() (*App, error) {
 	app := new(App)
 
-	app.db = persistance.NewPostgresDatabase()
+	db, err := persistance.NewPostgresDatabase()
+	if err != nil {
+		return nil, err
+	}
+	app.db = db
 
 	secret, ok := os.LookupEnv(envAuthSecret)
 	if !ok {

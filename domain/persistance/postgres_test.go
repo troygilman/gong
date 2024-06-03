@@ -24,7 +24,7 @@ func benchmarkCreateEvents(n int, createEvents func(context.Context, []types.Eve
 }
 
 func BenchmarkCreateEvents_10(b *testing.B) {
-	db := NewPostgresDatabase()
+	db, _ := NewPostgresDatabase()
 	for range b.N {
 		if err := benchmarkCreateEvents(10, db.CreateEvents); err != nil {
 			b.Error(err)
@@ -33,7 +33,7 @@ func BenchmarkCreateEvents_10(b *testing.B) {
 }
 
 func BenchmarkCreateEvents_100(b *testing.B) {
-	db := NewPostgresDatabase()
+	db, _ := NewPostgresDatabase()
 	for range b.N {
 		if err := benchmarkCreateEvents(100, db.CreateEvents); err != nil {
 			b.Error(err)
@@ -42,7 +42,7 @@ func BenchmarkCreateEvents_100(b *testing.B) {
 }
 
 func BenchmarkCreateEvents_1000(b *testing.B) {
-	db := NewPostgresDatabase()
+	db, _ := NewPostgresDatabase()
 	for range b.N {
 		if err := benchmarkCreateEvents(1000, db.CreateEvents); err != nil {
 			b.Error(err)
@@ -51,7 +51,7 @@ func BenchmarkCreateEvents_1000(b *testing.B) {
 }
 
 func BenchmarkCreateEvents_10000(b *testing.B) {
-	db := NewPostgresDatabase()
+	db, _ := NewPostgresDatabase()
 	for range b.N {
 		if err := benchmarkCreateEvents(10000, db.CreateEvents); err != nil {
 			b.Error(err)

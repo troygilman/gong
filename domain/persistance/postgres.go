@@ -30,48 +30,49 @@ type postgresDatabase struct {
 	conn *sql.DB
 }
 
-func NewPostgresDatabase() Database {
+func NewPostgresDatabase() (Database, error) {
 	hostname, ok := os.LookupEnv(envDatabaseHostname)
 	if !ok {
-		log.Fatalf("%s not set", envDatabaseHostname)
+		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
 	}
 
 	port, ok := os.LookupEnv(envDatabasePort)
 	if !ok {
-		log.Fatalf("%s not set", envDatabasePort)
+		return nil, fmt.Errorf("%s not set", envDatabasePort)
 	}
 
 	name, ok := os.LookupEnv(envDatabaseName)
 	if !ok {
-		log.Fatalf("%s not set", envDatabaseName)
+		return nil, fmt.Errorf("%s not set", envDatabaseName)
 	}
 
 	username, ok := os.LookupEnv(envDatabaseUsername)
 	if !ok {
-		log.Fatalf("%s not set", envDatabaseUsername)
+		return nil, fmt.Errorf("%s not set", envDatabaseUsername)
 	}
 
 	password, ok := os.LookupEnv(envDatabasePassword)
 	if !ok {
-		log.Fatalf("%s not set", envDatabasePassword)
+		return nil, fmt.Errorf("%s not set", envDatabasePassword)
 	}
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", hostname, username, password, name, port)
 	conn, err := sql.Open("postgres", dsn)
 	if err != nil {
-		panic("failed to connect to postgres database: " + err.Error())
+		return nil, fmt.Errorf("failed to connect to postgres database: %s", err.Error())
 	}
 
 	conn.SetMaxOpenConns(5) // requred to not overwhelm db server
 
 	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
 		// TO-DO
+		log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
 	})
 
 	log.Println("Database connection was successfully opened")
 	return &postgresDatabase{
 		conn: conn,
-	}
+	}, nil
 }
 
 func sqlError(stmt Statement, err error) error {
@@ -247,42 +248,22 @@ func (db *postgresDatabase) UpdateActor(ctx context.Context, actor types.Actor) 
 	return nil
 }
 
-func buildDistinctColumnValueQuery(t ReadableTable, c ColumnString, alias string, condition BoolExpression) Statement {
-	cte := CTE("cte")
-	cteVal := c.From(cte)
-
-	l := LATERAL(
-		SELECT(c).FROM(t).WHERE(
-			c.GT(cteVal).AND(condition),
-		).ORDER_BY(c).LIMIT(1),
-	).AS("l")
-
-	sub := SELECT(c.From(l)).FROM(cte.CROSS_JOIN(l))
-
-	stmt := WITH_RECURSIVE(
-		cte.AS(
-			SELECT(c).FROM(t).WHERE(condition).ORDER_BY(c).LIMIT(1).
-				UNION_ALL(sub)))(SELECT(cteVal.AS(alias)).FROM(cte))
-
-	return stmt
-}
-
 func (db *postgresDatabase) QueryActorSources(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
-		Source string
+		Sender string
 	}
 
-	condition := table.Event.ActorPid.EQ(String(query.ActorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.Sender, "source", condition)
+	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
+	stmt := SELECT(DISTINCT(table.Event.Sender)).FROM(table.Event).WHERE(condition)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
 	sources := make([]string, 0, len(m))
-	for _, source := range m {
-		if source.Source != "" {
-			sources = append(sources, source.Source)
+	for _, mItem := range m {
+		if mItem.Sender != "" {
+			sources = append(sources, mItem.Sender)
 		}
 	}
 
@@ -291,20 +272,20 @@ func (db *postgresDatabase) QueryActorSources(ctx context.Context, query ActorSo
 
 func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
-		Sink string
+		ActorPid string
 	}
 
-	condition := table.Event.Sender.EQ(String(query.ActorPID)).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := buildDistinctColumnValueQuery(table.Event, table.Event.ActorPid, "sink", condition)
+	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.Sender.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
+	stmt := SELECT(DISTINCT(table.Event.ActorPid)).FROM(table.Event).WHERE(condition)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
 	sinks := make([]string, 0, len(m))
-	for _, sink := range m {
-		if sink.Sink != "" {
-			sinks = append(sinks, sink.Sink)
+	for _, mItem := range m {
+		if mItem.ActorPid != "" {
+			sinks = append(sinks, mItem.ActorPid)
 		}
 	}
 
