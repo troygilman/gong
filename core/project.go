@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ActorKindProject           = "project"
+	actorKindProject           = "project"
 	ActorInitialized           = "actor.Initialized"
 	ActorStarted               = "actor.Started"
 	ActorStopped               = "actor.Stopped"

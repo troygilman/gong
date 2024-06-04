@@ -70,8 +70,8 @@ func NewApp() (App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
-	app.producerFuncs[ActorKindProject] = newProjectProducerWithApp
-	app.producerFuncs[ActorKindProcessor] = newProcessorProducerWithApp
+	app.producerFuncs[actorKindProject] = newProjectProducerWithApp
+	app.producerFuncs[actorKindProcessor] = newProcessorProducerWithApp
 
 	return app, nil
 }
@@ -126,7 +126,7 @@ func (app *gongApp) Actor(
 	projectID uuid.UUID,
 	actorPID string,
 ) (actor common.Actor, err error) {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return actor, err
 	}
@@ -148,7 +148,7 @@ func (app *gongApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) (project common.ProjectProps, err error) {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return project, err
 	}
@@ -170,7 +170,7 @@ func (app *gongApp) Events(
 	numEvents int,
 	filter common.Filter,
 ) (events common.EventList, err error) {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return events, err
 	}
@@ -196,7 +196,7 @@ func (app *gongApp) ProcessEvents(
 	projectID uuid.UUID,
 	events []sdk.Event,
 ) error {
-	processorPID, err := app.pid(ActorKindProcessor, projectID.String())
+	processorPID, err := app.pid(actorKindProcessor, projectID.String())
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (app *gongApp) SourcesSinks(
 	actorPID string,
 	flowType string,
 ) (pids []string, err error) {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return pids, err
 	}
@@ -238,7 +238,7 @@ func (app *gongApp) ListenStart(
 	id string,
 	c chan<- []any,
 ) error {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func (app *gongApp) ListenStop(
 	projectID uuid.UUID,
 	id string,
 ) error {
-	projectPID, err := app.pid(ActorKindProject, projectID.String())
+	projectPID, err := app.pid(actorKindProject, projectID.String())
 	if err != nil {
 		return err
 	}
