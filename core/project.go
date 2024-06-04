@@ -1,10 +1,10 @@
-package domain
+package core
 
 import (
 	"context"
 	"errors"
-	"gong/domain/persistance"
-	"gong/types"
+	"gong/common"
+	"gong/persistance"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -23,19 +23,13 @@ const (
 
 type project struct {
 	commonActorData
-	actors    map[string]types.Actor
-	updates   map[string]types.Actor
+	actors    map[string]common.Actor
+	updates   map[string]common.Actor
 	repeater  actor.SendRepeater
 	listeners map[string]chan<- []any
 }
 
-func NewProjectProducer() actor.Producer {
-	return func() actor.Receiver {
-		return &project{}
-	}
-}
-
-func NewProjectProducerWithApp(app *App) actor.Producer {
+func newProjectProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
 			commonActorData: commonActorData{
@@ -62,17 +56,17 @@ func (p *project) Receive(aCtx *actor.Context) {
 func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]types.Actor)
-		p.updates = make(map[string]types.Actor)
+		p.actors = make(map[string]common.Actor)
+		p.updates = make(map[string]common.Actor)
 		p.listeners = make(map[string]chan<- []any)
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case msgGetProjectProps:
-		props := types.ProjectProps{
+		props := common.ProjectProps{
 			ID:     p.id,
-			Actors: make(map[string]types.Actor, 0),
+			Actors: make(map[string]common.Actor, 0),
 		}
 		for pid, data := range p.actors {
 			props.Actors[pid] = data
@@ -100,11 +94,11 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		for pid, data := range p.updates {
 			_, exists := p.actors[pid]
 			if exists {
-				msgs = append(msgs, types.SseNewEvents{
+				msgs = append(msgs, common.SseNewEvents{
 					Actor: data,
 				})
 			} else {
-				msgs = append(msgs, types.SseNewActor{
+				msgs = append(msgs, common.SseNewActor{
 					Actor: data,
 				})
 			}
@@ -132,7 +126,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 				NumEvents: msg.NumEvents,
 				Filter:    msg.Filter,
 			}
-			events, err := p.app.db.QueryEvents(ctx, query)
+			events, err := p.app.database().QueryEvents(ctx, query)
 			if err != nil {
 				return err
 			}
@@ -142,7 +136,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			})
 		} else {
 			aCtx.Respond(rspGetProjectEvents{
-				Events: make(types.EventList, 0),
+				Events: make(common.EventList, 0),
 			})
 		}
 	case msgGetActorSourcesSinks:
@@ -158,9 +152,9 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			var err error
 			switch msg.Flow {
 			case "Sources":
-				sourcesSinks, err = p.app.db.QueryActorSources(ctx, query)
+				sourcesSinks, err = p.app.database().QueryActorSources(ctx, query)
 			case "Sinks":
-				sourcesSinks, err = p.app.db.QueryActorSinks(ctx, query)
+				sourcesSinks, err = p.app.database().QueryActorSinks(ctx, query)
 			}
 			if err != nil {
 				return err
@@ -183,7 +177,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 func (p *project) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.db.QueryActors(ctx, id)
+	actorProps, err := p.app.database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}

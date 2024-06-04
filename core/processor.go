@@ -1,10 +1,10 @@
-package domain
+package core
 
 import (
 	"context"
 	"crypto/rand"
+	"gong/common"
 	"gong/sdk"
-	"gong/types"
 	"slices"
 	"time"
 
@@ -21,20 +21,14 @@ const (
 
 type processor struct {
 	commonActorData
-	actors   map[string]types.Actor
+	actors   map[string]common.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
-	batch    []types.Event
+	batch    []common.Event
 	repeater actor.SendRepeater
 }
 
-func NewProcessorProducer() actor.Producer {
-	return func() actor.Receiver {
-		return &processor{}
-	}
-}
-
-func NewProcessorProducerWithApp(app *App) actor.Producer {
+func newProcessorProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
 			commonActorData: commonActorData{
@@ -62,10 +56,10 @@ func (p *processor) Receive(aCtx *actor.Context) {
 func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]types.Actor)
+		p.actors = make(map[string]common.Actor)
 		p.entropy = ulid.Monotonic(rand.Reader, 1)
 		p.updates = make(map[string]bool)
-		p.batch = make([]types.Event, 0)
+		p.batch = make([]common.Event, 0)
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
 	case actor.Stopped:
@@ -92,7 +86,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		return err
 	}
 
-	event := types.Event{
+	event := common.Event{
 		ID:        eventID,
 		ProjectID: p.id,
 		Event:     sdkEvent,
@@ -100,7 +94,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 
 	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorData = types.Actor{
+		actorData = common.Actor{
 			PID:       event.PID,
 			ProjectID: p.id,
 			NumEvents: 0,
@@ -128,12 +122,12 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 
 func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) error {
 	defer func() {
-		p.batch = make([]types.Event, 0)
+		p.batch = make([]common.Event, 0)
 		p.updates = make(map[string]bool)
 	}()
 
 	projectPID := aCtx.Engine().Registry.GetPID(ActorKindProject, p.id.String())
-	actors := make([]types.Actor, 0)
+	actors := make([]common.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}
@@ -144,16 +138,16 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
-			err = p.app.db.UpdateActor(ctx, p.actors[pid])
+			err = p.app.database().UpdateActor(ctx, p.actors[pid])
 		} else {
-			err = p.app.db.CreateActor(ctx, p.actors[pid])
+			err = p.app.database().CreateActor(ctx, p.actors[pid])
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := p.app.db.CreateEvents(ctx, p.batch); err != nil {
+	if err := p.app.database().CreateEvents(ctx, p.batch); err != nil {
 		return err
 	}
 
@@ -163,7 +157,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 func (p *processor) load(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 
-	actorProps, err := p.app.db.QueryActors(ctx, id)
+	actorProps, err := p.app.database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}

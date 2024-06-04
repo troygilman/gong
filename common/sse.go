@@ -1,4 +1,4 @@
-package types
+package common
 
 type SseNewActor struct {
 	Actor Actor

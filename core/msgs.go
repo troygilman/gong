@@ -1,8 +1,8 @@
-package domain
+package core
 
 import (
+	"gong/common"
 	"gong/sdk"
-	"gong/types"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -14,7 +14,7 @@ type msgSdkEvents struct {
 type msgGetProjectProps struct{}
 
 type rspGetProjectProps struct {
-	Props types.ProjectProps
+	Props common.ProjectProps
 }
 
 type msgGetProjectActorProps struct {
@@ -22,25 +22,25 @@ type msgGetProjectActorProps struct {
 }
 
 type rspGetProjectActor struct {
-	Actor types.Actor
+	Actor common.Actor
 }
 
 type msgGetProjectEvents struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	NumEvents int
-	Filter    types.EventsFilter
+	Filter    common.Filter
 }
 
 type rspGetProjectEvents struct {
-	Events types.EventList
-	Actor  types.Actor
+	Events common.EventList
+	Actor  common.Actor
 }
 
 type msgProcessorUpdateState struct{}
 
 type msgUpdateProjectActors struct {
-	Actors []types.Actor
+	Actors []common.Actor
 }
 
 type msgProjectUpdateState struct{}

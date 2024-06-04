@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gong/.gen/gong/public/model"
 	"gong/.gen/gong/public/table"
-	"gong/types"
+	"gong/common"
 	"log"
 	"log/slog"
 	"os"
@@ -83,7 +83,7 @@ func sqlError(stmt Statement, err error) error {
 	return fmt.Errorf("%s - %s", err.Error(), stmt.DebugSql())
 }
 
-func (db *postgresDatabase) CreateEvents(ctx context.Context, events []types.Event) error {
+func (db *postgresDatabase) CreateEvents(ctx context.Context, events []common.Event) error {
 	m := make([]model.Event, len(events))
 	for i := range len(events) {
 		m[i].ID = events[i].ID.String()
@@ -132,7 +132,7 @@ func (db *postgresDatabase) CreateEvents(ctx context.Context, events []types.Eve
 	return nil
 }
 
-func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]types.Event, error) {
+func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]common.Event, error) {
 	var m []model.Event
 
 	whereExpression := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID)))
@@ -174,7 +174,7 @@ func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) 
 	}
 
 	var err error
-	events := make([]types.Event, len(m))
+	events := make([]common.Event, len(m))
 	for idx := range m {
 		events[idx].ID, err = ulid.Parse(m[idx].ID)
 		if err != nil {
@@ -194,7 +194,7 @@ func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) 
 	return events, nil
 }
 
-func (db *postgresDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]types.Actor, error) {
+func (db *postgresDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]common.Actor, error) {
 	var m []model.Actor
 
 	stmt := table.Actor.SELECT(table.Actor.AllColumns).WHERE(table.Actor.ProjectID.EQ(UUID(projectID)))
@@ -203,7 +203,7 @@ func (db *postgresDatabase) QueryActors(ctx context.Context, projectID uuid.UUID
 	}
 
 	var err error
-	actors := make([]types.Actor, len(m))
+	actors := make([]common.Actor, len(m))
 	for idx, mItem := range m {
 		actors[idx].PID = mItem.Pid
 		actors[idx].ProjectID = mItem.ProjectID
@@ -218,7 +218,7 @@ func (db *postgresDatabase) QueryActors(ctx context.Context, projectID uuid.UUID
 	return actors, nil
 }
 
-func (db *postgresDatabase) CreateActor(ctx context.Context, actor types.Actor) error {
+func (db *postgresDatabase) CreateActor(ctx context.Context, actor common.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID
@@ -235,7 +235,7 @@ func (db *postgresDatabase) CreateActor(ctx context.Context, actor types.Actor) 
 	return nil
 }
 
-func (db *postgresDatabase) UpdateActor(ctx context.Context, actor types.Actor) error {
+func (db *postgresDatabase) UpdateActor(ctx context.Context, actor common.Actor) error {
 	var m model.Actor
 
 	m.Pid = actor.PID

@@ -1,4 +1,4 @@
-package domain
+package core
 
 import (
 	"github.com/anthdm/hollywood/actor"
@@ -6,7 +6,7 @@ import (
 	actor_utils "github.com/troygilman0/utils"
 )
 
-func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func actorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {
@@ -24,7 +24,7 @@ func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc
 	}
 }
 
-func ActorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func actorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {

@@ -1,4 +1,4 @@
-package types
+package common
 
 import (
 	"context"
@@ -85,20 +85,20 @@ type Actor struct {
 	LastEventID ulid.ULID
 }
 
-type EventsFilter struct {
+type Filter struct {
 	ID     string
 	Type   string
 	Sender string
 	Level  slog.Level
 }
 
-func NewEventsFilter(ctx echo.Context) EventsFilter {
+func NewFilter(ctx echo.Context) Filter {
 	level, err := strconv.Atoi(ctx.QueryParam("filter_level"))
 	if err != nil {
 		level = int(slog.LevelDebug)
 	}
 
-	return EventsFilter{
+	return Filter{
 		ID:     ctx.QueryParam("filter_id"),
 		Type:   ctx.QueryParam("filter_type"),
 		Sender: ctx.QueryParam("filter_sender"),

@@ -1,4 +1,4 @@
-package domain
+package core
 
 import (
 	"context"
@@ -14,6 +14,6 @@ type persistentActor interface {
 
 type commonActorData struct {
 	id          uuid.UUID
-	app         *App
+	app         App
 	poisonTimer actor_utils.PoisonTimer
 }

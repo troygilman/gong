@@ -1,10 +1,10 @@
 package view
 
 import (
-	"gong/types"
+	"gong/common"
 )
 
-templ overviewTabContent(actor types.Actor) {
+templ overviewTabContent(actor common.Actor) {
 	<div class="flex flex-col gap-4 p-4 w-full h-full max-h-full overflow-y-auto">
 		<div class="h-fit">Detail</div>
 		@ActorFlowChartWidget()

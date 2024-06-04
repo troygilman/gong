@@ -2,10 +2,10 @@ package view
 
 import (
 	"fmt"
-	"gong/types"
+	"gong/common"
 )
 
-templ Project(props types.ProjectProps) {
+templ Project(props common.ProjectProps) {
 	@Index() {
 		<div
 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
@@ -33,24 +33,24 @@ templ Project(props types.ProjectProps) {
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
 				@ProjectActorList(props)
-				if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+				if pid, ok := ctx.Value(common.CtxPID).(string); ok {
 					@ActorContent(props.Actors[pid])
 				} else {
-					@ActorContent(types.Actor{})
+					@ActorContent(common.Actor{})
 				}
 			</div>
 		</div>
 	}
 }
 
-templ ProjectActorList(props types.ProjectProps) {
+templ ProjectActorList(props common.ProjectProps) {
 	<div class="flex flex-col w-64 min-w-64 h-full border-r border-color bg-base-200">
 		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
 		<div class="border border-color mx-6 mt-2"></div>
 		<ul
 			id="actor-list"
 			class="menu menu-sm"
-			sse-swap={ types.SseTypeNewActor }
+			sse-swap={ common.SseTypeNewActor }
 			hx-swap="afterbegin"
 			x-data="{ active: ''}"
 		>
@@ -62,7 +62,7 @@ templ ProjectActorList(props types.ProjectProps) {
 }
 
 func isCurrentPID(ctx context.Context, actorPID string) bool {
-	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(common.CtxPID).(string); ok {
 		return pid == actorPID
 	}
 	return false
@@ -82,12 +82,12 @@ script resetActiveListItem(id string) {
 	}
 }
 
-templ ProjectActorListItem(actor types.Actor, oob bool) {
+templ ProjectActorListItem(actor common.Actor, oob bool) {
 	<li
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
 		hx-get={ formatProjectUrl(ctx) }
-		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewActor) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
 		hx-include={ includes }
 		hx-trigger="click"
@@ -108,10 +108,10 @@ templ ProjectActorListItem(actor types.Actor, oob bool) {
 	</li>
 }
 
-templ ProjectActorBadge(actor types.Actor) {
+templ ProjectActorBadge(actor common.Actor) {
 	<div
 		class={ "badge",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
-		sse-swap={ types.SseTypeUpdateActorNumEvents + actor.PID }
+		sse-swap={ common.SseTypeUpdateActorNumEvents + actor.PID }
 		hx-target="this"
 		hx-swap="outerHTML"
 	>
@@ -128,25 +128,25 @@ const (
 	tabLabelEvents   = "Events"
 )
 
-templ ProjectActor(actor types.Actor) {
+templ ProjectActor(actor common.Actor) {
 	@ActorContent(actor)
 	@ProjectActorListItem(actor, true)
 }
 
-templ ActorContent(actor types.Actor) {
+templ ActorContent(actor common.Actor) {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
 		<input id="actor-pid" type="hidden" name="pid" value={ actor.PID }/>
-		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
+		<input id="tab" type="hidden" name="tab" value={ ctx.Value(common.CtxTab).(string) }/>
 		<div class="p-4 font-bold">{ actor.PID }</div>
 		<div
 			role="tablist"
 			class="tabs tabs-bordered"
 		>
-			if activeTab, ok := ctx.Value(types.CtxTab).(string); ok {
+			if activeTab, ok := ctx.Value(common.CtxTab).(string); ok {
 				@tab(tabLabelOverview, activeTab)
 				@tab(tabLabelEvents, activeTab)
 			}
@@ -166,7 +166,7 @@ templ tab(label string, active string) {
 		class={ "tab", templ.KV("tab-active", label == active) }
 		if label != active {
 			hx-get={ formatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewActor) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
 			hx-include={ includes }
 			hx-push-url="true"
@@ -177,7 +177,7 @@ templ tab(label string, active string) {
 }
 
 templ tabContent(label string) {
-	if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && label == activeTab {
+	if activeTab, ok := ctx.Value(common.CtxTab).(string); ok && label == activeTab {
 		<div
 			class="flex flex-col grow min-h-0"
 		>

@@ -1,12 +1,12 @@
-package handler
+package api
 
 import (
 	"bytes"
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"gong/common"
 	"gong/sdk"
-	"gong/types"
 	"gong/view"
 	"log"
 	"net/http"
@@ -17,13 +17,24 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func GetProject(eCtx echo.Context) error {
+func bindProjectHandlers(e groupable) {
+	newGroup(e, "/project/:projectID", func(e *echo.Group) {
+		e.GET("", handleGetProject)
+		e.GET("/events", handleGetProjectEvents)
+		e.GET("/sse", handleConnectProjectSSE)
+		e.GET("/chart", handleGetActorChart)
+		e.GET("/tooltip", handleGetActorChartTooltip)
+		e.GET("/connect", handleConnectProject)
+	}, middlewareProjectContext())
+}
+
+func handleGetProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 	projectID := mustProjectID(eCtx)
 
 	switch eCtx.Request().Header.Get("View") {
-	case types.ProjectViewActor:
+	case common.ProjectViewActor:
 		actorPID, ok := actorPID(eCtx)
 		if !ok {
 			return errors.New("actorPID is empty")
@@ -36,7 +47,7 @@ func GetProject(eCtx echo.Context) error {
 
 		return view.ProjectActor(actor).Render(ctx, eCtx.Response())
 
-	case types.ProjectViewFlowChart:
+	case common.ProjectViewFlowChart:
 		return view.ActorFlowChartWidget().Render(ctx, eCtx.Response())
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
@@ -48,7 +59,7 @@ func GetProject(eCtx echo.Context) error {
 	}
 }
 
-func GetProjectEvents(eCtx echo.Context) error {
+func handleGetProjectEvents(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 
@@ -69,14 +80,14 @@ func GetProjectEvents(eCtx echo.Context) error {
 		return errors.New("'n' must be non-empty")
 	}
 
-	filter, ok := eCtx.Request().Context().Value(types.CtxFilter).(types.EventsFilter)
+	filter, ok := eCtx.Request().Context().Value(common.CtxFilter).(common.Filter)
 	if !ok {
 		return errors.New("filter is empty")
 	}
 
 	events, err := app.Events(ctx, projectID, actorPID, eventID, n, filter)
 	if err != nil {
-		events = make(types.EventList, 0)
+		events = make(common.EventList, 0)
 	}
 
 	appendTop := n > 0
@@ -92,7 +103,7 @@ func GetProjectEvents(eCtx echo.Context) error {
 	return view.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }
 
-func ConnectProjectSSE(eCtx echo.Context) error {
+func handleConnectProjectSSE(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 
@@ -128,20 +139,20 @@ func ConnectProjectSSE(eCtx echo.Context) error {
 			for _, sse := range sses {
 				if err := func() error {
 					switch sse := sse.(type) {
-					case types.SseNewActor:
+					case common.SseNewActor:
 						if err := writeServerSentEvent(
 							ctx,
 							eCtx.Response(),
-							types.SseTypeNewActor,
+							common.SseTypeNewActor,
 							view.ProjectActorListItem(sse.Actor, false),
 						); err != nil {
 							return err
 						}
-					case types.SseNewEvents:
+					case common.SseNewEvents:
 						if err := writeServerSentEvent(
 							ctx,
 							eCtx.Response(),
-							types.SseTypeUpdateActorNumEvents+sse.Actor.PID,
+							common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
 							view.ProjectActorBadge(sse.Actor),
 						); err != nil {
 							return err
@@ -159,7 +170,7 @@ func ConnectProjectSSE(eCtx echo.Context) error {
 
 var upgrader = websocket.Upgrader{}
 
-func ConnectProject(eCtx echo.Context) error {
+func handleConnectProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 
@@ -188,7 +199,7 @@ func ConnectProject(eCtx echo.Context) error {
 	}
 }
 
-func GetActorChart(eCtx echo.Context) error {
+func handleGetActorChart(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 	projectID := mustProjectID(eCtx)
@@ -198,7 +209,7 @@ func GetActorChart(eCtx echo.Context) error {
 		return errors.New("actorPID is missing")
 	}
 
-	flowType, ok := eCtx.Request().Context().Value(types.CtxFlow).(string)
+	flowType, ok := eCtx.Request().Context().Value(common.CtxFlow).(string)
 	if !ok {
 		return errors.New("flow is missing")
 	}
@@ -212,6 +223,6 @@ func GetActorChart(eCtx echo.Context) error {
 	return view.ActorFlowChart(pids).Render(ctx, eCtx.Response())
 }
 
-func GetActorChartTooltip(ctx echo.Context) error {
+func handleGetActorChartTooltip(ctx echo.Context) error {
 	return view.ChartTooltip().Render(ctx.Request().Context(), ctx.Response())
 }

@@ -2,22 +2,22 @@ package view
 
 import (
 	"fmt"
-	"gong/types"
+	"gong/common"
 	"strings"
 	"log/slog"
 	"strconv"
 )
 
-templ eventsTabContent(actor types.Actor) {
-	if filter, ok := ctx.Value(types.CtxFilter).(types.EventsFilter); ok {
+templ eventsTabContent(actor common.Actor) {
+	if filter, ok := ctx.Value(common.CtxFilter).(common.Filter); ok {
 		@eventsFilter(filter)
 	} else {
-		@eventsFilter(types.EventsFilter{})
+		@eventsFilter(common.Filter{})
 	}
 	@ProjectActorEventsContainer(actor)
 }
 
-templ ProjectActorEventsContainer(actor types.Actor) {
+templ ProjectActorEventsContainer(actor common.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
@@ -119,7 +119,7 @@ templ ProjectActorEventsContainer(actor types.Actor) {
 	</div>
 }
 
-templ eventsFilter(filter types.EventsFilter) {
+templ eventsFilter(filter common.Filter) {
 	<form
 		id="events-filter"
 		class="join m-4 w-fit"
@@ -270,7 +270,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
-	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(common.CtxPID).(string); ok {
 		return formatActorPID(pid)
 	}
 	return ""
@@ -280,7 +280,7 @@ func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")
 }
 
-templ ProjectActorEvents(events types.EventList, appendTop bool, moreTop bool, moreBottom bool) {
+templ ProjectActorEvents(events common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
 	if appendTop || (!appendTop && moreBottom) {
 		@eventsTopDataLoader(!appendTop, moreTop)
 	}
@@ -292,7 +292,7 @@ templ ProjectActorEvents(events types.EventList, appendTop bool, moreTop bool, m
 	}
 }
 
-templ projectActorEvent(event types.Event) {
+templ projectActorEvent(event common.Event) {
 	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="event">
 		<input type="hidden" value={ event.ID.String() }/>
 		<td>

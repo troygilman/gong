@@ -2,7 +2,7 @@ package persistance
 
 import (
 	"context"
-	"gong/types"
+	"gong/common"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,11 +10,11 @@ import (
 )
 
 type Database interface {
-	QueryEvents(ctx context.Context, query EventsQuery) ([]types.Event, error)
-	CreateEvents(ctx context.Context, events []types.Event) error
-	QueryActors(ctx context.Context, projectID uuid.UUID) ([]types.Actor, error)
-	CreateActor(ctx context.Context, actor types.Actor) error
-	UpdateActor(ctx context.Context, actor types.Actor) error
+	QueryEvents(ctx context.Context, query EventsQuery) ([]common.Event, error)
+	CreateEvents(ctx context.Context, events []common.Event) error
+	QueryActors(ctx context.Context, projectID uuid.UUID) ([]common.Actor, error)
+	CreateActor(ctx context.Context, actor common.Actor) error
+	UpdateActor(ctx context.Context, actor common.Actor) error
 	QueryActorSources(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
 	QueryActorSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
 }
@@ -24,7 +24,7 @@ type EventsQuery struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	NumEvents int
-	Filter    types.EventsFilter
+	Filter    common.Filter
 }
 
 type ActorSourcesSinksQuery struct {

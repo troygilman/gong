@@ -1,4 +1,4 @@
-package domain
+package core
 
 import (
 	"context"
@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"gong/domain/persistance"
+	"gong/common"
+	"gong/persistance"
 	"gong/sdk"
-	"gong/types"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,9 +18,25 @@ import (
 	actor_utils "github.com/troygilman0/utils"
 )
 
-const DefaultTimeout = 10 * time.Second
+const (
+	envAuthSecret  = "AUTH_SECRET"
+	defaultTimeout = 10 * time.Second
+)
 
-type App struct {
+type App interface {
+	pid(kind string, id string) (*actor.PID, error)
+	database() persistance.Database
+	JWT(tokenString string) (jwt.RegisteredClaims, error)
+	Actor(ctx context.Context, projectID uuid.UUID, actorPID string) (actor common.Actor, err error)
+	ProjectProps(ctx context.Context, projectID uuid.UUID) (project common.ProjectProps, err error)
+	Events(ctx context.Context, projectID uuid.UUID, actorPID string, eventID ulid.ULID, numEvents int, filter common.Filter) (events common.EventList, err error)
+	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
+	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, flowType string) (pids []string, err error)
+	ListenStart(ctx context.Context, projectID uuid.UUID, id string, c chan<- []any) error
+	ListenStop(ctx context.Context, projectID uuid.UUID, id string) error
+}
+
+type gongApp struct {
 	secret        []byte
 	engine        *actor.Engine
 	pids          map[string]*actor.PID
@@ -28,14 +44,10 @@ type App struct {
 	db            persistance.Database
 }
 
-type producerFunc func(*App) actor.Producer
+type producerFunc func(App) actor.Producer
 
-const (
-	envAuthSecret = "AUTH_SECRET"
-)
-
-func NewApp() (*App, error) {
-	app := new(App)
+func NewApp() (App, error) {
+	app := new(gongApp)
 
 	db, err := persistance.NewPostgresDatabase()
 	if err != nil {
@@ -58,15 +70,15 @@ func NewApp() (*App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
-	app.producerFuncs[ActorKindProject] = NewProjectProducerWithApp
-	app.producerFuncs[ActorKindProcessor] = NewProcessorProducerWithApp
+	app.producerFuncs[ActorKindProject] = newProjectProducerWithApp
+	app.producerFuncs[ActorKindProcessor] = newProcessorProducerWithApp
 
 	return app, nil
 }
 
 var nilUUID = uuid.Nil.String()
 
-func (app *App) pid(kind string, id string) (*actor.PID, error) {
+func (app *gongApp) pid(kind string, id string) (*actor.PID, error) {
 	if id == nilUUID {
 		return nil, errors.New("invalid actor id")
 	}
@@ -83,12 +95,16 @@ func (app *App) pid(kind string, id string) (*actor.PID, error) {
 		if !ok {
 			return nil, errors.New("actor kind does not have a producer registered")
 		}
-		pid = app.engine.Spawn(producer(app), kind, actor.WithID(id), actor.WithMiddleware(ActorMiddlewareLoad(uuid)))
+		pid = app.engine.Spawn(producer(app), kind, actor.WithID(id), actor.WithMiddleware(actorMiddlewareLoad(uuid)))
 	}
 	return pid, nil
 }
 
-func (app *App) JWT(tokenString string) (jwt.RegisteredClaims, error) {
+func (app *gongApp) database() persistance.Database {
+	return app.db
+}
+
+func (app *gongApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	var claims jwt.RegisteredClaims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -105,11 +121,11 @@ func (app *App) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	return claims, nil
 }
 
-func (app *App) Actor(
+func (app *gongApp) Actor(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-) (actor types.Actor, err error) {
+) (actor common.Actor, err error) {
 	projectPID, err := app.pid(ActorKindProject, projectID.String())
 	if err != nil {
 		return actor, err
@@ -119,7 +135,7 @@ func (app *App) Actor(
 		ActorPID: actorPID,
 	}
 
-	r := app.engine.Request(projectPID, msg, DefaultTimeout)
+	r := app.engine.Request(projectPID, msg, defaultTimeout)
 	response, err := actor_utils.HandleResponse[rspGetProjectActor](r)
 	if err != nil {
 		return actor, err
@@ -128,16 +144,16 @@ func (app *App) Actor(
 	return response.Actor, nil
 }
 
-func (app *App) ProjectProps(
+func (app *gongApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
-) (project types.ProjectProps, err error) {
+) (project common.ProjectProps, err error) {
 	projectPID, err := app.pid(ActorKindProject, projectID.String())
 	if err != nil {
 		return project, err
 	}
 
-	r := app.engine.Request(projectPID, msgGetProjectProps{}, DefaultTimeout)
+	r := app.engine.Request(projectPID, msgGetProjectProps{}, defaultTimeout)
 	response, err := actor_utils.HandleResponse[rspGetProjectProps](r)
 	if err != nil {
 		return project, err
@@ -146,14 +162,14 @@ func (app *App) ProjectProps(
 	return response.Props, nil
 }
 
-func (app *App) Events(
+func (app *gongApp) Events(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
 	eventID ulid.ULID,
 	numEvents int,
-	filter types.EventsFilter,
-) (events types.EventList, err error) {
+	filter common.Filter,
+) (events common.EventList, err error) {
 	projectPID, err := app.pid(ActorKindProject, projectID.String())
 	if err != nil {
 		return events, err
@@ -166,7 +182,7 @@ func (app *App) Events(
 		Filter:    filter,
 	}
 
-	r := app.engine.Request(projectPID, msg, DefaultTimeout)
+	r := app.engine.Request(projectPID, msg, defaultTimeout)
 	response, err := actor_utils.HandleResponse[rspGetProjectEvents](r)
 	if err != nil {
 		return events, err
@@ -175,7 +191,7 @@ func (app *App) Events(
 	return response.Events, nil
 }
 
-func (app *App) ProcessEvents(
+func (app *gongApp) ProcessEvents(
 	ctx context.Context,
 	projectID uuid.UUID,
 	events []sdk.Event,
@@ -191,7 +207,7 @@ func (app *App) ProcessEvents(
 	return nil
 }
 
-func (app *App) SourcesSinks(
+func (app *gongApp) SourcesSinks(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
@@ -207,7 +223,7 @@ func (app *App) SourcesSinks(
 		Flow:     flowType,
 	}
 
-	r := app.engine.Request(projectPID, msg, DefaultTimeout)
+	r := app.engine.Request(projectPID, msg, defaultTimeout)
 	response, err := actor_utils.HandleResponse[rspGetActorSourcesSinks](r)
 	if err != nil {
 		return pids, err
@@ -216,7 +232,7 @@ func (app *App) SourcesSinks(
 	return response.SourcesSinks, nil
 }
 
-func (app *App) ListenStart(
+func (app *gongApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
@@ -234,7 +250,7 @@ func (app *App) ListenStart(
 	return nil
 }
 
-func (app *App) ListenStop(
+func (app *gongApp) ListenStop(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,

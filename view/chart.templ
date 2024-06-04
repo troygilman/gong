@@ -1,7 +1,7 @@
 package view
 
 import (
-	"gong/types"
+	"gong/common"
 	"fmt"
 )
 
@@ -16,7 +16,7 @@ templ ActorFlowChartWidget() {
 		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-trigger="load" hx-include={ includes } class="aspect-square"></div>
 		<div class="border-l border-color overflow-auto">
 			<div role="tablist" class="tabs tabs-boxed">
-				if flow, ok := ctx.Value(types.CtxFlow).(string); ok {
+				if flow, ok := ctx.Value(common.CtxFlow).(string); ok {
 					<input id="flow" type="hidden" name="flow" value={ flow }/>
 					@actorFlowChartFilterItem("Sources", flow)
 					@actorFlowChartFilterItem("Sinks", flow)
@@ -30,8 +30,8 @@ templ ActorFlowChart(sourcesSinks []string) {
 	<div class="grow min-h-0 min-w-0">
 		<svg id="chart" class="max-w-full max-h-full"></svg>
 		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
-		if actorPID, ok := ctx.Value(types.CtxPID).(string); ok {
-			if flowType, ok := ctx.Value(types.CtxFlow).(string); ok {
+		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
+			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
 				@initActorFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 			}
 		}
@@ -44,8 +44,8 @@ templ actorFlowChartFilterItem(label string, active string) {
 		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
 		if label != active {
 			hx-get={ formatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, types.ProjectViewFlowChart) }
-			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, types.CtxFlow, label) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, common.CtxFlow, label) }
 			hx-include={ includes }
 			hx-push-url="true"
 			hx-trigger="click"

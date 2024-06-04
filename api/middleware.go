@@ -1,16 +1,16 @@
-package handler
+package api
 
 import (
 	"errors"
-	"gong/domain"
-	"gong/types"
+	"gong/common"
+	"gong/core"
 	"log"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
-func MiddlewareLogRequest() echo.MiddlewareFunc {
+func middlewareLogRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			log.Printf("%s: %s %s", ctx.Request().Method, ctx.Request().RequestURI, requestID(ctx))
@@ -19,7 +19,7 @@ func MiddlewareLogRequest() echo.MiddlewareFunc {
 	}
 }
 
-func MiddlewareWithApp(app *domain.App) echo.MiddlewareFunc {
+func middlewareWithApp(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			ctx.Set("app", app)
@@ -28,7 +28,7 @@ func MiddlewareWithApp(app *domain.App) echo.MiddlewareFunc {
 	}
 }
 
-func MiddlewareJWT(app *domain.App) echo.MiddlewareFunc {
+func middlewareJWT(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			tokenCookie, err := ctx.Cookie("auth-token")
@@ -45,45 +45,45 @@ func MiddlewareJWT(app *domain.App) echo.MiddlewareFunc {
 	}
 }
 
-func MiddlewareProjectContext() echo.MiddlewareFunc {
+func middlewareProjectContext() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			cb := types.NewContextBuilder(ctx.Request().Context())
+			cb := common.NewContextBuilder(ctx.Request().Context())
 
 			{ // project ID
 				projectID, err := uuid.Parse(ctx.Param("projectID"))
 				if err != nil {
 					return errors.New("projectID is empty")
 				}
-				cb = cb.With(types.CtxProject, projectID)
+				cb = cb.With(common.CtxProject, projectID)
 			}
 
 			{ // actor PID
-				actorPID := ctx.QueryParam(string(types.CtxPID))
+				actorPID := ctx.QueryParam(string(common.CtxPID))
 				if actorPID != "" {
-					cb = cb.With(types.CtxPID, actorPID)
+					cb = cb.With(common.CtxPID, actorPID)
 				}
 			}
 
 			{ // tab
-				tab := ctx.QueryParam(string(types.CtxTab))
+				tab := ctx.QueryParam(string(common.CtxTab))
 				if tab == "" {
 					tab = "Events"
 				}
-				cb = cb.With(types.CtxTab, tab)
+				cb = cb.With(common.CtxTab, tab)
 			}
 
 			{ // flow chart type
-				flowType := ctx.QueryParam(string(types.CtxFlow))
+				flowType := ctx.QueryParam(string(common.CtxFlow))
 				if flowType == "" {
 					flowType = "Sources"
 				}
-				cb = cb.With(types.CtxFlow, flowType)
+				cb = cb.With(common.CtxFlow, flowType)
 			}
 
 			{ // events filter
-				filter := types.NewEventsFilter(ctx)
-				cb = cb.With(types.CtxFilter, filter)
+				filter := common.NewFilter(ctx)
+				cb = cb.With(common.CtxFilter, filter)
 			}
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
