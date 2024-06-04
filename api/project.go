@@ -214,7 +214,15 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
-	pids, err := app.SourcesSinks(ctx, projectID, actorPID, flowType)
+	var sources bool
+	switch flowType {
+	case "Sources":
+		sources = true
+	case "Sinks":
+		sources = false
+	}
+
+	pids, err := app.SourcesSinks(ctx, projectID, actorPID, sources)
 	if err != nil {
 		return err
 	}

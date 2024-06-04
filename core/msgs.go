@@ -47,7 +47,7 @@ type msgProjectUpdateState struct{}
 
 type msgGetActorSourcesSinks struct {
 	ActorPID string
-	Flow     string
+	Sources  bool
 }
 
 type rspGetActorSourcesSinks struct {

@@ -13,7 +13,9 @@ templ ChartTooltip() {
 
 templ ActorFlowChartWidget() {
 	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded shadow">
-		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-trigger="load" hx-include={ includes } class="aspect-square"></div>
+		<div hx-get={ formatProjectUrl(ctx) + "/chart" } hx-trigger="load" hx-include={ includes } class="flex aspect-square items-center justify-center">
+			@spinnerIcon("size-1/3 pointer-events-none animate-spin")
+		</div>
 		<div class="border-l border-color overflow-auto">
 			<div role="tablist" class="tabs tabs-boxed">
 				if flow, ok := ctx.Value(common.CtxFlow).(string); ok {

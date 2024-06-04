@@ -31,7 +31,7 @@ type App interface {
 	ProjectProps(ctx context.Context, projectID uuid.UUID) (project common.ProjectProps, err error)
 	Events(ctx context.Context, projectID uuid.UUID, actorPID string, eventID ulid.ULID, numEvents int, filter common.Filter) (events common.EventList, err error)
 	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
-	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, flowType string) (pids []string, err error)
+	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, sources bool) (pids []string, err error)
 	ListenStart(ctx context.Context, projectID uuid.UUID, lType ListenerType, id string) (<-chan []any, error)
 	ListenStop(ctx context.Context, id string) error
 }
@@ -211,7 +211,7 @@ func (app *gongApp) SourcesSinks(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-	flowType string,
+	sources bool,
 ) (pids []string, err error) {
 	projectPID, err := app.pid(kindProject, projectID.String())
 	if err != nil {
@@ -220,7 +220,7 @@ func (app *gongApp) SourcesSinks(
 
 	msg := msgGetActorSourcesSinks{
 		ActorPID: actorPID,
-		Flow:     flowType,
+		Sources:  sources,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)

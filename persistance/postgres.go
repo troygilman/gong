@@ -252,46 +252,30 @@ func (db *postgresDatabase) UpdateActor(ctx context.Context, actor common.Actor)
 	return nil
 }
 
-func (db *postgresDatabase) QueryActorSources(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
+func (db *postgresDatabase) QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
 	var m []struct {
-		Sender string
+		Pid string
 	}
 
-	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := SELECT(DISTINCT(table.Event.Sender)).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.Sender)
+	var stmt SelectStatement
+	if query.Sources {
+		condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
+		stmt = SELECT(DISTINCT(table.Event.Sender), table.Event.Sender.AS("pid")).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.Sender)
+	} else {
+		condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.Sender.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
+		stmt = SELECT(DISTINCT(table.Event.ActorPid), table.Event.ActorPid.AS("pid")).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.ActorPid)
+	}
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
 	}
 
-	sources := make([]string, 0, len(m))
+	pids := make([]string, 0, len(m))
 	for _, mItem := range m {
-		if mItem.Sender != "" {
-			sources = append(sources, mItem.Sender)
+		if mItem.Pid != "" {
+			pids = append(pids, mItem.Pid)
 		}
 	}
 
-	return sources, nil
-}
-
-func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
-	var m []struct {
-		ActorPid string
-	}
-
-	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.Sender.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := SELECT(DISTINCT(table.Event.ActorPid)).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.ActorPid)
-
-	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
-		return nil, sqlError(stmt, err)
-	}
-
-	sinks := make([]string, 0, len(m))
-	for _, mItem := range m {
-		if mItem.ActorPid != "" {
-			sinks = append(sinks, mItem.ActorPid)
-		}
-	}
-
-	return sinks, nil
+	return pids, nil
 }

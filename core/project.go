@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gong/common"
 	"gong/persistance"
 	"time"
@@ -116,7 +117,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		}
 
 	case msgGetProjectEvents:
-		actorData, ok := p.actors[msg.ActorPID]
+		_, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := persistance.EventsQuery{
 				ProjectID: p.id,
@@ -125,45 +126,23 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 				NumEvents: msg.NumEvents,
 				Filter:    msg.Filter,
 			}
-			events, err := p.app.database().QueryEvents(ctx, query)
-			if err != nil {
-				return err
-			}
-			aCtx.Respond(rspGetProjectEvents{
-				Events: events,
-				Actor:  actorData,
-			})
+			go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
 		} else {
-			aCtx.Respond(rspGetProjectEvents{
-				Events: make(common.EventList, 0),
-			})
+			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
 	case msgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
-			go func(engine *actor.Engine, sender *actor.PID) {
-				query := persistance.ActorSourcesSinksQuery{
-					ProjectID: p.id,
-					ActorPID:  msg.ActorPID,
-					MinTime:   time.Now().Add(-24 * time.Hour),
-					MaxTime:   time.Now(),
-				}
-				var sourcesSinks []string
-				var err error
-				switch msg.Flow {
-				case "Sources":
-					sourcesSinks, err = p.app.database().QueryActorSources(context.Background(), query)
-				case "Sinks":
-					sourcesSinks, err = p.app.database().QueryActorSinks(context.Background(), query)
-				}
-				if err != nil {
-					engine.Send(sender, err)
-					return
-				}
-				engine.Send(sender, rspGetActorSourcesSinks{
-					SourcesSinks: sourcesSinks,
-				})
-			}(aCtx.Engine(), aCtx.Sender())
+			query := persistance.ActorSourcesSinksQuery{
+				Sources:   msg.Sources,
+				ProjectID: p.id,
+				ActorPID:  msg.ActorPID,
+				MinTime:   time.Now().Add(-24 * time.Hour),
+				MaxTime:   time.Now(),
+			}
+			go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
+		} else {
+			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
 	case msgListenStart:
 		listeners, ok := p.listeners[msg.lType]
@@ -203,4 +182,29 @@ func (p *project) create(ctx context.Context, id uuid.UUID) error {
 
 func isActorAlive(eventType string) bool {
 	return eventType != ActorStopped && eventType != ActorStoppedEvent
+}
+
+func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
+	ctx := context.Background()
+	events, err := db.QueryEvents(ctx, query)
+	if err != nil {
+		engine.Send(sender, err)
+		return
+	}
+
+	engine.Send(sender, rspGetProjectEvents{
+		Events: events,
+	})
+}
+
+func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
+	pids, err := db.QueryActorSourcesSinks(context.Background(), query)
+	if err != nil {
+		engine.Send(sender, err)
+		return
+	}
+
+	engine.Send(sender, rspGetActorSourcesSinks{
+		SourcesSinks: pids,
+	})
 }

@@ -15,8 +15,7 @@ type Database interface {
 	QueryActors(ctx context.Context, projectID uuid.UUID) ([]common.Actor, error)
 	CreateActor(ctx context.Context, actor common.Actor) error
 	UpdateActor(ctx context.Context, actor common.Actor) error
-	QueryActorSources(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
-	QueryActorSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
+	QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
 }
 
 type EventsQuery struct {
@@ -28,6 +27,7 @@ type EventsQuery struct {
 }
 
 type ActorSourcesSinksQuery struct {
+	Sources   bool
 	ProjectID uuid.UUID
 	ActorPID  string
 	MinTime   time.Time
