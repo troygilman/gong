@@ -104,13 +104,13 @@ func (db *postgresDatabase) CreateEvents(ctx context.Context, events []common.Ev
 			return err
 		}
 
-		stmt, err := tx.PrepareContext(ctx, "COPY event (project_id, timestamp, id, actor_pid, index, sender, type, level, msg, attrs) FROM STDIN")
+		stmt, err := tx.PrepareContext(ctx, "COPY event (project_id, timestamp, id, actor_pid, index, type, level, sender, msg, attrs) FROM STDIN")
 		if err != nil {
 			return err
 		}
 
 		for _, e := range m {
-			_, err = stmt.ExecContext(ctx, e.ProjectID, e.Timestamp, e.ID, e.ActorPid, e.Index, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
+			_, err = stmt.ExecContext(ctx, e.ProjectID, e.Timestamp, e.ID, e.ActorPid, e.Index, e.Type, e.Level, e.Sender, e.Msg, e.Attrs)
 			if err != nil {
 				return err
 			}
@@ -258,7 +258,7 @@ func (db *postgresDatabase) QueryActorSources(ctx context.Context, query ActorSo
 	}
 
 	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := SELECT(DISTINCT(table.Event.Sender)).FROM(table.Event).WHERE(condition)
+	stmt := SELECT(DISTINCT(table.Event.Sender)).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.Sender)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)
@@ -280,7 +280,7 @@ func (db *postgresDatabase) QueryActorSinks(ctx context.Context, query ActorSour
 	}
 
 	condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.Sender.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-	stmt := SELECT(DISTINCT(table.Event.ActorPid)).FROM(table.Event).WHERE(condition)
+	stmt := SELECT(DISTINCT(table.Event.ActorPid)).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.ActorPid)
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
 		return nil, sqlError(stmt, err)

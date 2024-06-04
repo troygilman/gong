@@ -14,6 +14,8 @@ func ExamplePopulateDB() error {
 		return err
 	}
 
+	server1 := "local/server/1"
+
 	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	config.QueueSize = 100000
 	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
@@ -24,15 +26,13 @@ func ExamplePopulateDB() error {
 		e := sdk.Event{
 			PID:       "local/client/1",
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
-			Sender:    "local/server/1",
-			Attrs:     "{}",
+			Sender:    &server1,
 		}
 		engine.Send(gongPID, e)
 		e = sdk.Event{
 			PID:       "local/client/2",
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
-			Sender:    "local/server/1",
-			Attrs:     "{}",
+			Sender:    &server1,
 		}
 		engine.Send(gongPID, e)
 	}

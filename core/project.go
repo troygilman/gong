@@ -141,26 +141,29 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case msgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
-			query := persistance.ActorSourcesSinksQuery{
-				ProjectID: p.id,
-				ActorPID:  msg.ActorPID,
-				MinTime:   time.Now().Add(-24 * time.Hour),
-				MaxTime:   time.Now(),
-			}
-			var sourcesSinks []string
-			var err error
-			switch msg.Flow {
-			case "Sources":
-				sourcesSinks, err = p.app.database().QueryActorSources(ctx, query)
-			case "Sinks":
-				sourcesSinks, err = p.app.database().QueryActorSinks(ctx, query)
-			}
-			if err != nil {
-				return err
-			}
-			aCtx.Respond(rspGetActorSourcesSinks{
-				SourcesSinks: sourcesSinks,
-			})
+			go func(engine *actor.Engine, sender *actor.PID) {
+				query := persistance.ActorSourcesSinksQuery{
+					ProjectID: p.id,
+					ActorPID:  msg.ActorPID,
+					MinTime:   time.Now().Add(-24 * time.Hour),
+					MaxTime:   time.Now(),
+				}
+				var sourcesSinks []string
+				var err error
+				switch msg.Flow {
+				case "Sources":
+					sourcesSinks, err = p.app.database().QueryActorSources(context.Background(), query)
+				case "Sinks":
+					sourcesSinks, err = p.app.database().QueryActorSinks(context.Background(), query)
+				}
+				if err != nil {
+					engine.Send(sender, err)
+					return
+				}
+				engine.Send(sender, rspGetActorSourcesSinks{
+					SourcesSinks: sourcesSinks,
+				})
+			}(aCtx.Engine(), aCtx.Sender())
 		}
 	case msgListenStart:
 		listeners, ok := p.listeners[msg.lType]

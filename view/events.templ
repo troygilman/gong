@@ -305,13 +305,21 @@ templ projectActorEvent(event common.Event) {
 			{ event.Type }
 		</td>
 		<td>
-			{ event.Event.Sender }
+			if event.Sender != nil {
+				{ *event.Sender }
+			} else {
+				N/A
+			}
 		</td>
 		<td>
 			{ event.Level.String() }
 		</td>
 		<td>
-			{ event.Msg }
+			if event.Msg != nil {
+				{ *event.Msg }
+			} else {
+				N/A
+			}
 		</td>
 	</tr>
 }

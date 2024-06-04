@@ -29,12 +29,12 @@ var (
 
 type Event struct {
 	PID       string
-	Sender    string
 	Timestamp time.Time
 	Type      string
 	Level     slog.Level
-	Msg       string
-	Attrs     string
+	Sender    *string
+	Msg       *string
+	Attrs     *string
 }
 
 type GongConfig struct {
@@ -110,12 +110,13 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		event := Event{
 			Type:  fmt.Sprintf("%T", msg),
 			Level: level,
-			Msg:   logMsg,
-			Attrs: attrStr,
+			Msg:   &logMsg,
+			Attrs: &attrStr,
 		}
 
 		if ctx.Sender() != nil {
-			event.Sender = ctx.Sender().String()
+			sender := ctx.Sender().String()
+			event.Sender = &sender
 		}
 
 		switch event.Type {
