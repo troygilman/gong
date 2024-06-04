@@ -185,7 +185,9 @@ func isActorAlive(eventType string) bool {
 }
 
 func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	events, err := db.QueryEvents(ctx, query)
 	if err != nil {
 		engine.Send(sender, err)
@@ -198,7 +200,10 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 }
 
 func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
-	pids, err := db.QueryActorSourcesSinks(context.Background(), query)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pids, err := db.QueryActorSourcesSinks(ctx, query)
 	if err != nil {
 		engine.Send(sender, err)
 		return
