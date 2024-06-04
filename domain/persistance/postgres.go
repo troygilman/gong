@@ -64,6 +64,10 @@ func NewPostgresDatabase() (Database, error) {
 
 	conn.SetMaxOpenConns(5) // requred to not overwhelm db server
 
+	if err := conn.Ping(); err != nil {
+		return nil, err
+	}
+
 	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
 		// TO-DO
 		log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
@@ -100,13 +104,13 @@ func (db *postgresDatabase) CreateEvents(ctx context.Context, events []types.Eve
 			return err
 		}
 
-		stmt, err := tx.PrepareContext(ctx, "COPY event (id, project_id, actor_pid, index, timestamp, sender, type, level, msg, attrs) FROM STDIN")
+		stmt, err := tx.PrepareContext(ctx, "COPY event (project_id, timestamp, id, actor_pid, index, sender, type, level, msg, attrs) FROM STDIN")
 		if err != nil {
 			return err
 		}
 
 		for _, e := range m {
-			_, err = stmt.ExecContext(ctx, e.ID, e.ProjectID, e.ActorPid, e.Index, e.Timestamp, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
+			_, err = stmt.ExecContext(ctx, e.ProjectID, e.Timestamp, e.ID, e.ActorPid, e.Index, e.Sender, e.Type, e.Level, e.Msg, e.Attrs)
 			if err != nil {
 				return err
 			}

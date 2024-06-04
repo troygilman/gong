@@ -1,57 +1,19 @@
 package example
 
 import (
-	"flag"
 	"fmt"
 	"gong/sdk"
-	"log"
 	"log/slog"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"sync"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 )
 
-var _ = flag.Bool("c", false, "run example client")
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-
-func StartClient() {
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
-
-	startClient()
-
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
-}
-
-func startClient() {
+func ExampleClient() error {
 	engine, err := actor.NewEngine(actor.NewEngineConfig())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
@@ -71,6 +33,7 @@ func startClient() {
 	wg.Wait()
 
 	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
+	return nil
 }
 
 type testMsg struct {

@@ -20,7 +20,7 @@ var static embed.FS
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-c" {
-		example.StartClient()
+		example.RunExample(example.ExampleClient)
 	} else {
 		log.Fatal(run())
 	}
