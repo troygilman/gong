@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	actorKindProcessor  = "processor"
 	sendUpdatesInterval = 50 * time.Millisecond
 )
 
@@ -126,7 +125,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		p.updates = make(map[string]bool)
 	}()
 
-	projectPID := aCtx.Engine().Registry.GetPID(actorKindProject, p.id.String())
+	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
 	actors := make([]common.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])

@@ -55,10 +55,13 @@ type rspGetActorSourcesSinks struct {
 }
 
 type msgListenStart struct {
-	id string
-	c  chan<- []any
+	lType ListenerType
 }
 
 type msgListenStop struct {
-	id string
+	lType ListenerType
+}
+
+type msgListenData struct {
+	data []any
 }

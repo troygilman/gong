@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	actorKindProject           = "project"
 	ActorInitialized           = "actor.Initialized"
 	ActorStarted               = "actor.Started"
 	ActorStopped               = "actor.Stopped"
@@ -26,7 +25,7 @@ type project struct {
 	actors    map[string]common.Actor
 	updates   map[string]common.Actor
 	repeater  actor.SendRepeater
-	listeners map[string]chan<- []any
+	listeners map[ListenerType]map[*actor.PID]struct{}
 }
 
 func newProjectProducerWithApp(app App) actor.Producer {
@@ -58,7 +57,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case actor.Initialized:
 		p.actors = make(map[string]common.Actor)
 		p.updates = make(map[string]common.Actor)
-		p.listeners = make(map[string]chan<- []any)
+		p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
 	case actor.Stopped:
@@ -106,14 +105,14 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			delete(p.updates, pid)
 		}
 
-		// attempt to push msgs to every listener concurrently
-		for _, c := range p.listeners {
-			go func(c chan<- []any, msgs []any) {
-				select {
-				case c <- msgs:
-				default:
-				}
-			}(c, msgs)
+		if len(msgs) > 0 {
+			// attempt to push msgs to every listener concurrently
+			listeners := p.listeners[ListenerTypeProject]
+			for pid := range listeners {
+				aCtx.Send(pid, msgListenData{
+					data: msgs,
+				})
+			}
 		}
 
 	case msgGetProjectEvents:
@@ -164,11 +163,16 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			})
 		}
 	case msgListenStart:
-		p.listeners[msg.id] = msg.c
+		listeners, ok := p.listeners[msg.lType]
+		if !ok {
+			listeners = make(map[*actor.PID]struct{})
+		}
+		listeners[aCtx.Sender()] = struct{}{}
+		p.listeners[msg.lType] = listeners
 	case msgListenStop:
-		if c, ok := p.listeners[msg.id]; ok {
-			close(c)
-			delete(p.listeners, msg.id)
+		listeners, ok := p.listeners[msg.lType]
+		if ok {
+			delete(listeners, aCtx.Sender())
 		}
 	}
 	return nil

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gong/common"
+	"gong/core"
 	"gong/sdk"
 	"gong/view"
 	"log"
@@ -118,14 +119,13 @@ func handleConnectProjectSSE(eCtx echo.Context) error {
 
 	projectID := mustProjectID(eCtx)
 
-	sseChan := make(chan []any, 100)
-
-	if err := app.ListenStart(ctx, projectID, requestID, sseChan); err != nil {
+	sseChan, err := app.ListenStart(ctx, projectID, core.ListenerTypeProject, requestID)
+	if err != nil {
 		return err
 	}
 
 	defer func() {
-		if err := app.ListenStop(ctx, projectID, requestID); err != nil {
+		if err := app.ListenStop(ctx, requestID); err != nil {
 			log.Println(err)
 		}
 		// flush the channel until closed

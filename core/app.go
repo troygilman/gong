@@ -32,8 +32,8 @@ type App interface {
 	Events(ctx context.Context, projectID uuid.UUID, actorPID string, eventID ulid.ULID, numEvents int, filter common.Filter) (events common.EventList, err error)
 	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
 	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, flowType string) (pids []string, err error)
-	ListenStart(ctx context.Context, projectID uuid.UUID, id string, c chan<- []any) error
-	ListenStop(ctx context.Context, projectID uuid.UUID, id string) error
+	ListenStart(ctx context.Context, projectID uuid.UUID, lType ListenerType, id string) (<-chan []any, error)
+	ListenStop(ctx context.Context, id string) error
 }
 
 type gongApp struct {
@@ -70,8 +70,8 @@ func NewApp() (App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
-	app.producerFuncs[actorKindProject] = newProjectProducerWithApp
-	app.producerFuncs[actorKindProcessor] = newProcessorProducerWithApp
+	app.producerFuncs[kindProject] = newProjectProducerWithApp
+	app.producerFuncs[kindProcessor] = newProcessorProducerWithApp
 
 	return app, nil
 }
@@ -126,7 +126,7 @@ func (app *gongApp) Actor(
 	projectID uuid.UUID,
 	actorPID string,
 ) (actor common.Actor, err error) {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
+	projectPID, err := app.pid(kindProject, projectID.String())
 	if err != nil {
 		return actor, err
 	}
@@ -148,7 +148,7 @@ func (app *gongApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) (project common.ProjectProps, err error) {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
+	projectPID, err := app.pid(kindProject, projectID.String())
 	if err != nil {
 		return project, err
 	}
@@ -170,7 +170,7 @@ func (app *gongApp) Events(
 	numEvents int,
 	filter common.Filter,
 ) (events common.EventList, err error) {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
+	projectPID, err := app.pid(kindProject, projectID.String())
 	if err != nil {
 		return events, err
 	}
@@ -196,7 +196,7 @@ func (app *gongApp) ProcessEvents(
 	projectID uuid.UUID,
 	events []sdk.Event,
 ) error {
-	processorPID, err := app.pid(actorKindProcessor, projectID.String())
+	processorPID, err := app.pid(kindProcessor, projectID.String())
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (app *gongApp) SourcesSinks(
 	actorPID string,
 	flowType string,
 ) (pids []string, err error) {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
+	projectPID, err := app.pid(kindProject, projectID.String())
 	if err != nil {
 		return pids, err
 	}
@@ -235,33 +235,22 @@ func (app *gongApp) SourcesSinks(
 func (app *gongApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
+	lType ListenerType,
 	id string,
-	c chan<- []any,
-) error {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
-	if err != nil {
-		return err
-	}
-
-	app.engine.Send(projectPID, msgListenStart{
-		id: id,
-		c:  c,
-	})
-	return nil
+) (<-chan []any, error) {
+	c := make(chan []any, 100)
+	app.engine.Spawn(newListenerProducer(app, projectID, lType, c, nil), kindListener, actor.WithID(id))
+	return c, nil
 }
 
 func (app *gongApp) ListenStop(
 	ctx context.Context,
-	projectID uuid.UUID,
 	id string,
 ) error {
-	projectPID, err := app.pid(actorKindProject, projectID.String())
+	listenerPID, err := app.pid(kindListener, id)
 	if err != nil {
 		return err
 	}
-
-	app.engine.Send(projectPID, msgListenStop{
-		id: id,
-	})
+	app.engine.Poison(listenerPID)
 	return nil
 }
