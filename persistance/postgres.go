@@ -147,17 +147,17 @@ func (db *postgresDatabase) QueryEvents(ctx context.Context, query EventsQuery) 
 		}
 	}
 
-	if query.Filter.ID != "" {
-		whereExpression = whereExpression.AND(table.Event.ID.EQ(String(query.Filter.ID)))
+	if query.Filter.ID != nil {
+		whereExpression = whereExpression.AND(table.Event.ID.EQ(String(*query.Filter.ID)))
 	}
-	if query.Filter.Type != "" {
-		whereExpression = whereExpression.AND(table.Event.Type.EQ(String(query.Filter.Type)))
+	if query.Filter.Type != nil {
+		whereExpression = whereExpression.AND(table.Event.Type.EQ(String(*query.Filter.Type)))
 	}
-	if query.Filter.Sender != "" {
-		whereExpression = whereExpression.AND(table.Event.Sender.EQ(String(query.Filter.Sender)))
+	if query.Filter.Sender != nil {
+		whereExpression = whereExpression.AND(table.Event.Sender.EQ(String(*query.Filter.Sender)))
 	}
-	if query.Filter.Level > slog.LevelDebug {
-		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(query.Filter.Level))))
+	if query.Filter.Level != nil {
+		whereExpression = whereExpression.AND(table.Event.Level.GT_EQ(Int(int64(*query.Filter.Level))))
 	}
 
 	stmt := table.Event.SELECT(table.Event.AllColumns).WHERE(

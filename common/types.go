@@ -86,22 +86,53 @@ type Actor struct {
 }
 
 type Filter struct {
-	ID     string
-	Type   string
-	Sender string
-	Level  slog.Level
+	ID     *string
+	Type   *string
+	Sender *string
+	Level  *slog.Level
 }
 
-func NewFilter(ctx echo.Context) Filter {
-	level, err := strconv.Atoi(ctx.QueryParam("filter_level"))
-	if err != nil {
-		level = int(slog.LevelDebug)
+func NewFilter(ctx echo.Context) (filter Filter) {
+	id := ctx.QueryParam("filter_id")
+	if id != "" {
+		filter.ID = &id
 	}
 
-	return Filter{
-		ID:     ctx.QueryParam("filter_id"),
-		Type:   ctx.QueryParam("filter_type"),
-		Sender: ctx.QueryParam("filter_sender"),
-		Level:  slog.Level(level),
+	fType := ctx.QueryParam("filter_type")
+	if fType != "" {
+		filter.Type = &fType
 	}
+
+	sender := ctx.QueryParam("filter_sender")
+	if sender != "" {
+		filter.Sender = &sender
+	}
+
+	level, err := strconv.Atoi(ctx.QueryParam("filter_level"))
+	if err == nil {
+		sLevel := slog.Level(level)
+		filter.Level = &sLevel
+	}
+
+	return filter
+}
+
+func (filter Filter) ValidEvent(event Event) bool {
+	if filter.ID != nil && *filter.ID != event.ID.String() {
+		return false
+	}
+
+	if filter.Type != nil && *filter.Type != event.Type {
+		return false
+	}
+
+	if filter.Sender != nil && (event.Sender == nil || *filter.Sender != *event.Sender) {
+		return false
+	}
+
+	if filter.Level != nil && *filter.Level > event.Level {
+		return false
+	}
+
+	return true
 }

@@ -2,16 +2,18 @@ package core
 
 import (
 	"context"
+	"gong/common"
+
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
 	actor_utils "github.com/troygilman0/utils"
-	"gong/common"
 )
 
 type ListenerType uint
 
 const (
 	ListenerTypeProject ListenerType = iota
+	ListenerTypeEvents
 )
 
 func newListenerProducer(
@@ -71,6 +73,20 @@ func (l *listener) receive(ctx context.Context, aCtx *actor.Context) error {
 		switch l.lType {
 		case ListenerTypeProject:
 			l.c <- msg.data
+		case ListenerTypeEvents:
+			if l.filter != nil {
+				filteredEvents := make([]any, 0, len(msg.data))
+				for _, event := range msg.data {
+					if event, ok := event.(common.Event); ok {
+						if l.filter.ValidEvent(event) {
+							filteredEvents = append(filteredEvents, event)
+						}
+					}
+				}
+				l.c <- filteredEvents
+			} else {
+				l.c <- msg.data
+			}
 		default:
 			panic("invalid listener type")
 		}

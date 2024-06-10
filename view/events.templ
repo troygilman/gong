@@ -141,34 +141,40 @@ templ eventsFilter(filter common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", "filter_id", filter.ID != "", -1) {
+		@eventsFilterItem("ID", "filter_id", filter.ID != nil, -1) {
 			<input
+				class="event-filter-input"
 				name="filter_id"
 				type="text"
 				placeholder="01HXZJN46DQJPWYBAM"
-				value={ filter.ID }
-				class="event-filter-input"
+				if filter.ID != nil {
+					value={ *filter.ID }
+				}
 			/>
 		}
-		@eventsFilterItem("Type", "filter_type", filter.Type != "", 0) {
+		@eventsFilterItem("Type", "filter_type", filter.Type != nil, 0) {
 			<input
+				class="event-filter-input"
 				name="filter_type"
 				type="text"
 				placeholder="actor.Started"
-				value={ filter.Type }
-				class="event-filter-input"
+				if filter.Type != nil {
+					value={ *filter.Type }
+				}
 			/>
 		}
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "", 0) {
+		@eventsFilterItem("Sender", "filter_sender", filter.Sender != nil, 0) {
 			<input
+				class="event-filter-input"
 				name="filter_sender"
 				type="text"
 				placeholder="local/server/primary"
-				value={ filter.Sender }
-				class="event-filter-input"
+				if filter.Sender != nil {
+					value={ *filter.Sender }
+				}
 			/>
 		}
-		@eventsFilterItem("Level", "filter_level", filter.Level != slog.LevelDebug, 1) {
+		@eventsFilterItem("Level", "filter_level", filter.Level != nil, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -179,7 +185,7 @@ templ eventsFilter(filter common.Filter) {
 	</form>
 }
 
-templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Level) {
+templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Level) {
 	<div class="form-control">
 		<label class="label cursor-pointer py-1">
 			<span class="label-text">{ label }</span>
@@ -188,7 +194,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 				name="filter_level"
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
-				if selected == level {
+				if selected != nil && *selected == level {
 					checked
 				}
 			/>
