@@ -22,7 +22,8 @@ func bindProjectHandlers(e groupable) {
 	newGroup(e, "/project/:projectID", func(e *echo.Group) {
 		e.GET("", handleGetProject)
 		e.GET("/events", handleGetProjectEvents)
-		e.GET("/sse", handleConnectProjectSSE)
+		e.GET("/sse/project", handleConnectSseProject)
+		e.GET("/sse/events", handleConnectSseEvents)
 		e.GET("/chart", handleGetActorChart)
 		e.GET("/tooltip", handleGetActorChartTooltip)
 		e.GET("/connect", handleConnectProject)
@@ -81,7 +82,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 		return errors.New("'n' must be non-empty")
 	}
 
-	filter, ok := eCtx.Request().Context().Value(common.CtxFilter).(common.Filter)
+	filter, ok := filter(eCtx)
 	if !ok {
 		return errors.New("filter is empty")
 	}
@@ -104,7 +105,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 	return view.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }
 
-func handleConnectProjectSSE(eCtx echo.Context) error {
+func handleConnectSseProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 
@@ -164,6 +165,75 @@ func handleConnectProjectSSE(eCtx echo.Context) error {
 				}
 				flusher.Flush()
 			}
+		}
+	}
+}
+
+func handleConnectSseEvents(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
+
+	flusher, ok := eCtx.Response().Writer.(http.Flusher)
+	if !ok {
+		return errors.New("sse not supported")
+	}
+
+	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
+
+	requestID := requestID(eCtx)
+
+	projectID := mustProjectID(eCtx)
+
+	filter, ok := filter(eCtx)
+	if !ok {
+		panic("filter is required")
+	}
+
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeProject, filter)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := app.ListenStop(ctx, requestID); err != nil {
+			log.Println(err)
+		}
+		// flush the channel until closed
+		for range sseChan {
+		}
+	}()
+
+	for {
+		select {
+		case sses := <-sseChan:
+			if err := func() error {
+				eventCount := 0
+				for _, sse := range sses {
+					switch sse := sse.(type) {
+					case common.Event:
+						eventCount++
+					default:
+						_ = sse
+					}
+				}
+
+				if eventCount > 0 {
+					log.Println("NEW EVENTS")
+					if err := writeServerSentEvent(
+						ctx,
+						eCtx.Response(),
+						common.SseTypeNewEvents,
+						nil,
+					); err != nil {
+						return err
+					}
+				}
+
+				return nil
+			}(); err != nil {
+				return err
+			}
+			flusher.Flush()
 		}
 	}
 }

@@ -10,7 +10,7 @@ templ Project(props common.ProjectProps) {
 		<div
 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
 			hx-ext="sse"
-			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
 			x-data
 		>
 			<div class="grid grid-cols-6 border-b border-color py-2 px-4 w-full items-center z-50 bg-base-200">

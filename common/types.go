@@ -12,13 +12,6 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-const (
-	SseTypeNewActor             = "new-actor"
-	SseTypeNewEvents            = "new-events:"
-	SseTypeDeleteActor          = "delete-actor:"
-	SseTypeUpdateActorNumEvents = "update-actor-num-events:"
-)
-
 type CtxKey string
 
 const (

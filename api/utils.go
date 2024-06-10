@@ -69,3 +69,8 @@ func tab(ctx echo.Context) (string, bool) {
 	tab, ok := ctx.Request().Context().Value(common.CtxTab).(string)
 	return tab, ok
 }
+
+func filter(ctx echo.Context) (common.Filter, bool) {
+	filter, ok := ctx.Request().Context().Value(common.CtxFilter).(common.Filter)
+	return filter, ok
+}

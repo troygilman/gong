@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gong/common"
 	"gong/persistance"
+	"slices"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -113,6 +114,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 						}
 					}
 				case ListenerTypeEvents:
+					listenerData[listenerPID] = append(listenerData[listenerPID], slices.Clone(p.eventUpdates))
 				default:
 				}
 			}

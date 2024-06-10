@@ -21,6 +21,9 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
+		hx-ext="sse"
+		sse-connect={ formatProjectUrl(ctx) + "/sse/events" }
+		hx-include={ includes }
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
 		@htmx:after-request="onAfterRequest($event)"
@@ -45,6 +48,7 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 			}
 
 			function shouldLoadTop() {
+				console.log("shouldLoadTop");
 				const container = document.getElementById("events-container");
 				return container.scrollTop <= container.scrollHeight * 0.1;
 			}
@@ -246,9 +250,9 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="every 1s [shouldLoadTop()], load-next once, intersect once delay:100ms"
+			hx-trigger="sse:new-events [shouldLoadTop()], load-next once, intersect once delay:100ms"
 		} else {
-			hx-trigger="every 1s [shouldLoadTop()]"
+			hx-trigger="sse:new-events [shouldLoadTop()]"
 		}
 		if oob {
 			hx-swap-oob="true"
