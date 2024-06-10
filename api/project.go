@@ -119,7 +119,7 @@ func handleConnectProjectSSE(eCtx echo.Context) error {
 
 	projectID := mustProjectID(eCtx)
 
-	sseChan, err := app.ListenStart(ctx, projectID, core.ListenerTypeProject, requestID)
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeProject, common.Filter{})
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ type App interface {
 	Events(ctx context.Context, projectID uuid.UUID, actorPID string, eventID ulid.ULID, numEvents int, filter common.Filter) (events common.EventList, err error)
 	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
 	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, sources bool) (pids []string, err error)
-	ListenStart(ctx context.Context, projectID uuid.UUID, lType ListenerType, id string) (<-chan []any, error)
+	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter common.Filter) (<-chan []any, error)
 	ListenStop(ctx context.Context, id string) error
 }
 
@@ -235,11 +235,12 @@ func (app *gongApp) SourcesSinks(
 func (app *gongApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
-	lType ListenerType,
 	id string,
+	lType ListenerType,
+	filter common.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)
-	app.engine.Spawn(newListenerProducer(app, projectID, lType, c, nil), kindListener, actor.WithID(id))
+	app.engine.Spawn(newListenerProducer(app, projectID, lType, c, filter), kindListener, actor.WithID(id))
 	return c, nil
 }
 

@@ -125,15 +125,6 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		p.updates = make(map[string]bool)
 	}()
 
-	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
-	actors := make([]common.Actor, 0)
-	for pid := range p.updates {
-		actors = append(actors, p.actors[pid])
-	}
-	if len(actors) > 0 {
-		aCtx.Send(projectPID, msgUpdateProjectActors{actors: actors})
-	}
-
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
@@ -148,6 +139,20 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 
 	if err := p.app.database().CreateEvents(ctx, p.batch); err != nil {
 		return err
+	}
+
+	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
+	actors := make([]common.Actor, 0)
+
+	for pid := range p.updates {
+		actors = append(actors, p.actors[pid])
+	}
+
+	if len(actors) > 0 {
+		aCtx.Send(projectPID, msgUpdateProject{
+			actors: actors,
+			events: p.batch,
+		})
 	}
 
 	return nil

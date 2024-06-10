@@ -39,11 +39,12 @@ type rspGetProjectEvents struct {
 
 type msgProcessorUpdateState struct{}
 
-type msgUpdateProjectActors struct {
+type msgUpdateProject struct {
 	actors []common.Actor
+	events []common.Event
 }
 
-type msgProjectUpdateState struct{}
+type msgUpdateProjectInternal struct{}
 
 type msgGetActorSourcesSinks struct {
 	actorPID string

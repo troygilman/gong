@@ -23,10 +23,11 @@ const (
 
 type project struct {
 	commonActorData
-	actors    map[string]common.Actor
-	updates   map[string]common.Actor
-	repeater  actor.SendRepeater
-	listeners map[ListenerType]map[*actor.PID]struct{}
+	actors       map[string]common.Actor
+	actorUpdates map[string]common.Actor
+	eventUpdates []common.Event
+	repeater     actor.SendRepeater
+	listeners    map[ListenerType]map[*actor.PID]struct{}
 }
 
 func newProjectProducerWithApp(app App) actor.Producer {
@@ -57,10 +58,10 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
 		p.actors = make(map[string]common.Actor)
-		p.updates = make(map[string]common.Actor)
+		p.actorUpdates = make(map[string]common.Actor)
 		p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
 	case actor.Started:
-		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProjectUpdateState{}, projectUpdatePropsInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case msgGetProjectProps:
@@ -74,6 +75,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		aCtx.Respond(rspGetProjectProps{
 			props: props,
 		})
+
 	case msgGetProjectActorProps:
 		actorData, ok := p.actors[msg.actorPID]
 		if ok {
@@ -83,38 +85,54 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		} else {
 			return errors.New("actor pid does not exist")
 		}
-	case msgUpdateProjectActors:
+
+	case msgUpdateProject:
 		for _, actorData := range msg.actors {
-			p.updates[actorData.PID] = actorData
+			p.actorUpdates[actorData.PID] = actorData
 		}
+		p.eventUpdates = append(p.eventUpdates, msg.events...)
 
-	case msgProjectUpdateState:
-		msgs := make([]any, 0)
+	case msgUpdateProjectInternal:
+		listenerData := make(map[*actor.PID][]any)
 
-		for pid, data := range p.updates {
-			_, exists := p.actors[pid]
-			if exists {
-				msgs = append(msgs, common.SseNewEvents{
-					Actor: data,
-				})
-			} else {
-				msgs = append(msgs, common.SseNewActor{
-					Actor: data,
-				})
+		// build data for every listener
+		for listenerType, listeners := range p.listeners {
+			for listenerPID := range listeners {
+				switch listenerType {
+				case ListenerTypeProject:
+					for _, actor := range p.actorUpdates {
+						_, exists := p.actors[actor.PID]
+						if exists {
+							listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewEvents{
+								Actor: actor,
+							})
+						} else {
+							listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewActor{
+								Actor: actor,
+							})
+						}
+					}
+				case ListenerTypeEvents:
+				default:
+				}
 			}
-			p.actors[pid] = data
-			delete(p.updates, pid)
 		}
 
-		if len(msgs) > 0 {
-			// attempt to push msgs to every listener concurrently
-			listeners := p.listeners[ListenerTypeProject]
-			for pid := range listeners {
+		// push data to every listener concurrently
+		for pid, data := range listenerData {
+			if len(data) > 0 {
 				aCtx.Send(pid, msgListenData{
-					data: msgs,
+					data: data,
 				})
 			}
 		}
+
+		// reset update state
+		for _, actor := range p.actorUpdates {
+			p.actors[actor.PID] = actor
+			delete(p.actorUpdates, actor.PID)
+		}
+		p.eventUpdates = []common.Event{}
 
 	case msgGetProjectEvents:
 		_, ok := p.actors[msg.actorPID]

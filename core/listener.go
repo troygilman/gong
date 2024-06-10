@@ -21,7 +21,7 @@ func newListenerProducer(
 	projectID uuid.UUID,
 	lType ListenerType,
 	c chan<- []any,
-	filter *common.Filter,
+	filter common.Filter,
 ) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
@@ -39,7 +39,7 @@ type listener struct {
 	projectID uuid.UUID
 	lType     ListenerType
 	c         chan<- []any
-	filter    *common.Filter
+	filter    common.Filter
 }
 
 func (l *listener) Receive(aCtx *actor.Context) {
@@ -74,19 +74,15 @@ func (l *listener) receive(ctx context.Context, aCtx *actor.Context) error {
 		case ListenerTypeProject:
 			l.c <- msg.data
 		case ListenerTypeEvents:
-			if l.filter != nil {
-				filteredEvents := make([]any, 0, len(msg.data))
-				for _, event := range msg.data {
-					if event, ok := event.(common.Event); ok {
-						if l.filter.ValidEvent(event) {
-							filteredEvents = append(filteredEvents, event)
-						}
+			filteredEvents := make([]any, 0, len(msg.data))
+			for _, event := range msg.data {
+				if event, ok := event.(common.Event); ok {
+					if l.filter.ValidEvent(event) {
+						filteredEvents = append(filteredEvents, event)
 					}
 				}
-				l.c <- filteredEvents
-			} else {
-				l.c <- msg.data
 			}
+			l.c <- filteredEvents
 		default:
 			panic("invalid listener type")
 		}
