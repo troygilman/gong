@@ -132,7 +132,7 @@ func (app *gongApp) Actor(
 	}
 
 	msg := msgGetProjectActorProps{
-		ActorPID: actorPID,
+		actorPID: actorPID,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
@@ -141,7 +141,7 @@ func (app *gongApp) Actor(
 		return actor, err
 	}
 
-	return response.Actor, nil
+	return response.actor, nil
 }
 
 func (app *gongApp) ProjectProps(
@@ -159,7 +159,7 @@ func (app *gongApp) ProjectProps(
 		return project, err
 	}
 
-	return response.Props, nil
+	return response.props, nil
 }
 
 func (app *gongApp) Events(
@@ -176,10 +176,10 @@ func (app *gongApp) Events(
 	}
 
 	msg := msgGetProjectEvents{
-		ActorPID:  actorPID,
-		EventID:   eventID,
-		NumEvents: numEvents,
-		Filter:    filter,
+		actorPID:  actorPID,
+		eventID:   eventID,
+		numEvents: numEvents,
+		filter:    filter,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
@@ -188,7 +188,7 @@ func (app *gongApp) Events(
 		return events, err
 	}
 
-	return response.Events, nil
+	return response.events, nil
 }
 
 func (app *gongApp) ProcessEvents(
@@ -202,7 +202,7 @@ func (app *gongApp) ProcessEvents(
 	}
 
 	app.engine.Send(processorPID, msgSdkEvents{
-		Events: events,
+		events: events,
 	})
 	return nil
 }
@@ -219,8 +219,8 @@ func (app *gongApp) SourcesSinks(
 	}
 
 	msg := msgGetActorSourcesSinks{
-		ActorPID: actorPID,
-		Sources:  sources,
+		actorPID: actorPID,
+		sources:  sources,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
@@ -229,7 +229,7 @@ func (app *gongApp) SourcesSinks(
 		return pids, err
 	}
 
-	return response.SourcesSinks, nil
+	return response.sourcesSinks, nil
 }
 
 func (app *gongApp) ListenStart(

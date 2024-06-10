@@ -65,10 +65,10 @@ func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
 		p.repeater.Stop()
 		return p.processUpdates(ctx, aCtx)
 	case msgSdkEvents:
-		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
+		slices.SortFunc(msg.events, func(a, b sdk.Event) int {
 			return a.Timestamp.Compare(b.Timestamp)
 		})
-		for _, event := range msg.Events {
+		for _, event := range msg.events {
 			if err := p.handleEvent(event); err != nil {
 				return err
 			}
@@ -131,7 +131,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		actors = append(actors, p.actors[pid])
 	}
 	if len(actors) > 0 {
-		aCtx.Send(projectPID, msgUpdateProjectActors{Actors: actors})
+		aCtx.Send(projectPID, msgUpdateProjectActors{actors: actors})
 	}
 
 	for pid, actorExists := range p.updates {

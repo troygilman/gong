@@ -72,19 +72,19 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			props.Actors[pid] = data
 		}
 		aCtx.Respond(rspGetProjectProps{
-			Props: props,
+			props: props,
 		})
 	case msgGetProjectActorProps:
-		actorData, ok := p.actors[msg.ActorPID]
+		actorData, ok := p.actors[msg.actorPID]
 		if ok {
 			aCtx.Respond(rspGetProjectActor{
-				Actor: actorData,
+				actor: actorData,
 			})
 		} else {
 			return errors.New("actor pid does not exist")
 		}
 	case msgUpdateProjectActors:
-		for _, actorData := range msg.Actors {
+		for _, actorData := range msg.actors {
 			p.updates[actorData.PID] = actorData
 		}
 
@@ -117,26 +117,26 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		}
 
 	case msgGetProjectEvents:
-		_, ok := p.actors[msg.ActorPID]
+		_, ok := p.actors[msg.actorPID]
 		if ok {
 			query := persistance.EventsQuery{
 				ProjectID: p.id,
-				ActorPID:  msg.ActorPID,
-				EventID:   msg.EventID,
-				NumEvents: msg.NumEvents,
-				Filter:    msg.Filter,
+				ActorPID:  msg.actorPID,
+				EventID:   msg.eventID,
+				NumEvents: msg.numEvents,
+				Filter:    msg.filter,
 			}
 			go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
 		} else {
 			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
 	case msgGetActorSourcesSinks:
-		_, ok := p.actors[msg.ActorPID]
+		_, ok := p.actors[msg.actorPID]
 		if ok {
 			query := persistance.ActorSourcesSinksQuery{
-				Sources:   msg.Sources,
+				Sources:   msg.sources,
 				ProjectID: p.id,
-				ActorPID:  msg.ActorPID,
+				ActorPID:  msg.actorPID,
 				MinTime:   time.Now().Add(-24 * time.Hour),
 				MaxTime:   time.Now(),
 			}
@@ -195,7 +195,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 	}
 
 	engine.Send(sender, rspGetProjectEvents{
-		Events: events,
+		events: events,
 	})
 }
 
@@ -210,6 +210,6 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 	}
 
 	engine.Send(sender, rspGetActorSourcesSinks{
-		SourcesSinks: pids,
+		sourcesSinks: pids,
 	})
 }
