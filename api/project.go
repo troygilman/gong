@@ -189,7 +189,7 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 		panic("filter is required")
 	}
 
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeProject, filter)
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeEvents, filter)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,6 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 				}
 
 				if eventCount > 0 {
-					log.Println("NEW EVENTS")
 					if err := writeServerSentEvent(
 						ctx,
 						eCtx.Response(),

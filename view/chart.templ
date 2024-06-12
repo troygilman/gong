@@ -197,7 +197,6 @@ script initActorFlowChart(actorPID string, sourcesSinks []string, isSources bool
     function ticked() {
     	link.attr("d", linkArc);
         node.attr("transform", d => {
-			console.log(d);
 			return `translate(${d.x},${d.y})`
 		});
     };

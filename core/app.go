@@ -73,6 +73,17 @@ func NewApp() (App, error) {
 	app.producerFuncs[kindProject] = newProjectProducerWithApp
 	app.producerFuncs[kindProcessor] = newProcessorProducerWithApp
 
+	engine.SpawnFunc(func(ctx *actor.Context) {
+		switch msg := ctx.Message().(type) {
+		case actor.Started:
+			ctx.Engine().Subscribe(ctx.PID())
+		case actor.EventLogger:
+			//log.Println(msg.Log())
+		default:
+			_ = msg
+		}
+	}, "event-stream-listener")
+
 	return app, nil
 }
 

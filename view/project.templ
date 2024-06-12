@@ -7,6 +7,16 @@ import (
 
 templ Project(props common.ProjectProps) {
 	@Index() {
+		<div id="includes" hx-include={ includes }></div>
+		<script>
+			const next = htmx.createEventSource;
+			htmx.createEventSource = function(url) {
+				const elem = htmx.find("#includes");
+				const params = new URLSearchParams(htmx.values(elem));
+				url = url + "?" + params.toString();
+				return next(url);
+			}
+		</script>
 		<div
 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
 			hx-ext="sse"

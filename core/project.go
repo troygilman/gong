@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"gong/common"
 	"gong/persistance"
-	"slices"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -114,7 +113,9 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 						}
 					}
 				case ListenerTypeEvents:
-					listenerData[listenerPID] = append(listenerData[listenerPID], slices.Clone(p.eventUpdates))
+					for _, event := range p.eventUpdates {
+						listenerData[listenerPID] = append(listenerData[listenerPID], event)
+					}
 				default:
 				}
 			}
@@ -181,6 +182,9 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 }
 
 func (p *project) load(ctx context.Context, id uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
 	p.id = id
 
 	actorProps, err := p.app.database().QueryActors(ctx, id)
