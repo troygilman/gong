@@ -97,6 +97,12 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 					console.log("event swap bottom - overflow:", overflow)
 				}
 			}
+
+			htmx.on("htmx:beforeRequest", function(e) {
+				if (e.srcElement.id == "events-top-data-loader" && !shouldLoadTop()) {
+					e.preventDefault();
+				}
+			});
 		</script>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
@@ -250,9 +256,9 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 		hx-include={ includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="sse:new-events [shouldLoadTop()], load-next once, intersect once delay:100ms"
+			hx-trigger="sse:new-events, load-next once, intersect once delay:100ms"
 		} else {
-			hx-trigger="sse:new-events [shouldLoadTop()]"
+			hx-trigger="sse:new-events"
 		}
 		if oob {
 			hx-swap-oob="true"
