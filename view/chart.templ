@@ -31,7 +31,21 @@ templ ActorFlowChartWidget() {
 templ ActorFlowChart(sourcesSinks []string) {
 	<div class="grow min-h-0 min-w-0">
 		<svg id="chart" class="max-w-full max-h-full"></svg>
-		<div id="tooltip" class="absolute hidden bg-base-300 border rounded"></div>
+		<div
+			id="tooltip"
+			class="absolute hidden bg-base-300 border rounded"
+			hx-get={ formatProjectUrl(ctx) + "/tooltip" }
+			hx-trigger="fetch-content"
+			hx-vals={ "js:{node: getNode(event)}" }
+		>
+			<script>
+				function getNode(event) {
+					if (event.type == "fetch-content") {
+						return event.detail.node;
+					}
+				}
+			</script>
+		</div>
 		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
 			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
 				@initActorFlowChart(actorPID, sourcesSinks, flowType == "Sources")
@@ -165,8 +179,9 @@ script initActorFlowChart(actorPID string, sourcesSinks []string, isSources bool
      	d3.select('#tooltip')
          	.style("left", (e.pageX + 10) + "px")
           	.style("top", (e.pageY + 10) + "px")
-           	.html(d.id)
             .classed("hidden", false);
+
+		htmx.trigger("#tooltip", "fetch-content", { node: d.id });
     };
 
     function hideTooltip(e, d) {
