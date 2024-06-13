@@ -14,9 +14,8 @@ CREATE TABLE IF NOT EXISTS event(
 
 SELECT create_hypertable('event', by_range('timestamp'));
 
--- may need to add projectID, timestamp to these indexes
-CREATE INDEX IF NOT EXISTS event_sources_idx ON event(project_id, actor_pid, timestamp, sender);
-CREATE INDEX IF NOT EXISTS event_sinks_idx ON event(project_id, sender, timestamp, actor_pid);
+CREATE INDEX IF NOT EXISTS event_sender_project_id_actor_pid_timestamp_idx ON event(sender, project_id, actor_pid, timestamp);
+CREATE INDEX IF NOT EXISTS event_actor_pid_project_id_sender_timestamp_idx ON event(actor_pid, project_id, sender, timestamp);
 
 
 CREATE TABLE IF NOT EXISTS actor(

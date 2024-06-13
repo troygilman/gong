@@ -209,7 +209,7 @@ func isActorAlive(eventType string) bool {
 }
 
 func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	events, err := db.QueryEvents(ctx, query)
@@ -224,7 +224,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 }
 
 func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	pids, err := db.QueryActorSourcesSinks(ctx, query)

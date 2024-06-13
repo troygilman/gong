@@ -70,7 +70,7 @@ func NewPostgresDatabase() (Database, error) {
 
 	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
 		// TO-DO
-		//log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
+		log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
 	})
 
 	log.Println("Database connection was successfully opened")
@@ -260,10 +260,10 @@ func (db *postgresDatabase) QueryActorSourcesSinks(ctx context.Context, query Ac
 	var stmt SelectStatement
 	if query.Sources {
 		condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.ActorPid.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-		stmt = SELECT(DISTINCT(table.Event.Sender), table.Event.Sender.AS("pid")).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.Sender)
+		stmt = SELECT(table.Event.Sender.AS("pid")).DISTINCT(table.Event.Sender).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.Sender)
 	} else {
 		condition := table.Event.ProjectID.EQ(UUID(query.ProjectID)).AND(table.Event.Sender.EQ(String(query.ActorPID))).AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime)))
-		stmt = SELECT(DISTINCT(table.Event.ActorPid), table.Event.ActorPid.AS("pid")).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.ActorPid)
+		stmt = SELECT(table.Event.ActorPid.AS("pid")).DISTINCT(table.Event.ActorPid).FROM(table.Event).WHERE(condition).ORDER_BY(table.Event.ActorPid)
 	}
 
 	if err := stmt.QueryContext(ctx, db.conn, &m); err != nil {
