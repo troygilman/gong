@@ -152,10 +152,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", "filter_id", filter.ID != nil, -1) {
+		@eventsFilterItem("ID", common.ParamFilterID, filter.ID != nil, -1) {
 			<input
 				class="event-filter-input"
-				name="filter_id"
+				name={ common.ParamFilterID }
 				type="text"
 				placeholder="01HXZJN46DQJPWYBAM"
 				if filter.ID != nil {
@@ -163,10 +163,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Type", "filter_type", filter.Type != nil, 0) {
+		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, 0) {
 			<input
 				class="event-filter-input"
-				name="filter_type"
+				name={ common.ParamFilterType }
 				type="text"
 				placeholder="actor.Started"
 				if filter.Type != nil {
@@ -174,10 +174,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != nil, 0) {
+		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
 			<input
 				class="event-filter-input"
-				name="filter_sender"
+				name={ common.ParamFilterSender }
 				type="text"
 				placeholder="local/server/primary"
 				if filter.Sender != nil {
@@ -185,7 +185,7 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Level", "filter_level", filter.Level != nil, 1) {
+		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level != nil, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -202,7 +202,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Lev
 			<span class="label-text">{ label }</span>
 			<input
 				type="radio"
-				name="filter_level"
+				name={ common.ParamFilterLevel }
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
 				if selected != nil && *selected == level {

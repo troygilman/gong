@@ -12,14 +12,24 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+const (
+	ParamPID          = "pid"
+	ParamTab          = "tab"
+	ParamFilterID     = "filter_id"
+	ParamFilterType   = "filter_type"
+	ParamFilterSender = "filter_sender"
+	ParamFilterLevel  = "filter_level"
+	ParamFlow         = "flow"
+)
+
 type CtxKey string
 
 const (
-	CtxProject CtxKey = "project"
-	CtxPID     CtxKey = "pid"
-	CtxTab     CtxKey = "tab"
+	CtxProject CtxKey = "projectID"
+	CtxPID     CtxKey = ParamPID
+	CtxTab     CtxKey = ParamTab
 	CtxFilter  CtxKey = "filter"
-	CtxFlow    CtxKey = "flow"
+	CtxFlow    CtxKey = ParamFlow
 )
 
 const (
@@ -86,22 +96,22 @@ type Filter struct {
 }
 
 func NewFilter(ctx echo.Context) (filter Filter) {
-	id := ctx.QueryParam("filter_id")
+	id := ctx.QueryParam(ParamFilterID)
 	if id != "" {
 		filter.ID = &id
 	}
 
-	fType := ctx.QueryParam("filter_type")
+	fType := ctx.QueryParam(ParamFilterType)
 	if fType != "" {
 		filter.Type = &fType
 	}
 
-	sender := ctx.QueryParam("filter_sender")
+	sender := ctx.QueryParam(ParamFilterSender)
 	if sender != "" {
 		filter.Sender = &sender
 	}
 
-	level, err := strconv.Atoi(ctx.QueryParam("filter_level"))
+	level, err := strconv.Atoi(ctx.QueryParam(ParamFilterLevel))
 	if err == nil {
 		sLevel := slog.Level(level)
 		filter.Level = &sLevel

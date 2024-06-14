@@ -51,7 +51,7 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			cb := common.NewContextBuilder(ctx.Request().Context())
 
 			{ // project ID
-				projectID, err := uuid.Parse(ctx.Param("projectID"))
+				projectID, err := uuid.Parse(ctx.Param(string(common.CtxProject)))
 				if err != nil {
 					return errors.New("projectID is empty")
 				}
@@ -59,14 +59,14 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			}
 
 			{ // actor PID
-				actorPID := ctx.QueryParam(string(common.CtxPID))
+				actorPID := ctx.QueryParam(common.ParamPID)
 				if actorPID != "" {
 					cb = cb.With(common.CtxPID, actorPID)
 				}
 			}
 
 			{ // tab
-				tab := ctx.QueryParam(string(common.CtxTab))
+				tab := ctx.QueryParam(common.ParamTab)
 				if tab == "" {
 					tab = "Events"
 				}
@@ -74,7 +74,7 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			}
 
 			{ // flow chart type
-				flowType := ctx.QueryParam(string(common.CtxFlow))
+				flowType := ctx.QueryParam(common.ParamFlow)
 				if flowType == "" {
 					flowType = "Sources"
 				}
@@ -85,6 +85,7 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				filter := common.NewFilter(ctx)
 				cb = cb.With(common.CtxFilter, filter)
 			}
+
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}

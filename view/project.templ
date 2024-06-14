@@ -151,8 +151,8 @@ templ ActorContent(actor common.Actor) {
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
-		<input id="actor-pid" type="hidden" name="pid" value={ actor.PID }/>
-		<input id="tab" type="hidden" name="tab" value={ ctx.Value(common.CtxTab).(string) }/>
+		<input id="actor-pid" type="hidden" name={ common.ParamPID } value={ actor.PID }/>
+		<input id="tab" type="hidden" name={ common.ParamTab } value={ ctx.Value(common.CtxTab).(string) }/>
 		<div class="p-4 font-bold">{ actor.PID }</div>
 		<div
 			role="tablist"
