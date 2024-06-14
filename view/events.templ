@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 	"gong/common"
+	view_common "gong/view/common"
 	"strings"
 	"log/slog"
 	"strconv"
@@ -22,8 +23,8 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		hx-ext="sse"
-		sse-connect={ formatProjectUrl(ctx) + "/sse/events" }
-		hx-include={ includes }
+		sse-connect={ view_common.FormatProjectUrl(ctx) + "/sse/events" }
+		hx-include={ view_common.Includes }
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
 		@htmx:after-request="onAfterRequest($event)"
@@ -124,7 +125,7 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 			</tbody>
 		</table>
 		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
-			@spinnerIcon("size-1/3 pointer-events-none animate-spin")
+			<span class="loading loading-spinner loading-lg"></span>
 		</div>
 	</div>
 }
@@ -133,8 +134,8 @@ templ eventsFilter(filter common.Filter) {
 	<form
 		id="events-filter"
 		class="join m-4 w-fit"
-		hx-get={ formatProjectUrl(ctx) }
-		hx-include={ includes }
+		hx-get={ view_common.FormatProjectUrl(ctx) }
+		hx-include={ view_common.Includes }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -217,15 +218,15 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 		if active {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ formatProjectUrl(ctx) }
-				hx-include={ includes }
+				hx-get={ view_common.FormatProjectUrl(ctx) }
+				hx-include={ view_common.Includes }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
 			>
-				@closeIcon("inline-block w-4 h-4 stroke-current")
+				@view_common.CloseIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
 		<div class="dropdown group">
@@ -251,9 +252,9 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
-		hx-get={ formatProjectUrl(ctx) + "/events" }
+		hx-get={ view_common.FormatProjectUrl(ctx) + "/events" }
 		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
-		hx-include={ includes }
+		hx-include={ view_common.Includes }
 		hx-swap="outerHTML"
 		if moreEvents {
 			hx-trigger="sse:new-events, load-next once, intersect once delay:100ms"
@@ -270,9 +271,9 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 	<tr
 		id="events-bottom-data-loader"
 		if moreEvents {
-			hx-get={ formatProjectUrl(ctx) + "/events" }
+			hx-get={ view_common.FormatProjectUrl(ctx) + "/events" }
 			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
-			hx-include={ includes }
+			hx-include={ view_common.Includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
 			if spinner {

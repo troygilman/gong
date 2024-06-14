@@ -9,6 +9,7 @@ import (
 	"gong/core"
 	"gong/sdk"
 	"gong/view"
+	view_overview "gong/view/overview"
 	"log"
 	"net/http"
 	"strconv"
@@ -50,7 +51,7 @@ func handleGetProject(eCtx echo.Context) error {
 		return view.ProjectActor(actor).Render(ctx, eCtx.Response())
 
 	case common.ProjectViewFlowChart:
-		return view.ActorFlowChartWidget().Render(ctx, eCtx.Response())
+		return view_overview.ActorFlowChartWidget().Render(ctx, eCtx.Response())
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
 		if err != nil {
@@ -297,9 +298,9 @@ func handleGetActorChart(eCtx echo.Context) error {
 	}
 
 	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
-	return view.ActorFlowChart(pids).Render(ctx, eCtx.Response())
+	return view_overview.ActorFlowChart(pids).Render(ctx, eCtx.Response())
 }
 
 func handleGetActorChartTooltip(ctx echo.Context) error {
-	return view.ChartTooltip().Render(ctx.Request().Context(), ctx.Response())
+	return view_overview.ChartTooltip().Render(ctx.Request().Context(), ctx.Response())
 }

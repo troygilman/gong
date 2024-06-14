@@ -70,7 +70,7 @@ func NewPostgresDatabase() (Database, error) {
 
 	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
 		// TO-DO
-		log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
+		//log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
 	})
 
 	log.Println("Database connection was successfully opened")

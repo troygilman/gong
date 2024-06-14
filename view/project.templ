@@ -3,11 +3,13 @@ package view
 import (
 	"fmt"
 	"gong/common"
+	view_common "gong/view/common"
+	"gong/view/overview"
 )
 
 templ Project(props common.ProjectProps) {
-	@Index() {
-		<div id="includes" hx-include={ includes }></div>
+	@view_common.Index() {
+		<div id="includes" hx-include={ view_common.Includes }></div>
 		<script>
 			const next = htmx.createEventSource;
 			htmx.createEventSource = function(url) {
@@ -23,9 +25,9 @@ templ Project(props common.ProjectProps) {
 			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
 			x-data
 		>
-			<div class="grid grid-cols-6 border-b border-color py-2 px-4 w-full items-center z-50 bg-base-200">
+			<div class="grid grid-cols-6 border-b border-color py-2 px-4 w-full items-center z-50 bg-base-100">
 				<div class="flex flex-row justify-begin">
-					@logoIcon("w-8 h-8 max-w-8 max-h-8")
+					@view_common.LogoIcon("w-8 h-8 max-w-8 max-h-8")
 				</div>
 				<div class="flex flex-row col-span-4 justify-center">
 					<div class="flex text-md font-bold items-center justify-center">
@@ -54,7 +56,7 @@ templ Project(props common.ProjectProps) {
 }
 
 templ ProjectActorList(props common.ProjectProps) {
-	<div class="flex flex-col w-64 min-w-64 h-full border-r border-color bg-base-200">
+	<div class="flex flex-col w-64 min-w-64 h-full border-r border-color">
 		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
 		<div class="border border-color mx-6 mt-2"></div>
 		<ul
@@ -96,10 +98,10 @@ templ ProjectActorListItem(actor common.Actor, oob bool) {
 	<li
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
-		hx-get={ formatProjectUrl(ctx) }
+		hx-get={ view_common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
-		hx-include={ includes }
+		hx-include={ view_common.Includes }
 		hx-trigger="click"
 		hx-push-url="true"
 		if oob {
@@ -162,7 +164,7 @@ templ ActorContent(actor common.Actor) {
 			}
 		</div>
 		@tabContent(tabLabelOverview) {
-			@overviewTabContent(actor)
+			@overview.OverviewTabContent(actor)
 		}
 		@tabContent(tabLabelEvents) {
 			@eventsTabContent(actor)
@@ -175,10 +177,10 @@ templ tab(label string, active string) {
 		role="tab"
 		class={ "tab", templ.KV("tab-active", label == active) }
 		if label != active {
-			hx-get={ formatProjectUrl(ctx) }
+			hx-get={ view_common.FormatProjectUrl(ctx) }
 			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
-			hx-include={ includes }
+			hx-include={ view_common.Includes }
 			hx-push-url="true"
 			hx-trigger="click"
 			hx-swap="none"

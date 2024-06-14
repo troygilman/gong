@@ -29,8 +29,7 @@ func ExampleClient() error {
 	wg.Wait()
 	fmt.Println("Clients stopped")
 
-	engine.Poison(gongPID, wg)
-	wg.Wait()
+	engine.Poison(gongPID, wg).Wait()
 
 	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
 	return nil
@@ -59,12 +58,13 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 1000000 {
+		for range 1000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
 			//time.Sleep(10 * time.Millisecond)
 		}
 		fmt.Println("Finished sending msgs")
+		time.Sleep(time.Second)
 		ctx.Engine().Poison(ctx.PID())
 		ctx.Engine().Poison(s.pids[0])
 		ctx.Engine().Poison(s.pids[1])
