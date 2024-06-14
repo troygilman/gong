@@ -6,13 +6,13 @@ import (
 	"fmt"
 )
 
-templ ChartTooltip() {
-	<div>
-		Actor!!!
+templ FlowChartTooltip(nodePID string) {
+	<div class="bg-base-300 p-2 rounded border border-color">
+		PID: { nodePID }
 	</div>
 }
 
-templ ActorFlowChartWidget() {
+templ FlowChartWidget() {
 	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded shadow">
 		<div
 			hx-get={ view_common.FormatProjectUrl(ctx) + "/chart" }
@@ -26,41 +26,50 @@ templ ActorFlowChartWidget() {
 			<div role="tablist" class="tabs tabs-boxed border border-color">
 				if flow, ok := ctx.Value(common.CtxFlow).(string); ok {
 					<input id="flow" type="hidden" name="flow" value={ flow }/>
-					@actorFlowChartFilterItem("Sources", flow)
-					@actorFlowChartFilterItem("Sinks", flow)
+					@flowChartFilterItem("Sources", flow)
+					@flowChartFilterItem("Sinks", flow)
 				}
 			</div>
 		</div>
 	</div>
 }
 
-templ ActorFlowChart(sourcesSinks []string) {
+templ FlowChart(sourcesSinks []string) {
 	<div class="grow min-h-0 min-w-0">
 		<svg id="chart" class="max-w-full max-h-full"></svg>
+		<script>
+			function getNode(event) {
+				if (event.detail.node) {
+					return event.detail.node;
+				}
+			}
+		</script>
 		<div
 			id="tooltip"
-			class="absolute hidden bg-base-300 border rounded"
+			class="absolute hidden"
 			hx-get={ view_common.FormatProjectUrl(ctx) + "/tooltip" }
-			hx-trigger="fetch-content"
 			hx-vals={ "js:{node: getNode(event)}" }
-		>
-			<script>
-				function getNode(event) {
-					if (event.type == "fetch-content") {
-						return event.detail.node;
-					}
+			hx-trigger="fetch"
+			hx-swap="innerHTML"
+			x-data="{ pid: '' }"
+			@fetch-content={ `
+				if ($event.detail.node == pid) {
+					$event.preventDefault();
+				} else {
+					pid = $event.detail.node;
+					htmx.trigger($el, "fetch", $event.detail);
 				}
-			</script>
-		</div>
+			` }
+		></div>
 		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
 			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
-				@initActorFlowChart(actorPID, sourcesSinks, flowType == "Sources")
+				@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 			}
 		}
 	</div>
 }
 
-templ actorFlowChartFilterItem(label string, active string) {
+templ flowChartFilterItem(label string, active string) {
 	<a
 		role="tab"
 		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
@@ -77,7 +86,7 @@ templ actorFlowChartFilterItem(label string, active string) {
 	>{ label }</a>
 }
 
-script initActorFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
+script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 	const width = 1000;
 	const height =  1000;
 	const circleRadius = 12;
