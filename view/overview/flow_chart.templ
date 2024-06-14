@@ -83,7 +83,7 @@ templ flowChartFilterItem(label string, active string) {
 
 templ FlowChart(sourcesSinks []string, flowType string) {
 	<div class="relative grow min-h-0 min-w-0">
-		<div class="flex flex-col absolute top-2 left-2 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm">
+		<div class="flex flex-col absolute top-2 left-2 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
 			<div class="flex items-center justify-start">
 				<div class="badge badge-primary badge-sm mr-2"></div>
 				Actor
@@ -196,7 +196,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.attr("x", 16)
       	.attr("y", "0.31em")
 	  	.attr("stroke-width", 0)
-	  	.attr("class", "text-lg font-normal")
+	  	.attr("class", "text-lg font-normal cursor-default")
       	.text(d => d.id)
     	.clone(true).lower()
       	.attr("fill", "none")

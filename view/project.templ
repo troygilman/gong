@@ -30,7 +30,7 @@ templ Project(props common.ProjectProps) {
 					@view_common.LogoIcon("w-8 h-8 max-w-8 max-h-8")
 				</div>
 				<div class="flex flex-row col-span-4 justify-center">
-					<div class="flex text-md font-bold items-center justify-center">
+					<div class="flex text-md font-bold items-center justify-center cursor-default">
 						Project
 					</div>
 					<div class="dropdown ml-2">
@@ -57,7 +57,7 @@ templ Project(props common.ProjectProps) {
 
 templ ProjectActorList(props common.ProjectProps) {
 	<div class="flex flex-col w-64 min-w-64 h-full border-r border-color">
-		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
+		<div class="flex items-center justify-center pt-2 font-bold cursor-default">Actors</div>
 		<div class="border border-color mx-6 mt-2"></div>
 		<ul
 			id="actor-list"
