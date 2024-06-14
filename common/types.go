@@ -20,21 +20,24 @@ const (
 	ParamFilterSender = "filter_sender"
 	ParamFilterLevel  = "filter_level"
 	ParamFlow         = "flow"
+	ParamFlowNode     = "flow_node"
 )
 
 type CtxKey string
 
 const (
-	CtxProject CtxKey = "projectID"
-	CtxPID     CtxKey = ParamPID
-	CtxTab     CtxKey = ParamTab
-	CtxFilter  CtxKey = "filter"
-	CtxFlow    CtxKey = ParamFlow
+	CtxProject  CtxKey = "projectID"
+	CtxPID      CtxKey = ParamPID
+	CtxTab      CtxKey = ParamTab
+	CtxFilter   CtxKey = "filter"
+	CtxFlow     CtxKey = ParamFlow
+	CtxFlowNode CtxKey = ParamFlowNode
 )
 
 const (
-	ProjectViewActor     = "actor"
-	ProjectViewFlowChart = "flow-chart"
+	ProjectViewActor             = "actor"
+	ProjectViewFlowChart         = "flow-chart"
+	ProjectViewFlowChartNodeInfo = "flow-chart-node-info"
 )
 
 type Event struct {

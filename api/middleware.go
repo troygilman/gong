@@ -81,6 +81,13 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				cb = cb.With(common.CtxFlow, flowType)
 			}
 
+			{ // flow chart node
+				flowNode := ctx.QueryParam(common.ParamFlowNode)
+				if flowNode != "" {
+					cb = cb.With(common.CtxFlowNode, flowNode)
+				}
+			}
+
 			{ // events filter
 				filter := common.NewFilter(ctx)
 				cb = cb.With(common.CtxFilter, filter)

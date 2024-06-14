@@ -26,7 +26,6 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/sse/project", handleConnectSseProject)
 		e.GET("/sse/events", handleConnectSseEvents)
 		e.GET("/chart", handleGetActorChart)
-		e.GET("/tooltip", handleGetActorChartTooltip)
 		e.GET("/connect", handleConnectProject)
 	}, middlewareProjectContext())
 }
@@ -52,6 +51,12 @@ func handleGetProject(eCtx echo.Context) error {
 
 	case common.ProjectViewFlowChart:
 		return view_overview.FlowChartWidget().Render(ctx, eCtx.Response())
+	case common.ProjectViewFlowChartNodeInfo:
+		nodePID, ok := ctx.Value(common.CtxFlowNode).(string)
+		if !ok {
+			return errors.New("flow_node is empty")
+		}
+		return view_overview.FlowChartNodeInfo(nodePID).Render(ctx, eCtx.Response())
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
 		if err != nil {
@@ -299,18 +304,4 @@ func handleGetActorChart(eCtx echo.Context) error {
 
 	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
 	return view_overview.FlowChart(pids).Render(ctx, eCtx.Response())
-}
-
-func handleGetActorChartTooltip(ctx echo.Context) error {
-	// actorPID, ok := actorPID(ctx)
-	// if !ok {
-	// 	return errors.New("actorPID is empty")
-	// }
-
-	nodePID := ctx.QueryParam("node")
-	if nodePID == "" {
-		return errors.New("node is empty")
-	}
-
-	return view_overview.FlowChartTooltip(nodePID).Render(ctx.Request().Context(), ctx.Response())
 }

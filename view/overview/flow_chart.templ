@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-templ FlowChartTooltip(nodePID string) {
-	<div class="bg-base-300 p-2 rounded border border-color">
+templ FlowChartNodeInfo(nodePID string) {
+	<div class="p-2">
 		PID: { nodePID }
 	</div>
 }
@@ -22,7 +22,7 @@ templ FlowChartWidget() {
 		>
 			<span class="loading loading-spinner loading-lg"></span>
 		</div>
-		<div class="border-l border-color overflow-auto p-4">
+		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
 			<div role="tablist" class="tabs tabs-boxed border border-color">
 				if flow, ok := ctx.Value(common.CtxFlow).(string); ok {
 					<input id="flow" type="hidden" name={ common.ParamFlow } value={ flow }/>
@@ -30,42 +30,37 @@ templ FlowChartWidget() {
 					@flowChartFilterItem("Sinks", flow)
 				}
 			</div>
+			<script>
+				function getNode(event) {
+					if (event.detail.node) {
+						return event.detail.node;
+					}
+				}
+			</script>
+			<div
+				id="node-info-container"
+				class="grow w-full min-h-0 border border-color rounded"
+				hx-get={ view_common.FormatProjectUrl(ctx) }
+				hx-vals={ fmt.Sprintf("js:{%s: getNode(event)}", common.ParamFlowNode) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChartNodeInfo) }
+				hx-influde={ view_common.Includes }
+				hx-trigger="fetch"
+				hx-swap="innerHTML"
+				x-data="{ node: '' }"
+				@fetch-content={ `
+					if ($event.detail.node == node) {
+						$event.preventDefault();
+					} else {
+						node = $event.detail.node;
+						htmx.trigger($el, "fetch", $event.detail);
+					}
+				` }
+			>
+				<div class="w-full h-full flex items-center justify-center">
+					Select a source/sink
+				</div>
+			</div>
 		</div>
-	</div>
-}
-
-templ FlowChart(sourcesSinks []string) {
-	<div class="grow min-h-0 min-w-0">
-		<svg id="chart" class="max-w-full max-h-full"></svg>
-		<script>
-			function getNode(event) {
-				if (event.detail.node) {
-					return event.detail.node;
-				}
-			}
-		</script>
-		<div
-			id="tooltip"
-			class="absolute hidden"
-			hx-get={ view_common.FormatProjectUrl(ctx) + "/tooltip" }
-			hx-vals={ "js:{node: getNode(event)}" }
-			hx-trigger="fetch"
-			hx-swap="innerHTML"
-			x-data="{ pid: '' }"
-			@fetch-content={ `
-				if ($event.detail.node == pid) {
-					$event.preventDefault();
-				} else {
-					pid = $event.detail.node;
-					htmx.trigger($el, "fetch", $event.detail);
-				}
-			` }
-		></div>
-		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
-			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
-				@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
-			}
-		}
 	</div>
 }
 
@@ -84,6 +79,17 @@ templ flowChartFilterItem(label string, active string) {
 			hx-swap="outerHTML"
 		}
 	>{ label }</a>
+}
+
+templ FlowChart(sourcesSinks []string) {
+	<div class="grow min-h-0 min-w-0">
+		<svg id="chart" class="max-w-full max-h-full"></svg>
+		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
+			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
+				@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
+			}
+		}
+	</div>
 }
 
 script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
@@ -170,9 +176,10 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
           		return "oklch(var(--a))";
           	}
         })
-        .on("mouseover", revealTooltip)
-        .on("mousemove", revealTooltip)
-        .on("mouseleave", hideTooltip);
+        .on("mouseover", (e, d) => { d3.select(e.target).attr("r", circleRadiusHover) })
+        .on("mousemove", (e, d) => { d3.select(e.target).attr("r", circleRadiusHover) })
+        .on("mouseleave", (e, d) => { d3.select(e.target).attr("r", circleRadius) })
+        .on("click", (e, d) => htmx.trigger("#node-info-container", "fetch-content", { node: d.id }));
 
 	node.append("text")
       	.attr("x", 16)
@@ -184,27 +191,6 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.attr("fill", "none")
       	.attr("stroke", "oklch(var(--b2))")
       	.attr("stroke-width", 4);
-
-    d3.select("#tooltip").on("mouseout", function() {
-    	d3.select('#tooltip').classed("hidden", true);
-    });
-
-    function revealTooltip(e, d) {
-		d3.select(this).attr("r", circleRadiusHover);
-     	d3.select('#tooltip')
-         	.style("left", (e.pageX + 10) + "px")
-          	.style("top", (e.pageY + 10) + "px")
-            .classed("hidden", false);
-
-		htmx.trigger("#tooltip", "fetch-content", { node: d.id });
-    };
-
-    function hideTooltip(e, d) {
-    	if (e.toElement.id != "tooltip") {
-			d3.select(this).attr("r", circleRadius);
-     		d3.select('#tooltip').classed("hidden", true);
-       	}
-    };
 
     function linkArc(d) {
       const r = 0;
