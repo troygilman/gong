@@ -81,13 +81,21 @@ templ flowChartFilterItem(label string, active string) {
 	>{ label }</a>
 }
 
-templ FlowChart(sourcesSinks []string) {
-	<div class="grow min-h-0 min-w-0">
+templ FlowChart(sourcesSinks []string, flowType string) {
+	<div class="relative grow min-h-0 min-w-0">
+		<div class="flex flex-col absolute top-2 left-2 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm">
+			<div class="flex items-center justify-start">
+				<div class="badge badge-primary badge-sm mr-2"></div>
+				Actor
+			</div>
+			<div class="flex items-center justify-start">
+				<div class="badge badge-accent badge-sm mr-2"></div>
+				{ flowType }
+			</div>
+		</div>
 		<svg id="chart" class="max-w-full max-h-full"></svg>
 		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
-			if flowType, ok := ctx.Value(common.CtxFlow).(string); ok {
-				@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
-			}
+			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
 	</div>
 }
@@ -167,7 +175,11 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
         .join("g");
 
 	node.append("circle")
-		.attr("class", "cursor-pointer")
+		.attr("class", d => {
+			if (d.group == 2) {
+				return "cursor-pointer";
+			}
+		})
         .attr("r", circleRadius)
         .attr("fill", d => {
         	if (d.group == 1) {
@@ -176,10 +188,9 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
           		return "oklch(var(--a))";
           	}
         })
-        .on("mouseover", (e, d) => { d3.select(e.target).attr("r", circleRadiusHover) })
-        .on("mousemove", (e, d) => { d3.select(e.target).attr("r", circleRadiusHover) })
-        .on("mouseleave", (e, d) => { d3.select(e.target).attr("r", circleRadius) })
-        .on("click", (e, d) => htmx.trigger("#node-info-container", "fetch-content", { node: d.id }));
+        .on("mouseover", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadiusHover) }})
+        .on("mouseleave", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadius) }})
+        .on("click", (e, d) => { if (d.group == 2) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
 
 	node.append("text")
       	.attr("x", 16)

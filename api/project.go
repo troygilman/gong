@@ -303,5 +303,5 @@ func handleGetActorChart(eCtx echo.Context) error {
 	}
 
 	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
-	return view_overview.FlowChart(pids).Render(ctx, eCtx.Response())
+	return view_overview.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
 }
