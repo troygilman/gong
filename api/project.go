@@ -52,11 +52,32 @@ func handleGetProject(eCtx echo.Context) error {
 	case common.ProjectViewFlowChart:
 		return view_overview.FlowChartWidget().Render(ctx, eCtx.Response())
 	case common.ProjectViewFlowChartNodeInfo:
+		actorPID, ok := actorPID(eCtx)
+		if !ok {
+			return errors.New("pid is empty")
+		}
+
 		nodePID, ok := ctx.Value(common.CtxFlowNode).(string)
 		if !ok {
 			return errors.New("flow_node is empty")
 		}
-		return view_overview.FlowChartNodeInfo(nodePID).Render(ctx, eCtx.Response())
+
+		flowType, ok := ctx.Value(common.CtxFlow).(string)
+		if !ok {
+			return errors.New("flow is missing")
+		}
+
+		source, err := isSources(flowType)
+		if err != nil {
+			return err
+		}
+
+		nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source)
+		if err != nil {
+			return err
+		}
+
+		return view_overview.FlowChartNodeInfo(nodeInfo).Render(ctx, eCtx.Response())
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
 		if err != nil {
@@ -289,12 +310,9 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
-	var sources bool
-	switch flowType {
-	case "Sources":
-		sources = true
-	case "Sinks":
-		sources = false
+	sources, err := isSources(flowType)
+	if err != nil {
+		return err
 	}
 
 	pids, err := app.SourcesSinks(ctx, projectID, actorPID, sources)
@@ -304,4 +322,15 @@ func handleGetActorChart(eCtx echo.Context) error {
 
 	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
 	return view_overview.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
+}
+
+func isSources(flowType string) (bool, error) {
+	switch flowType {
+	case "Sources":
+		return true, nil
+	case "Sinks":
+		return false, nil
+	default:
+		return false, errors.New("invalid flow type")
+	}
 }

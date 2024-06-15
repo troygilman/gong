@@ -142,3 +142,8 @@ func (filter Filter) ValidEvent(event Event) bool {
 
 	return true
 }
+
+type SourcesSinksNodeInfo struct {
+	PID      string
+	MsgCount int64
+}

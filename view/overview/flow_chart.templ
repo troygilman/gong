@@ -6,9 +6,10 @@ import (
 	"fmt"
 )
 
-templ FlowChartNodeInfo(nodePID string) {
+templ FlowChartNodeInfo(info common.SourcesSinksNodeInfo) {
 	<div class="p-2">
-		PID: { nodePID }
+		PID: { info.PID }
+		Events: { fmt.Sprintf("%d", info.MsgCount) }
 	</div>
 }
 
@@ -43,7 +44,7 @@ templ FlowChartWidget() {
 				hx-get={ view_common.FormatProjectUrl(ctx) }
 				hx-vals={ fmt.Sprintf("js:{%s: getNode(event)}", common.ParamFlowNode) }
 				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChartNodeInfo) }
-				hx-influde={ view_common.Includes }
+				hx-include={ view_common.Includes }
 				hx-trigger="fetch"
 				hx-swap="innerHTML"
 				x-data="{ node: '' }"

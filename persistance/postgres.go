@@ -70,7 +70,7 @@ func NewPostgresDatabase() (Database, error) {
 
 	SetQueryLogger(func(ctx context.Context, info QueryInfo) {
 		// TO-DO
-		//log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
+		log.Printf("%+v\n%s\n", info, info.Statement.DebugSql())
 	})
 
 	log.Println("Database connection was successfully opened")
@@ -278,4 +278,35 @@ func (db *postgresDatabase) QueryActorSourcesSinks(ctx context.Context, query Ac
 	}
 
 	return pids, nil
+}
+
+func (db *postgresDatabase) QuerySourcesSinksNodeInfo(
+	ctx context.Context,
+	query SourcesSinksNodeInfoQuery,
+) (info common.SourcesSinksNodeInfo, err error) {
+
+	var actorPid string
+	var sender string
+
+	if query.Source {
+		actorPid = query.ActorPID
+		sender = query.NodePID
+	} else {
+		actorPid = query.NodePID
+		sender = query.ActorPID
+	}
+
+	stmt := table.Event.SELECT(COUNT(table.Event.ID).AS("sources_sinks_node_info.msg_count")).WHERE(
+		table.Event.ProjectID.EQ(UUID(query.ProjectID)).
+			AND(table.Event.ActorPid.EQ(String(actorPid))).
+			AND(table.Event.Sender.EQ(String(sender))).
+			AND(table.Event.Timestamp.BETWEEN(TimestampzT(query.MinTime), TimestampzT(query.MaxTime))),
+	)
+
+	if err := stmt.Query(db.conn, &info); err != nil {
+		return info, sqlError(stmt, err)
+	}
+
+	info.PID = query.NodePID
+	return info, nil
 }

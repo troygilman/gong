@@ -32,6 +32,7 @@ type App interface {
 	Events(ctx context.Context, projectID uuid.UUID, actorPID string, eventID ulid.ULID, numEvents int, filter common.Filter) (events common.EventList, err error)
 	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
 	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, sources bool) (pids []string, err error)
+	SourcesSinksNodeInfo(ctx context.Context, projectID uuid.UUID, actorPID string, nodePID string, source bool) (common.SourcesSinksNodeInfo, error)
 	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter common.Filter) (<-chan []any, error)
 	ListenStop(ctx context.Context, id string) error
 }
@@ -241,6 +242,33 @@ func (app *gongApp) SourcesSinks(
 	}
 
 	return response.sourcesSinks, nil
+}
+
+func (app *gongApp) SourcesSinksNodeInfo(
+	ctx context.Context,
+	projectID uuid.UUID,
+	actorPID string,
+	nodePID string,
+	source bool,
+) (info common.SourcesSinksNodeInfo, err error) {
+	projectPID, err := app.pid(kindProject, projectID.String())
+	if err != nil {
+		return info, err
+	}
+
+	msg := msgGetSourcesSinksNodeInfo{
+		actorPID: actorPID,
+		nodePID:  nodePID,
+		source:   source,
+	}
+
+	r := app.engine.Request(projectPID, msg, defaultTimeout)
+	response, err := actor_utils.HandleResponse[rspGetSourcesSinksNodeInfo](r)
+	if err != nil {
+		return info, err
+	}
+
+	return response.info, nil
 }
 
 func (app *gongApp) ListenStart(

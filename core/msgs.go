@@ -55,6 +55,16 @@ type rspGetActorSourcesSinks struct {
 	sourcesSinks []string
 }
 
+type msgGetSourcesSinksNodeInfo struct {
+	actorPID string
+	nodePID  string
+	source   bool
+}
+
+type rspGetSourcesSinksNodeInfo struct {
+	info common.SourcesSinksNodeInfo
+}
+
 type msgListenStart struct {
 	lType ListenerType
 }

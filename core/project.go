@@ -165,6 +165,22 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		} else {
 			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
+
+	case msgGetSourcesSinksNodeInfo:
+		if _, ok := p.actors[msg.actorPID]; ok {
+			query := persistance.SourcesSinksNodeInfoQuery{
+				Source:    msg.source,
+				ProjectID: p.id,
+				ActorPID:  msg.actorPID,
+				NodePID:   msg.nodePID,
+				MinTime:   time.Now().Add(-24 * time.Hour),
+				MaxTime:   time.Now(),
+			}
+			go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
+		} else {
+			aCtx.Respond(fmt.Errorf("actor does not exist"))
+		}
+
 	case msgListenStart:
 		listeners, ok := p.listeners[msg.lType]
 		if !ok {
@@ -235,5 +251,20 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 
 	engine.Send(sender, rspGetActorSourcesSinks{
 		sourcesSinks: pids,
+	})
+}
+
+func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.SourcesSinksNodeInfoQuery) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	info, err := db.QuerySourcesSinksNodeInfo(ctx, query)
+	if err != nil {
+		engine.Send(sender, err)
+		return
+	}
+
+	engine.Send(sender, rspGetSourcesSinksNodeInfo{
+		info: info,
 	})
 }

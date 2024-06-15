@@ -16,6 +16,7 @@ type Database interface {
 	CreateActor(ctx context.Context, actor common.Actor) error
 	UpdateActor(ctx context.Context, actor common.Actor) error
 	QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
+	QuerySourcesSinksNodeInfo(context.Context, SourcesSinksNodeInfoQuery) (common.SourcesSinksNodeInfo, error)
 }
 
 type EventsQuery struct {
@@ -30,6 +31,15 @@ type ActorSourcesSinksQuery struct {
 	Sources   bool
 	ProjectID uuid.UUID
 	ActorPID  string
+	MinTime   time.Time
+	MaxTime   time.Time
+}
+
+type SourcesSinksNodeInfoQuery struct {
+	Source    bool
+	ProjectID uuid.UUID
+	ActorPID  string
+	NodePID   string
 	MinTime   time.Time
 	MaxTime   time.Time
 }
