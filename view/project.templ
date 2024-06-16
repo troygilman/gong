@@ -138,6 +138,7 @@ templ ProjectActorBadge(actor gong_common.Actor) {
 const (
 	tabLabelOverview = "Overview"
 	tabLabelEvents   = "Events"
+	tabLabelFlow     = "Flow"
 )
 
 templ ProjectActor(actor gong_common.Actor) {
@@ -158,10 +159,9 @@ templ ActorContent(actor gong_common.Actor) {
 			role="tablist"
 			class="tabs tabs-bordered"
 		>
-			if activeTab, ok := ctx.Value(gong_common.CtxTab).(string); ok {
-				@tab(tabLabelOverview, activeTab)
-				@tab(tabLabelEvents, activeTab)
-			}
+			@tab(tabLabelOverview)
+			@tab(tabLabelEvents)
+			@tab(tabLabelFlow)
 		</div>
 		@tabContent(tabLabelOverview) {
 			@overview.OverviewTabContent(actor)
@@ -169,23 +169,28 @@ templ ActorContent(actor gong_common.Actor) {
 		@tabContent(tabLabelEvents) {
 			@eventsTabContent(actor)
 		}
+		@tabContent(tabLabelFlow) {
+			@overview.FlowChartWidget()
+		}
 	</div>
 }
 
-templ tab(label string, active string) {
-	<a
-		role="tab"
-		class={ "tab", templ.KV("tab-active", label == active) }
-		if label != active {
-			hx-get={ common.FormatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
-			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
-			hx-include={ common.Includes }
-			hx-push-url="true"
-			hx-trigger="click"
-			hx-swap="none"
-		}
-	>{ label }</a>
+templ tab(label string) {
+	if active, ok := ctx.Value(gong_common.CtxTab).(string); ok {
+		<a
+			role="tab"
+			class={ "tab", templ.KV("tab-active", label == active) }
+			if label != active {
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
+				hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
+				hx-include={ common.Includes }
+				hx-push-url="true"
+				hx-trigger="click"
+				hx-swap="none"
+			}
+		>{ label }</a>
+	}
 }
 
 templ tabContent(label string) {

@@ -21,12 +21,12 @@ templ FlowChartNodeInfoEmpty() {
 }
 
 templ FlowChartWidget() {
-	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded shadow">
+	<div id="actor-flow-chart-widget" class="grid grid-cols-2 grow max-w-full min-h-0">
 		<div
 			hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
 			hx-trigger="load"
 			hx-include={ common.Includes }
-			class="flex aspect-square items-center justify-center bg-base-200"
+			class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden"
 		>
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
@@ -94,7 +94,7 @@ templ flowChartFilterItem(label string, active string) {
 }
 
 templ FlowChart(sourcesSinks []string, flowType string) {
-	<div class="relative h-full w-full">
+	<div class="flex relative h-full w-full items-center justify-center">
 		<div class="flex flex-col absolute top-2 left-2 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
 			<div class="flex items-center justify-start">
 				<div class="badge badge-primary badge-sm mr-2"></div>
@@ -105,7 +105,7 @@ templ FlowChart(sourcesSinks []string, flowType string) {
 				{ flowType }
 			</div>
 		</div>
-		<svg id="chart" class="max-w-full max-h-full"></svg>
+		<svg id="chart" class="w-full h-full block" preserveAspectRatio="xMidYMid slice"></svg>
 		if actorPID, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
@@ -176,7 +176,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
        	.data(links)
         .join("path")
         .attr("stroke", "oklch(var(--n))")
-        .attr("marker-mid", d => `url(${new URL(`#arrow`, location)})`);
+        .attr("marker-mid", d => "url('#arrow')");
 
   	const node = svg.append("g")
 		.attr("id", "nodes")
