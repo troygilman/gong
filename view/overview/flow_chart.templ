@@ -8,8 +8,15 @@ import (
 
 templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
 	<div id="node-info" class="w-full h-full p-2">
+		<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ info.PID }/>
 		PID: { info.PID }
 		Events: { fmt.Sprintf("%d", info.MsgCount) }
+	</div>
+}
+
+templ FlowChartNodeInfoEmpty() {
+	<div id="node-info" class="w-full h-full flex items-center justify-center">
+		Select a source/sink
 	</div>
 }
 
@@ -32,9 +39,13 @@ templ FlowChartWidget() {
 				}
 			</div>
 			<script>
-				function getNode(event) {
-					if (event.detail.node) {
+				function getNode(event, defaultNode) {
+					if (event && event.detail && event.detail.node) {
+						console.log("node")
 						return event.detail.node;
+					} else {
+						console.log("default")
+						return defaultNode;
 					}
 				}
 			</script>
@@ -42,19 +53,23 @@ templ FlowChartWidget() {
 				id="node-info-container"
 				class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
 				hx-get={ common.FormatProjectUrl(ctx) }
-				hx-vals={ fmt.Sprintf("js:{%s: getNode(event)}", gong_common.ParamFlowNode) }
 				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
 				hx-include={ common.Includes }
-				hx-trigger="fetch-content"
 				hx-target="#node-info"
 				hx-swap="outerHTML"
-				@fetch-content={ `
+				hx-push-url="true"
+				@htmx:before-request={ `
 					htmx.addClass(htmx.find("#node-info"), "hidden")
 				` }
+				if node, ok := ctx.Value(gong_common.CtxFlowNode).(string); ok {
+					hx-trigger="fetch-content, load"
+					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "%s")}`, gong_common.ParamFlowNode, node) }
+				} else {
+					hx-trigger="fetch-content"
+					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "")}`, gong_common.ParamFlowNode) }
+				}
 			>
-				<div id="node-info" class="w-full h-full flex items-center justify-center">
-					Select a source/sink
-				</div>
+				@FlowChartNodeInfoEmpty()
 				<span class="htmx-indicator loading loading-dots loading-lg"></span>
 			</div>
 		</div>

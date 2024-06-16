@@ -77,7 +77,11 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		return view_overview.FlowChartNodeInfo(nodeInfo).Render(ctx, eCtx.Response())
+		if nodeInfo.MsgCount > 0 {
+			return view_overview.FlowChartNodeInfo(nodeInfo).Render(ctx, eCtx.Response())
+		} else {
+			return view_overview.FlowChartNodeInfoEmpty().Render(ctx, eCtx.Response())
+		}
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
 		if err != nil {
