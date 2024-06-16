@@ -1,12 +1,12 @@
 package overview
 
 import (
-	"gong/common"
-	view_common "gong/view/common"
+	gong_common "gong/common"
+	"gong/view/common"
 	"fmt"
 )
 
-templ FlowChartNodeInfo(info common.SourcesSinksNodeInfo) {
+templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
 	<div id="node-info" class="w-full h-full p-2">
 		PID: { info.PID }
 		Events: { fmt.Sprintf("%d", info.MsgCount) }
@@ -16,17 +16,17 @@ templ FlowChartNodeInfo(info common.SourcesSinksNodeInfo) {
 templ FlowChartWidget() {
 	<div id="actor-flow-chart-widget" class="grid grid-cols-2 w-full border border-color rounded shadow">
 		<div
-			hx-get={ view_common.FormatProjectUrl(ctx) + "/chart" }
+			hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
 			hx-trigger="load"
-			hx-include={ view_common.Includes }
+			hx-include={ common.Includes }
 			class="flex aspect-square items-center justify-center bg-base-200"
 		>
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
 			<div role="tablist" class="tabs tabs-boxed border border-color">
-				if flow, ok := ctx.Value(common.CtxFlow).(string); ok {
-					<input id="flow" type="hidden" name={ common.ParamFlow } value={ flow }/>
+				if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
+					<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
 					@flowChartFilterItem("Sources", flow)
 					@flowChartFilterItem("Sinks", flow)
 				}
@@ -41,10 +41,10 @@ templ FlowChartWidget() {
 			<div
 				id="node-info-container"
 				class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
-				hx-get={ view_common.FormatProjectUrl(ctx) }
-				hx-vals={ fmt.Sprintf("js:{%s: getNode(event)}", common.ParamFlowNode) }
-				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChartNodeInfo) }
-				hx-include={ view_common.Includes }
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-vals={ fmt.Sprintf("js:{%s: getNode(event)}", gong_common.ParamFlowNode) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
+				hx-include={ common.Includes }
 				hx-trigger="fetch-content"
 				hx-target="#node-info"
 				hx-swap="outerHTML"
@@ -66,10 +66,10 @@ templ flowChartFilterItem(label string, active string) {
 		role="tab"
 		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
 		if label != active {
-			hx-get={ view_common.FormatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
-			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, common.CtxFlow, label) }
-			hx-include={ view_common.Includes }
+			hx-get={ common.FormatProjectUrl(ctx) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, gong_common.CtxFlow, label) }
+			hx-include={ common.Includes }
 			hx-push-url="true"
 			hx-trigger="click"
 			hx-target="#actor-flow-chart-widget"
@@ -91,7 +91,7 @@ templ FlowChart(sourcesSinks []string, flowType string) {
 			</div>
 		</div>
 		<svg id="chart" class="max-w-full max-h-full"></svg>
-		if actorPID, ok := ctx.Value(common.CtxPID).(string); ok {
+		if actorPID, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
 	</div>

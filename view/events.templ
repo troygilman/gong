@@ -2,29 +2,29 @@ package view
 
 import (
 	"fmt"
-	"gong/common"
-	view_common "gong/view/common"
+	gong_common "gong/common"
+	"gong/view/common"
 	"strings"
 	"log/slog"
 	"strconv"
 )
 
-templ eventsTabContent(actor common.Actor) {
-	if filter, ok := ctx.Value(common.CtxFilter).(common.Filter); ok {
+templ eventsTabContent(actor gong_common.Actor) {
+	if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
 		@eventsFilter(filter)
 	} else {
-		@eventsFilter(common.Filter{})
+		@eventsFilter(gong_common.Filter{})
 	}
 	@ProjectActorEventsContainer(actor)
 }
 
-templ ProjectActorEventsContainer(actor common.Actor) {
+templ ProjectActorEventsContainer(actor gong_common.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		hx-ext="sse"
-		sse-connect={ view_common.FormatProjectUrl(ctx) + "/sse/events" }
-		hx-include={ view_common.Includes }
+		sse-connect={ common.FormatProjectUrl(ctx) + "/sse/events" }
+		hx-include={ common.Includes }
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
 		@htmx:after-request="onAfterRequest($event)"
@@ -130,12 +130,12 @@ templ ProjectActorEventsContainer(actor common.Actor) {
 	</div>
 }
 
-templ eventsFilter(filter common.Filter) {
+templ eventsFilter(filter gong_common.Filter) {
 	<form
 		id="events-filter"
 		class="join m-4 w-fit"
-		hx-get={ view_common.FormatProjectUrl(ctx) }
-		hx-include={ view_common.Includes }
+		hx-get={ common.FormatProjectUrl(ctx) }
+		hx-include={ common.Includes }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -152,10 +152,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", common.ParamFilterID, filter.ID != nil, -1) {
+		@eventsFilterItem("ID", gong_common.ParamFilterID, filter.ID != nil, -1) {
 			<input
 				class="event-filter-input"
-				name={ common.ParamFilterID }
+				name={ gong_common.ParamFilterID }
 				type="text"
 				placeholder="01HXZJN46DQJPWYBAM"
 				if filter.ID != nil {
@@ -163,10 +163,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, 0) {
+		@eventsFilterItem("Type", gong_common.ParamFilterType, filter.Type != nil, 0) {
 			<input
 				class="event-filter-input"
-				name={ common.ParamFilterType }
+				name={ gong_common.ParamFilterType }
 				type="text"
 				placeholder="actor.Started"
 				if filter.Type != nil {
@@ -174,10 +174,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
+		@eventsFilterItem("Sender", gong_common.ParamFilterSender, filter.Sender != nil, 0) {
 			<input
 				class="event-filter-input"
-				name={ common.ParamFilterSender }
+				name={ gong_common.ParamFilterSender }
 				type="text"
 				placeholder="local/server/primary"
 				if filter.Sender != nil {
@@ -185,7 +185,7 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level != nil, 1) {
+		@eventsFilterItem("Level", gong_common.ParamFilterLevel, filter.Level != nil, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -202,7 +202,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Lev
 			<span class="label-text">{ label }</span>
 			<input
 				type="radio"
-				name={ common.ParamFilterLevel }
+				name={ gong_common.ParamFilterLevel }
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
 				if selected != nil && *selected == level {
@@ -218,15 +218,15 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 		if active {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ view_common.FormatProjectUrl(ctx) }
-				hx-include={ view_common.Includes }
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-include={ common.Includes }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
 			>
-				@view_common.CloseIcon("inline-block w-4 h-4 stroke-current")
+				@common.CloseIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
 		<div class="dropdown group">
@@ -252,9 +252,9 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
-		hx-get={ view_common.FormatProjectUrl(ctx) + "/events" }
+		hx-get={ common.FormatProjectUrl(ctx) + "/events" }
 		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
-		hx-include={ view_common.Includes }
+		hx-include={ common.Includes }
 		hx-swap="outerHTML"
 		if moreEvents {
 			hx-trigger="sse:new-events, load-next once, intersect once delay:100ms"
@@ -271,9 +271,9 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 	<tr
 		id="events-bottom-data-loader"
 		if moreEvents {
-			hx-get={ view_common.FormatProjectUrl(ctx) + "/events" }
+			hx-get={ common.FormatProjectUrl(ctx) + "/events" }
 			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
-			hx-include={ view_common.Includes }
+			hx-include={ common.Includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
 			if spinner {
@@ -287,7 +287,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
-	if pid, ok := ctx.Value(common.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 		return formatActorPID(pid)
 	}
 	return ""
@@ -297,7 +297,7 @@ func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")
 }
 
-templ ProjectActorEvents(events common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
+templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
 	if appendTop || (!appendTop && moreBottom) {
 		@eventsTopDataLoader(!appendTop, moreTop)
 	}
@@ -309,7 +309,7 @@ templ ProjectActorEvents(events common.EventList, appendTop bool, moreTop bool, 
 	}
 }
 
-templ projectActorEvent(event common.Event) {
+templ projectActorEvent(event gong_common.Event) {
 	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="event">
 		<input type="hidden" value={ event.ID.String() }/>
 		<td>
