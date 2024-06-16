@@ -3,7 +3,8 @@ package api
 import (
 	"errors"
 	"gong/common"
-	"gong/core"
+	core_common "gong/core/common"
+
 	"log"
 
 	"github.com/google/uuid"
@@ -19,7 +20,7 @@ func middlewareLogRequest() echo.MiddlewareFunc {
 	}
 }
 
-func middlewareWithApp(app core.App) echo.MiddlewareFunc {
+func middlewareWithApp(app core_common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			ctx.Set("app", app)
@@ -28,7 +29,7 @@ func middlewareWithApp(app core.App) echo.MiddlewareFunc {
 	}
 }
 
-func middlewareJWT(app core.App) echo.MiddlewareFunc {
+func middlewareJWT(app core_common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			tokenCookie, err := ctx.Cookie("auth-token")

@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"gong/common"
-	"gong/core"
+	core_common "gong/core/common"
 	"io"
 	"strings"
 
@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func mustApp(ctx echo.Context) core.App {
-	app, ok := ctx.Get("app").(core.App)
+func mustApp(ctx echo.Context) core_common.App {
+	app, ok := ctx.Get("app").(core_common.App)
 	if !ok {
 		panic(fmt.Sprintln("App does not exist in context"))
 	}

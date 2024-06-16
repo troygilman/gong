@@ -1,12 +1,15 @@
-package core
+package project
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"gong/common"
+	gong_common "gong/common"
 	"gong/persistance"
+	"log"
 	"time"
+
+	"gong/core/common"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -14,27 +17,23 @@ import (
 )
 
 const (
-	ActorInitialized           = "actor.Initialized"
-	ActorStarted               = "actor.Started"
-	ActorStopped               = "actor.Stopped"
-	ActorStoppedEvent          = "actor.ActorStoppedEvent"
 	projectUpdatePropsInterval = 100 * time.Millisecond
 )
 
 type project struct {
-	commonActorData
-	actors       map[string]common.Actor
-	actorUpdates map[string]common.Actor
-	eventUpdates []common.Event
+	common.CommonActorData
+	actors       map[string]gong_common.Actor
+	actorUpdates map[string]gong_common.Actor
+	eventUpdates []gong_common.Event
 	repeater     actor.SendRepeater
-	listeners    map[ListenerType]map[*actor.PID]struct{}
+	listeners    map[common.ListenerType]map[*actor.PID]struct{}
 }
 
-func newProjectProducerWithApp(app App) actor.Producer {
+func NewProjectProducerWithApp(app common.App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
-			commonActorData: commonActorData{
-				app: app,
+			CommonActorData: common.CommonActorData{
+				App: app,
 			},
 		}
 	}
@@ -57,62 +56,63 @@ func (p *project) Receive(aCtx *actor.Context) {
 func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]common.Actor)
-		p.actorUpdates = make(map[string]common.Actor)
-		p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
+		p.actors = make(map[string]gong_common.Actor)
+		p.actorUpdates = make(map[string]gong_common.Actor)
+		p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
 	case actor.Started:
-		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgUpdateProjectInternal{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
-	case msgGetProjectProps:
-		props := common.ProjectProps{
-			ID:     p.id,
-			Actors: make(map[string]common.Actor, 0),
+	case common.MsgGetProjectProps:
+		props := gong_common.ProjectProps{
+			ID:     p.Id,
+			Actors: make(map[string]gong_common.Actor, 0),
 		}
 		for pid, data := range p.actors {
 			props.Actors[pid] = data
 		}
-		aCtx.Respond(rspGetProjectProps{
-			props: props,
+		log.Println(props)
+		aCtx.Respond(common.RspGetProjectProps{
+			Props: props,
 		})
 
-	case msgGetProjectActorProps:
-		actorData, ok := p.actors[msg.actorPID]
+	case common.MsgGetProjectActorProps:
+		actorData, ok := p.actors[msg.ActorPID]
 		if ok {
-			aCtx.Respond(rspGetProjectActor{
-				actor: actorData,
+			aCtx.Respond(common.RspGetProjectActor{
+				Actor: actorData,
 			})
 		} else {
 			return errors.New("actor pid does not exist")
 		}
 
-	case msgUpdateProject:
-		for _, actorData := range msg.actors {
+	case common.MsgUpdateProject:
+		for _, actorData := range msg.Actors {
 			p.actorUpdates[actorData.PID] = actorData
 		}
-		p.eventUpdates = append(p.eventUpdates, msg.events...)
+		p.eventUpdates = append(p.eventUpdates, msg.Events...)
 
-	case msgUpdateProjectInternal:
+	case common.MsgUpdateProjectInternal:
 		listenerData := make(map[*actor.PID][]any)
 
 		// build data for every listener
 		for listenerType, listeners := range p.listeners {
 			for listenerPID := range listeners {
 				switch listenerType {
-				case ListenerTypeProject:
+				case common.ListenerTypeProject:
 					for _, actor := range p.actorUpdates {
 						_, exists := p.actors[actor.PID]
 						if exists {
-							listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewEvents{
+							listenerData[listenerPID] = append(listenerData[listenerPID], gong_common.SseNewEvents{
 								Actor: actor,
 							})
 						} else {
-							listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewActor{
+							listenerData[listenerPID] = append(listenerData[listenerPID], gong_common.SseNewActor{
 								Actor: actor,
 							})
 						}
 					}
-				case ListenerTypeEvents:
+				case common.ListenerTypeEvents:
 					for _, event := range p.eventUpdates {
 						listenerData[listenerPID] = append(listenerData[listenerPID], event)
 					}
@@ -124,8 +124,8 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		// push data to every listener concurrently
 		for pid, data := range listenerData {
 			if len(data) > 0 {
-				aCtx.Send(pid, msgListenData{
-					data: data,
+				aCtx.Send(pid, common.MsgListenData{
+					Data: data,
 				})
 			}
 		}
@@ -135,61 +135,61 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			p.actors[actor.PID] = actor
 			delete(p.actorUpdates, actor.PID)
 		}
-		p.eventUpdates = []common.Event{}
+		p.eventUpdates = []gong_common.Event{}
 
-	case msgGetProjectEvents:
-		_, ok := p.actors[msg.actorPID]
+	case common.MsgGetProjectEvents:
+		_, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := persistance.EventsQuery{
-				ProjectID: p.id,
-				ActorPID:  msg.actorPID,
-				EventID:   msg.eventID,
-				NumEvents: msg.numEvents,
-				Filter:    msg.filter,
+				ProjectID: p.Id,
+				ActorPID:  msg.ActorPID,
+				EventID:   msg.EventID,
+				NumEvents: msg.NumEvents,
+				Filter:    msg.Filter,
 			}
-			go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
+			go queryEvents(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
 		} else {
 			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
-	case msgGetActorSourcesSinks:
-		_, ok := p.actors[msg.actorPID]
+	case common.MsgGetActorSourcesSinks:
+		_, ok := p.actors[msg.ActorPID]
 		if ok {
 			query := persistance.ActorSourcesSinksQuery{
-				Sources:   msg.sources,
-				ProjectID: p.id,
-				ActorPID:  msg.actorPID,
+				Sources:   msg.Sources,
+				ProjectID: p.Id,
+				ActorPID:  msg.ActorPID,
 				MinTime:   time.Now().Add(-24 * time.Hour),
 				MaxTime:   time.Now(),
 			}
-			go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
+			go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
 		} else {
 			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
 
-	case msgGetSourcesSinksNodeInfo:
-		if _, ok := p.actors[msg.actorPID]; ok {
+	case common.MsgGetSourcesSinksNodeInfo:
+		if _, ok := p.actors[msg.ActorPID]; ok {
 			query := persistance.SourcesSinksNodeInfoQuery{
-				Source:    msg.source,
-				ProjectID: p.id,
-				ActorPID:  msg.actorPID,
-				NodePID:   msg.nodePID,
+				Source:    msg.Source,
+				ProjectID: p.Id,
+				ActorPID:  msg.ActorPID,
+				NodePID:   msg.NodePID,
 				MinTime:   time.Now().Add(-24 * time.Hour),
 				MaxTime:   time.Now(),
 			}
-			go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.app.database(), query)
+			go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
 		} else {
 			aCtx.Respond(fmt.Errorf("actor does not exist"))
 		}
 
-	case msgListenStart:
-		listeners, ok := p.listeners[msg.lType]
+	case common.MsgListenStart:
+		listeners, ok := p.listeners[msg.LType]
 		if !ok {
 			listeners = make(map[*actor.PID]struct{})
 		}
 		listeners[aCtx.Sender()] = struct{}{}
-		p.listeners[msg.lType] = listeners
-	case msgListenStop:
-		listeners, ok := p.listeners[msg.lType]
+		p.listeners[msg.LType] = listeners
+	case common.MsgListenStop:
+		listeners, ok := p.listeners[msg.LType]
 		if ok {
 			delete(listeners, aCtx.Sender())
 		}
@@ -197,13 +197,13 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	return nil
 }
 
-func (p *project) load(ctx context.Context, id uuid.UUID) error {
+func (p *project) Load(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	p.id = id
+	p.Id = id
 
-	actorProps, err := p.app.database().QueryActors(ctx, id)
+	actorProps, err := p.App.Database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -215,13 +215,9 @@ func (p *project) load(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (p *project) create(ctx context.Context, id uuid.UUID) error {
-	p.id = id
+func (p *project) Create(ctx context.Context, id uuid.UUID) error {
+	p.Id = id
 	return nil
-}
-
-func isActorAlive(eventType string) bool {
-	return eventType != ActorStopped && eventType != ActorStoppedEvent
 }
 
 func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
@@ -234,8 +230,8 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 		return
 	}
 
-	engine.Send(sender, rspGetProjectEvents{
-		events: events,
+	engine.Send(sender, common.RspGetProjectEvents{
+		Events: events,
 	})
 }
 
@@ -249,8 +245,8 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 		return
 	}
 
-	engine.Send(sender, rspGetActorSourcesSinks{
-		sourcesSinks: pids,
+	engine.Send(sender, common.RspGetActorSourcesSinks{
+		SourcesSinks: pids,
 	})
 }
 
@@ -264,7 +260,7 @@ func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persi
 		return
 	}
 
-	engine.Send(sender, rspGetSourcesSinksNodeInfo{
-		info: info,
+	engine.Send(sender, common.RspGetSourcesSinksNodeInfo{
+		Info: info,
 	})
 }

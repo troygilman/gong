@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gong/common"
-	"gong/core"
+	core_common "gong/core/common"
 	"gong/sdk"
 	"gong/view"
 	view_overview "gong/view/overview"
@@ -147,7 +147,7 @@ func handleConnectSseProject(eCtx echo.Context) error {
 
 	projectID := mustProjectID(eCtx)
 
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeProject, common.Filter{})
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, core_common.ListenerTypeProject, common.Filter{})
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 		panic("filter is required")
 	}
 
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, core.ListenerTypeEvents, filter)
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, core_common.ListenerTypeEvents, filter)
 	if err != nil {
 		return err
 	}

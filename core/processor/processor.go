@@ -1,9 +1,10 @@
-package core
+package processor
 
 import (
 	"context"
 	"crypto/rand"
-	"gong/common"
+	gong_common "gong/common"
+	"gong/core/common"
 	"gong/sdk"
 	"slices"
 	"time"
@@ -19,19 +20,19 @@ const (
 )
 
 type processor struct {
-	commonActorData
-	actors   map[string]common.Actor
+	common.CommonActorData
+	actors   map[string]gong_common.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
-	batch    []common.Event
+	batch    []gong_common.Event
 	repeater actor.SendRepeater
 }
 
-func newProcessorProducerWithApp(app App) actor.Producer {
+func NewProcessorProducerWithApp(app common.App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
-			commonActorData: commonActorData{
-				app: app,
+			CommonActorData: common.CommonActorData{
+				App: app,
 			},
 		}
 	}
@@ -39,7 +40,7 @@ func newProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case msgSdkEvents, msgProcessorUpdateState:
+	case common.MsgSdkEvents, common.MsgProcessorUpdateState:
 	default:
 		actor_utils.LogActorMsg(aCtx)
 	}
@@ -55,25 +56,25 @@ func (p *processor) Receive(aCtx *actor.Context) {
 func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Initialized:
-		p.actors = make(map[string]common.Actor)
+		p.actors = make(map[string]gong_common.Actor)
 		p.entropy = ulid.Monotonic(rand.Reader, 1)
 		p.updates = make(map[string]bool)
-		p.batch = make([]common.Event, 0)
+		p.batch = make([]gong_common.Event, 0)
 	case actor.Started:
-		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgProcessorUpdateState{}, sendUpdatesInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 		return p.processUpdates(ctx, aCtx)
-	case msgSdkEvents:
-		slices.SortFunc(msg.events, func(a, b sdk.Event) int {
+	case common.MsgSdkEvents:
+		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
 			return a.Timestamp.Compare(b.Timestamp)
 		})
-		for _, event := range msg.events {
+		for _, event := range msg.Events {
 			if err := p.handleEvent(event); err != nil {
 				return err
 			}
 		}
-	case msgProcessorUpdateState:
+	case common.MsgProcessorUpdateState:
 		return p.processUpdates(ctx, aCtx)
 	}
 	return nil
@@ -85,17 +86,17 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		return err
 	}
 
-	event := common.Event{
+	event := gong_common.Event{
 		ID:        eventID,
-		ProjectID: p.id,
+		ProjectID: p.Id,
 		Event:     sdkEvent,
 	}
 
 	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorData = common.Actor{
+		actorData = gong_common.Actor{
 			PID:       event.PID,
-			ProjectID: p.id,
+			ProjectID: p.Id,
 			NumEvents: 0,
 			Alive:     false,
 		}
@@ -105,7 +106,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 
 	actorData.NumEvents++
 	if event.ID.Compare(actorData.LastEventID) > 0 {
-		actorData.Alive = isActorAlive(event.Type)
+		actorData.Alive = common.IsActorAlive(event.Type)
 		actorData.LastEventID = event.ID
 	}
 	p.actors[event.PID] = actorData
@@ -121,47 +122,47 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 
 func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) error {
 	defer func() {
-		p.batch = make([]common.Event, 0)
+		p.batch = make([]gong_common.Event, 0)
 		p.updates = make(map[string]bool)
 	}()
 
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
-			err = p.app.database().UpdateActor(ctx, p.actors[pid])
+			err = p.App.Database().UpdateActor(ctx, p.actors[pid])
 		} else {
-			err = p.app.database().CreateActor(ctx, p.actors[pid])
+			err = p.App.Database().CreateActor(ctx, p.actors[pid])
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := p.app.database().CreateEvents(ctx, p.batch); err != nil {
+	if err := p.App.Database().CreateEvents(ctx, p.batch); err != nil {
 		return err
 	}
 
-	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
-	actors := make([]common.Actor, 0)
+	projectPID := aCtx.Engine().Registry.GetPID(common.KindProject, p.Id.String())
+	actors := make([]gong_common.Actor, 0)
 
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}
 
 	if len(actors) > 0 {
-		aCtx.Send(projectPID, msgUpdateProject{
-			actors: actors,
-			events: p.batch,
+		aCtx.Send(projectPID, common.MsgUpdateProject{
+			Actors: actors,
+			Events: p.batch,
 		})
 	}
 
 	return nil
 }
 
-func (p *processor) load(ctx context.Context, id uuid.UUID) error {
-	p.id = id
+func (p *processor) Load(ctx context.Context, id uuid.UUID) error {
+	p.Id = id
 
-	actorProps, err := p.app.database().QueryActors(ctx, id)
+	actorProps, err := p.App.Database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -173,7 +174,7 @@ func (p *processor) load(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (p *processor) create(ctx context.Context, id uuid.UUID) error {
-	p.id = id
+func (p *processor) Create(ctx context.Context, id uuid.UUID) error {
+	p.Id = id
 	return nil
 }

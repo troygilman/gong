@@ -1,4 +1,4 @@
-package core
+package common
 
 import (
 	"github.com/anthdm/hollywood/actor"
@@ -6,14 +6,14 @@ import (
 	actor_utils "github.com/troygilman0/utils"
 )
 
-func actorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {
 			case actor.Started:
-				a, ok := ctx.Receiver().(persistentActor)
+				a, ok := ctx.Receiver().(PersistentActor)
 				if ok {
-					if err := a.load(ctx.Context(), id); err != nil {
+					if err := a.Load(ctx.Context(), id); err != nil {
 						actor_utils.LogActorError(ctx, err)
 						ctx.Engine().Poison(ctx.PID())
 					}
@@ -24,14 +24,14 @@ func actorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc
 	}
 }
 
-func actorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func ActorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {
 			case actor.Started:
-				a, ok := ctx.Receiver().(persistentActor)
+				a, ok := ctx.Receiver().(PersistentActor)
 				if ok {
-					if err := a.create(ctx.Context(), id); err != nil {
+					if err := a.Create(ctx.Context(), id); err != nil {
 						actor_utils.LogActorError(ctx, err)
 						ctx.Engine().Poison(ctx.PID())
 					}

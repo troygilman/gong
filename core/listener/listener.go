@@ -1,27 +1,21 @@
-package core
+package listener
 
 import (
 	"context"
-	"gong/common"
+	gong_common "gong/common"
+	"gong/core/common"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
 	actor_utils "github.com/troygilman0/utils"
 )
 
-type ListenerType uint
-
-const (
-	ListenerTypeProject ListenerType = iota
-	ListenerTypeEvents
-)
-
-func newListenerProducer(
-	app App,
+func NewListenerProducer(
+	app common.App,
 	projectID uuid.UUID,
-	lType ListenerType,
+	lType common.ListenerType,
 	c chan<- []any,
-	filter common.Filter,
+	filter gong_common.Filter,
 ) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
@@ -35,11 +29,11 @@ func newListenerProducer(
 }
 
 type listener struct {
-	app       App
+	app       common.App
 	projectID uuid.UUID
-	lType     ListenerType
+	lType     common.ListenerType
 	c         chan<- []any
-	filter    common.Filter
+	filter    gong_common.Filter
 }
 
 func (l *listener) Receive(aCtx *actor.Context) {
@@ -53,30 +47,30 @@ func (l *listener) Receive(aCtx *actor.Context) {
 func (l *listener) receive(ctx context.Context, aCtx *actor.Context) error {
 	switch msg := aCtx.Message().(type) {
 	case actor.Started:
-		projectPID, err := l.app.pid(kindProject, l.projectID.String())
+		projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
 		if err != nil {
 			return err
 		}
 
-		aCtx.Send(projectPID, msgListenStart{lType: l.lType})
+		aCtx.Send(projectPID, common.MsgListenStart{LType: l.lType})
 
 	case actor.Stopped:
-		projectPID, err := l.app.pid(kindProject, l.projectID.String())
+		projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
 		if err != nil {
 			return err
 		}
 
-		aCtx.Send(projectPID, msgListenStop{lType: l.lType})
+		aCtx.Send(projectPID, common.MsgListenStop{LType: l.lType})
 		close(l.c)
 
-	case msgListenData:
+	case common.MsgListenData:
 		switch l.lType {
-		case ListenerTypeProject:
-			l.c <- msg.data
-		case ListenerTypeEvents:
-			filteredEvents := make([]any, 0, len(msg.data))
-			for _, event := range msg.data {
-				if event, ok := event.(common.Event); ok {
+		case common.ListenerTypeProject:
+			l.c <- msg.Data
+		case common.ListenerTypeEvents:
+			filteredEvents := make([]any, 0, len(msg.Data))
+			for _, event := range msg.Data {
+				if event, ok := event.(gong_common.Event); ok {
 					if l.filter.ValidEvent(event) {
 						filteredEvents = append(filteredEvents, event)
 					}
