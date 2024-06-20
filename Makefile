@@ -14,10 +14,6 @@ client:
 	@go run . -c -cpuprofile=tmp/cpu.prof
 	@go tool pprof -png -output tmp/out.png tmp/cpu.prof
 
-migrate:
-	@make up
-	@make jet
-
 jet:
 	@jet -dsn=postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}?sslmode=disable -schema=public -path=./.gen
 

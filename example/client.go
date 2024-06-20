@@ -58,7 +58,7 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 100000 {
+		for range 1000000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
 			//time.Sleep(10 * time.Millisecond)
@@ -75,23 +75,26 @@ func (s server) Receive(ctx *actor.Context) {
 }
 
 type client struct {
-	wg *sync.WaitGroup
+	wg    *sync.WaitGroup
+	count int
 }
 
 func newClient(wg *sync.WaitGroup) actor.Producer {
 	return func() actor.Receiver {
-		return client{
+		return &client{
 			wg: wg,
 		}
 	}
 }
 
-func (c client) Receive(ctx *actor.Context) {
+func (c *client) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
 		c.wg.Add(1)
 	case actor.Stopped:
-		fmt.Println("Stopping client")
+		fmt.Printf("Stopping client - count: %d\n", c.count)
 		c.wg.Done()
+	case testMsg:
+		c.count++
 	}
 }

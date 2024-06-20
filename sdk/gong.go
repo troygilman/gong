@@ -55,6 +55,7 @@ type Gong struct {
 	config GongConfig
 	events chan<- Event
 	done   <-chan struct{}
+	count  int
 }
 
 func NewGong(config GongConfig) actor.Producer {
@@ -96,7 +97,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			}
 		}, done)
 	case actor.Stopped:
-		fmt.Println("Stopping Gong")
+		fmt.Printf("Stopping Gong - count: %d\n", g.count)
 		close(g.events)
 		<-g.done
 	case actor.EventLogger:
@@ -159,11 +160,14 @@ func (g *Gong) Receive(ctx *actor.Context) {
 }
 
 func (g *Gong) pushEvent(e Event) error {
-	select {
-	case g.events <- e:
-	default:
-		//slog.Warn("Cant push event", "event", e)
-	}
+	g.events <- e
+	g.count++
+	// select {
+	// case g.events <- e:
+	// 	g.count++
+	// default:
+	// 	slog.Warn("Cant push event", "event", e)
+	// }
 	return nil
 }
 

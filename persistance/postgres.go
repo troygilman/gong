@@ -69,7 +69,7 @@ func NewPostgresDatabase() (Database, error) {
 
 	bunDB.AddQueryHook(bundebug.NewQueryHook(
 		bundebug.FromEnv("BUNDEBUG"),
-		bundebug.WithVerbose(true),
+		// bundebug.WithVerbose(true),
 	))
 
 	bunDB.SetMaxOpenConns(5) // requred to not overwhelm db server
