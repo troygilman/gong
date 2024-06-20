@@ -9,52 +9,67 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func benchmarkCreateEvents(n int, createEvents func(context.Context, []common.Event) error) error {
+func benchmarkCreateEvents(n int, numEvents int, db Database) error {
 	projectID := uuid.MustParse("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
-
-	events := make([]common.Event, n)
-	for idx := range n {
-		events[idx] = common.Event{
-			ID:        ulid.Make(),
-			ProjectID: projectID,
+	for range n {
+		events := make([]common.Event, numEvents)
+		for idx := range numEvents {
+			events[idx] = common.Event{
+				ID:        ulid.Make().String(),
+				ProjectID: projectID,
+			}
+		}
+		if err := db.CreateEvents(context.Background(), events); err != nil {
+			return err
 		}
 	}
-
-	return createEvents(context.Background(), events)
+	return nil
 }
 
 func BenchmarkCreateEvents_10(b *testing.B) {
-	db, _ := NewPostgresDatabase()
-	for range b.N {
-		if err := benchmarkCreateEvents(10, db.CreateEvents); err != nil {
-			b.Error(err)
-		}
+	db, err := NewPostgresDatabase()
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	if err := benchmarkCreateEvents(b.N, 10, db); err != nil {
+		b.Error(err)
+		return
 	}
 }
 
 func BenchmarkCreateEvents_100(b *testing.B) {
-	db, _ := NewPostgresDatabase()
-	for range b.N {
-		if err := benchmarkCreateEvents(100, db.CreateEvents); err != nil {
-			b.Error(err)
-		}
+	db, err := NewPostgresDatabase()
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	if err := benchmarkCreateEvents(b.N, 100, db); err != nil {
+		b.Error(err)
+		return
 	}
 }
 
 func BenchmarkCreateEvents_1000(b *testing.B) {
-	db, _ := NewPostgresDatabase()
-	for range b.N {
-		if err := benchmarkCreateEvents(1000, db.CreateEvents); err != nil {
-			b.Error(err)
-		}
+	db, err := NewPostgresDatabase()
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	if err := benchmarkCreateEvents(b.N, 1000, db); err != nil {
+		b.Error(err)
+		return
 	}
 }
 
 func BenchmarkCreateEvents_10000(b *testing.B) {
-	db, _ := NewPostgresDatabase()
-	for range b.N {
-		if err := benchmarkCreateEvents(10000, db.CreateEvents); err != nil {
-			b.Error(err)
-		}
+	db, err := NewPostgresDatabase()
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	if err := benchmarkCreateEvents(b.N, 10000, db); err != nil {
+		b.Error(err)
+		return
 	}
 }

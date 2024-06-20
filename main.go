@@ -5,12 +5,16 @@ import (
 	"gong/api"
 	"gong/core"
 	"gong/example"
+	"gong/persistance"
 	"log"
 	"os"
 )
 
 //go:embed static
 var static embed.FS
+
+//go:embed migration
+var sqlMigrations embed.FS
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-c" {
@@ -21,7 +25,12 @@ func main() {
 }
 
 func run() error {
-	app, err := core.NewApp()
+	db, err := persistance.NewPostgresDatabase()
+	if err != nil {
+		return err
+	}
+
+	app, err := core.NewApp(db)
 	if err != nil {
 		return err
 	}

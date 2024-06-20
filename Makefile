@@ -34,7 +34,7 @@ test:
 	@go test -v ./core
 
 bench:
-	@go test -v -run=XXX -bench=BenchmarkCreateEvents -o=tmp -benchmem -cpuprofile=tmp/cpu.prof -memprofile=tmp/mem.prof ./core
+	@go test -v -run=XXX -bench=. ./...
 
 db:
 	@docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=${DB_PASSWORD} timescale/timescaledb-ha:pg16

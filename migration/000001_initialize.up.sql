@@ -1,9 +1,8 @@
-CREATE TABLE IF NOT EXISTS event(
+CREATE TABLE IF NOT EXISTS events(
     project_id UUID,
     timestamp TIMESTAMPTZ,
 	id VARCHAR(26),
-    actor_pid TEXT NOT NULL,
-    index INTEGER NOT NULL,
+    pid TEXT NOT NULL,
     type TEXT NOT NULL,
     level INTEGER NOT NULL,
     sender TEXT,
@@ -12,17 +11,17 @@ CREATE TABLE IF NOT EXISTS event(
     PRIMARY KEY (project_id, id, timestamp)
 );
 
-SELECT create_hypertable('event', by_range('timestamp'));
+SELECT create_hypertable('events', by_range('timestamp'));
 
-CREATE INDEX IF NOT EXISTS event_sender_project_id_actor_pid_timestamp_idx ON event(sender, project_id, actor_pid, timestamp);
-CREATE INDEX IF NOT EXISTS event_actor_pid_project_id_sender_timestamp_idx ON event(actor_pid, project_id, sender, timestamp);
+CREATE INDEX IF NOT EXISTS events_sender_project_id_pid_timestamp_idx ON events(sender, project_id, pid, timestamp);
+CREATE INDEX IF NOT EXISTS events_pid_project_id_sender_timestamp_idx ON events(pid, project_id, sender, timestamp);
 
 
-CREATE TABLE IF NOT EXISTS actor(
-    pid TEXT,
+CREATE TABLE IF NOT EXISTS actors(
     project_id UUID,
+    pid TEXT,
     num_events INTEGER NOT NULL,
     last_event_id VARCHAR(26) NOT NULL,
     alive BOOLEAN NOT NULL,
-    PRIMARY KEY (pid, project_id)
+    PRIMARY KEY (project_id, pid)
 );

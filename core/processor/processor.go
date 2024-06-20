@@ -24,7 +24,7 @@ type processor struct {
 	actors   map[string]gong_common.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
-	batch    []gong_common.Event
+	events   []gong_common.Event
 	repeater actor.SendRepeater
 }
 
@@ -59,7 +59,7 @@ func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
 		p.actors = make(map[string]gong_common.Actor)
 		p.entropy = ulid.Monotonic(rand.Reader, 1)
 		p.updates = make(map[string]bool)
-		p.batch = make([]gong_common.Event, 0)
+		p.events = make([]gong_common.Event, 0)
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgProcessorUpdateState{}, sendUpdatesInterval)
 	case actor.Stopped:
@@ -87,7 +87,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 	}
 
 	event := gong_common.Event{
-		ID:        eventID,
+		ID:        eventID.String(),
 		ProjectID: p.Id,
 		Event:     sdkEvent,
 	}
@@ -102,29 +102,41 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) error {
 		}
 	}
 
-	event.Index = int32(actorData.NumEvents)
-
 	actorData.NumEvents++
-	if event.ID.Compare(actorData.LastEventID) > 0 {
+
+	lastEventID, err := ulid.Parse(actorData.LastEventID)
+	if err != nil {
+		lastEventID = ulid.ULID{}
+	}
+
+	if eventID.Compare(lastEventID) > 0 {
 		actorData.Alive = common.IsActorAlive(event.Type)
 		actorData.LastEventID = event.ID
 	}
+
 	p.actors[event.PID] = actorData
 
 	if _, ok := p.updates[event.PID]; !ok {
 		p.updates[event.PID] = actorExists
 	}
 
-	p.batch = append(p.batch, event)
+	p.events = append(p.events, event)
 
 	return nil
 }
 
 func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) error {
+	batchSize := min(len(p.events), 10000)
+	batch := p.events[:batchSize]
+
 	defer func() {
-		p.batch = make([]gong_common.Event, 0)
+		p.events = p.events[batchSize:]
 		p.updates = make(map[string]bool)
 	}()
+
+	if err := p.App.Database().CreateEvents(ctx, batch); err != nil {
+		return err
+	}
 
 	for pid, actorExists := range p.updates {
 		var err error
@@ -138,10 +150,6 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		}
 	}
 
-	if err := p.App.Database().CreateEvents(ctx, p.batch); err != nil {
-		return err
-	}
-
 	projectPID := aCtx.Engine().Registry.GetPID(common.KindProject, p.Id.String())
 	actors := make([]gong_common.Actor, 0)
 
@@ -152,7 +160,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	if len(actors) > 0 {
 		aCtx.Send(projectPID, common.MsgUpdateProject{
 			Actors: actors,
-			Events: p.batch,
+			Events: batch,
 		})
 	}
 

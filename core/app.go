@@ -36,13 +36,9 @@ type gongApp struct {
 
 type producerFunc func(common.App) actor.Producer
 
-func NewApp() (common.App, error) {
+func NewApp(db persistance.Database) (common.App, error) {
 	app := new(gongApp)
 
-	db, err := persistance.NewPostgresDatabase()
-	if err != nil {
-		return nil, err
-	}
 	app.db = db
 
 	secret, ok := os.LookupEnv(envAuthSecret)

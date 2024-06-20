@@ -310,13 +310,13 @@ templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop b
 }
 
 templ projectActorEvent(event gong_common.Event) {
-	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="event">
-		<input type="hidden" value={ event.ID.String() }/>
+	<tr id={ fmt.Sprintf("event-%s", event.ID) } class="event">
+		<input type="hidden" value={ event.ID }/>
 		<td>
 			{ event.Timestamp.String() }
 		</td>
 		<td>
-			{ event.ID.String() }
+			{ event.ID }
 		</td>
 		<td>
 			{ event.Type }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
 )
 
 const (
@@ -41,9 +40,8 @@ const (
 )
 
 type Event struct {
-	ID        ulid.ULID
+	ID        string
 	ProjectID uuid.UUID
-	Index     int32
 	sdk.Event
 }
 
@@ -51,7 +49,7 @@ type EventList []Event
 
 func (l *EventList) Push(e Event) {
 	i := sort.Search(len(*l), func(i int) bool {
-		return e.Index < (*l)[i].Index
+		return e.ID < (*l)[i].ID
 		//return e.Timestamp.Before((*l)[i].Timestamp)
 	})
 	*l = append(*l, Event{})
@@ -88,7 +86,7 @@ type Actor struct {
 	ProjectID   uuid.UUID
 	NumEvents   int32
 	Alive       bool
-	LastEventID ulid.ULID
+	LastEventID string
 }
 
 type Filter struct {
@@ -124,7 +122,7 @@ func NewFilter(ctx echo.Context) (filter Filter) {
 }
 
 func (filter Filter) ValidEvent(event Event) bool {
-	if filter.ID != nil && *filter.ID != event.ID.String() {
+	if filter.ID != nil && *filter.ID != event.ID {
 		return false
 	}
 
