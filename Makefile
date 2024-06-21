@@ -24,7 +24,7 @@ down:
 	@migrate -path ./migration -database postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}?sslmode=disable down
 
 profile:
-	@go tool pprof -png http://localhost:8080/debug/pprof/profile > out.png
+	@go tool pprof -png -output tmp/profile.png http://localhost:8080/debug/pprof/profile
 
 test:
 	@go test -v ./core
