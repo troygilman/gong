@@ -1,0 +1,253 @@
+package overview
+
+import (
+	gong_common "gong/common"
+	"gong/view/common"
+	"fmt"
+)
+
+templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
+	<div id="node-info" class="w-full h-full p-2">
+		<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ info.PID }/>
+		PID: { info.PID }
+		Events: { fmt.Sprintf("%d", info.MsgCount) }
+	</div>
+}
+
+templ FlowChartNodeInfoEmpty() {
+	<div id="node-info" class="w-full h-full flex items-center justify-center">
+		Select a source/sink
+	</div>
+}
+
+templ FlowChartWidget() {
+	<div id="actor-flow-chart-widget" class="grid grid-cols-2 grow max-w-full min-h-0">
+		<div
+			hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
+			hx-trigger="load"
+			hx-include={ common.Includes }
+			class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden"
+		>
+			<span class="loading loading-dots loading-lg"></span>
+		</div>
+		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
+			<div role="tablist" class="tabs tabs-boxed border border-color">
+				if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
+					<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
+					@flowChartFilterItem("Sources", flow)
+					@flowChartFilterItem("Sinks", flow)
+				}
+			</div>
+			<script>
+				function getNode(event, defaultNode) {
+					if (event && event.detail && event.detail.node) {
+						console.log("node")
+						return event.detail.node;
+					} else {
+						console.log("default")
+						return defaultNode;
+					}
+				}
+			</script>
+			<div
+				id="node-info-container"
+				class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
+				hx-include={ common.Includes }
+				hx-target="#node-info"
+				hx-swap="outerHTML"
+				hx-push-url="true"
+				@htmx:before-request={ `
+					htmx.addClass(htmx.find("#node-info"), "hidden")
+				` }
+				if node, ok := ctx.Value(gong_common.CtxFlowNode).(string); ok {
+					hx-trigger="fetch-content, load"
+					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "%s")}`, gong_common.ParamFlowNode, node) }
+				} else {
+					hx-trigger="fetch-content"
+					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "")}`, gong_common.ParamFlowNode) }
+				}
+			>
+				@FlowChartNodeInfoEmpty()
+				<span class="htmx-indicator loading loading-dots loading-lg"></span>
+			</div>
+		</div>
+	</div>
+}
+
+templ flowChartFilterItem(label string, active string) {
+	<a
+		role="tab"
+		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
+		if label != active {
+			hx-get={ common.FormatProjectUrl(ctx) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, gong_common.CtxFlow, label) }
+			hx-include={ common.Includes }
+			hx-push-url="true"
+			hx-trigger="click"
+			hx-target="#actor-flow-chart-widget"
+			hx-swap="outerHTML"
+		}
+	>{ label }</a>
+}
+
+templ FlowChart(sourcesSinks []string, flowType string) {
+	<div class="flex relative h-full w-full items-center justify-center">
+		<div class="flex flex-col absolute top-2 left-2 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
+			<div class="flex items-center justify-start">
+				<div class="badge badge-primary badge-sm mr-2"></div>
+				Actor
+			</div>
+			<div class="flex items-center justify-start">
+				<div class="badge badge-accent badge-sm mr-2"></div>
+				{ flowType }
+			</div>
+		</div>
+		<svg id="chart" class="w-full h-full block" preserveAspectRatio="xMidYMid slice"></svg>
+		if actorPID, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
+		}
+	</div>
+}
+
+script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
+	const width = 1000;
+	const height =  1000;
+	const circleRadius = 12;
+	const circleRadiusHover = 14;
+
+	let data = {
+		"nodes": [
+			{"id": actorPID, "group": 1},
+		],
+		"links": [],
+	}
+
+	for (let i = 0; i < sourcesSinks.length; i++) {
+		let pid = sourcesSinks[i];
+		data.nodes.push({"id": pid, "group": 2});
+		data.links.push({"source": pid, "target": actorPID, "value": 1});
+	};
+
+	// Specify the color scale.
+	const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+	// The force simulation mutates links and nodes, so create a copy
+	// so that re-evaluating this cell produces the same result.
+	const links = data.links.map(d => ({...d}));
+	const nodes = data.nodes.map(d => ({...d}));
+
+	// Create a simulation with several forces.
+	const simulation = d3.forceSimulation(nodes)
+		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
+	    .force("charge", d3.forceManyBody().strength(-10000))
+	    .force("center", d3.forceCenter(width / 2, height / 2))
+		.velocityDecay(0.2)
+	    .on("tick", ticked);
+
+
+	const zoom = d3.zoom().on("zoom", handleZoom);
+
+	// Create the SVG container.
+	const svg = d3.select("#chart")
+	    .attr("viewBox", [0, 0, width, height])
+		.call(zoom);
+
+	svg.append("defs").append("marker")
+      	.attr("id", "arrow")
+       	.attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 4)
+        .attr("markerHeight", 4)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("fill", "oklch(var(--n))")
+        .attr("d", "M0,-5L10,0L0,5");
+
+	const link = svg.append("g")
+		.attr("id", "links")
+    	.attr("fill", "none")
+     	.attr("stroke-width", 4)
+		.attr("opacity", 0.2)
+      	.selectAll("path")
+       	.data(links)
+        .join("path")
+        .attr("stroke", "oklch(var(--n))")
+        .attr("marker-mid", d => "url('#arrow')");
+
+  	const node = svg.append("g")
+		.attr("id", "nodes")
+   		.attr("stroke", "oklch(var(--b2))")
+     	.attr("stroke-width", 4)
+       	.selectAll("g")
+        .data(nodes)
+        .join("g");
+
+	node.append("circle")
+		.attr("class", d => {
+			if (d.group == 2) {
+				return "cursor-pointer";
+			}
+		})
+        .attr("r", circleRadius)
+        .attr("fill", d => {
+        	if (d.group == 1) {
+         		return "oklch(var(--p))";
+         	} else {
+          		return "oklch(var(--a))";
+          	}
+        })
+        .on("mouseover", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadiusHover) }})
+        .on("mouseleave", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadius) }})
+        .on("click", (e, d) => { if (d.group == 2) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
+
+	node.append("text")
+      	.attr("x", 16)
+      	.attr("y", "0.31em")
+	  	.attr("stroke-width", 0)
+	  	.attr("class", "text-lg font-normal cursor-default")
+      	.text(d => d.id)
+    	.clone(true).lower()
+      	.attr("fill", "none")
+      	.attr("stroke", "oklch(var(--b2))")
+      	.attr("stroke-width", 4);
+
+    function linkArc(d) {
+      const r = 0;
+      const midX = (d.source.x + d.target.x) / 2;
+      const midY = (d.source.y + d.target.y) / 2;
+	  var node1 = d.source;
+	  var node2 = d.target;
+	  if (!isSources) {
+		node1 = d.target;
+		node2 = d.source;
+	  }
+      return `
+      	M${node1.x},${node1.y}
+        A${r},${r} 0 0,1 ${midX},${midY}
+        A${r},${r} 0 0,1 ${node2.x},${node2.y}
+      `;
+    }
+
+    // Set the position attributes of links and nodes each time the simulation ticks.
+    function ticked() {
+    	link.attr("d", linkArc);
+        node.attr("transform", d => {
+			return `translate(${d.x},${d.y})`
+		});
+    };
+
+    function handleZoom(e) {
+    	svg.select("#nodes")
+     		.attr("transform", d => {
+				return e.transform;
+			});
+    	svg.select("#links")
+     		.attr("transform", d => {
+				return e.transform;
+			});
+    }
+}

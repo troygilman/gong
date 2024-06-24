@@ -1,11 +1,11 @@
-package handler
+package api
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"gong/domain"
-	"gong/types"
+	"gong/common"
+	core_common "gong/core/common"
 	"io"
 	"strings"
 
@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func mustApp(ctx echo.Context) domain.App {
-	app, ok := ctx.Get("app").(domain.App)
+func mustApp(ctx echo.Context) core_common.App {
+	app, ok := ctx.Get("app").(core_common.App)
 	if !ok {
 		panic(fmt.Sprintln("App does not exist in context"))
 	}
@@ -57,15 +57,20 @@ func requestID(ctx echo.Context) string {
 }
 
 func mustProjectID(ctx echo.Context) uuid.UUID {
-	return ctx.Request().Context().Value(types.CtxProject).(uuid.UUID)
+	return ctx.Request().Context().Value(common.CtxProject).(uuid.UUID)
 }
 
 func actorPID(ctx echo.Context) (string, bool) {
-	actorPID, ok := ctx.Request().Context().Value(types.CtxPID).(string)
+	actorPID, ok := ctx.Request().Context().Value(common.CtxPID).(string)
 	return actorPID, ok
 }
 
 func tab(ctx echo.Context) (string, bool) {
-	tab, ok := ctx.Request().Context().Value(types.CtxTab).(string)
+	tab, ok := ctx.Request().Context().Value(common.CtxTab).(string)
 	return tab, ok
+}
+
+func filter(ctx echo.Context) (common.Filter, bool) {
+	filter, ok := ctx.Request().Context().Value(common.CtxFilter).(common.Filter)
+	return filter, ok
 }

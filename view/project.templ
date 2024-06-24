@@ -2,74 +2,79 @@ package view
 
 import (
 	"fmt"
-	"gong/types"
+	gong_common "gong/common"
+	"gong/view/common"
+	"gong/view/overview"
 )
 
-templ Project(props types.ProjectProps) {
-	@Index() {
-		@overrideHtmxHistory(formatProjectUrl(ctx, ""))
+templ Project(props gong_common.ProjectProps) {
+	@common.Index() {
+		<div id="includes" hx-include={ common.Includes }></div>
+		<script>
+			const next = htmx.createEventSource;
+			htmx.createEventSource = function(url) {
+				const elem = htmx.find("#includes");
+				const params = new URLSearchParams(htmx.values(elem));
+				url = url + "?" + params.toString();
+				return next(url);
+			}
+		</script>
 		<div
- 			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
- 			hx-ext="sse"
- 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
- 			x-data
+			class="flex flex-col h-screen w-screen max-h-screen max-w-screen"
+			hx-ext="sse"
+			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
+			x-data
 		>
-			<div class="flex flex-row border-b border-neutral py-2 px-4 w-full items-center justify-center drop-shadow z-50">
-				<div class="flex text-md font-bold items-center justify-center">
-					Project
+			<div class="grid grid-cols-6 border-b border-color py-2 px-4 w-full items-center z-50 bg-base-100">
+				<div class="flex flex-row justify-begin">
+					@common.LogoIcon("w-8 h-8 max-w-8 max-h-8")
 				</div>
-				<div class="dropdown ml-2">
-					<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation">{ props.ID.String() }</div>
-					<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full">
-						<li><a>Item 1</a></li>
-						<li><a>Item 2</a></li>
-					</ul>
+				<div class="flex flex-row col-span-4 justify-center">
+					<div class="flex text-md font-bold items-center justify-center cursor-default">
+						Project
+					</div>
+					<div class="dropdown ml-2">
+						<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation">{ props.ID.String() }</div>
+						<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full">
+							<li><a>Item 1</a></li>
+							<li><a>Item 2</a></li>
+						</ul>
+					</div>
 				</div>
+				<div></div>
 			</div>
 			<div class="flex flex-row grow min-w-full min-h-0">
 				@ProjectActorList(props)
-				if pid, ok := ctx.Value(types.CtxPID).(string); ok {
-					@ActorContent(props.ActorProps[pid])
+				if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+					@ActorContent(props.Actors[pid])
 				} else {
-					@ActorContent(types.ProjectActorProps{})
+					@ActorContent(gong_common.Actor{})
 				}
 			</div>
 		</div>
 	}
 }
 
-script overrideHtmxHistory(path string) {
-	htmx.on("htmx:before-history-update", function(e) {
-		console.log(e.detail)
-		const url = e.detail.history.path.split("?");
-		if (url.length > 1) {
-			e.detail.history.path = path + "?" + url[1];
-		} else {
-			a.detail.history.path = path;
-		}
-	});
-}
-
-templ ProjectActorList(props types.ProjectProps) {
-	<div class="flex flex-col w-64 h-full border-r border-neutral">
-		<div class="flex items-center justify-center pt-2 font-bold">Actors</div>
-		<div class="divider divider-neutral px-6 m-0"></div>
+templ ProjectActorList(props gong_common.ProjectProps) {
+	<div class="flex flex-col w-64 min-w-64 h-full border-r border-color">
+		<div class="flex items-center justify-center pt-2 font-bold cursor-default">Actors</div>
+		<div class="border border-color mx-6 mt-2"></div>
 		<ul
- 			id="actor-list"
- 			class="menu menu-sm"
- 			sse-swap={ types.SseTypeNewActor }
- 			hx-swap="afterbegin"
- 			x-data="{ active: ''}"
+			id="actor-list"
+			class="menu menu-sm"
+			sse-swap={ gong_common.SseTypeNewActor }
+			hx-swap="afterbegin"
+			x-data="{ active: ''}"
 		>
-			for _, actorProps := range props.ActorProps {
-				@ProjectActorListItem(actorProps, false)
+			for _, actor := range props.Actors {
+				@ProjectActorListItem(actor, false)
 			}
 		</ul>
 	</div>
 }
 
 func isCurrentPID(ctx context.Context, actorPID string) bool {
-	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 		return pid == actorPID
 	}
 	return false
@@ -89,99 +94,109 @@ script resetActiveListItem(id string) {
 	}
 }
 
-templ ProjectActorListItem(props types.ProjectActorProps, oob bool) {
+templ ProjectActorListItem(actor gong_common.Actor, oob bool) {
 	<li
- 		id={ "actor-list-item-" + formatActorPID(props.PID) }
- 		class="max-w-full"
- 		hx-get={ formatProjectUrl(ctx, "/actor") }
- 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, props.PID) }
- 		hx-include={ includes }
- 		hx-trigger="click"
- 		hx-push-url="true"
- 		if oob {
+		id={ "actor-list-item-" + formatActorPID(actor.PID) }
+		class="max-w-full"
+		hx-get={ common.FormatProjectUrl(ctx) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
+		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
+		hx-include={ common.Includes }
+		hx-trigger="click"
+		hx-push-url="true"
+		if oob {
 			hx-swap-oob="true"
 		}
 	>
 		<a
- 			class={ "flex flex-row items-center justify-between w-full", templ.KV("active", isCurrentPID(ctx, props.PID)) }
+			class={ "flex flex-row items-center justify-between w-full cursor-pointer", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
 		>
-			<div class="grow min-w-0 mr-2 truncate">{ props.PID }</div>
-			@ProjectActorBadge(props.PID, props.NumEvents, props.Alive)
-			if isCurrentPID(ctx, props.PID) {
-				@resetActiveListItem("actor-list-item-" + formatActorPID(props.PID))
+			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
+			@ProjectActorBadge(actor)
+			if isCurrentPID(ctx, actor.PID) {
+				@resetActiveListItem("actor-list-item-" + formatActorPID(actor.PID))
 			}
 		</a>
 	</li>
 }
 
-templ ProjectActorBadge(pid string, numEvents int32, alive bool) {
+templ ProjectActorBadge(actor gong_common.Actor) {
 	<div
- 		class={ "badge",  templ.KV("badge-success", alive), templ.KV("badge-error", !alive) }
- 		sse-swap={ types.SseTypeUpdateActorNumEvents + pid }
- 		hx-target="this"
- 		hx-swap="outerHTML"
+		class={ "badge",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
+		sse-swap={ gong_common.SseTypeUpdateActorNumEvents + actor.PID }
+		hx-target="this"
+		hx-swap="outerHTML"
 	>
-		if numEvents > 999 {
+		if actor.NumEvents > 999 {
 			{ "999+" }
 		} else {
-			{ fmt.Sprintf("%d", numEvents) }
+			{ fmt.Sprintf("%d", actor.NumEvents) }
 		}
 	</div>
 }
 
 const (
-	tabLabelEvents = "Events"
-	tabLabelTest   = "Test"
+	tabLabelOverview = "Overview"
+	tabLabelEvents   = "Events"
+	tabLabelFlow     = "Flow"
 )
 
-templ ProjectActor(props types.ProjectActorProps) {
-	@ActorContent(props)
-	@ProjectActorListItem(props, true)
+templ ProjectActor(actor gong_common.Actor) {
+	@ActorContent(actor)
+	@ProjectActorListItem(actor, true)
 }
 
-templ ActorContent(props types.ProjectActorProps) {
+templ ActorContent(actor gong_common.Actor) {
 	<div
- 		id="actor-content"
- 		class="flex flex-col grow max-h-full min-h-full min-w-0"
- 		hx-swap-oob="true"
+		id="actor-content"
+		class="flex flex-col grow max-h-full min-h-full min-w-0"
+		hx-swap-oob="true"
 	>
-		<input id="actor-pid" type="hidden" name="pid" value={ props.PID }/>
-		<input id="tab" type="hidden" name="tab" value={ ctx.Value(types.CtxTab).(string) }/>
-		<div class="p-2 font-bold">{ props.PID }</div>
+		<input id="actor-pid" type="hidden" name={ gong_common.ParamPID } value={ actor.PID }/>
+		<input id="tab" type="hidden" name={ gong_common.ParamTab } value={ ctx.Value(gong_common.CtxTab).(string) }/>
+		<div class="p-4 font-bold">{ actor.PID }</div>
 		<div
- 			role="tablist"
- 			class="tabs tabs-bordered"
+			role="tablist"
+			class="tabs tabs-bordered"
 		>
-			@actorTab(tabLabelEvents)
-			@actorTab(tabLabelTest)
+			@tab(tabLabelOverview)
+			@tab(tabLabelEvents)
+			@tab(tabLabelFlow)
 		</div>
-		@actorTabContent(tabLabelEvents) {
-			@eventsTabContent(props)
+		@tabContent(tabLabelOverview) {
+			@overview.OverviewTabContent(actor)
+		}
+		@tabContent(tabLabelEvents) {
+			@eventsTabContent(actor)
+		}
+		@tabContent(tabLabelFlow) {
+			@overview.FlowChartWidget()
 		}
 	</div>
 }
 
-templ actorTab(label string) {
-	<a
- 		role="tab"
- 		if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && activeTab == label {
-			class="tab tab-active"
-		} else {
-			class="tab"
-		}
- 		hx-get={ formatProjectUrl(ctx, "/actor") }
- 		hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
- 		hx-include={ includes }
- 		hx-push-url="true"
- 		hx-trigger="click"
- 		hx-swap="none"
-	>{ label }</a>
+templ tab(label string) {
+	if active, ok := ctx.Value(gong_common.CtxTab).(string); ok {
+		<a
+			role="tab"
+			class={ "tab", templ.KV("tab-active", label == active) }
+			if label != active {
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
+				hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
+				hx-include={ common.Includes }
+				hx-push-url="true"
+				hx-trigger="click"
+				hx-swap="none"
+			}
+		>{ label }</a>
+	}
 }
 
-templ actorTabContent(label string) {
-	if activeTab, ok := ctx.Value(types.CtxTab).(string); ok && label == activeTab {
+templ tabContent(label string) {
+	if activeTab, ok := ctx.Value(gong_common.CtxTab).(string); ok && label == activeTab {
 		<div
- 			class="flex flex-col grow min-h-0"
+			class="flex flex-col grow min-h-0"
 		>
 			{ children... }
 		</div>

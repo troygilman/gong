@@ -1,54 +1,113 @@
 package view
 
 import (
-	"github.com/google/uuid"
 	"fmt"
-	"gong/types"
+	gong_common "gong/common"
+	"gong/view/common"
 	"strings"
+	"log/slog"
+	"strconv"
 )
 
-templ eventsTabContent(props types.ProjectActorProps) {
-	if filter, ok := ctx.Value(types.CtxFilter).(types.EventsFilter); ok {
+templ eventsTabContent(actor gong_common.Actor) {
+	if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
 		@eventsFilter(filter)
 	} else {
-		@eventsFilter(types.EventsFilter{})
+		@eventsFilter(gong_common.Filter{})
 	}
-	@ProjectActorEventsContainer(props)
+	@ProjectActorEventsContainer(actor)
 }
 
-templ ProjectActorEventsContainer(props types.ProjectActorProps) {
+templ ProjectActorEventsContainer(actor gong_common.Actor) {
 	<div
 		id="events-container"
-		class="grow min-h-0 max-w-full overflow-x-auto"
+		class="grow min-h-0 max-w-full overflow-x-auto relative"
+		hx-ext="sse"
+		sse-connect={ common.FormatProjectUrl(ctx) + "/sse/events" }
+		hx-include={ common.Includes }
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
+		@htmx:after-request="onAfterRequest($event)"
 	>
 		<script>
 			function handleScroll(pid, { scrollTop }) {
 				const container = document.getElementById("events-container");
-				if (container.scrollTop < scrollTop) {
-					if (loadNext(container)) {
-						htmx.trigger('#events-top-data-loader-' + pid , 'load-next', {})
+				try {
+					if (container.scrollTop < scrollTop) {
+						if (shouldLoadTop()) {
+							htmx.trigger('#events-top-data-loader', 'load-next', {})
+						}
+					} else if (container.scrollTop > scrollTop) {
+						if (shouldLoadBottom()) {
+							htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
+						}
 					}
-				} else if (container.scrollTop > scrollTop) {
-					if (loadPrev(container)) {
-						htmx.trigger('#events-bottom-data-loader-' + pid, 'load-prev', {})
-					}
+				} catch (error) {
+					console.log(error);
 				}
 				return container.scrollTop;
 			}
 
-			function loadNext(container) {
+			function shouldLoadTop() {
+				console.log("shouldLoadTop");
+				const container = document.getElementById("events-container");
 				return container.scrollTop <= container.scrollHeight * 0.1;
 			}
 
-			function loadPrev(container) {
+			function shouldLoadBottom() {
+				const container = document.getElementById("events-container");
 				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
 			}
+
+			function getTopID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					return events[0].querySelector("input").value;
+				} else {
+					return "";
+				}
+			}
+
+			function getBottomID() {
+				const events = document.getElementById("events-container").querySelectorAll(".event");
+				if (events.length > 0) {
+					return events[events.length-1].querySelector("input").value;
+				} else {
+					return "";
+				}
+			}
+
+			function onAfterRequest(e) {
+				const maxEvents = 200;
+				const container = document.getElementById("events-container");
+				const events = container.querySelectorAll(".event");
+				const overflow = events.length - maxEvents;
+				if (e.detail.target.id === "events-top-data-loader") {
+					if (overflow > 0) {
+						for (let i = maxEvents; i < events.length; i++) {
+							htmx.remove(events[i]);
+						}
+					}
+					console.log("event swap top - overflow:", overflow)
+				} else if (e.detail.target.id === "events-bottom-data-loader") {
+					if (overflow > 0) {
+						for (let i = 0; i < overflow; i++) {
+							htmx.remove(events[i]);
+						}
+					}
+					console.log("event swap bottom - overflow:", overflow)
+				}
+			}
+
+			htmx.on("htmx:beforeRequest", function(e) {
+				if (e.srcElement.id == "events-top-data-loader" && !shouldLoadTop()) {
+					e.preventDefault();
+				}
+			});
 		</script>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
-				<tr>
+				<tr class="cursor-default">
 					<th>Timestamp</th>
 					<th>ID</th>
 					<th>Type</th>
@@ -59,118 +118,167 @@ templ ProjectActorEventsContainer(props types.ProjectActorProps) {
 			</thead>
 			<tbody
 				id="events-container"
+				hx-sync="this"
 			>
-				@eventsTopDataLoader(props.NumEvents, props.NumEvents, false, false)
-				@eventsBottomDataLoader(props.NumEvents, props.NumEvents, false)
+				@eventsTopDataLoader(false, false)
+				@eventsBottomDataLoader(false, true, true)
 			</tbody>
 		</table>
+		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
+			<span class="loading loading-dots loading-lg"></span>
+		</div>
 	</div>
 }
 
-templ eventsFilter(filter types.EventsFilter) {
+templ eventsFilter(filter gong_common.Filter) {
 	<form
 		id="events-filter"
-		class="join border rounded-lg m-4 w-fit"
-		hx-get={ formatProjectUrl(ctx, "/actor") }
-		hx-include={ includes }
+		class="join m-4 w-fit"
+		hx-get={ common.FormatProjectUrl(ctx) }
+		hx-include={ common.Includes }
+		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
 		hx-push-url="true"
 	>
 		<script>
 			function updateFilter() {
-				const form = document.getElementById('events-filter');
-				for (const input of form.elements) {
-					if (input.value !== input.defaultValue) {
+				console.log("updateFilter()");
+				const inputs = document.getElementById('events-filter').querySelectorAll("input");
+				for (const input of inputs) {
+					if (input.value !== input.defaultValue || input.checked !== input.defaultChecked) {
 						htmx.trigger('#events-filter', 'submit', {});
 					}
 				}
 			}
 		</script>
-		@eventsFilterItem("Type", "filter_type", filter.Type != "") {
+		@eventsFilterItem("ID", gong_common.ParamFilterID, filter.ID != nil, -1) {
 			<input
-				name="filter_type"
+				class="event-filter-input"
+				name={ gong_common.ParamFilterID }
 				type="text"
-				placeholder="actor.Started"
-				value={ filter.Type }
-				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
-				@keydown.enter="updateFilter()"
-				@focusout="updateFilter()"
+				placeholder="01HXZJN46DQJPWYBAM"
+				if filter.ID != nil {
+					value={ *filter.ID }
+				}
 			/>
 		}
-		<div class="h-full border w-0"></div>
-		@eventsFilterItem("Sender", "filter_sender", filter.Sender != "") {
+		@eventsFilterItem("Type", gong_common.ParamFilterType, filter.Type != nil, 0) {
 			<input
-				name="filter_sender"
+				class="event-filter-input"
+				name={ gong_common.ParamFilterType }
 				type="text"
 				placeholder="actor.Started"
-				value={ filter.Sender }
-				class="input input-bordered input-sm w-full max-w-xs focus:outline-none"
-				@keydown.enter="updateFilter()"
-				@focusout="updateFilter()"
+				if filter.Type != nil {
+					value={ *filter.Type }
+				}
 			/>
+		}
+		@eventsFilterItem("Sender", gong_common.ParamFilterSender, filter.Sender != nil, 0) {
+			<input
+				class="event-filter-input"
+				name={ gong_common.ParamFilterSender }
+				type="text"
+				placeholder="local/server/primary"
+				if filter.Sender != nil {
+					value={ *filter.Sender }
+				}
+			/>
+		}
+		@eventsFilterItem("Level", gong_common.ParamFilterLevel, filter.Level != nil, 1) {
+			<div class="px-2 py-1">
+				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
+				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
+				@eventsFilterLevelOption("WARN", slog.LevelWarn, filter.Level)
+				@eventsFilterLevelOption("ERROR", slog.LevelError, filter.Level)
+			</div>
 		}
 	</form>
 }
 
-templ eventsFilterItem(label string, name string, active bool) {
+templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Level) {
+	<div class="form-control">
+		<label class="label cursor-pointer py-1">
+			<span class="label-text">{ label }</span>
+			<input
+				type="radio"
+				name={ gong_common.ParamFilterLevel }
+				class="radio"
+				value={ strconv.Itoa(int(level)) }
+				if selected != nil && *selected == level {
+					checked
+				}
+			/>
+		</label>
+	</div>
+}
+
+templ eventsFilterItem(label string, name string, active bool, placement int) {
 	<div class="join-item indicator">
 		if active {
 			<span
-				class="indicator-item badge badge-primary badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ formatProjectUrl(ctx, "/actor") }
-				hx-include={ includes }
+				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-include={ common.Includes }
 				hx-params={ "not " + name }
+				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
 			>
-				@closeIcon("inline-block w-4 h-4 stroke-current")
+				@common.CloseIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
-		<div class="dropdown">
-			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation rounded-none">{ label }</div>
-			<div tabindex="0" class="dropdown-content z-50 shadow bg-base-100 rounded-box w-64">
+		<div class="dropdown group">
+			<div
+				tabindex="0"
+				role="button"
+				class={ "event-filter-button-container", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
+			>
+				<div class={ "event-filter-button", templ.KV("bg-neutral text-neutral-content", active) }>{ label }</div>
+			</div>
+			<div
+				tabindex="0"
+				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border"
+				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
+				@keydown.enter="updateFilter()"
+			>
 				{ children... }
 			</div>
 		</div>
 	</div>
 }
 
-templ eventsTopDataLoader(startIdx int32, endIdx int32, oob bool, moreEvents bool) {
+templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
-		id={ "events-top-data-loader-" + formatActorPIDCtx(ctx) }
-		hx-get={ formatProjectUrl(ctx, "/events") }
-		hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, 10) }
-		hx-include={ includes }
+		id="events-top-data-loader"
+		hx-get={ common.FormatProjectUrl(ctx) + "/events" }
+		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
+		hx-include={ common.Includes }
 		hx-swap="outerHTML"
 		if moreEvents {
-			hx-trigger="load-next once, intersect once"
+			hx-trigger="sse:new-events, load-next once, intersect once delay:100ms"
 		} else {
-			hx-trigger="every 1s [load()]"
+			hx-trigger="sse:new-events"
 		}
 		if oob {
 			hx-swap-oob="true"
 		}
-	>
-		<script>
-			function load() {
-				const container = document.getElementById("events-container");
-				return loadNext(container);
-			}
-		</script>
-	</tr>
+	></tr>
 }
 
-templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
+templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 	<tr
-		id={ "events-bottom-data-loader-" + formatActorPIDCtx(ctx) }
-		if startIdx > 0 {
-			hx-get={ formatProjectUrl(ctx, "/events") }
-			hx-vals={ fmt.Sprintf(`{ "start": %d, "end": %d, "n": %d }`, startIdx, endIdx, -10) }
-			hx-include={ includes }
+		id="events-bottom-data-loader"
+		if moreEvents {
+			hx-get={ common.FormatProjectUrl(ctx) + "/events" }
+			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
+			hx-include={ common.Includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
+			if spinner {
+				hx-indicator="#spinner"
+			}
 		}
 		if oob {
 			hx-swap-oob="true"
@@ -179,7 +287,7 @@ templ eventsBottomDataLoader(startIdx int32, endIdx int32, oob bool) {
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
-	if pid, ok := ctx.Value(types.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 		return formatActorPID(pid)
 	}
 	return ""
@@ -189,40 +297,46 @@ func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")
 }
 
-templ ProjectActorEvents(projectID uuid.UUID, actorPID string, events types.EventList, delete []int32, startIdx int32, endIdx int32, appendEnd bool, moreEvents bool) {
-	@eventsTopDataLoader(startIdx, endIdx, !appendEnd, moreEvents)
+templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
+	if appendTop || (!appendTop && moreBottom) {
+		@eventsTopDataLoader(!appendTop, moreTop)
+	}
 	for i := 0; i < len(events); i++ {
 		@projectActorEvent(events[i])
 	}
-	for _, i := range delete {
-		@projectActorEventDelete(i)
+	if !appendTop || (appendTop && moreTop) {
+		@eventsBottomDataLoader(appendTop, moreBottom, false)
 	}
-	@eventsBottomDataLoader(startIdx, endIdx, appendEnd)
 }
 
-templ projectActorEvent(event types.Event) {
-	<tr id={ fmt.Sprintf("event-%d", event.Index) } class="text-nowrap">
+templ projectActorEvent(event gong_common.Event) {
+	<tr id={ fmt.Sprintf("event-%s", event.ID) } class="event">
+		<input type="hidden" value={ event.ID }/>
 		<td>
 			{ event.Timestamp.String() }
 		</td>
 		<td>
-			{ event.ID.String() }
+			{ event.ID }
 		</td>
 		<td>
 			{ event.Type }
 		</td>
 		<td>
-			{ event.Event.Sender }
+			if event.Sender != nil {
+				{ *event.Sender }
+			} else {
+				N/A
+			}
 		</td>
 		<td>
 			{ event.Level.String() }
 		</td>
 		<td>
-			{ event.Msg }
+			if event.Msg != nil {
+				{ *event.Msg }
+			} else {
+				N/A
+			}
 		</td>
 	</tr>
-}
-
-templ projectActorEventDelete(index int32) {
-	<tr id={ fmt.Sprintf("event-%d", index) } hx-swap-oob="delete"></tr>
 }

@@ -2,8 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {}
+@layer components {
+	.event {
+		@apply text-nowrap;
+	}
+
+	.event-filter-input {
+		@apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent;
+	}
+
+	.event-filter-button {
+		@apply btn btn-sm btn-ghost hover:bg-base-content/10 hover:text-base-content rounded-none no-animation;
+	}
+
+	.event-filter-button-container {
+		@apply border border-color overflow-hidden group-focus-within:rounded-b-none group-focus-within:border-b-0;
+	}
+
+	[data-theme="nord"] .border-color {
+		@apply border-gray-300;
+	}
+
+	.spinner {
+		@apply hidden;
+	}
+
+	.htmx-request.spinner {
+		@apply flex;
+	}
+}
 
 [x-cloak] {
-    display: none !important;
+	display: none !important;
+}
+
+.htmx-indicator {
+	opacity: 0;
+}
+
+.htmx-request .htmx-indicator {
+	opacity: 1;
 }

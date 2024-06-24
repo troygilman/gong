@@ -1,37 +1,46 @@
 package example
 
 import (
+	"fmt"
 	"gong/sdk"
-	"log"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 )
 
-func StartClient() {
+func ExampleClient() error {
 	engine, err := actor.NewEngine(actor.NewEngineConfig())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	gongPID := engine.Spawn(sdk.NewGong(sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")), "gong")
+	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
+	config.QueueSize = 100000
+	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
 
-	pid1 := engine.Spawn(newClient(), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
-	pid2 := engine.Spawn(newClient(), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
-	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("primary"), actor.WithMiddleware(sdk.GongMiddleware()))
+	start := time.Now()
+	wg := &sync.WaitGroup{}
+	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
+	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
 
-	time.Sleep(10 * time.Second)
+	wg.Wait()
+	fmt.Println("Clients stopped")
 
-	engine.Stop(gongPID)
-	time.Sleep(time.Second)
+	engine.Poison(gongPID, wg).Wait()
+
+	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
+	return nil
 }
 
 type testMsg struct {
+	id string
 }
 
 func (m testMsg) Log() (slog.Level, string, []any) {
-	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi"}
+	return slog.LevelInfo, "test", []any{"id", "jsdjsidjsjdi", "pid", actor.NewPID("hello", "123")}
 }
 
 type server struct {
@@ -49,11 +58,14 @@ func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
 func (s server) Receive(ctx *actor.Context) {
 	switch ctx.Message().(type) {
 	case actor.Started:
-		for range 100 {
+		for range 1000000 {
 			ctx.Send(s.pids[0], testMsg{})
 			ctx.Send(s.pids[1], testMsg{})
-			time.Sleep(10 * time.Millisecond)
+			//time.Sleep(10 * time.Millisecond)
 		}
+		fmt.Println("Finished sending msgs")
+		time.Sleep(time.Second)
+		ctx.Engine().Poison(ctx.PID())
 		ctx.Engine().Poison(s.pids[0])
 		ctx.Engine().Poison(s.pids[1])
 		// nums := []int{}
@@ -62,13 +74,27 @@ func (s server) Receive(ctx *actor.Context) {
 	}
 }
 
-type client struct{}
+type client struct {
+	wg    *sync.WaitGroup
+	count int
+}
 
-func newClient() actor.Producer {
+func newClient(wg *sync.WaitGroup) actor.Producer {
 	return func() actor.Receiver {
-		return client{}
+		return &client{
+			wg: wg,
+		}
 	}
 }
 
-func (c client) Receive(ctx *actor.Context) {
+func (c *client) Receive(ctx *actor.Context) {
+	switch ctx.Message().(type) {
+	case actor.Started:
+		c.wg.Add(1)
+	case actor.Stopped:
+		fmt.Printf("Stopping client - count: %d\n", c.count)
+		c.wg.Done()
+	case testMsg:
+		c.count++
+	}
 }

@@ -1,6 +1,6 @@
 view/**/*_templ.go
 static/css
 .env
-.gen
 tmp
 node_modules
+.vscode
