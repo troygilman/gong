@@ -346,8 +346,29 @@ func handleGetProjectAdmin(eCtx echo.Context) error {
 }
 
 func handleConnectSseProjectAdmin(eCtx echo.Context) error {
+	ctx := eCtx.Request().Context()
 	return sse(eCtx, core_common.ListenerTypeMetrics, func(sses []any) error {
-		log.Printf("%+v\n", sses)
+		for _, sse := range sses {
+			switch sse := sse.(type) {
+			case core_common.MetricGroup:
+				if err := writeServerSentEvent(
+					ctx,
+					eCtx.Response(),
+					common.SseTypeUpdateMetricLatency,
+					view.Metric(sse.Avg.Latency.Milliseconds(), common.SseTypeUpdateMetricLatency),
+				); err != nil {
+					return err
+				}
+				if err := writeServerSentEvent(
+					ctx,
+					eCtx.Response(),
+					common.SseTypeUpdateMetricThroughput,
+					view.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
+				); err != nil {
+					return err
+				}
+			}
+		}
 		return nil
 	})
 }

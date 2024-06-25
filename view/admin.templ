@@ -1,9 +1,29 @@
 package view
 
-import "gong/view/common"
+import (
+	"gong/view/common"
+	"fmt"
+	gong_common "gong/common"
+)
 
 templ Admin() {
 	@common.Index() {
-		<div hx-ext="sse" sse-connect={ common.FormatProjectUrl(ctx) + "/admin/sse" }></div>
+		<div hx-ext="sse" sse-connect={ common.FormatProjectUrl(ctx) + "/admin/sse" }>
+			<div>
+				Metrics
+				<div class="flex flex-row">
+					<div class="pr-2">Latency (ms):</div>
+					@Metric(0, gong_common.SseTypeUpdateMetricLatency)
+				</div>
+				<div class="flex flex-row">
+					<div class="pr-2">Throughput (events/sec):</div>
+					@Metric(0, gong_common.SseTypeUpdateMetricThroughput)
+				</div>
+			</div>
+		</div>
 	}
+}
+
+templ Metric(val int64, sseSwap string) {
+	<div sse-swap={ sseSwap }>{ fmt.Sprintf("%d", val) }</div>
 }
