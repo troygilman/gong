@@ -3,10 +3,13 @@ package api
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"gong/common"
 	core_common "gong/core/common"
 	"io"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -73,4 +76,46 @@ func tab(ctx echo.Context) (string, bool) {
 func filter(ctx echo.Context) (common.Filter, bool) {
 	filter, ok := ctx.Request().Context().Value(common.CtxFilter).(common.Filter)
 	return filter, ok
+}
+
+func sse(eCtx echo.Context, listenerType core_common.ListenerType, f func(sses []any) error) error {
+	ctx := eCtx.Request().Context()
+	app := mustApp(eCtx)
+
+	flusher, ok := eCtx.Response().Writer.(http.Flusher)
+	if !ok {
+		return errors.New("sse not supported")
+	}
+
+	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
+
+	requestID := requestID(eCtx)
+
+	projectID := mustProjectID(eCtx)
+
+	filter, _ := filter(eCtx)
+
+	sseChan, err := app.ListenStart(ctx, projectID, requestID, listenerType, filter)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := app.ListenStop(ctx, requestID); err != nil {
+			log.Println(err)
+		}
+		// flush the channel until closed
+		for range sseChan {
+		}
+	}()
+
+	for {
+		select {
+		case sses := <-sseChan:
+			if err := f(sses); err != nil {
+				return err
+			}
+			flusher.Flush()
+		}
+	}
 }

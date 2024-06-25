@@ -64,22 +64,28 @@ func (l *listener) receive(ctx context.Context, aCtx *actor.Context) error {
 		close(l.c)
 
 	case common.MsgListenData:
-		switch l.lType {
-		case common.ListenerTypeProject:
-			l.c <- msg.Data
-		case common.ListenerTypeEvents:
-			filteredEvents := make([]any, 0, len(msg.Data))
-			for _, event := range msg.Data {
-				if event, ok := event.(gong_common.Event); ok {
+		filteredData := make([]any, 0, len(msg.Data))
+
+		for _, data := range msg.Data {
+			switch l.lType {
+			case common.ListenerTypeProject:
+				filteredData = msg.Data
+			case common.ListenerTypeEvents:
+				if event, ok := data.(gong_common.Event); ok {
 					if l.filter.ValidEvent(event) {
-						filteredEvents = append(filteredEvents, event)
+						filteredData = append(filteredData, event)
 					}
 				}
+			case common.ListenerTypeMetrics:
+				if metricGroup, ok := data.(common.MetricGroup); ok {
+					filteredData = append(filteredData, metricGroup)
+				}
+			default:
+				panic("invalid listener type")
 			}
-			l.c <- filteredEvents
-		default:
-			panic("invalid listener type")
 		}
+
+		l.c <- filteredData
 	}
 	return nil
 }

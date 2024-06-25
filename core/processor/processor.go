@@ -120,7 +120,9 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, er
 }
 
 func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) error {
+	start := time.Now()
 	batchSize := min(len(p.events), 10000)
+
 	defer func() {
 		p.events = p.events[batchSize:]
 		p.updates = make(map[string]bool)
@@ -160,12 +162,25 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		actors = append(actors, p.actors[pid])
 	}
 
-	if len(actors) > 0 {
-		aCtx.Send(projectPID, common.MsgUpdateProject{
-			Actors: actors,
-			Events: eventBatch,
-		})
+	latency := time.Since(start)
+	latencySec := float32(latency.Milliseconds()) / 1000
+
+	var throughput int64
+	if latencySec > 0 {
+		throughput = int64(float32(batchSize) / latencySec)
 	}
+
+	metric := common.Metric{
+		Timestamp:  time.Now(),
+		Latency:    latency,
+		Throughput: throughput,
+	}
+
+	aCtx.Send(projectPID, common.MsgUpdateProject{
+		Actors: actors,
+		Events: eventBatch,
+		Metric: metric,
+	})
 
 	return nil
 }

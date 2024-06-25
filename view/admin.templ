@@ -1,0 +1,9 @@
+package view
+
+import "gong/view/common"
+
+templ Admin() {
+	@common.Index() {
+		<div hx-ext="sse" sse-connect={ common.FormatProjectUrl(ctx) + "/admin/sse" }></div>
+	}
+}

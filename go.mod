@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/a-h/templ v0.2.697
 	github.com/anthdm/hollywood v0.0.0-20240115210651-dd34702ee21f
+	github.com/gammazero/deque v0.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1

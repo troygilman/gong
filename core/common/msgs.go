@@ -42,6 +42,7 @@ type MsgProcessorUpdateState struct{}
 type MsgUpdateProject struct {
 	Actors []common.Actor
 	Events []common.Event
+	Metric Metric
 }
 
 type MsgUpdateProjectInternal struct{}

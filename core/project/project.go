@@ -27,6 +27,7 @@ type project struct {
 	eventUpdates []gong_common.Event
 	repeater     actor.SendRepeater
 	listeners    map[common.ListenerType]map[*actor.PID]struct{}
+	metrics      common.MetricsManager
 }
 
 func NewProjectProducerWithApp(app common.App) actor.Producer {
@@ -59,6 +60,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		p.actors = make(map[string]gong_common.Actor)
 		p.actorUpdates = make(map[string]gong_common.Actor)
 		p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
+		p.metrics = common.NewMetricsManager(time.Second * 10)
 	case actor.Started:
 		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgUpdateProjectInternal{}, projectUpdatePropsInterval)
 	case actor.Stopped:
@@ -91,6 +93,7 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			p.actorUpdates[actorData.PID] = actorData
 		}
 		p.eventUpdates = append(p.eventUpdates, msg.Events...)
+		p.metrics.Process(msg.Metric, time.Now())
 
 	case common.MsgUpdateProjectInternal:
 		listenerData := make(map[*actor.PID][]any)
@@ -116,6 +119,8 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 					for _, event := range p.eventUpdates {
 						listenerData[listenerPID] = append(listenerData[listenerPID], event)
 					}
+				case common.ListenerTypeMetrics:
+					listenerData[listenerPID] = append(listenerData[listenerPID], p.metrics.Group())
 				default:
 				}
 			}

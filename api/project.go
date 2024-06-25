@@ -27,6 +27,8 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/sse/events", handleConnectSseEvents)
 		e.GET("/chart", handleGetActorChart)
 		e.GET("/connect", handleConnectProject)
+		e.GET("/admin", handleGetProjectAdmin)
+		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	}, middlewareProjectContext())
 }
 
@@ -337,4 +339,15 @@ func isSources(flowType string) (bool, error) {
 	default:
 		return false, errors.New("invalid flow type")
 	}
+}
+
+func handleGetProjectAdmin(eCtx echo.Context) error {
+	return view.Admin().Render(eCtx.Request().Context(), eCtx.Response())
+}
+
+func handleConnectSseProjectAdmin(eCtx echo.Context) error {
+	return sse(eCtx, core_common.ListenerTypeMetrics, func(sses []any) error {
+		log.Printf("%+v\n", sses)
+		return nil
+	})
 }

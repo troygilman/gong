@@ -38,6 +38,7 @@ type ListenerType uint
 const (
 	ListenerTypeProject ListenerType = iota
 	ListenerTypeEvents
+	ListenerTypeMetrics
 )
 
 type PersistentActor interface {
