@@ -172,7 +172,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 
 	metric := common.Metric{
 		Timestamp:  time.Now(),
-		Latency:    latency,
+		Latency:    latency.Milliseconds(),
 		Throughput: throughput,
 	}
 

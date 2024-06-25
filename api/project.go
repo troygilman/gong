@@ -10,8 +10,6 @@ import (
 	"gong/sdk"
 	"gong/view"
 	view_overview "gong/view/overview"
-	"log"
-	"net/http"
 	"strconv"
 
 	"github.com/gorilla/websocket"
@@ -140,134 +138,59 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 
 func handleConnectSseProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
-
-	flusher, ok := eCtx.Response().Writer.(http.Flusher)
-	if !ok {
-		return errors.New("sse not supported")
-	}
-
-	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
-
-	requestID := requestID(eCtx)
-
-	projectID := mustProjectID(eCtx)
-
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, core_common.ListenerTypeProject, common.Filter{})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err := app.ListenStop(ctx, requestID); err != nil {
-			log.Println(err)
-		}
-		// flush the channel until closed
-		for range sseChan {
-		}
-	}()
-
-	for {
-		select {
-		case sses := <-sseChan:
-			for _, sse := range sses {
-				if err := func() error {
-					switch sse := sse.(type) {
-					case common.SseNewActor:
-						if err := writeServerSentEvent(
-							ctx,
-							eCtx.Response(),
-							common.SseTypeNewActor,
-							view.ProjectActorListItem(sse.Actor, false),
-						); err != nil {
-							return err
-						}
-					case common.SseNewEvents:
-						if err := writeServerSentEvent(
-							ctx,
-							eCtx.Response(),
-							common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
-							view.ProjectActorBadge(sse.Actor),
-						); err != nil {
-							return err
-						}
-					}
-					return nil
-				}(); err != nil {
+	return sse(eCtx, core_common.ListenerTypeProject, func(sses []any) error {
+		for _, sse := range sses {
+			switch sse := sse.(type) {
+			case common.SseNewActor:
+				if err := writeServerSentEvent(
+					ctx,
+					eCtx.Response(),
+					common.SseTypeNewActor,
+					view.ProjectActorListItem(sse.Actor, false),
+				); err != nil {
 					return err
 				}
-				flusher.Flush()
+			case common.SseNewEvents:
+				if err := writeServerSentEvent(
+					ctx,
+					eCtx.Response(),
+					common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
+					view.ProjectActorBadge(sse.Actor),
+				); err != nil {
+					return err
+				}
 			}
 		}
-	}
+		return nil
+	})
 }
 
 func handleConnectSseEvents(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
-
-	flusher, ok := eCtx.Response().Writer.(http.Flusher)
-	if !ok {
-		return errors.New("sse not supported")
-	}
-
-	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
-
-	requestID := requestID(eCtx)
-
-	projectID := mustProjectID(eCtx)
-
-	filter, ok := filter(eCtx)
-	if !ok {
-		panic("filter is required")
-	}
-
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, core_common.ListenerTypeEvents, filter)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err := app.ListenStop(ctx, requestID); err != nil {
-			log.Println(err)
+	return sse(eCtx, core_common.ListenerTypeEvents, func(sses []any) error {
+		eventCount := 0
+		for _, sse := range sses {
+			switch sse := sse.(type) {
+			case common.Event:
+				eventCount++
+			default:
+				_ = sse
+			}
 		}
-		// flush the channel until closed
-		for range sseChan {
-		}
-	}()
 
-	for {
-		select {
-		case sses := <-sseChan:
-			if err := func() error {
-				eventCount := 0
-				for _, sse := range sses {
-					switch sse := sse.(type) {
-					case common.Event:
-						eventCount++
-					default:
-						_ = sse
-					}
-				}
-
-				if eventCount > 0 {
-					if err := writeServerSentEvent(
-						ctx,
-						eCtx.Response(),
-						common.SseTypeNewEvents,
-						nil,
-					); err != nil {
-						return err
-					}
-				}
-
-				return nil
-			}(); err != nil {
+		if eventCount > 0 {
+			if err := writeServerSentEvent(
+				ctx,
+				eCtx.Response(),
+				common.SseTypeNewEvents,
+				nil,
+			); err != nil {
 				return err
 			}
-			flusher.Flush()
 		}
-	}
+
+		return nil
+	})
 }
 
 var upgrader = websocket.Upgrader{}
@@ -355,7 +278,7 @@ func handleConnectSseProjectAdmin(eCtx echo.Context) error {
 					ctx,
 					eCtx.Response(),
 					common.SseTypeUpdateMetricLatency,
-					view.Metric(sse.Avg.Latency.Milliseconds(), common.SseTypeUpdateMetricLatency),
+					view.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
 				); err != nil {
 					return err
 				}

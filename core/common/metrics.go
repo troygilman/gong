@@ -7,7 +7,7 @@ import (
 
 type Metric struct {
 	Timestamp  time.Time
-	Latency    time.Duration
+	Latency    int64
 	Throughput int64
 }
 
@@ -24,7 +24,7 @@ func NewMetricsManager(duration time.Duration) MetricsManager {
 type MetricsManager struct {
 	duration        time.Duration
 	metrics         deque.Deque[Metric]
-	totalLatency    time.Duration
+	totalLatency    int64
 	totalThroughput int64
 }
 
@@ -47,7 +47,7 @@ func (mm *MetricsManager) Process(m Metric, now time.Time) {
 func (mm MetricsManager) Group() (mg MetricGroup) {
 	if mm.metrics.Len() > 0 {
 		mg.Avg = Metric{
-			Latency:    mm.totalLatency / time.Duration(mm.metrics.Len()),
+			Latency:    mm.totalLatency / int64(mm.metrics.Len()),
 			Throughput: mm.totalThroughput / int64(mm.metrics.Len()),
 		}
 	}
