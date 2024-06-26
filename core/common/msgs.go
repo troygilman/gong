@@ -45,8 +45,6 @@ type MsgUpdateProject struct {
 	Metric Metric
 }
 
-type MsgUpdateProjectInternal struct{}
-
 type MsgGetActorSourcesSinks struct {
 	ActorPID string
 	Sources  bool

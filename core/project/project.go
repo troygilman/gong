@@ -20,6 +20,8 @@ const (
 	projectUpdatePropsInterval = 100 * time.Millisecond
 )
 
+type msgUpdateProjectInternal struct{}
+
 type project struct {
 	common.CommonActorData
 	actors       map[string]gong_common.Actor
@@ -41,7 +43,11 @@ func NewProjectProducerWithApp(app common.App) actor.Producer {
 }
 
 func (p *project) Receive(aCtx *actor.Context) {
-	actor_utils.LogActorMsg(aCtx)
+	switch aCtx.Message().(type) {
+	case msgUpdateProjectInternal, common.MsgUpdateProject:
+	default:
+		actor_utils.LogActorMsg(aCtx)
+	}
 
 	ctx, cancel := context.WithTimeout(aCtx.Context(), 1*time.Second)
 	defer cancel()
@@ -60,9 +66,9 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 		p.actors = make(map[string]gong_common.Actor)
 		p.actorUpdates = make(map[string]gong_common.Actor)
 		p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
-		p.metrics = common.NewMetricsManager(time.Second * 10)
+		p.metrics = common.NewMetricsManager(20)
 	case actor.Started:
-		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgUpdateProjectInternal{}, projectUpdatePropsInterval)
+		p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 	case actor.Stopped:
 		p.repeater.Stop()
 	case common.MsgGetProjectProps:
@@ -93,9 +99,9 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			p.actorUpdates[actorData.PID] = actorData
 		}
 		p.eventUpdates = append(p.eventUpdates, msg.Events...)
-		p.metrics.Process(msg.Metric, time.Now())
+		p.metrics.Process(msg.Metric)
 
-	case common.MsgUpdateProjectInternal:
+	case msgUpdateProjectInternal:
 		listenerData := make(map[*actor.PID][]any)
 
 		// build data for every listener

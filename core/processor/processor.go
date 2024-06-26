@@ -45,7 +45,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 		actor_utils.LogActorMsg(aCtx)
 	}
 
-	ctx, cancel := context.WithTimeout(aCtx.Context(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(aCtx.Context(), 2*time.Second)
 	defer cancel()
 
 	if err := p.receive(ctx, aCtx); err != nil {
@@ -155,9 +155,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		}
 	}
 
-	projectPID := aCtx.Engine().Registry.GetPID(common.KindProject, p.Id.String())
 	actors := make([]gong_common.Actor, 0)
-
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}
@@ -176,6 +174,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		Throughput: throughput,
 	}
 
+	projectPID := aCtx.Engine().Registry.GetPID(common.KindProject, p.Id.String())
 	aCtx.Send(projectPID, common.MsgUpdateProject{
 		Actors: actors,
 		Events: eventBatch,

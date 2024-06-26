@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/gammazero/deque"
 	"time"
+
+	"github.com/gammazero/deque"
 )
 
 type Metric struct {
@@ -15,36 +16,37 @@ type MetricGroup struct {
 	Avg Metric
 }
 
-func NewMetricsManager(duration time.Duration) MetricsManager {
+func NewMetricsManager(size int) MetricsManager {
 	return MetricsManager{
-		duration: duration,
+		size:    size,
+		metrics: deque.New[Metric](),
 	}
 }
 
 type MetricsManager struct {
-	duration        time.Duration
-	metrics         deque.Deque[Metric]
+	size            int
+	metrics         *deque.Deque[Metric]
 	totalLatency    int64
 	totalThroughput int64
 }
 
-func (mm *MetricsManager) prune(now time.Time) {
-	cutoff := now.Add(-mm.duration)
-	for mm.metrics.Back().Timestamp.Before(cutoff) {
-		metric := mm.metrics.PopBack()
+func (mm *MetricsManager) prune() {
+	for mm.metrics.Len() > mm.size {
+		metric := mm.metrics.PopFront()
 		mm.totalLatency -= metric.Latency
 		mm.totalThroughput -= metric.Throughput
 	}
 }
 
-func (mm *MetricsManager) Process(m Metric, now time.Time) {
+func (mm *MetricsManager) Process(m Metric) {
 	mm.totalLatency += m.Latency
 	mm.totalThroughput += m.Throughput
-	mm.metrics.PushFront(m)
-	mm.prune(now)
+	mm.metrics.PushBack(m)
+	mm.prune()
 }
 
-func (mm MetricsManager) Group() (mg MetricGroup) {
+func (mm *MetricsManager) Group() (mg MetricGroup) {
+	mm.prune()
 	if mm.metrics.Len() > 0 {
 		mg.Avg = Metric{
 			Latency:    mm.totalLatency / int64(mm.metrics.Len()),

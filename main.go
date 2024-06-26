@@ -25,7 +25,7 @@ func main() {
 }
 
 func run() error {
-	db, err := persistance.NewPostgresDatabase()
+	db, err := persistance.NewPostgresDatabase(sqlMigrations)
 	if err != nil {
 		return err
 	}

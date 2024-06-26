@@ -5,9 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"gong/common"
+	"io/fs"
 	"log"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
 	"github.com/uptrace/bun"
@@ -28,7 +32,7 @@ type postgresDatabase struct {
 	bunDB *bun.DB
 }
 
-func NewPostgresDatabase() (Database, error) {
+func NewPostgresDatabase(sqlMigrations fs.FS) (Database, error) {
 	hostname, ok := os.LookupEnv(envDatabaseHostname)
 	if !ok {
 		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
@@ -68,8 +72,8 @@ func NewPostgresDatabase() (Database, error) {
 	bunDB := bun.NewDB(sqlDB, pgdialect.New())
 
 	bunDB.AddQueryHook(bundebug.NewQueryHook(
-		bundebug.FromEnv("BUNDEBUG"),
-		// bundebug.WithVerbose(true),
+		// bundebug.FromEnv("BUNDEBUG"),
+		bundebug.WithVerbose(false),
 	))
 
 	bunDB.SetMaxOpenConns(5) // requred to not overwhelm db server
@@ -78,26 +82,26 @@ func NewPostgresDatabase() (Database, error) {
 		return nil, err
 	}
 
-	// if sqlMigrations != nil {
-	// 	dbDriver, err := sqlite.WithInstance(db.DB, &sqlite.Config{})
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
-	// 	}
+	if sqlMigrations != nil {
+		dbDriver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+		if err != nil {
+			return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
+		}
 
-	// 	sourceDriver, err := iofs.New(sqlMigrations, "migration")
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
-	// 	}
+		sourceDriver, err := iofs.New(sqlMigrations, "migration")
+		if err != nil {
+			return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
+		}
 
-	// 	migrations, err := migrate.NewWithInstance("sqlMigrations", sourceDriver, "sqlite", dbDriver)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("error while creating db migrations: %s", err.Error())
-	// 	}
+		migrations, err := migrate.NewWithInstance("sqlMigrations", sourceDriver, "postgres", dbDriver)
+		if err != nil {
+			return nil, fmt.Errorf("error while creating db migrations: %s", err.Error())
+		}
 
-	// 	if err := migrations.Up(); err != nil && err != migrate.ErrNoChange {
-	// 		return nil, fmt.Errorf("error while applying db migrations: %s", err.Error())
-	// 	}
-	// }
+		if err := migrations.Up(); err != nil && err != migrate.ErrNoChange {
+			return nil, fmt.Errorf("error while applying db migrations: %s", err.Error())
+		}
+	}
 
 	log.Println("Database connection was successfully opened")
 	return &postgresDatabase{

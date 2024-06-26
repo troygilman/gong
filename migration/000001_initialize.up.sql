@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS events(
     project_id UUID,
     timestamp TIMESTAMPTZ,
-	id VARCHAR(26),
+	id TEXT,
     pid TEXT NOT NULL,
     type TEXT NOT NULL,
     level INTEGER NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS actors(
     project_id UUID,
     pid TEXT,
     num_events INTEGER NOT NULL,
-    last_event_id VARCHAR(26) NOT NULL,
+    last_event_id TEXT NOT NULL,
     alive BOOLEAN NOT NULL,
     PRIMARY KEY (project_id, pid)
 );

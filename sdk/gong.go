@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	serverHost            = "localhost:8080"
+	serverHost            = "gong.fly.dev"
 	actorInitializedEvent = "actor.ActorInitializedEvent"
 	actorStartedEvent     = "actor.ActorStartedEvent"
 	actorStoppedEvent     = "actor.ActorStoppedEvent"
@@ -38,6 +38,8 @@ type Event struct {
 }
 
 type GongConfig struct {
+	Host      string
+	Scheme    string
 	ProjectID string
 	QueueSize uint
 	Logger    *slog.Logger
@@ -45,6 +47,8 @@ type GongConfig struct {
 
 func NewDefaultGongConfig(projectID string) GongConfig {
 	return GongConfig{
+		Host:      serverHost,
+		Scheme:    "wss",
 		ProjectID: projectID,
 		QueueSize: 1000,
 		Logger:    slog.Default(),
@@ -82,7 +86,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		var conn *websocket.Conn
 		for conn == nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			u := url.URL{Scheme: "ws", Host: serverHost, Path: fmt.Sprintf("project/%s/connect", g.config.ProjectID)}
+			u := url.URL{Scheme: g.config.Scheme, Host: g.config.Host, Path: fmt.Sprintf("project/%s/connect", g.config.ProjectID)}
 			conn, _, err = websocket.DefaultDialer.DialContext(ctx, u.String(), nil)
 			if err != nil {
 				fmt.Printf("dial: %s\n", err.Error())
