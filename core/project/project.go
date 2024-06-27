@@ -27,6 +27,7 @@ type project struct {
 	actors       map[string]gong_common.Actor
 	actorUpdates map[string]gong_common.Actor
 	eventUpdates []gong_common.Event
+	metricUpdate common.Metric
 	repeater     actor.SendRepeater
 	listeners    map[common.ListenerType]map[*actor.PID]struct{}
 	metrics      common.MetricsManager
@@ -99,9 +100,10 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			p.actorUpdates[actorData.PID] = actorData
 		}
 		p.eventUpdates = append(p.eventUpdates, msg.Events...)
-		p.metrics.Process(msg.Metric)
+		p.metricUpdate = msg.Metric
 
 	case msgUpdateProjectInternal:
+		p.metrics.Process(p.metricUpdate)
 		listenerData := make(map[*actor.PID][]any)
 
 		// build data for every listener
@@ -154,7 +156,8 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 			query := persistance.EventsQuery{
 				ProjectID: p.Id,
 				ActorPID:  msg.ActorPID,
-				EventID:   msg.EventID,
+				// EventID:   msg.EventID,
+				Timestamp: msg.Timestamp,
 				NumEvents: msg.NumEvents,
 				Filter:    msg.Filter,
 			}

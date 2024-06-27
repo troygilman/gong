@@ -45,7 +45,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 		actor_utils.LogActorMsg(aCtx)
 	}
 
-	ctx, cancel := context.WithTimeout(aCtx.Context(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(aCtx.Context(), 10*time.Second)
 	defer cancel()
 
 	if err := p.receive(ctx, aCtx); err != nil {
@@ -83,8 +83,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, er
 	}
 
 	event = gong_common.Event{
-		ID:        eventID.String(),
-		ProjectID: p.Id,
+		ProjectID: p.Id.String(),
 		Event:     sdkEvent,
 	}
 
@@ -107,7 +106,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, er
 
 	if eventID.Compare(lastEventID) > 0 {
 		actorData.Alive = common.IsActorAlive(event.Type)
-		actorData.LastEventID = event.ID
+		// actorData.LastEventID = event.ID
 	}
 
 	p.actors[event.PID] = actorData

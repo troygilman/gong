@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 func benchmarkCreateEvents(n int, numEvents int, db Database) error {
@@ -15,8 +14,7 @@ func benchmarkCreateEvents(n int, numEvents int, db Database) error {
 		events := make([]common.Event, numEvents)
 		for idx := range numEvents {
 			events[idx] = common.Event{
-				ID:        ulid.Make().String(),
-				ProjectID: projectID,
+				ProjectID: projectID.String(),
 			}
 		}
 		if err := db.CreateEvents(context.Background(), events); err != nil {

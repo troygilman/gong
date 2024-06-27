@@ -11,10 +11,10 @@ import (
 	"gong/view"
 	view_overview "gong/view/overview"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
 )
 
 func bindProjectHandlers(e groupable) {
@@ -103,9 +103,12 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 		return errors.New("actorPID is empty")
 	}
 
-	eventID, err := ulid.Parse(eCtx.QueryParam("id"))
+	var timestamp time.Time
+	unixNano, err := strconv.Atoi(eCtx.QueryParam("timestamp"))
 	if err != nil {
-		eventID = ulid.ULID{}
+		timestamp = time.Now()
+	} else {
+		timestamp = time.Unix(0, int64(unixNano))
 	}
 
 	n, err := strconv.Atoi(eCtx.QueryParam("n"))
@@ -118,7 +121,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 		return errors.New("filter is empty")
 	}
 
-	events, err := app.Events(ctx, projectID, actorPID, eventID, n, filter)
+	events, err := app.Events(ctx, projectID, actorPID, timestamp, n, filter)
 	if err != nil {
 		events = make(common.EventList, 0)
 	}

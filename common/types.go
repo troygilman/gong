@@ -40,8 +40,7 @@ const (
 )
 
 type Event struct {
-	ID        string
-	ProjectID uuid.UUID
+	ProjectID string
 	sdk.Event
 }
 
@@ -49,7 +48,7 @@ type EventList []Event
 
 func (l *EventList) Push(e Event) {
 	i := sort.Search(len(*l), func(i int) bool {
-		return e.ID < (*l)[i].ID
+		return e.Timestamp.Before((*l)[i].Timestamp)
 		//return e.Timestamp.Before((*l)[i].Timestamp)
 	})
 	*l = append(*l, Event{})
@@ -84,24 +83,18 @@ type ProjectProps struct {
 type Actor struct {
 	PID         string
 	ProjectID   uuid.UUID
-	NumEvents   int32
+	NumEvents   int
 	Alive       bool
 	LastEventID string
 }
 
 type Filter struct {
-	ID     *string
 	Type   *string
 	Sender *string
 	Level  *slog.Level
 }
 
 func NewFilter(ctx echo.Context) (filter Filter) {
-	id := ctx.QueryParam(ParamFilterID)
-	if id != "" {
-		filter.ID = &id
-	}
-
 	fType := ctx.QueryParam(ParamFilterType)
 	if fType != "" {
 		filter.Type = &fType
@@ -122,15 +115,11 @@ func NewFilter(ctx echo.Context) (filter Filter) {
 }
 
 func (filter Filter) ValidEvent(event Event) bool {
-	if filter.ID != nil && *filter.ID != event.ID {
-		return false
-	}
-
 	if filter.Type != nil && *filter.Type != event.Type {
 		return false
 	}
 
-	if filter.Sender != nil && (event.Sender == nil || *filter.Sender != *event.Sender) {
+	if filter.Sender != nil && *filter.Sender != event.Sender {
 		return false
 	}
 

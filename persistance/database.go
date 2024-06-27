@@ -24,6 +24,7 @@ type EventsQuery struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	NumEvents int
+	Timestamp time.Time
 	Filter    common.Filter
 }
 

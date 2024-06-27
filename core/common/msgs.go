@@ -3,6 +3,7 @@ package common
 import (
 	"gong/common"
 	"gong/sdk"
+	"time"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -28,6 +29,7 @@ type RspGetProjectActor struct {
 type MsgGetProjectEvents struct {
 	ActorPID  string
 	EventID   ulid.ULID
+	Timestamp time.Time
 	NumEvents int
 	Filter    common.Filter
 }

@@ -19,8 +19,7 @@ func GongMiddleware() actor.MiddlewareFunc {
 			}
 
 			if ctx.Sender() != nil {
-				sender := ctx.Sender().String()
-				event.Sender = &sender
+				event.Sender = ctx.Sender().String()
 			}
 
 			rType := reflect.TypeOf(ctx.Message())
@@ -33,11 +32,11 @@ func GongMiddleware() actor.MiddlewareFunc {
 				level, logMsg, attr := msg.Log()
 
 				if attrStr, err := encodeAttrMap(createAttrMap(attr)); err == nil {
-					event.Attrs = &attrStr
+					event.Attrs = attrStr
 				}
 
 				event.Level = level
-				event.Msg = &logMsg
+				event.Msg = logMsg
 			case actor.Initialized, actor.Started, actor.Stopped:
 				event.Level = slog.LevelInfo
 			}

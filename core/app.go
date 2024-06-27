@@ -17,7 +17,6 @@ import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 	actor_utils "github.com/troygilman0/utils"
 )
 
@@ -163,7 +162,7 @@ func (app *gongApp) Events(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-	eventID ulid.ULID,
+	timestamp time.Time,
 	numEvents int,
 	filter gong_common.Filter,
 ) (events gong_common.EventList, err error) {
@@ -174,7 +173,7 @@ func (app *gongApp) Events(
 
 	msg := common.MsgGetProjectEvents{
 		ActorPID:  actorPID,
-		EventID:   eventID,
+		Timestamp: timestamp,
 		NumEvents: numEvents,
 		Filter:    filter,
 	}

@@ -26,13 +26,13 @@ func ExamplePopulateDB() error {
 		e := sdk.Event{
 			PID:       "local/client/1",
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
-			Sender:    &server1,
+			Sender:    server1,
 		}
 		engine.Send(gongPID, e)
 		e = sdk.Event{
 			PID:       "local/client/2",
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
-			Sender:    &server1,
+			Sender:    server1,
 		}
 		engine.Send(gongPID, e)
 	}

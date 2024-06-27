@@ -88,7 +88,7 @@ func NewPostgresDatabase(sqlMigrations fs.FS) (Database, error) {
 			return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
 		}
 
-		sourceDriver, err := iofs.New(sqlMigrations, "migration")
+		sourceDriver, err := iofs.New(sqlMigrations, "migration/postgres")
 		if err != nil {
 			return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
 		}
@@ -126,10 +126,6 @@ func (db *postgresDatabase) QueryEvents(
 		} else {
 			stmt = stmt.Where("id < ?", query.EventID.String())
 		}
-	}
-
-	if query.Filter.ID != nil {
-		stmt = stmt.Where("id = ?", *query.Filter.ID)
 	}
 
 	if query.Filter.Type != nil {
@@ -209,13 +205,14 @@ func (db *postgresDatabase) QueryActorSourcesSinks(
 
 	stmt := db.bunDB.NewSelect().
 		Model(&actors).
+		Distinct().
 		Where("project_id = ?", query.ProjectID.String()).
 		Where("timestamp BETWEEN ? AND ?", query.MinTime, query.MaxTime)
 
 	if query.Sources {
-		stmt = stmt.Where("pid = ?", query.ActorPID).DistinctOn("sender").Order("sender").ExcludeColumn("pid")
+		stmt = stmt.Where("pid = ?", query.ActorPID).Order("sender").ExcludeColumn("pid")
 	} else {
-		stmt = stmt.Where("sender = ?", query.ActorPID).DistinctOn("pid").Order("pid").ExcludeColumn("sender")
+		stmt = stmt.Where("sender = ?", query.ActorPID).Order("pid").ExcludeColumn("sender")
 	}
 
 	if err := stmt.Scan(ctx); err != nil {

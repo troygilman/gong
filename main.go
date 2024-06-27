@@ -14,7 +14,7 @@ import (
 var static embed.FS
 
 //go:embed migration
-var sqlMigrations embed.FS
+var migrations embed.FS
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-c" {
@@ -25,7 +25,8 @@ func main() {
 }
 
 func run() error {
-	db, err := persistance.NewPostgresDatabase(sqlMigrations)
+	db, err := persistance.NewQuestDatabase(migrations)
+	// db, err := persistance.NewSQLiteDatabase(migrations, persistance.WithSQLiteFile("dev.db"))
 	if err != nil {
 		return err
 	}

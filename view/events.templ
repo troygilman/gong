@@ -109,7 +109,6 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			<thead>
 				<tr class="cursor-default">
 					<th>Timestamp</th>
-					<th>ID</th>
 					<th>Type</th>
 					<th>Sender</th>
 					<th>Level</th>
@@ -152,18 +151,7 @@ templ eventsFilter(filter gong_common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("ID", gong_common.ParamFilterID, filter.ID != nil, -1) {
-			<input
-				class="event-filter-input"
-				name={ gong_common.ParamFilterID }
-				type="text"
-				placeholder="01HXZJN46DQJPWYBAM"
-				if filter.ID != nil {
-					value={ *filter.ID }
-				}
-			/>
-		}
-		@eventsFilterItem("Type", gong_common.ParamFilterType, filter.Type != nil, 0) {
+		@eventsFilterItem("Type", gong_common.ParamFilterType, filter.Type != nil, -1) {
 			<input
 				class="event-filter-input"
 				name={ gong_common.ParamFilterType }
@@ -253,7 +241,7 @@ templ eventsTopDataLoader(oob bool, moreEvents bool) {
 	<tr
 		id="events-top-data-loader"
 		hx-get={ common.FormatProjectUrl(ctx) + "/events" }
-		hx-vals={ fmt.Sprintf(`js:{ "id": getTopID(), "n": %d }`, 20) }
+		hx-vals={ fmt.Sprintf(`js:{ "timestamp": getTopID(), "n": %d }`, 20) }
 		hx-include={ common.Includes }
 		hx-swap="outerHTML"
 		if moreEvents {
@@ -272,7 +260,7 @@ templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
 		id="events-bottom-data-loader"
 		if moreEvents {
 			hx-get={ common.FormatProjectUrl(ctx) + "/events" }
-			hx-vals={ fmt.Sprintf(`js:{ "id": getBottomID(), "n": %d }`, -20) }
+			hx-vals={ fmt.Sprintf(`js:{ "timestamp": getBottomID(), "n": %d }`, -20) }
 			hx-include={ common.Includes }
 			hx-swap="outerHTML"
 			hx-trigger="load-prev once, intersect once"
@@ -310,20 +298,17 @@ templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop b
 }
 
 templ projectActorEvent(event gong_common.Event) {
-	<tr id={ fmt.Sprintf("event-%s", event.ID) } class="event">
-		<input type="hidden" value={ event.ID }/>
+	<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
+		<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
 		<td>
 			{ event.Timestamp.String() }
-		</td>
-		<td>
-			{ event.ID }
 		</td>
 		<td>
 			{ event.Type }
 		</td>
 		<td>
-			if event.Sender != nil {
-				{ *event.Sender }
+			if event.Sender != "" {
+				{ event.Sender }
 			} else {
 				N/A
 			}
@@ -332,8 +317,8 @@ templ projectActorEvent(event gong_common.Event) {
 			{ event.Level.String() }
 		</td>
 		<td>
-			if event.Msg != nil {
-				{ *event.Msg }
+			if event.Msg != "" {
+				{ event.Msg }
 			} else {
 				N/A
 			}
