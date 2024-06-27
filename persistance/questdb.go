@@ -9,7 +9,8 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/jackc/pgx/v4"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/questdb/go-questdb-client/v3"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -71,24 +72,47 @@ func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 		return nil, err
 	}
 
-	_, err = bunDB.NewRaw(`CREATE TABLE IF NOT EXISTS 'events' (
-  project_id SYMBOL INDEX,
-  timestamp TIMESTAMP,
-  pid SYMBOL INDEX,
-  sender SYMBOL INDEX,
-  type SYMBOL INDEX,
-  level LONG,
-  msg VARCHAR,
-  attrs VARCHAR
-) TIMESTAMP(timestamp) PARTITION BY day;`).Exec(context.Background())
-	if err != nil {
-		return nil, err
+	if sqlMigrations != nil {
+		dbDriver, err := NewQuestDriver(bunDB, Config{
+			MigrationsTableName: "migrations",
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
+		}
+
+		sourceDriver, err := iofs.New(sqlMigrations, "migration/quest")
+		if err != nil {
+			return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
+		}
+
+		migrations, err := migrate.NewWithInstance("sqlMigrations", sourceDriver, "postgres", dbDriver)
+		if err != nil {
+			return nil, fmt.Errorf("error while creating db migrations: %s", err.Error())
+		}
+
+		if err := migrations.Up(); err != nil && err != migrate.ErrNoChange {
+			return nil, fmt.Errorf("error while applying db migrations: %s", err.Error())
+		}
 	}
 
-	_, err = bunDB.NewCreateTable().IfNotExists().Model((*common.Actor)(nil)).Exec(context.Background())
-	if err != nil {
-		return nil, err
-	}
+	// 	_, err = bunDB.NewRaw(`CREATE TABLE IF NOT EXISTS 'events' (
+	//   project_id SYMBOL INDEX,
+	//   timestamp TIMESTAMP,
+	//   pid SYMBOL INDEX,
+	//   sender SYMBOL INDEX,
+	//   type SYMBOL INDEX,
+	//   level LONG,
+	//   msg VARCHAR,
+	//   attrs VARCHAR
+	// ) TIMESTAMP(timestamp) PARTITION BY day;`).Exec(context.Background())
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	_, err = bunDB.NewCreateTable().IfNotExists().Model((*common.Actor)(nil)).Exec(context.Background())
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
 	log.Println("Database connection was successfully opened")
 	return &questDatabase{
