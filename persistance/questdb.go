@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"slices"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -156,6 +157,10 @@ func (db *questDatabase) QueryEvents(
 	if err != nil {
 		return nil, err
 	}
+
+	slices.SortFunc(events, func(a common.Event, b common.Event) int {
+		return a.Timestamp.Compare(b.Timestamp)
+	})
 
 	return events, nil
 }

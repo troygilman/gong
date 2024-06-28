@@ -289,7 +289,7 @@ templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop b
 	if appendTop || (!appendTop && moreBottom) {
 		@eventsTopDataLoader(!appendTop, moreTop)
 	}
-	for i := 0; i < len(events); i++ {
+	for i := len(events)-1; i >= 0; i-- {
 		@projectActorEvent(events[i])
 	}
 	if !appendTop || (appendTop && moreTop) {
