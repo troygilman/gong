@@ -18,92 +18,190 @@ templ eventsTabContent(actor gong_common.Actor) {
 	@ProjectActorEventsContainer(actor)
 }
 
+script initTable(url string) {
+	if (window.Alpine) {
+		initStore();
+	} else {
+		document.addEventListener("alpine:init", () => {
+			initStore();
+		});
+	}
+
+	function initStore() {
+		Alpine.store("event", {
+			init() {
+				this.intervalID = window.setInterval(() => {
+					if (this.newEvents) {
+						this.moreTop = true;
+						this.fetch(true, null);
+					}
+				}, 1000); // time in ms
+
+				// TO-DO: maybe get rid of the fetch-events to prevent the events from queueing - use raw function call
+				document.addEventListener("fetch-events", (e) => {
+					console.log("fetch-events");
+					this._fetch(e.detail.isTop)
+				});
+
+				htmx.on("htmx:afterSettle", function(e) {
+					if (e.target.id == "events") {
+						setTimeout(() => {
+							Alpine.store("event").fetch(e.detail.isTop);
+						}, 1000);
+					}
+				});
+
+				this.fetch(false, null)
+			},
+
+			destroy() {
+				clearInterval(this.intervalID);
+			},
+
+			fetch(isTop) {
+				document.dispatchEvent(new CustomEvent("fetch-events", { detail: {
+					isTop: isTop,
+				}}));
+			},
+
+			_fetch(isTop) {
+				console.log("fetch()", isTop, this.moreTop, this.moreBottom, this.newEvents)
+				if ((isTop && this.moreTop && shouldLoadTop()) || (!isTop && this.moreBottom && shouldLoadBottom())) {
+					const values = {
+						n: 0,
+						timestamp: "",
+					}
+					if (isTop) {
+						values.n = 20;
+						values.timestamp = getTopTimestamp();
+					} else {
+						values.n = -20
+						values.timestamp = getBottomTimestamp();
+					}
+					htmx.ajax("GET", addParamsToURL(url + "/events"), {
+						source: "#events-container",
+						values: values,
+						handler: (src, something) => {
+							const html = something.xhr.responseText;
+							if (isTop) {
+								if (html == "") {
+									this.moreTop = false;
+								} else {
+									this.moreTop = true;
+									this.newEvents = false;
+								}
+								this.moreBottom = true;
+							} else {
+								if (html == "") {
+									this.moreBottom = false;
+								} else {
+									this.moreBottom = true;
+								}
+								this.moreTop = true;
+							}
+                            handleEvents(html, isTop);
+						},
+					});
+				}
+			},
+
+			newEvents: false,
+			moreTop: false,
+			moreBottom: true,
+			intervalID: 0,
+		});
+	};
+
+	const eventSource = new EventSource(addParamsToURL(url + "/sse/events"));
+	eventSource.addEventListener("new-events", (event) => {
+		console.log("new-event")
+		Alpine.store("event").newEvents = true;
+	})
+
+	function addParamsToURL(url) {
+		const elem = htmx.find("#includes");
+		const params = new URLSearchParams(htmx.values(elem).entries());
+		return url + "?" + params.toString();
+	};
+
+	function handleEvents(events, isTop) {
+		const maxEvents = 200;
+		const container = document.getElementById("events");
+		if (isTop) {
+			htmx.swap("#events", events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
+			const overflow = container.children.length - maxEvents;
+			if (overflow > 0) {
+				for (let i = maxEvents; i < container.children.length; i++) {
+					htmx.remove(container.children[i]);
+				}
+			}
+			console.log("event swap top - overflow:", overflow)
+		} else {
+			htmx.swap("#events", events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
+			const overflow = container.children.length - maxEvents;
+			if (overflow > 0) {
+				for (let i = 0; i < overflow; i++) {
+					htmx.remove(container.children[i]);
+				}
+			}
+			console.log("event swap bottom - overflow:", overflow)
+		}
+	};
+			
+	function shouldLoadTop() {
+		const container = document.getElementById("events-container");
+		return container.scrollTop <= container.scrollHeight * 0.1;
+	};
+
+	function shouldLoadBottom() {
+		const container = document.getElementById("events-container");
+		return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+	};
+
+	function getTopTimestamp() {
+		const events = document.getElementById("events").children;
+		if (events.length > 0) {
+			return events[0].querySelector("input").value;
+		} else {
+			return "";
+		}
+	};
+
+	function getBottomTimestamp() {
+		const events = document.getElementById("events").children;
+		if (events.length > 0) {
+			return events[events.length-1].querySelector("input").value;
+		} else {
+			return "";
+		}
+	};
+}
+
 templ ProjectActorEventsContainer(actor gong_common.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		hx-ext="sse"
-		sse-connect={ common.FormatProjectUrl(ctx) + "/sse/events" }
 		hx-include={ common.Includes }
+		hx-sync="this:drop"
 		x-data="{ scrollTop: 0 }"
 		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
-		@htmx:after-request="onAfterRequest($event)"
 	>
+		@initTable(common.FormatProjectUrl(ctx))
 		<script>
 			function handleScroll(pid, { scrollTop }) {
 				const container = document.getElementById("events-container");
 				try {
 					if (container.scrollTop < scrollTop) {
-						if (shouldLoadTop()) {
-							htmx.trigger('#events-top-data-loader', 'load-next', {})
-						}
+                        Alpine.store("event").fetch(true, null);
 					} else if (container.scrollTop > scrollTop) {
-						if (shouldLoadBottom()) {
-							htmx.trigger('#events-bottom-data-loader', 'load-prev', {})
-						}
+                        Alpine.store("event").fetch(false, null);
 					}
 				} catch (error) {
 					console.log(error);
 				}
 				return container.scrollTop;
 			}
-
-			function shouldLoadTop() {
-				console.log("shouldLoadTop");
-				const container = document.getElementById("events-container");
-				return container.scrollTop <= container.scrollHeight * 0.1;
-			}
-
-			function shouldLoadBottom() {
-				const container = document.getElementById("events-container");
-				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
-			}
-
-			function getTopID() {
-				const events = document.getElementById("events-container").querySelectorAll(".event");
-				if (events.length > 0) {
-					return events[0].querySelector("input").value;
-				} else {
-					return "";
-				}
-			}
-
-			function getBottomID() {
-				const events = document.getElementById("events-container").querySelectorAll(".event");
-				if (events.length > 0) {
-					return events[events.length-1].querySelector("input").value;
-				} else {
-					return "";
-				}
-			}
-
-			function onAfterRequest(e) {
-				const maxEvents = 200;
-				const container = document.getElementById("events-container");
-				const events = container.querySelectorAll(".event");
-				const overflow = events.length - maxEvents;
-				if (e.detail.target.id === "events-top-data-loader") {
-					if (overflow > 0) {
-						for (let i = maxEvents; i < events.length; i++) {
-							htmx.remove(events[i]);
-						}
-					}
-					console.log("event swap top - overflow:", overflow)
-				} else if (e.detail.target.id === "events-bottom-data-loader") {
-					if (overflow > 0) {
-						for (let i = 0; i < overflow; i++) {
-							htmx.remove(events[i]);
-						}
-					}
-					console.log("event swap bottom - overflow:", overflow)
-				}
-			}
-
-			htmx.on("htmx:beforeRequest", function(e) {
-				if (e.srcElement.id == "events-top-data-loader" && !shouldLoadTop()) {
-					e.preventDefault();
-				}
-			});
 		</script>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
@@ -116,11 +214,8 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 				</tr>
 			</thead>
 			<tbody
-				id="events-container"
-				hx-sync="this"
+				id="events"
 			>
-				@eventsTopDataLoader(false, false)
-				@eventsBottomDataLoader(false, true, true)
 			</tbody>
 		</table>
 		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
@@ -237,43 +332,6 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	</div>
 }
 
-templ eventsTopDataLoader(oob bool, moreEvents bool) {
-	<tr
-		id="events-top-data-loader"
-		hx-get={ common.FormatProjectUrl(ctx) + "/events" }
-		hx-vals={ fmt.Sprintf(`js:{ "timestamp": getTopID(), "n": %d }`, 20) }
-		hx-include={ common.Includes }
-		hx-swap="outerHTML"
-		if moreEvents {
-			hx-trigger="sse:new-events, load-next once, intersect once delay:100ms"
-		} else {
-			hx-trigger="sse:new-events"
-		}
-		if oob {
-			hx-swap-oob="true"
-		}
-	></tr>
-}
-
-templ eventsBottomDataLoader(oob bool, moreEvents bool, spinner bool) {
-	<tr
-		id="events-bottom-data-loader"
-		if moreEvents {
-			hx-get={ common.FormatProjectUrl(ctx) + "/events" }
-			hx-vals={ fmt.Sprintf(`js:{ "timestamp": getBottomID(), "n": %d }`, -20) }
-			hx-include={ common.Includes }
-			hx-swap="outerHTML"
-			hx-trigger="load-prev once, intersect once"
-			if spinner {
-				hx-indicator="#spinner"
-			}
-		}
-		if oob {
-			hx-swap-oob="true"
-		}
-	></tr>
-}
-
 func formatActorPIDCtx(ctx context.Context) string {
 	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 		return formatActorPID(pid)
@@ -286,14 +344,8 @@ func formatActorPID(pid string) string {
 }
 
 templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
-	if appendTop || (!appendTop && moreBottom) {
-		@eventsTopDataLoader(!appendTop, moreTop)
-	}
 	for i := len(events)-1; i >= 0; i-- {
 		@projectActorEvent(events[i])
-	}
-	if !appendTop || (appendTop && moreTop) {
-		@eventsBottomDataLoader(appendTop, moreBottom, false)
 	}
 }
 

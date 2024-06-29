@@ -14,7 +14,7 @@ templ Project(props gong_common.ProjectProps) {
 			const next = htmx.createEventSource;
 			htmx.createEventSource = function(url) {
 				const elem = htmx.find("#includes");
-				const params = new URLSearchParams(htmx.values(elem));
+				const params = new URLSearchParams(htmx.values(elem).entries());
 				url = url + "?" + params.toString();
 				return next(url);
 			}
