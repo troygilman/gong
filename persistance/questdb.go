@@ -64,7 +64,7 @@ func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 
 	bunDB.AddQueryHook(bundebug.NewQueryHook(
 		// bundebug.FromEnv("BUNDEBUG"),
-		bundebug.WithVerbose(true),
+		bundebug.WithVerbose(false),
 	))
 
 	bunDB.SetMaxOpenConns(5) // requred to not overwhelm db server
@@ -95,25 +95,6 @@ func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 			return nil, fmt.Errorf("error while applying db migrations: %s", err.Error())
 		}
 	}
-
-	// 	_, err = bunDB.NewRaw(`CREATE TABLE IF NOT EXISTS 'events' (
-	//   project_id SYMBOL INDEX,
-	//   timestamp TIMESTAMP,
-	//   pid SYMBOL INDEX,
-	//   sender SYMBOL INDEX,
-	//   type SYMBOL INDEX,
-	//   level LONG,
-	//   msg VARCHAR,
-	//   attrs VARCHAR
-	// ) TIMESTAMP(timestamp) PARTITION BY day;`).Exec(context.Background())
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	_, err = bunDB.NewCreateTable().IfNotExists().Model((*common.Actor)(nil)).Exec(context.Background())
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
 
 	log.Println("Database connection was successfully opened")
 	return &questDatabase{

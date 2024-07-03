@@ -44,6 +44,7 @@ script initTable(url string) {
 				this.eventSource.addEventListener("new-events", (event) => {
 					console.log("new-event")
 					Alpine.store("event").moreTop = true;
+					Alpine.store("event").newEvents = true;
 				});
 			},
 
@@ -73,7 +74,9 @@ script initTable(url string) {
 							const html = something.xhr.responseText;
 							if (isTop) {
 								if (html == "") {
-									this.moreTop = false;
+									if (!this.newEvents) {
+										this.moreTop = false;
+									}
 								} else {
 									this.moreTop = true;
 									this.newEvents = false;
@@ -95,6 +98,7 @@ script initTable(url string) {
 
 			moreTop: false,
 			moreBottom: true,
+			newEvents: false,
 			intervalID: 0,
 			eventSource: null,
 		});
