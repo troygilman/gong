@@ -89,12 +89,18 @@ type Actor struct {
 }
 
 type Filter struct {
+	PID    *string
 	Type   *string
 	Sender *string
 	Level  *slog.Level
 }
 
 func NewFilter(ctx echo.Context) (filter Filter) {
+	pid := ctx.QueryParam(ParamPID)
+	if pid != "" {
+		filter.PID = &pid
+	}
+
 	fType := ctx.QueryParam(ParamFilterType)
 	if fType != "" {
 		filter.Type = &fType
@@ -115,6 +121,10 @@ func NewFilter(ctx echo.Context) (filter Filter) {
 }
 
 func (filter Filter) ValidEvent(event Event) bool {
+	if filter.PID != nil && *filter.PID != event.PID {
+		return false
+	}
+
 	if filter.Type != nil && *filter.Type != event.Type {
 		return false
 	}

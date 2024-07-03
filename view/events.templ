@@ -28,43 +28,30 @@ script initTable(url string) {
 	}
 
 	function initStore() {
+		if (Alpine.store("event")) {
+			Alpine.store("event").destroy();
+		}
 		Alpine.store("event", {
 			init() {
 				this.intervalID = window.setInterval(() => {
-					if (this.newEvents) {
-						this.moreTop = true;
-						this.fetch(true, null);
-					}
-				}, 1000); // time in ms
+					this.fetch(true);
+				}, 200); // time in ms
 
-				// TO-DO: maybe get rid of the fetch-events to prevent the events from queueing - use raw function call
-				document.addEventListener("fetch-events", (e) => {
-					console.log("fetch-events");
-					this._fetch(e.detail.isTop)
+				this.fetch(false)
+
+				this.eventSource = new EventSource(addParamsToURL(url + "/sse/events"));
+				this.eventSource.addEventListener("new-events", (event) => {
+					console.log("new-event")
+					Alpine.store("event").moreTop = true;
 				});
-
-				htmx.on("htmx:afterSettle", function(e) {
-					if (e.target.id == "events") {
-						setTimeout(() => {
-							Alpine.store("event").fetch(e.detail.isTop);
-						}, 1000);
-					}
-				});
-
-				this.fetch(false, null)
 			},
 
 			destroy() {
 				clearInterval(this.intervalID);
+				this.eventSource.close();
 			},
 
 			fetch(isTop) {
-				document.dispatchEvent(new CustomEvent("fetch-events", { detail: {
-					isTop: isTop,
-				}}));
-			},
-
-			_fetch(isTop) {
 				console.log("fetch()", isTop, this.moreTop, this.moreBottom, this.newEvents)
 				if ((isTop && this.moreTop && shouldLoadTop()) || (!isTop && this.moreBottom && shouldLoadBottom())) {
 					const values = {
@@ -105,18 +92,12 @@ script initTable(url string) {
 				}
 			},
 
-			newEvents: false,
 			moreTop: false,
 			moreBottom: true,
 			intervalID: 0,
+			eventSource: null,
 		});
 	};
-
-	const eventSource = new EventSource(addParamsToURL(url + "/sse/events"));
-	eventSource.addEventListener("new-events", (event) => {
-		console.log("new-event")
-		Alpine.store("event").newEvents = true;
-	})
 
 	function addParamsToURL(url) {
 		const elem = htmx.find("#includes");
@@ -147,7 +128,7 @@ script initTable(url string) {
 			console.log("event swap bottom - overflow:", overflow)
 		}
 	};
-			
+
 	function shouldLoadTop() {
 		const container = document.getElementById("events-container");
 		return container.scrollTop <= container.scrollHeight * 0.1;
@@ -193,9 +174,9 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 				const container = document.getElementById("events-container");
 				try {
 					if (container.scrollTop < scrollTop) {
-                        Alpine.store("event").fetch(true, null);
+                        Alpine.store("event").fetch(true);
 					} else if (container.scrollTop > scrollTop) {
-                        Alpine.store("event").fetch(false, null);
+                        Alpine.store("event").fetch(false);
 					}
 				} catch (error) {
 					console.log(error);
@@ -215,8 +196,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			</thead>
 			<tbody
 				id="events"
-			>
-			</tbody>
+			></tbody>
 		</table>
 		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
