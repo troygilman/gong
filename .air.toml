@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "./tmp/main"
   cmd = "templ generate && npx tailwindcss build -i tailwind.css -o static/css/app.css && go build -o ./tmp/main -gcflags='all=-N -l' ."
   delay = 1000
-  exclude_dir = ["tmp"]
+  exclude_dir = ["tmp", "node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go", ".*_templ.go"]
   exclude_unchanged = false
