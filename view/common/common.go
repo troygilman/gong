@@ -14,4 +14,4 @@ func FormatProjectUrl(ctx context.Context) string {
 	return string(templ.URL(url))
 }
 
-const Includes = "#actor-pid, #tab, #events-filter, #flow, #flow-node"
+const Includes = "#actor-pid, #tab, #events-filter, #flow, #flow-node, #flow-range"

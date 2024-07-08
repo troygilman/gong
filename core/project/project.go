@@ -168,11 +168,16 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 	case common.MsgGetActorSourcesSinks:
 		_, ok := p.actors[msg.ActorPID]
 		if ok {
+			duration, err := msg.Range.Duration()
+			if err != nil {
+				return err
+			}
+
 			query := persistance.ActorSourcesSinksQuery{
 				Sources:   msg.Sources,
 				ProjectID: p.Id,
 				ActorPID:  msg.ActorPID,
-				MinTime:   time.Now().Add(-24 * time.Hour),
+				MinTime:   time.Now().Add(-duration),
 				MaxTime:   time.Now(),
 			}
 			go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
@@ -182,12 +187,17 @@ func (p *project) receive(ctx context.Context, aCtx *actor.Context) error {
 
 	case common.MsgGetSourcesSinksNodeInfo:
 		if _, ok := p.actors[msg.ActorPID]; ok {
+			duration, err := msg.Range.Duration()
+			if err != nil {
+				return err
+			}
+
 			query := persistance.SourcesSinksNodeInfoQuery{
 				Source:    msg.Source,
 				ProjectID: p.Id,
 				ActorPID:  msg.ActorPID,
 				NodePID:   msg.NodePID,
-				MinTime:   time.Now().Add(-24 * time.Hour),
+				MinTime:   time.Now().Add(-duration),
 				MaxTime:   time.Now(),
 			}
 			go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)

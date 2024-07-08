@@ -50,6 +50,7 @@ type MsgUpdateProject struct {
 type MsgGetActorSourcesSinks struct {
 	ActorPID string
 	Sources  bool
+	Range    common.Range
 }
 
 type RspGetActorSourcesSinks struct {
@@ -60,6 +61,7 @@ type MsgGetSourcesSinksNodeInfo struct {
 	ActorPID string
 	NodePID  string
 	Source   bool
+	Range    common.Range
 }
 
 type RspGetSourcesSinksNodeInfo struct {

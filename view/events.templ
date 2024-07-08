@@ -36,6 +36,7 @@ script initTable(url string) {
 			init() {
 				this.intervalID = window.setInterval(() => {
 					this.fetch(true);
+					this.fetch(false);
 				}, 200); // time in ms
 
 				this.fetch(false)

@@ -2,10 +2,12 @@ package common
 
 import (
 	"context"
+	"errors"
 	"gong/sdk"
 	"log/slog"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -20,23 +22,65 @@ const (
 	ParamFilterLevel  = "filter_level"
 	ParamFlow         = "flow"
 	ParamFlowNode     = "flow_node"
+	ParamFlowRange    = "flow_range"
 )
 
 type CtxKey string
 
 const (
-	CtxProject  CtxKey = "projectID"
-	CtxPID      CtxKey = ParamPID
-	CtxTab      CtxKey = ParamTab
-	CtxFilter   CtxKey = "filter"
-	CtxFlow     CtxKey = ParamFlow
-	CtxFlowNode CtxKey = ParamFlowNode
+	CtxProject   CtxKey = "projectID"
+	CtxPID       CtxKey = ParamPID
+	CtxTab       CtxKey = ParamTab
+	CtxFilter    CtxKey = "filter"
+	CtxFlow      CtxKey = ParamFlow
+	CtxFlowNode  CtxKey = ParamFlowNode
+	CtxFlowRange CtxKey = ParamFlowRange
 )
 
 const (
 	ProjectViewActor             = "actor"
 	ProjectViewFlowChart         = "flow-chart"
 	ProjectViewFlowChartNodeInfo = "flow-chart-node-info"
+)
+
+type Range int
+
+func (r Range) String() string {
+	return strconv.Itoa(int(r))
+}
+
+func (r *Range) Parse(s string) error {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+	*r = Range(i)
+	return nil
+}
+
+func (r Range) Duration() (time.Duration, error) {
+	switch r {
+	case 0:
+		return time.Minute, nil
+	case 1:
+		return time.Hour, nil
+	case 2:
+		return time.Hour * 24, nil
+	case 3:
+		return time.Hour * 24 * 7, nil
+	case 4:
+		return time.Hour * 24 * 30, nil
+	default:
+		return 0, errors.New("invalid range")
+	}
+}
+
+const (
+	RangeMinute Range = iota
+	RangeHour
+	RangeDay
+	RangeWeek
+	RangeMonth
 )
 
 type Event struct {

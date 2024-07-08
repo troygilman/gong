@@ -208,6 +208,7 @@ func (app *gongApp) SourcesSinks(
 	projectID uuid.UUID,
 	actorPID string,
 	sources bool,
+	rng gong_common.Range,
 ) (pids []string, err error) {
 	projectPID, err := app.PID(common.KindProject, projectID.String())
 	if err != nil {
@@ -217,6 +218,7 @@ func (app *gongApp) SourcesSinks(
 	msg := common.MsgGetActorSourcesSinks{
 		ActorPID: actorPID,
 		Sources:  sources,
+		Range:    rng,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
@@ -234,6 +236,7 @@ func (app *gongApp) SourcesSinksNodeInfo(
 	actorPID string,
 	nodePID string,
 	source bool,
+	rng gong_common.Range,
 ) (info gong_common.SourcesSinksNodeInfo, err error) {
 	projectPID, err := app.PID(common.KindProject, projectID.String())
 	if err != nil {
@@ -244,6 +247,7 @@ func (app *gongApp) SourcesSinksNodeInfo(
 		ActorPID: actorPID,
 		NodePID:  nodePID,
 		Source:   source,
+		Range:    rng,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)

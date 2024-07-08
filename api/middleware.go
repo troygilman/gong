@@ -89,6 +89,15 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				}
 			}
 
+			{ // flow chart range
+				flowRange := ctx.QueryParam(common.ParamFlowRange)
+				var r common.Range
+				if err := r.Parse(flowRange); err != nil {
+					return err
+				}
+				cb = cb.With(common.CtxFlowRange, r)
+			}
+
 			{ // events filter
 				filter := common.NewFilter(ctx)
 				cb = cb.With(common.CtxFilter, filter)

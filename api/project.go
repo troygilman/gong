@@ -72,7 +72,12 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source)
+		flowRange, ok := ctx.Value(common.CtxFlowRange).(common.Range)
+		if !ok {
+			return errors.New("flow_range is missing")
+		}
+
+		nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source, flowRange)
 		if err != nil {
 			return err
 		}
@@ -244,17 +249,21 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
+	flowRange, ok := eCtx.Request().Context().Value(common.CtxFlowRange).(common.Range)
+	if !ok {
+		return errors.New("flow range is missing")
+	}
+
 	sources, err := isSources(flowType)
 	if err != nil {
 		return err
 	}
 
-	pids, err := app.SourcesSinks(ctx, projectID, actorPID, sources)
+	pids, err := app.SourcesSinks(ctx, projectID, actorPID, sources, flowRange)
 	if err != nil {
 		return err
 	}
 
-	//response.SourcesSinks = append(response.SourcesSinks, "test1", "test2")
 	return view_overview.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
 }
 
