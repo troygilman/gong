@@ -2,10 +2,10 @@ package main
 
 import (
 	"embed"
-	"gong/api"
 	"gong/core"
 	"gong/example"
 	"gong/persistance"
+	"gong/transport"
 	"log"
 	"os"
 )
@@ -26,7 +26,6 @@ func main() {
 
 func run() error {
 	db, err := persistance.NewQuestDatabase(migrations)
-	// db, err := persistance.NewSQLiteDatabase(migrations, persistance.WithSQLiteFile("dev.db"))
 	if err != nil {
 		return err
 	}
@@ -36,7 +35,7 @@ func run() error {
 		return err
 	}
 
-	if err := api.RunServer(app, static); err != nil {
+	if err := transport.RunServer(app, static); err != nil {
 		return err
 	}
 

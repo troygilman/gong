@@ -1,4 +1,4 @@
-package api
+package transport
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"gong/common"
 	core_common "gong/core/common"
 	"gong/sdk"
-	"gong/view"
-	view_overview "gong/view/overview"
+	view_admin "gong/view/admin"
+	view_project "gong/view/project"
 	"strconv"
 	"time"
 
@@ -47,10 +47,10 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		return view.ProjectActor(actor).Render(ctx, eCtx.Response())
+		return view_project.ProjectActor(actor).Render(ctx, eCtx.Response())
 
 	case common.ProjectViewFlowChart:
-		return view_overview.FlowChartWidget().Render(ctx, eCtx.Response())
+		return view_project.FlowChartWidget().Render(ctx, eCtx.Response())
 	case common.ProjectViewFlowChartNodeInfo:
 		actorPID, ok := actorPID(eCtx)
 		if !ok {
@@ -83,9 +83,9 @@ func handleGetProject(eCtx echo.Context) error {
 		}
 
 		if nodeInfo.MsgCount > 0 {
-			return view_overview.FlowChartNodeInfo(nodeInfo).Render(ctx, eCtx.Response())
+			return view_project.FlowChartNodeInfo(nodeInfo).Render(ctx, eCtx.Response())
 		} else {
-			return view_overview.FlowChartNodeInfoEmpty().Render(ctx, eCtx.Response())
+			return view_project.FlowChartNodeInfoEmpty().Render(ctx, eCtx.Response())
 		}
 	default:
 		props, err := app.ProjectProps(ctx, projectID)
@@ -93,7 +93,7 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		return view.Project(props).Render(ctx, eCtx.Response())
+		return view_project.Project(props).Render(ctx, eCtx.Response())
 	}
 }
 
@@ -143,7 +143,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 
 	fmt.Printf("NUM EVENTS: %d\n", len(events))
 
-	return view.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
+	return view_project.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }
 
 func handleConnectSseProject(eCtx echo.Context) error {
@@ -156,7 +156,7 @@ func handleConnectSseProject(eCtx echo.Context) error {
 					ctx,
 					eCtx.Response(),
 					common.SseTypeNewActor,
-					view.ProjectActorListItem(sse.Actor, false),
+					view_project.ProjectActorListItem(sse.Actor, false),
 				); err != nil {
 					return err
 				}
@@ -165,7 +165,7 @@ func handleConnectSseProject(eCtx echo.Context) error {
 					ctx,
 					eCtx.Response(),
 					common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
-					view.ProjectActorBadge(sse.Actor),
+					view_project.ProjectActorBadge(sse.Actor),
 				); err != nil {
 					return err
 				}
@@ -264,7 +264,7 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return err
 	}
 
-	return view_overview.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
+	return view_project.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
 }
 
 func isSources(flowType string) (bool, error) {
@@ -279,7 +279,7 @@ func isSources(flowType string) (bool, error) {
 }
 
 func handleGetProjectAdmin(eCtx echo.Context) error {
-	return view.Admin().Render(eCtx.Request().Context(), eCtx.Response())
+	return view_admin.Admin().Render(eCtx.Request().Context(), eCtx.Response())
 }
 
 func handleConnectSseProjectAdmin(eCtx echo.Context) error {
@@ -292,7 +292,7 @@ func handleConnectSseProjectAdmin(eCtx echo.Context) error {
 					ctx,
 					eCtx.Response(),
 					common.SseTypeUpdateMetricLatency,
-					view.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
+					view_admin.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
 				); err != nil {
 					return err
 				}
@@ -300,7 +300,7 @@ func handleConnectSseProjectAdmin(eCtx echo.Context) error {
 					ctx,
 					eCtx.Response(),
 					common.SseTypeUpdateMetricThroughput,
-					view.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
+					view_admin.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
 				); err != nil {
 					return err
 				}

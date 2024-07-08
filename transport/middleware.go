@@ -1,4 +1,4 @@
-package api
+package transport
 
 import (
 	"errors"
@@ -92,10 +92,9 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			{ // flow chart range
 				flowRange := ctx.QueryParam(common.ParamFlowRange)
 				var r common.Range
-				if err := r.Parse(flowRange); err != nil {
-					return err
+				if err := r.Parse(flowRange); err == nil {
+					cb = cb.With(common.CtxFlowRange, r)
 				}
-				cb = cb.With(common.CtxFlowRange, r)
 			}
 
 			{ // events filter

@@ -1,11 +1,10 @@
-package view
+package project
 
 import (
 	"context"
 	"fmt"
 	gong_common "gong/common"
 	"gong/view/common"
-	"gong/view/overview"
 )
 
 templ Project(props gong_common.ProjectProps) {
@@ -165,13 +164,13 @@ templ ActorContent(actor gong_common.Actor) {
 			@tab(tabLabelFlow)
 		</div>
 		@tabContent(tabLabelOverview) {
-			@overview.OverviewTabContent(actor)
+			@OverviewTabContent(actor)
 		}
 		@tabContent(tabLabelEvents) {
 			@eventsTabContent(actor)
 		}
 		@tabContent(tabLabelFlow) {
-			@overview.FlowChartWidget()
+			@FlowChartWidget()
 		}
 	</div>
 }
