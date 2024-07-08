@@ -10,11 +10,14 @@ import (
 
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
 type Config struct {
 	StatementTimeout    time.Duration
 	MigrationsTableName string
+	Verbose             bool
 }
 
 type questDriver struct {
@@ -24,7 +27,13 @@ type questDriver struct {
 	tx     bun.Tx
 }
 
-func NewQuestDriver(db *bun.DB, config Config) (database.Driver, error) {
+func NewQuestDriver(sqlDB *sql.DB, config Config) (database.Driver, error) {
+	db := bun.NewDB(sqlDB, pgdialect.New())
+
+	db.AddQueryHook(bundebug.NewQueryHook(
+		bundebug.WithVerbose(config.Verbose),
+	))
+
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}

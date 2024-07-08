@@ -7,46 +7,69 @@ import (
 	"gong/common"
 	"io/fs"
 	"log"
-	"log/slog"
-	"time"
+	"os"
+	"slices"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	"github.com/questdb/go-questdb-client/v3"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/sqlitedialect"
-	"github.com/uptrace/bun/driver/sqliteshim"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
 )
 
-type DatabaseProducer func() (*sql.DB, error)
+const (
+	envDatabaseHostname = "DB_HOSTNAME"
+	envDatabasePort     = "DB_PORT"
+	envDatabaseName     = "DB_NAME"
+	envDatabaseUsername = "DB_USERNAME"
+	envDatabasePassword = "DB_PASSWORD"
+)
 
-func WithSQLiteFile(filePath string) DatabaseProducer {
-	return func() (*sql.DB, error) {
-		return sql.Open(sqliteshim.ShimName, fmt.Sprintf("file:%s?cache=shared", filePath))
-	}
+type questDatabase struct {
+	bunDB  *bun.DB
+	client questdb.LineSender
 }
 
-func WithTurso(name string, token string) DatabaseProducer {
-	return func() (*sql.DB, error) {
-		return sql.Open("libsql", fmt.Sprintf("libsql://%s.turso.io?authToken=%s", name, token))
-	}
-}
-
-type sqliteDatabase struct {
-	bunDB *bun.DB
-}
-
-func NewSQLiteDatabase(sqlMigrations fs.FS, producer DatabaseProducer) (Database, error) {
-	sqlDB, err := producer()
-	if err != nil {
-		return nil, err
+func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
+	hostname, ok := os.LookupEnv(envDatabaseHostname)
+	if !ok {
+		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
 	}
 
-	bunDB := bun.NewDB(sqlDB, sqlitedialect.New())
+	port, ok := os.LookupEnv(envDatabasePort)
+	if !ok {
+		return nil, fmt.Errorf("%s not set", envDatabasePort)
+	}
+
+	name, ok := os.LookupEnv(envDatabaseName)
+	if !ok {
+		return nil, fmt.Errorf("%s not set", envDatabaseName)
+	}
+
+	username, ok := os.LookupEnv(envDatabaseUsername)
+	if !ok {
+		return nil, fmt.Errorf("%s not set", envDatabaseUsername)
+	}
+
+	password, ok := os.LookupEnv(envDatabasePassword)
+	if !ok {
+		return nil, fmt.Errorf("%s not set", envDatabasePassword)
+	}
+
+	connector := pgdriver.NewConnector(
+		pgdriver.WithNetwork("tcp"),
+		pgdriver.WithAddr(hostname+":"+port),
+		pgdriver.WithUser(username),
+		pgdriver.WithPassword(password),
+		pgdriver.WithDatabase(name),
+		pgdriver.WithTLSConfig(nil),
+	)
+
+	sqlDB := sql.OpenDB(connector)
+	bunDB := bun.NewDB(sqlDB, pgdialect.New())
 
 	bunDB.AddQueryHook(bundebug.NewQueryHook(
 		// bundebug.FromEnv("BUNDEBUG"),
@@ -60,17 +83,20 @@ func NewSQLiteDatabase(sqlMigrations fs.FS, producer DatabaseProducer) (Database
 	}
 
 	if sqlMigrations != nil {
-		dbDriver, err := sqlite.WithInstance(sqlDB, &sqlite.Config{})
+		dbDriver, err := NewQuestDriver(sqlDB, Config{
+			MigrationsTableName: "migrations",
+			Verbose:             true,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
 		}
 
-		sourceDriver, err := iofs.New(sqlMigrations, "migration/sqlite")
+		sourceDriver, err := iofs.New(sqlMigrations, "migration/quest")
 		if err != nil {
 			return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
 		}
 
-		migrations, err := migrate.NewWithInstance("sqlMigrations", sourceDriver, "sqlite", dbDriver)
+		migrations, err := migrate.NewWithInstance("sqlMigrations", sourceDriver, "postgres", dbDriver)
 		if err != nil {
 			return nil, fmt.Errorf("error while creating db migrations: %s", err.Error())
 		}
@@ -80,64 +106,33 @@ func NewSQLiteDatabase(sqlMigrations fs.FS, producer DatabaseProducer) (Database
 		}
 	}
 
+	client, err := questdb.NewLineSender(context.Background(), questdb.WithTcp(), questdb.WithAddress(hostname+":9009"), questdb.WithBasicAuth(username, password))
+	if err != nil {
+		return nil, err
+	}
+
 	log.Println("Database connection was successfully opened")
-	return &sqliteDatabase{
-		bunDB: bunDB,
+	return &questDatabase{
+		bunDB:  bunDB,
+		client: client,
 	}, nil
 }
 
-type sqliteEvent struct {
-	bun.BaseModel `bun:"table:events"`
-	ProjectID     string
-	PID           string
-	Timestamp     int64
-	Type          string
-	Level         slog.Level
-	Sender        string
-	Msg           string
-	Attrs         string
-}
-
-func (e *sqliteEvent) Parse(o common.Event) {
-	e.ProjectID = o.ProjectID
-	e.PID = o.PID
-	e.Timestamp = o.Timestamp.UnixMicro()
-	e.Type = o.Type
-	e.Level = o.Level
-	e.Sender = o.Sender
-	e.Msg = o.Msg
-	e.Attrs = o.Attrs
-}
-
-func (e sqliteEvent) Scan(o *common.Event) (err error) {
-	o.ProjectID = e.ProjectID
-	o.PID = e.PID
-	o.Timestamp = time.UnixMicro(e.Timestamp)
-	o.Type = e.Type
-	o.Level = e.Level
-	o.Sender = e.Sender
-	o.Msg = e.Msg
-	o.Attrs = e.Attrs
-	return nil
-}
-
-func (db *sqliteDatabase) QueryEvents(
+func (db *questDatabase) QueryEvents(
 	ctx context.Context,
 	query EventsQuery,
 ) ([]common.Event, error) {
 
-	var events []sqliteEvent
+	var events []common.Event
 
 	stmt := db.bunDB.NewSelect().Model(&events).Where("project_id = ?", query.ProjectID).Where("pid = ?", query.ActorPID)
 
-	order := "id DESC"
-	if query.EventID.Compare(ulid.ULID{}) != 0 {
-		if query.NumEvents > 0 {
-			stmt = stmt.Where("id > ?", query.EventID.String())
-			order = "id ASC"
-		} else {
-			stmt = stmt.Where("id < ?", query.EventID.String())
-		}
+	order := "timestamp DESC"
+	if query.NumEvents > 0 {
+		stmt = stmt.Where("timestamp > ?", query.Timestamp)
+		order = "timestamp ASC"
+	} else {
+		stmt = stmt.Where("timestamp < ?", query.Timestamp)
 	}
 
 	if query.Filter.Type != nil {
@@ -157,17 +152,14 @@ func (db *sqliteDatabase) QueryEvents(
 		return nil, err
 	}
 
-	outEvents := make([]common.Event, len(events))
-	for i, e := range events {
-		if err := e.Scan(&outEvents[i]); err != nil {
-			return nil, err
-		}
-	}
+	slices.SortFunc(events, func(a common.Event, b common.Event) int {
+		return a.Timestamp.Compare(b.Timestamp)
+	})
 
-	return outEvents, nil
+	return events, nil
 }
 
-func (db *sqliteDatabase) CreateEvents(
+func (db *questDatabase) CreateEvents(
 	ctx context.Context,
 	events []common.Event,
 ) error {
@@ -175,20 +167,29 @@ func (db *sqliteDatabase) CreateEvents(
 		return nil
 	}
 
-	sqlEvents := make([]sqliteEvent, len(events))
-	for i, e := range events {
-		sqlEvents[i].Parse(e)
+	for _, e := range events {
+		err := db.client.Table("events").
+			Symbol("project_id", e.ProjectID).
+			Symbol("pid", e.PID).
+			Symbol("sender", e.Sender).
+			Symbol("type", e.Type).
+			Int64Column("level", int64(e.Level)).
+			StringColumn("msg", e.Msg).
+			StringColumn("attrs", e.Attrs).
+			At(ctx, e.Timestamp)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err := db.bunDB.NewInsert().Model(&sqlEvents).Exec(ctx)
-	if err != nil {
+	if err := db.client.Flush(ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *sqliteDatabase) QueryActors(
+func (db *questDatabase) QueryActors(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) ([]common.Actor, error) {
@@ -202,14 +203,14 @@ func (db *sqliteDatabase) QueryActors(
 	return actors, nil
 }
 
-func (db *sqliteDatabase) CreateActor(
+func (db *questDatabase) CreateActor(
 	ctx context.Context, actor common.Actor,
 ) error {
 	_, err := db.bunDB.NewInsert().Model(&actor).Exec(ctx)
 	return err
 }
 
-func (db *sqliteDatabase) UpdateActor(
+func (db *questDatabase) UpdateActor(
 	ctx context.Context,
 	actor common.Actor,
 ) error {
@@ -217,7 +218,7 @@ func (db *sqliteDatabase) UpdateActor(
 	return err
 }
 
-func (db *sqliteDatabase) QueryActorSourcesSinks(
+func (db *questDatabase) QueryActorSourcesSinks(
 	ctx context.Context,
 	query ActorSourcesSinksQuery,
 ) ([]string, error) {
@@ -231,7 +232,7 @@ func (db *sqliteDatabase) QueryActorSourcesSinks(
 		Model(&actors).
 		Distinct().
 		Where("project_id = ?", query.ProjectID.String()).
-		Where("timestamp BETWEEN ? AND ?", query.MinTime.UnixMicro(), query.MaxTime.UnixMicro())
+		Where("timestamp BETWEEN ? AND ?", query.MinTime, query.MaxTime)
 
 	if query.Sources {
 		stmt = stmt.Where("pid = ?", query.ActorPID).Order("sender").ExcludeColumn("pid")
@@ -259,7 +260,7 @@ func (db *sqliteDatabase) QueryActorSourcesSinks(
 	return pids, nil
 }
 
-func (db *sqliteDatabase) QuerySourcesSinksNodeInfo(
+func (db *questDatabase) QuerySourcesSinksNodeInfo(
 	ctx context.Context,
 	query SourcesSinksNodeInfoQuery,
 ) (info common.SourcesSinksNodeInfo, err error) {
@@ -280,7 +281,7 @@ func (db *sqliteDatabase) QuerySourcesSinksNodeInfo(
 		Where("project_id = ?", query.ProjectID.String()).
 		Where("pid = ?", actorPid).
 		Where("sender = ?", sender).
-		Where("timestamp BETWEEN ? AND ?", query.MinTime.UnixMicro(), query.MaxTime.UnixMicro()).
+		Where("timestamp BETWEEN ? AND ?", query.MinTime, query.MaxTime).
 		Scan(ctx, &info)
 
 	info.PID = query.NodePID
