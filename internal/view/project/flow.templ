@@ -32,12 +32,15 @@ templ FlowChartWidget() {
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
-			<div role="tablist" class="tabs tabs-boxed border border-color">
-				if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
-					<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
-					@flowChartFilterItem("Sources", flow)
-					@flowChartFilterItem("Sinks", flow)
-				}
+			<div>
+				<div class="text-sm pb-1 pl-2 cursor-default">Flow Type</div>
+				<div role="tablist" class="tabs tabs-boxed border border-color p-2">
+					if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
+						<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
+						@flowChartFilterItem("Sources", flow)
+						@flowChartFilterItem("Sinks", flow)
+					}
+				</div>
 			</div>
 			@flowChartRange(ctx)
 			<script>
@@ -87,7 +90,6 @@ func flowChartRange(ctx context.Context) templ.Component {
 
 templ flowChartRangeComponent(rng gong_common.Range) {
 	<div
-		class="bg-base-200 border border-color rounded p-1"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
 		hx-include={ common.Includes }
@@ -96,20 +98,16 @@ templ flowChartRangeComponent(rng gong_common.Range) {
 		hx-target="#actor-flow-chart-widget"
 		hx-swap="outerHTML"
 	>
-		<input type="range" id="flow-range" name="flow_range" min="0" max="4" value={ rng.String() } step="1" class="range range-sm rotate-180 [--range-shdw:oklch(var(--n))]"/>
-		<div class="flex w-full justify-between px-2 text-xs">
-			<span>|</span>
-			<span>|</span>
-			<span>|</span>
-			<span>|</span>
-			<span>|</span>
-		</div>
-		<div class="flex w-full justify-between px-2 text-xs">
-			<span>1 Month</span>
-			<span>1 Week</span>
-			<span>1 Day</span>
-			<span>1 Hour</span>
-			<span>1 Min</span>
+		<div class="text-sm pb-1 pl-2 cursor-default">Lookback Range</div>
+		<div class="bg-base-200 border border-color rounded py-2 px-4">
+			<input type="range" id="flow-range" name="flow_range" min="0" max="4" value={ rng.String() } step="1" class="range range-sm rotate-180 [--range-shdw:oklch(var(--n))]"/>
+			<div class="flex w-full justify-between px-2 pb-4 text-xs">
+				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Month</div></div>
+				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Week</div></div>
+				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Day</div></div>
+				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Hour</div></div>
+				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Min</div></div>
+			</div>
 		</div>
 	</div>
 }
