@@ -5,10 +5,6 @@ import (
 	"errors"
 	"fmt"
 	gong_common "gong/common"
-	"gong/core/common"
-	"gong/core/listener"
-	"gong/core/processor"
-	"gong/core/project"
 	"gong/persistance"
 	"gong/sdk"
 	"os"
@@ -33,9 +29,9 @@ type gongApp struct {
 	db            persistance.Database
 }
 
-type producerFunc func(common.App) actor.Producer
+type producerFunc func(App) actor.Producer
 
-func NewApp(db persistance.Database) (common.App, error) {
+func NewApp(db persistance.Database) (App, error) {
 	app := new(gongApp)
 
 	app.db = db
@@ -55,8 +51,8 @@ func NewApp(db persistance.Database) (common.App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
-	app.producerFuncs[common.KindProject] = project.NewProjectProducerWithApp
-	app.producerFuncs[common.KindProcessor] = processor.NewProcessorProducerWithApp
+	app.producerFuncs[KindProject] = NewProjectProducerWithApp
+	app.producerFuncs[KindProcessor] = NewProcessorProducerWithApp
 
 	engine.SpawnFunc(func(ctx *actor.Context) {
 		switch msg := ctx.Message().(type) {
@@ -91,7 +87,7 @@ func (app *gongApp) PID(kind string, id string) (*actor.PID, error) {
 		if !ok {
 			return nil, errors.New("actor kind does not have a producer registered")
 		}
-		pid = app.engine.Spawn(producer(app), kind, actor.WithID(id), actor.WithMiddleware(common.ActorMiddlewareLoad(uuid)))
+		pid = app.engine.Spawn(producer(app), kind, actor.WithID(id), actor.WithMiddleware(ActorMiddlewareLoad(uuid)))
 	}
 	return pid, nil
 }
@@ -122,17 +118,17 @@ func (app *gongApp) Actor(
 	projectID uuid.UUID,
 	actorPID string,
 ) (actor gong_common.Actor, err error) {
-	projectPID, err := app.PID(common.KindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return actor, err
 	}
 
-	msg := common.MsgGetProjectActorProps{
+	msg := MsgGetProjectActorProps{
 		ActorPID: actorPID,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := actor_utils.HandleResponse[common.RspGetProjectActor](r)
+	response, err := actor_utils.HandleResponse[RspGetProjectActor](r)
 	if err != nil {
 		return actor, err
 	}
@@ -144,13 +140,13 @@ func (app *gongApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) (project gong_common.ProjectProps, err error) {
-	projectPID, err := app.PID(common.KindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return project, err
 	}
 
-	r := app.engine.Request(projectPID, common.MsgGetProjectProps{}, defaultTimeout)
-	response, err := actor_utils.HandleResponse[common.RspGetProjectProps](r)
+	r := app.engine.Request(projectPID, MsgGetProjectProps{}, defaultTimeout)
+	response, err := actor_utils.HandleResponse[RspGetProjectProps](r)
 	if err != nil {
 		return project, err
 	}
@@ -166,12 +162,12 @@ func (app *gongApp) Events(
 	numEvents int,
 	filter gong_common.Filter,
 ) (events gong_common.EventList, err error) {
-	projectPID, err := app.PID(common.KindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return events, err
 	}
 
-	msg := common.MsgGetProjectEvents{
+	msg := MsgGetProjectEvents{
 		ActorPID:  actorPID,
 		Timestamp: timestamp,
 		NumEvents: numEvents,
@@ -179,7 +175,7 @@ func (app *gongApp) Events(
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := actor_utils.HandleResponse[common.RspGetProjectEvents](r)
+	response, err := actor_utils.HandleResponse[RspGetProjectEvents](r)
 	if err != nil {
 		return events, err
 	}
@@ -192,12 +188,12 @@ func (app *gongApp) ProcessEvents(
 	projectID uuid.UUID,
 	events []sdk.Event,
 ) error {
-	processorPID, err := app.PID(common.KindProcessor, projectID.String())
+	processorPID, err := app.PID(KindProcessor, projectID.String())
 	if err != nil {
 		return err
 	}
 
-	app.engine.Send(processorPID, common.MsgSdkEvents{
+	app.engine.Send(processorPID, MsgSdkEvents{
 		Events: events,
 	})
 	return nil
@@ -210,19 +206,19 @@ func (app *gongApp) SourcesSinks(
 	sources bool,
 	rng gong_common.Range,
 ) (pids []string, err error) {
-	projectPID, err := app.PID(common.KindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return pids, err
 	}
 
-	msg := common.MsgGetActorSourcesSinks{
+	msg := MsgGetActorSourcesSinks{
 		ActorPID: actorPID,
 		Sources:  sources,
 		Range:    rng,
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := actor_utils.HandleResponse[common.RspGetActorSourcesSinks](r)
+	response, err := actor_utils.HandleResponse[RspGetActorSourcesSinks](r)
 	if err != nil {
 		return pids, err
 	}
@@ -238,12 +234,12 @@ func (app *gongApp) SourcesSinksNodeInfo(
 	source bool,
 	rng gong_common.Range,
 ) (info gong_common.SourcesSinksNodeInfo, err error) {
-	projectPID, err := app.PID(common.KindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return info, err
 	}
 
-	msg := common.MsgGetSourcesSinksNodeInfo{
+	msg := MsgGetSourcesSinksNodeInfo{
 		ActorPID: actorPID,
 		NodePID:  nodePID,
 		Source:   source,
@@ -251,7 +247,7 @@ func (app *gongApp) SourcesSinksNodeInfo(
 	}
 
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := actor_utils.HandleResponse[common.RspGetSourcesSinksNodeInfo](r)
+	response, err := actor_utils.HandleResponse[RspGetSourcesSinksNodeInfo](r)
 	if err != nil {
 		return info, err
 	}
@@ -263,11 +259,11 @@ func (app *gongApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
-	lType common.ListenerType,
+	lType ListenerType,
 	filter gong_common.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)
-	app.engine.Spawn(listener.NewListenerProducer(app, projectID, lType, c, filter), common.KindListener, actor.WithID(id))
+	app.engine.Spawn(NewListenerProducer(app, projectID, lType, c, filter), KindListener, actor.WithID(id))
 	return c, nil
 }
 
@@ -275,7 +271,7 @@ func (app *gongApp) ListenStop(
 	ctx context.Context,
 	id string,
 ) error {
-	listenerPID, err := app.PID(common.KindListener, id)
+	listenerPID, err := app.PID(KindListener, id)
 	if err != nil {
 		return err
 	}

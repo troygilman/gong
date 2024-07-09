@@ -1,10 +1,9 @@
-package processor
+package core
 
 import (
 	"context"
 	"crypto/rand"
-	gong_common "gong/common"
-	"gong/core/common"
+	"gong/common"
 	"gong/sdk"
 	"slices"
 	"time"
@@ -20,18 +19,18 @@ const (
 )
 
 type processor struct {
-	common.CommonActorData
-	actors   map[string]gong_common.Actor
+	CommonActorData
+	actors   map[string]common.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
 	events   []sdk.Event
 	repeater actor.SendRepeater
 }
 
-func NewProcessorProducerWithApp(app common.App) actor.Producer {
+func NewProcessorProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
-			CommonActorData: common.CommonActorData{
+			CommonActorData: CommonActorData{
 				App: app,
 			},
 		}
@@ -40,7 +39,7 @@ func NewProcessorProducerWithApp(app common.App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case common.MsgSdkEvents, common.MsgProcessorUpdateState:
+	case MsgSdkEvents, MsgProcessorUpdateState:
 	default:
 		actor_utils.LogActorMsg(aCtx)
 	}
@@ -51,21 +50,21 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
-			p.actors = make(map[string]gong_common.Actor)
+			p.actors = make(map[string]common.Actor)
 			p.entropy = ulid.Monotonic(rand.Reader, 1)
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
-			p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgProcessorUpdateState{}, sendUpdatesInterval)
+			p.repeater = aCtx.SendRepeat(aCtx.PID(), MsgProcessorUpdateState{}, sendUpdatesInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
 			return p.processUpdates(ctx, aCtx)
-		case common.MsgSdkEvents:
+		case MsgSdkEvents:
 			slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
 				return a.Timestamp.Compare(b.Timestamp)
 			})
 			p.events = append(p.events, msg.Events...)
-		case common.MsgProcessorUpdateState:
+		case MsgProcessorUpdateState:
 			return p.processUpdates(ctx, aCtx)
 		}
 		return nil
@@ -74,20 +73,20 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	}
 }
 
-func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, err error) {
+func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err error) {
 	eventID, err := ulid.New(ulid.Timestamp(sdkEvent.Timestamp), p.entropy)
 	if err != nil {
 		return event, err
 	}
 
-	event = gong_common.Event{
+	event = common.Event{
 		ProjectID: p.Id.String(),
 		Event:     sdkEvent,
 	}
 
 	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorData = gong_common.Actor{
+		actorData = common.Actor{
 			PID:       event.PID,
 			ProjectID: p.Id,
 			NumEvents: 0,
@@ -103,7 +102,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, er
 	}
 
 	if eventID.Compare(lastEventID) > 0 {
-		actorData.Alive = common.IsActorAlive(event.Type)
+		actorData.Alive = IsActorAlive(event.Type)
 		// actorData.LastEventID = event.ID
 	}
 
@@ -126,7 +125,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	}()
 
 	sdkEventBatch := p.events[:batchSize]
-	eventBatch := make([]gong_common.Event, 0, len(sdkEventBatch))
+	eventBatch := make([]common.Event, 0, len(sdkEventBatch))
 
 	for _, sdkEvent := range sdkEventBatch {
 		event, err := p.handleEvent(sdkEvent)
@@ -152,7 +151,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		}
 	}
 
-	actors := make([]gong_common.Actor, 0)
+	actors := make([]common.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}
@@ -165,14 +164,14 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		throughput = int64(float32(batchSize) / latencySec)
 	}
 
-	metric := common.Metric{
+	metric := Metric{
 		Timestamp:  time.Now(),
 		Latency:    latency.Milliseconds(),
 		Throughput: throughput,
 	}
 
-	projectPID := aCtx.Engine().Registry.GetPID(common.KindProject, p.Id.String())
-	aCtx.Send(projectPID, common.MsgUpdateProject{
+	projectPID := aCtx.Engine().Registry.GetPID(KindProject, p.Id.String())
+	aCtx.Send(projectPID, MsgUpdateProject{
 		Actors: actors,
 		Events: eventBatch,
 		Metric: metric,
