@@ -1,12 +1,11 @@
-package core
+package dolly
 
 import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
-	actor_utils "github.com/troygilman0/utils"
 )
 
-func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func MiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {
@@ -14,7 +13,7 @@ func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc
 				a, ok := ctx.Receiver().(PersistentActor)
 				if ok {
 					if err := a.Load(ctx.Context(), id); err != nil {
-						actor_utils.LogActorError(ctx, err)
+						LogActorError(ctx, err)
 						ctx.Engine().Poison(ctx.PID())
 					}
 				}
@@ -24,7 +23,7 @@ func ActorMiddlewareLoad(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc
 	}
 }
 
-func ActorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
+func MiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			switch ctx.Message().(type) {
@@ -32,7 +31,7 @@ func ActorMiddlewareCreate(id uuid.UUID) func(actor.ReceiveFunc) actor.ReceiveFu
 				a, ok := ctx.Receiver().(PersistentActor)
 				if ok {
 					if err := a.Create(ctx.Context(), id); err != nil {
-						actor_utils.LogActorError(ctx, err)
+						LogActorError(ctx, err)
 						ctx.Engine().Poison(ctx.PID())
 					}
 				}

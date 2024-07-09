@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"gong/internal/common"
+	"gong/pkg/dolly"
 	"gong/sdk"
 	"slices"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
-	actor_utils "github.com/troygilman0/utils"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 )
 
 type processor struct {
-	CommonActorData
+	commonActorData
 	actors   map[string]common.Actor
 	entropy  ulid.MonotonicReader
 	updates  map[string]bool
@@ -30,8 +30,8 @@ type processor struct {
 func NewProcessorProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
-			CommonActorData: CommonActorData{
-				App: app,
+			commonActorData: commonActorData{
+				app: app,
 			},
 		}
 	}
@@ -39,9 +39,9 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case MsgSdkEvents, MsgProcessorUpdateState:
+	case msgSdkEvents, msgProcessorUpdateState:
 	default:
-		actor_utils.LogActorMsg(aCtx)
+		dolly.LogActorMsg(aCtx)
 	}
 
 	ctx, cancel := context.WithTimeout(aCtx.Context(), 10*time.Second)
@@ -55,21 +55,21 @@ func (p *processor) Receive(aCtx *actor.Context) {
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
-			p.repeater = aCtx.SendRepeat(aCtx.PID(), MsgProcessorUpdateState{}, sendUpdatesInterval)
+			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
 			return p.processUpdates(ctx, aCtx)
-		case MsgSdkEvents:
-			slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
+		case msgSdkEvents:
+			slices.SortFunc(msg.events, func(a, b sdk.Event) int {
 				return a.Timestamp.Compare(b.Timestamp)
 			})
-			p.events = append(p.events, msg.Events...)
-		case MsgProcessorUpdateState:
+			p.events = append(p.events, msg.events...)
+		case msgProcessorUpdateState:
 			return p.processUpdates(ctx, aCtx)
 		}
 		return nil
 	}(); err != nil {
-		actor_utils.LogActorError(aCtx, err)
+		dolly.LogActorError(aCtx, err)
 	}
 }
 
@@ -80,7 +80,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err err
 	}
 
 	event = common.Event{
-		ProjectID: p.Id.String(),
+		ProjectID: p.id.String(),
 		Event:     sdkEvent,
 	}
 
@@ -88,7 +88,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err err
 	if !actorExists {
 		actorData = common.Actor{
 			PID:       event.PID,
-			ProjectID: p.Id,
+			ProjectID: p.id,
 			NumEvents: 0,
 			Alive:     false,
 		}
@@ -102,7 +102,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err err
 	}
 
 	if eventID.Compare(lastEventID) > 0 {
-		actorData.Alive = IsActorAlive(event.Type)
+		actorData.Alive = isActorAlive(event.Type)
 		// actorData.LastEventID = event.ID
 	}
 
@@ -135,16 +135,16 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		eventBatch = append(eventBatch, event)
 	}
 
-	if err := p.App.Database().CreateEvents(ctx, eventBatch); err != nil {
+	if err := p.app.Database().CreateEvents(ctx, eventBatch); err != nil {
 		return err
 	}
 
 	for pid, actorExists := range p.updates {
 		var err error
 		if actorExists {
-			err = p.App.Database().UpdateActor(ctx, p.actors[pid])
+			err = p.app.Database().UpdateActor(ctx, p.actors[pid])
 		} else {
-			err = p.App.Database().CreateActor(ctx, p.actors[pid])
+			err = p.app.Database().CreateActor(ctx, p.actors[pid])
 		}
 		if err != nil {
 			return err
@@ -170,20 +170,20 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		Throughput: throughput,
 	}
 
-	projectPID := aCtx.Engine().Registry.GetPID(KindProject, p.Id.String())
-	aCtx.Send(projectPID, MsgUpdateProject{
-		Actors: actors,
-		Events: eventBatch,
-		Metric: metric,
+	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
+	aCtx.Send(projectPID, msgUpdateProject{
+		actors: actors,
+		events: eventBatch,
+		metric: metric,
 	})
 
 	return nil
 }
 
 func (p *processor) Load(ctx context.Context, id uuid.UUID) error {
-	p.Id = id
+	p.id = id
 
-	actorProps, err := p.App.Database().QueryActors(ctx, id)
+	actorProps, err := p.app.Database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -196,6 +196,6 @@ func (p *processor) Load(ctx context.Context, id uuid.UUID) error {
 }
 
 func (p *processor) Create(ctx context.Context, id uuid.UUID) error {
-	p.Id = id
+	p.id = id
 	return nil
 }

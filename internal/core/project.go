@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"gong/internal/common"
 	"gong/internal/persistance"
+	"gong/pkg/dolly"
 	"log"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
-	actor_utils "github.com/troygilman0/utils"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 type msgUpdateProjectInternal struct{}
 
 type project struct {
-	CommonActorData
+	commonActorData
 	actors       map[string]common.Actor
 	actorUpdates map[string]common.Actor
 	eventUpdates []common.Event
@@ -34,8 +34,8 @@ type project struct {
 func NewProjectProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
-			CommonActorData: CommonActorData{
-				App: app,
+			commonActorData: commonActorData{
+				app: app,
 			},
 		}
 	}
@@ -43,9 +43,9 @@ func NewProjectProducerWithApp(app App) actor.Producer {
 
 func (p *project) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case msgUpdateProjectInternal, MsgUpdateProject:
+	case msgUpdateProjectInternal, msgUpdateProject:
 	default:
-		actor_utils.LogActorMsg(aCtx)
+		dolly.LogActorMsg(aCtx)
 	}
 
 	if err := func() error {
@@ -59,35 +59,35 @@ func (p *project) Receive(aCtx *actor.Context) {
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
-		case MsgGetProjectProps:
+		case msgGetProjectProps:
 			props := common.ProjectProps{
-				ID:     p.Id,
+				ID:     p.id,
 				Actors: make(map[string]common.Actor, 0),
 			}
 			for pid, data := range p.actors {
 				props.Actors[pid] = data
 			}
 			log.Println(props)
-			aCtx.Respond(RspGetProjectProps{
-				Props: props,
+			aCtx.Respond(rspGetProjectProps{
+				props: props,
 			})
 
-		case MsgGetProjectActorProps:
-			actorData, ok := p.actors[msg.ActorPID]
+		case msgGetProjectActorProps:
+			actorData, ok := p.actors[msg.actorPID]
 			if ok {
-				aCtx.Respond(RspGetProjectActor{
-					Actor: actorData,
+				aCtx.Respond(rspGetProjectActor{
+					actor: actorData,
 				})
 			} else {
 				return errors.New("actor pid does not exist")
 			}
 
-		case MsgUpdateProject:
-			for _, actorData := range msg.Actors {
+		case msgUpdateProject:
+			for _, actorData := range msg.actors {
 				p.actorUpdates[actorData.PID] = actorData
 			}
-			p.eventUpdates = append(p.eventUpdates, msg.Events...)
-			p.metricUpdate = msg.Metric
+			p.eventUpdates = append(p.eventUpdates, msg.events...)
+			p.metricUpdate = msg.metric
 
 		case msgUpdateProjectInternal:
 			p.metrics.Process(p.metricUpdate)
@@ -124,8 +124,8 @@ func (p *project) Receive(aCtx *actor.Context) {
 			// push data to every listener concurrently
 			for pid, data := range listenerData {
 				if len(data) > 0 {
-					aCtx.Send(pid, MsgListenData{
-						Data: data,
+					aCtx.Send(pid, msgListenData{
+						data: data,
 					})
 				}
 			}
@@ -137,76 +137,76 @@ func (p *project) Receive(aCtx *actor.Context) {
 			}
 			p.eventUpdates = []common.Event{}
 
-		case MsgGetProjectEvents:
-			_, ok := p.actors[msg.ActorPID]
+		case msgGetProjectEvents:
+			_, ok := p.actors[msg.actorPID]
 			if ok {
 				query := persistance.EventsQuery{
-					ProjectID: p.Id,
-					ActorPID:  msg.ActorPID,
-					Timestamp: msg.Timestamp,
-					NumEvents: msg.NumEvents,
-					Filter:    msg.Filter,
+					ProjectID: p.id,
+					ActorPID:  msg.actorPID,
+					Timestamp: msg.timestamp,
+					NumEvents: msg.numEvents,
+					Filter:    msg.filter,
 				}
-				go queryEvents(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
+				go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
 			} else {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
-		case MsgGetActorSourcesSinks:
-			_, ok := p.actors[msg.ActorPID]
+		case msgGetActorSourcesSinks:
+			_, ok := p.actors[msg.actorPID]
 			if ok {
-				duration, err := msg.Range.Duration()
+				duration, err := msg.rng.Duration()
 				if err != nil {
 					return err
 				}
 
 				query := persistance.ActorSourcesSinksQuery{
-					Sources:   msg.Sources,
-					ProjectID: p.Id,
-					ActorPID:  msg.ActorPID,
+					Sources:   msg.sources,
+					ProjectID: p.id,
+					ActorPID:  msg.actorPID,
 					MinTime:   time.Now().Add(-duration),
 					MaxTime:   time.Now(),
 				}
-				go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
+				go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
 			} else {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
 
-		case MsgGetSourcesSinksNodeInfo:
-			if _, ok := p.actors[msg.ActorPID]; ok {
-				duration, err := msg.Range.Duration()
+		case msgGetSourcesSinksNodeInfo:
+			if _, ok := p.actors[msg.actorPID]; ok {
+				duration, err := msg.rng.Duration()
 				if err != nil {
 					return err
 				}
 
 				query := persistance.SourcesSinksNodeInfoQuery{
-					Source:    msg.Source,
-					ProjectID: p.Id,
-					ActorPID:  msg.ActorPID,
-					NodePID:   msg.NodePID,
+					Source:    msg.source,
+					ProjectID: p.id,
+					ActorPID:  msg.actorPID,
+					NodePID:   msg.nodePID,
 					MinTime:   time.Now().Add(-duration),
 					MaxTime:   time.Now(),
 				}
-				go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.App.Database(), query)
+				go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
 			} else {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
 
-		case MsgListenStart:
-			listeners, ok := p.listeners[msg.LType]
+		case msgListenStart:
+			listeners, ok := p.listeners[msg.lType]
 			if !ok {
 				listeners = make(map[*actor.PID]struct{})
 			}
 			listeners[aCtx.Sender()] = struct{}{}
-			p.listeners[msg.LType] = listeners
-		case MsgListenStop:
-			listeners, ok := p.listeners[msg.LType]
+			p.listeners[msg.lType] = listeners
+		case msgListenStop:
+			listeners, ok := p.listeners[msg.lType]
 			if ok {
 				delete(listeners, aCtx.Sender())
 			}
 		}
 		return nil
 	}(); err != nil {
-		actor_utils.LogActorError(aCtx, err)
+		dolly.LogActorError(aCtx, err)
 		if aCtx.Sender() != nil {
 			aCtx.Respond(err)
 		}
@@ -217,9 +217,9 @@ func (p *project) Load(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	p.Id = id
+	p.id = id
 
-	actorProps, err := p.App.Database().QueryActors(ctx, id)
+	actorProps, err := p.app.Database().QueryActors(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (p *project) Load(ctx context.Context, id uuid.UUID) error {
 }
 
 func (p *project) Create(ctx context.Context, id uuid.UUID) error {
-	p.Id = id
+	p.id = id
 	return nil
 }
 
@@ -246,8 +246,8 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 		return
 	}
 
-	engine.Send(sender, RspGetProjectEvents{
-		Events: events,
+	engine.Send(sender, rspGetProjectEvents{
+		events: events,
 	})
 }
 
@@ -261,8 +261,8 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 		return
 	}
 
-	engine.Send(sender, RspGetActorSourcesSinks{
-		SourcesSinks: pids,
+	engine.Send(sender, rspGetActorSourcesSinks{
+		sourcesSinks: pids,
 	})
 }
 
@@ -276,7 +276,7 @@ func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persi
 		return
 	}
 
-	engine.Send(sender, RspGetSourcesSinksNodeInfo{
-		Info: info,
+	engine.Send(sender, rspGetSourcesSinksNodeInfo{
+		info: info,
 	})
 }

@@ -8,74 +8,74 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-type MsgSdkEvents struct {
-	Events []sdk.Event
+type msgSdkEvents struct {
+	events []sdk.Event
 }
 
-type MsgGetProjectProps struct{}
+type msgGetProjectProps struct{}
 
-type RspGetProjectProps struct {
-	Props common.ProjectProps
+type rspGetProjectProps struct {
+	props common.ProjectProps
 }
 
-type MsgGetProjectActorProps struct {
-	ActorPID string
+type msgGetProjectActorProps struct {
+	actorPID string
 }
 
-type RspGetProjectActor struct {
-	Actor common.Actor
+type rspGetProjectActor struct {
+	actor common.Actor
 }
 
-type MsgGetProjectEvents struct {
-	ActorPID  string
-	EventID   ulid.ULID
-	Timestamp time.Time
-	NumEvents int
-	Filter    common.Filter
+type msgGetProjectEvents struct {
+	actorPID  string
+	eventID   ulid.ULID
+	timestamp time.Time
+	numEvents int
+	filter    common.Filter
 }
 
-type RspGetProjectEvents struct {
-	Events common.EventList
-	Actor  common.Actor
+type rspGetProjectEvents struct {
+	events common.EventList
+	actor  common.Actor
 }
 
-type MsgProcessorUpdateState struct{}
+type msgProcessorUpdateState struct{}
 
-type MsgUpdateProject struct {
-	Actors []common.Actor
-	Events []common.Event
-	Metric Metric
+type msgUpdateProject struct {
+	actors []common.Actor
+	events []common.Event
+	metric Metric
 }
 
-type MsgGetActorSourcesSinks struct {
-	ActorPID string
-	Sources  bool
-	Range    common.Range
+type msgGetActorSourcesSinks struct {
+	actorPID string
+	sources  bool
+	rng      common.Range
 }
 
-type RspGetActorSourcesSinks struct {
-	SourcesSinks []string
+type rspGetActorSourcesSinks struct {
+	sourcesSinks []string
 }
 
-type MsgGetSourcesSinksNodeInfo struct {
-	ActorPID string
-	NodePID  string
-	Source   bool
-	Range    common.Range
+type msgGetSourcesSinksNodeInfo struct {
+	actorPID string
+	nodePID  string
+	source   bool
+	rng      common.Range
 }
 
-type RspGetSourcesSinksNodeInfo struct {
-	Info common.SourcesSinksNodeInfo
+type rspGetSourcesSinksNodeInfo struct {
+	info common.SourcesSinksNodeInfo
 }
 
-type MsgListenStart struct {
-	LType ListenerType
+type msgListenStart struct {
+	lType ListenerType
 }
 
-type MsgListenStop struct {
-	LType ListenerType
+type msgListenStop struct {
+	lType ListenerType
 }
 
-type MsgListenData struct {
-	Data []any
+type msgListenData struct {
+	data []any
 }

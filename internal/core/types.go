@@ -4,13 +4,13 @@ import (
 	"context"
 	"gong/internal/common"
 	"gong/internal/persistance"
+	"gong/pkg/dolly"
 	"gong/sdk"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	actor_utils "github.com/troygilman0/utils"
 )
 
 type App interface {
@@ -28,9 +28,9 @@ type App interface {
 }
 
 const (
-	KindProject   = "project"
-	KindProcessor = "processor"
-	KindListener  = "listener"
+	kindProject   = "project"
+	kindProcessor = "processor"
+	kindListener  = "listener"
 )
 
 type ListenerType uint
@@ -41,15 +41,10 @@ const (
 	ListenerTypeMetrics
 )
 
-type PersistentActor interface {
-	Load(ctx context.Context, id uuid.UUID) error
-	Create(ctx context.Context, id uuid.UUID) error
-}
-
-type CommonActorData struct {
-	Id          uuid.UUID
-	App         App
-	PoisonTimer actor_utils.PoisonTimer
+type commonActorData struct {
+	id          uuid.UUID
+	app         App
+	poisonTimer dolly.PoisonTimer
 }
 
 const (
@@ -59,6 +54,6 @@ const (
 	ActorStoppedEvent = "actor.ActorStoppedEvent"
 )
 
-func IsActorAlive(eventType string) bool {
+func isActorAlive(eventType string) bool {
 	return eventType != ActorStopped && eventType != ActorStoppedEvent
 }

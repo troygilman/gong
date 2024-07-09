@@ -2,10 +2,10 @@ package core
 
 import (
 	"gong/internal/common"
+	"gong/pkg/dolly"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
-	actor_utils "github.com/troygilman0/utils"
 )
 
 func NewListenerProducer(
@@ -38,28 +38,28 @@ func (l *listener) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Started:
-			projectPID, err := l.app.PID(KindProject, l.projectID.String())
+			projectPID, err := l.app.PID(kindProject, l.projectID.String())
 			if err != nil {
 				return err
 			}
-			aCtx.Send(projectPID, MsgListenStart{LType: l.lType})
+			aCtx.Send(projectPID, msgListenStart{lType: l.lType})
 
 		case actor.Stopped:
-			projectPID, err := l.app.PID(KindProject, l.projectID.String())
+			projectPID, err := l.app.PID(kindProject, l.projectID.String())
 			if err != nil {
 				return err
 			}
 
-			aCtx.Send(projectPID, MsgListenStop{LType: l.lType})
+			aCtx.Send(projectPID, msgListenStop{lType: l.lType})
 			close(l.c)
 
-		case MsgListenData:
-			filteredData := make([]any, 0, len(msg.Data))
+		case msgListenData:
+			filteredData := make([]any, 0, len(msg.data))
 
-			for _, data := range msg.Data {
+			for _, data := range msg.data {
 				switch l.lType {
 				case ListenerTypeProject:
-					filteredData = msg.Data
+					filteredData = msg.data
 				case ListenerTypeEvents:
 					if event, ok := data.(common.Event); ok {
 						if l.filter.ValidEvent(event) {
@@ -79,6 +79,6 @@ func (l *listener) Receive(aCtx *actor.Context) {
 		}
 		return nil
 	}(); err != nil {
-		actor_utils.LogActorError(aCtx, err)
+		dolly.LogActorError(aCtx, err)
 	}
 }
