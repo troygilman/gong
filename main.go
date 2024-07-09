@@ -2,10 +2,10 @@ package main
 
 import (
 	"embed"
-	"gong/core"
 	"gong/example"
-	"gong/persistance"
-	"gong/transport"
+	"gong/internal/core"
+	"gong/internal/persistance"
+	"gong/internal/transport"
 	"log"
 	"os"
 )

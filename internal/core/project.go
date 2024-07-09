@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gong/common"
-	"gong/persistance"
+	"gong/internal/persistance"
 	"log"
 	"time"
 

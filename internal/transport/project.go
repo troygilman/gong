@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"gong/common"
-	"gong/core"
+	"gong/internal/core"
+	view_admin "gong/internal/view/admin"
+	view_project "gong/internal/view/project"
 	"gong/sdk"
-	view_admin "gong/view/admin"
-	view_project "gong/view/project"
 	"strconv"
 	"time"
 

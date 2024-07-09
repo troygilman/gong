@@ -5,5 +5,4 @@
 **/tmp
 **/node_modules
 **/.vscode
-dev.db
 fly.toml

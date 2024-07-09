@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gong/common"
-	"gong/core"
+	"gong/internal/core"
 	"io"
 	"log"
 	"net/http"

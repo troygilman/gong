@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"gong/core"
+	"gong/internal/core"
 	"io/fs"
 	"log"
 	"net/http"

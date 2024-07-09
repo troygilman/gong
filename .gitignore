@@ -1,8 +1,6 @@
-view/**/*_templ.go
+internal/view/**/*_templ.go
 static/css
 .env
 tmp
 node_modules
 .vscode
-dev.db
-dev.db-journal

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	gong_common "gong/common"
-	"gong/persistance"
+	"gong/internal/persistance"
 	"gong/sdk"
 	"os"
 	"time"
