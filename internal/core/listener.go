@@ -1,7 +1,7 @@
 package core
 
 import (
-	"gong/common"
+	"gong/internal/common"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"

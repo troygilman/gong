@@ -13,7 +13,7 @@ import (
 //go:embed static
 var static embed.FS
 
-//go:embed migration
+//go:embed migrations
 var migrations embed.FS
 
 func main() {

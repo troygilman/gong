@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"gong/common"
+	"gong/internal/common"
 	"io/fs"
 	"log"
 	"os"
@@ -91,7 +91,7 @@ func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 			return nil, fmt.Errorf("error while creating db driver: %s", err.Error())
 		}
 
-		sourceDriver, err := iofs.New(sqlMigrations, "migration/quest")
+		sourceDriver, err := iofs.New(sqlMigrations, "migrations/quest")
 		if err != nil {
 			return nil, fmt.Errorf("error while creating source driver: %s", err.Error())
 		}

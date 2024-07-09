@@ -2,7 +2,7 @@ package transport
 
 import (
 	"errors"
-	"gong/common"
+	"gong/internal/common"
 	"gong/internal/core"
 
 	"log"

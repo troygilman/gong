@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gong/common"
+	"gong/internal/common"
 	"gong/internal/persistance"
 	"log"
 	"time"

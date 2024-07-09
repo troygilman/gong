@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gong_common "gong/common"
+	"gong/internal/common"
 	"gong/internal/persistance"
 	"gong/sdk"
 	"os"
@@ -117,7 +117,7 @@ func (app *gongApp) Actor(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-) (actor gong_common.Actor, err error) {
+) (actor common.Actor, err error) {
 	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return actor, err
@@ -139,7 +139,7 @@ func (app *gongApp) Actor(
 func (app *gongApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
-) (project gong_common.ProjectProps, err error) {
+) (project common.ProjectProps, err error) {
 	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return project, err
@@ -160,8 +160,8 @@ func (app *gongApp) Events(
 	actorPID string,
 	timestamp time.Time,
 	numEvents int,
-	filter gong_common.Filter,
-) (events gong_common.EventList, err error) {
+	filter common.Filter,
+) (events common.EventList, err error) {
 	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return events, err
@@ -204,7 +204,7 @@ func (app *gongApp) SourcesSinks(
 	projectID uuid.UUID,
 	actorPID string,
 	sources bool,
-	rng gong_common.Range,
+	rng common.Range,
 ) (pids []string, err error) {
 	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
@@ -232,8 +232,8 @@ func (app *gongApp) SourcesSinksNodeInfo(
 	actorPID string,
 	nodePID string,
 	source bool,
-	rng gong_common.Range,
-) (info gong_common.SourcesSinksNodeInfo, err error) {
+	rng common.Range,
+) (info common.SourcesSinksNodeInfo, err error) {
 	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return info, err
@@ -260,7 +260,7 @@ func (app *gongApp) ListenStart(
 	projectID uuid.UUID,
 	id string,
 	lType ListenerType,
-	filter gong_common.Filter,
+	filter common.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)
 	app.engine.Spawn(NewListenerProducer(app, projectID, lType, c, filter), KindListener, actor.WithID(id))

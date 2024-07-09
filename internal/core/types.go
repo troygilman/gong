@@ -2,7 +2,7 @@ package core
 
 import (
 	"context"
-	"gong/common"
+	"gong/internal/common"
 	"gong/internal/persistance"
 	"gong/sdk"
 	"time"

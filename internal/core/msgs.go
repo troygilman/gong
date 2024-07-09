@@ -1,7 +1,7 @@
 package core
 
 import (
-	"gong/common"
+	"gong/internal/common"
 	"gong/sdk"
 	"time"
 

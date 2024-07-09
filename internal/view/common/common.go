@@ -3,7 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
-	"gong/common"
+	"gong/internal/common"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"

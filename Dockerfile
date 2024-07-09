@@ -12,11 +12,9 @@ RUN go install github.com/a-h/templ/cmd/templ@latest
 FROM node:${NODE_VERSION}-bookworm-slim as node-builder
 
 WORKDIR /usr/src/app
-COPY package.json package-lock.json ./
-RUN npm install
-
 COPY . .
-RUN npx tailwindcss build -i tailwind.css -o static/css/app.css
+RUN npm install
+RUN npx tailwindcss build -c configs/tailwind.config.js -i configs/tailwind.css -o static/css/app.css
 
 # Bring the Node.js built assets into the Go builder stage
 FROM builder as final-builder

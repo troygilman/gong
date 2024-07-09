@@ -2,7 +2,7 @@ package persistance
 
 import (
 	"context"
-	"gong/common"
+	"gong/internal/common"
 	"time"
 
 	"github.com/google/uuid"

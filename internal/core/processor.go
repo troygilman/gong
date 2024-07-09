@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"crypto/rand"
-	"gong/common"
+	"gong/internal/common"
 	"gong/sdk"
 	"slices"
 	"time"

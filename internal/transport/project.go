@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"gong/common"
+	"gong/internal/common"
 	"gong/internal/core"
 	view_admin "gong/internal/view/admin"
 	view_project "gong/internal/view/project"
