@@ -48,32 +48,30 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	ctx, cancel := context.WithTimeout(aCtx.Context(), 10*time.Second)
 	defer cancel()
 
-	if err := p.receive(ctx, aCtx); err != nil {
+	if err := func() error {
+		switch msg := aCtx.Message().(type) {
+		case actor.Initialized:
+			p.actors = make(map[string]gong_common.Actor)
+			p.entropy = ulid.Monotonic(rand.Reader, 1)
+			p.updates = make(map[string]bool)
+			p.events = make([]sdk.Event, 0)
+		case actor.Started:
+			p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgProcessorUpdateState{}, sendUpdatesInterval)
+		case actor.Stopped:
+			p.repeater.Stop()
+			return p.processUpdates(ctx, aCtx)
+		case common.MsgSdkEvents:
+			slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
+				return a.Timestamp.Compare(b.Timestamp)
+			})
+			p.events = append(p.events, msg.Events...)
+		case common.MsgProcessorUpdateState:
+			return p.processUpdates(ctx, aCtx)
+		}
+		return nil
+	}(); err != nil {
 		actor_utils.LogActorError(aCtx, err)
 	}
-}
-
-func (p *processor) receive(ctx context.Context, aCtx *actor.Context) error {
-	switch msg := aCtx.Message().(type) {
-	case actor.Initialized:
-		p.actors = make(map[string]gong_common.Actor)
-		p.entropy = ulid.Monotonic(rand.Reader, 1)
-		p.updates = make(map[string]bool)
-		p.events = make([]sdk.Event, 0)
-	case actor.Started:
-		p.repeater = aCtx.SendRepeat(aCtx.PID(), common.MsgProcessorUpdateState{}, sendUpdatesInterval)
-	case actor.Stopped:
-		p.repeater.Stop()
-		return p.processUpdates(ctx, aCtx)
-	case common.MsgSdkEvents:
-		slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
-			return a.Timestamp.Compare(b.Timestamp)
-		})
-		p.events = append(p.events, msg.Events...)
-	case common.MsgProcessorUpdateState:
-		return p.processUpdates(ctx, aCtx)
-	}
-	return nil
 }
 
 func (p *processor) handleEvent(sdkEvent sdk.Event) (event gong_common.Event, err error) {

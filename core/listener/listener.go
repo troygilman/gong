@@ -1,7 +1,6 @@
 package listener
 
 import (
-	"context"
 	gong_common "gong/common"
 	"gong/core/common"
 
@@ -37,55 +36,50 @@ type listener struct {
 }
 
 func (l *listener) Receive(aCtx *actor.Context) {
-	ctx := aCtx.Context()
+	if err := func() error {
+		switch msg := aCtx.Message().(type) {
+		case actor.Started:
+			projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
+			if err != nil {
+				return err
+			}
+			aCtx.Send(projectPID, common.MsgListenStart{LType: l.lType})
 
-	if err := l.receive(ctx, aCtx); err != nil {
+		case actor.Stopped:
+			projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
+			if err != nil {
+				return err
+			}
+
+			aCtx.Send(projectPID, common.MsgListenStop{LType: l.lType})
+			close(l.c)
+
+		case common.MsgListenData:
+			filteredData := make([]any, 0, len(msg.Data))
+
+			for _, data := range msg.Data {
+				switch l.lType {
+				case common.ListenerTypeProject:
+					filteredData = msg.Data
+				case common.ListenerTypeEvents:
+					if event, ok := data.(gong_common.Event); ok {
+						if l.filter.ValidEvent(event) {
+							filteredData = append(filteredData, event)
+						}
+					}
+				case common.ListenerTypeMetrics:
+					if metricGroup, ok := data.(common.MetricGroup); ok {
+						filteredData = append(filteredData, metricGroup)
+					}
+				default:
+					panic("invalid listener type")
+				}
+			}
+
+			l.c <- filteredData
+		}
+		return nil
+	}(); err != nil {
 		actor_utils.LogActorError(aCtx, err)
 	}
-}
-
-func (l *listener) receive(ctx context.Context, aCtx *actor.Context) error {
-	switch msg := aCtx.Message().(type) {
-	case actor.Started:
-		projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
-		if err != nil {
-			return err
-		}
-
-		aCtx.Send(projectPID, common.MsgListenStart{LType: l.lType})
-
-	case actor.Stopped:
-		projectPID, err := l.app.PID(common.KindProject, l.projectID.String())
-		if err != nil {
-			return err
-		}
-
-		aCtx.Send(projectPID, common.MsgListenStop{LType: l.lType})
-		close(l.c)
-
-	case common.MsgListenData:
-		filteredData := make([]any, 0, len(msg.Data))
-
-		for _, data := range msg.Data {
-			switch l.lType {
-			case common.ListenerTypeProject:
-				filteredData = msg.Data
-			case common.ListenerTypeEvents:
-				if event, ok := data.(gong_common.Event); ok {
-					if l.filter.ValidEvent(event) {
-						filteredData = append(filteredData, event)
-					}
-				}
-			case common.ListenerTypeMetrics:
-				if metricGroup, ok := data.(common.MetricGroup); ok {
-					filteredData = append(filteredData, metricGroup)
-				}
-			default:
-				panic("invalid listener type")
-			}
-		}
-
-		l.c <- filteredData
-	}
-	return nil
 }
