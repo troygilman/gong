@@ -7,21 +7,7 @@ import (
 	"gong/internal/view/common"
 )
 
-templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
-	<div id="node-info" class="w-full h-full p-2">
-		<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ info.PID }/>
-		PID: { info.PID }
-		Events: { fmt.Sprintf("%d", info.MsgCount) }
-	</div>
-}
-
-templ FlowChartNodeInfoEmpty() {
-	<div id="node-info" class="w-full h-full flex items-center justify-center">
-		Select a source/sink
-	</div>
-}
-
-templ FlowChartWidget() {
+templ FlowTabContent() {
 	<div id="actor-flow-chart-widget" class="grid grid-cols-2 grow max-w-full min-h-0">
 		<div
 			hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
@@ -32,17 +18,8 @@ templ FlowChartWidget() {
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
-			<div>
-				<div class="text-sm pb-1 pl-2 cursor-default">Flow Type</div>
-				<div role="tablist" class="tabs tabs-boxed border border-color p-2">
-					if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
-						<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
-						@flowChartFilterItem("Sources", flow)
-						@flowChartFilterItem("Sinks", flow)
-					}
-				</div>
-			</div>
-			@flowChartRange(ctx)
+			@flowChartFilterType(ctx)
+			@flowChartFilterRange(ctx)
 			<script>
 				function getNode(event, defaultNode) {
 					if (event && event.detail && event.detail.node) {
@@ -81,14 +58,14 @@ templ FlowChartWidget() {
 	</div>
 }
 
-func flowChartRange(ctx context.Context) templ.Component {
+func flowChartFilterRange(ctx context.Context) templ.Component {
 	if rng, ok := ctx.Value(gong_common.CtxFlowRange).(gong_common.Range); ok {
-		return flowChartRangeComponent(rng)
+		return flowChartFilterRangeComponent(rng)
 	}
-	return flowChartRangeComponent(gong_common.Range(1))
+	return flowChartFilterRangeComponent(gong_common.Range(1))
 }
 
-templ flowChartRangeComponent(rng gong_common.Range) {
+templ flowChartFilterRangeComponent(rng gong_common.Range) {
 	<div
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
@@ -112,7 +89,25 @@ templ flowChartRangeComponent(rng gong_common.Range) {
 	</div>
 }
 
-templ flowChartFilterItem(label string, active string) {
+func flowChartFilterType(ctx context.Context) templ.Component {
+	if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
+		return flowChartFilterTypeComponent(flow)
+	}
+	return flowChartFilterTypeComponent("Sources")
+}
+
+templ flowChartFilterTypeComponent(flow string) {
+	<div>
+		<div class="text-sm pb-1 pl-2 cursor-default">Flow Type</div>
+		<div role="tablist" class="tabs tabs-boxed border border-color p-2">
+			<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
+			@flowChartFilterTypeItem("Sources", flow)
+			@flowChartFilterTypeItem("Sinks", flow)
+		</div>
+	</div>
+}
+
+templ flowChartFilterTypeItem(label string, active string) {
 	<a
 		role="tab"
 		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
@@ -127,6 +122,20 @@ templ flowChartFilterItem(label string, active string) {
 			hx-swap="outerHTML"
 		}
 	>{ label }</a>
+}
+
+templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
+	<div id="node-info" class="w-full h-full p-2">
+		<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ info.PID }/>
+		PID: { info.PID }
+		Events: { fmt.Sprintf("%d", info.MsgCount) }
+	</div>
+}
+
+templ FlowChartNodeInfoEmpty() {
+	<div id="node-info" class="w-full h-full flex items-center justify-center">
+		Select a source/sink
+	</div>
 }
 
 templ FlowChart(sourcesSinks []string, flowType string) {

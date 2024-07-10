@@ -50,7 +50,7 @@ func handleGetProject(eCtx echo.Context) error {
 		return view_project.ProjectActor(actor).Render(ctx, eCtx.Response())
 
 	case common.ProjectViewFlowChart:
-		return view_project.FlowChartWidget().Render(ctx, eCtx.Response())
+		return view_project.FlowTabContent().Render(ctx, eCtx.Response())
 	case common.ProjectViewFlowChartNodeInfo:
 		actorPID, ok := actorPID(eCtx)
 		if !ok {
