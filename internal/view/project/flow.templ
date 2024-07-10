@@ -3,6 +3,8 @@ package project
 import (
 	"context"
 	"fmt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	gong_common "gong/internal/common"
 	"gong/internal/view/common"
 	"log"
@@ -19,8 +21,10 @@ templ FlowTabContent() {
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
-			@flowChartFilterType(ctx)
-			@flowChartFilterRange(ctx)
+			<div class="grid grid-cols-2 gap-4 w-full">
+				@flowChartFilterType(ctx)
+				@flowChartFilterRange(ctx)
+			</div>
 			@flowChartNodeInfo(ctx)
 		</div>
 	</div>
@@ -35,6 +39,7 @@ func flowChartFilterRange(ctx context.Context) templ.Component {
 
 templ flowChartFilterRangeComponent(rng gong_common.Range) {
 	<div
+		class="flex flex-col"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
 		hx-include={ common.Includes }
@@ -65,7 +70,7 @@ func flowChartFilterType(ctx context.Context) templ.Component {
 }
 
 templ flowChartFilterTypeComponent(flow string) {
-	<div>
+	<div class="flex flex-col">
 		<div class="text-sm pb-1 pl-2 cursor-default">Flow Type</div>
 		<div role="tablist" class="tabs tabs-boxed border border-color p-2">
 			<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
@@ -104,7 +109,7 @@ func flowChartNodeInfo(ctx context.Context) templ.Component {
 templ flowChartNodeInfoComponent(node string) {
 	<div
 		id="node-info-container"
-		class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
+		class="relative flex grow w-full min-h-0 border border-color rounded items-center justify-center"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
 		hx-include={ common.Includes }
@@ -129,15 +134,25 @@ templ flowChartNodeInfoComponent(node string) {
 			}
 		</script>
 		@FlowChartNodeInfoContentEmpty(node)
-		<span class="htmx-indicator loading loading-dots loading-lg"></span>
+		<span class="absolute htmx-indicator loading loading-dots loading-lg"></span>
 	</div>
 }
 
 templ FlowChartNodeInfoContent(info gong_common.SourcesSinksNodeInfo) {
 	<div id="node-info" class="flex flex-col w-full h-full p-2">
 		@flowChartNodeState(info.PID)
-		<div>PID: { info.PID }</div>
-		<div>Events: { fmt.Sprintf("%d", info.MsgCount) }</div>
+		<div class="stats border border-color">
+			<div class="stat">
+				<div class="stat-title">PID</div>
+				<div class="stat-value">{ info.PID }</div>
+				<div class="stat-desc">nice</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">Events</div>
+				<div class="stat-value">{  message.NewPrinter(language.English).Sprintf("%d", info.MsgCount) }</div>
+				<div class="stat-desc">nice</div>
+			</div>
+		</div>
 	</div>
 }
 
