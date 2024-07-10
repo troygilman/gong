@@ -5,6 +5,7 @@ import (
 	"fmt"
 	gong_common "gong/internal/common"
 	"gong/internal/view/common"
+	"log"
 )
 
 templ FlowTabContent() {
@@ -20,40 +21,7 @@ templ FlowTabContent() {
 		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
 			@flowChartFilterType(ctx)
 			@flowChartFilterRange(ctx)
-			<script>
-				function getNode(event, defaultNode) {
-					if (event && event.detail && event.detail.node) {
-						console.log("node")
-						return event.detail.node;
-					} else {
-						console.log("default")
-						return defaultNode;
-					}
-				}
-			</script>
-			<div
-				id="node-info-container"
-				class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
-				hx-get={ common.FormatProjectUrl(ctx) }
-				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
-				hx-include={ common.Includes }
-				hx-target="#node-info"
-				hx-swap="outerHTML"
-				hx-push-url="true"
-				@htmx:before-request={ `
-					htmx.addClass(htmx.find("#node-info"), "hidden")
-				` }
-				if node, ok := ctx.Value(gong_common.CtxFlowNode).(string); ok {
-					hx-trigger="fetch-content, load"
-					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "%s")}`, gong_common.ParamFlowNode, node) }
-				} else {
-					hx-trigger="fetch-content"
-					hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event, "")}`, gong_common.ParamFlowNode) }
-				}
-			>
-				@FlowChartNodeInfoEmpty()
-				<span class="htmx-indicator loading loading-dots loading-lg"></span>
-			</div>
+			@flowChartNodeInfo(ctx)
 		</div>
 	</div>
 }
@@ -124,18 +92,64 @@ templ flowChartFilterTypeItem(label string, active string) {
 	>{ label }</a>
 }
 
-templ FlowChartNodeInfo(info gong_common.SourcesSinksNodeInfo) {
-	<div id="node-info" class="w-full h-full p-2">
-		<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ info.PID }/>
-		PID: { info.PID }
-		Events: { fmt.Sprintf("%d", info.MsgCount) }
+func flowChartNodeInfo(ctx context.Context) templ.Component {
+	if node, ok := ctx.Value(gong_common.CtxFlowNode).(string); ok {
+		log.Println("flowChartNodeInfo: node found", node)
+		return flowChartNodeInfoComponent(node)
+	}
+	log.Println("flowChartNodeInfo: node not found")
+	return flowChartNodeInfoComponent("")
+}
+
+templ flowChartNodeInfoComponent(node string) {
+	<div
+		id="node-info-container"
+		class="flex grow w-full min-h-0 border border-color rounded items-center justify-center"
+		hx-get={ common.FormatProjectUrl(ctx) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
+		hx-include={ common.Includes }
+		hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event)}`, gong_common.ParamFlowNode) }
+		hx-target="#node-info"
+		hx-swap="outerHTML"
+		hx-push-url="true"
+		if node != "" {
+			hx-trigger="fetch-content, load"
+		} else {
+			hx-trigger="fetch-content"
+		}
+		@htmx:before-request={ "htmx.addClass(htmx.find('#node-info'), 'hidden')" }
+	>
+		<script>
+			function getNode(event) {
+				if (event && event.detail && event.detail.node) {
+					return event.detail.node;
+				} else {
+					return document.getElementById("flow-node").value;
+				}
+			}
+		</script>
+		@FlowChartNodeInfoContentEmpty(node)
+		<span class="htmx-indicator loading loading-dots loading-lg"></span>
 	</div>
 }
 
-templ FlowChartNodeInfoEmpty() {
+templ FlowChartNodeInfoContent(info gong_common.SourcesSinksNodeInfo) {
+	<div id="node-info" class="flex flex-col w-full h-full p-2">
+		@flowChartNodeState(info.PID)
+		<div>PID: { info.PID }</div>
+		<div>Events: { fmt.Sprintf("%d", info.MsgCount) }</div>
+	</div>
+}
+
+templ FlowChartNodeInfoContentEmpty(node string) {
 	<div id="node-info" class="w-full h-full flex items-center justify-center">
+		@flowChartNodeState(node)
 		Select a source/sink
 	</div>
+}
+
+templ flowChartNodeState(node string) {
+	<input id="flow-node" name={ gong_common.ParamFlowNode } type="hidden" value={ node }/>
 }
 
 templ FlowChart(sourcesSinks []string, flowType string) {
