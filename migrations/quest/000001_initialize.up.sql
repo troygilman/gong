@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS 'events' (
   pid SYMBOL INDEX,
   sender SYMBOL INDEX,
   type SYMBOL INDEX,
-  level LONG,
+  level SYMBOL INDEX,
   msg VARCHAR,
   attrs VARCHAR
 ) TIMESTAMP(timestamp) PARTITION BY day;

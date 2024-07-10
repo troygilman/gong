@@ -69,7 +69,7 @@ script initTable(url string) {
 						values.timestamp = getBottomTimestamp();
 					}
 					htmx.ajax("GET", addParamsToURL(url + "/events"), {
-						source: "#events-container",
+						source: "#events-spinner",
 						values: values,
 						handler: (src, something) => {
 							const html = something.xhr.responseText;
@@ -90,6 +90,10 @@ script initTable(url string) {
 									this.moreBottom = true;
 								}
 								this.moreTop = true;
+							}
+							const spinner = htmx.find("#events-spinner");
+							if (spinner) {
+								htmx.remove(spinner);
 							}
                             handleEvents(html, isTop);
 						},
@@ -204,7 +208,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 				id="events"
 			></tbody>
 		</table>
-		<div id="spinner" class="spinner absolute top-0 w-full h-full items-center justify-center">
+		<div id="events-spinner" class="spinner absolute flex top-0 w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 	</div>
@@ -352,7 +356,7 @@ templ projectActorEvent(event gong_common.Event) {
 			}
 		</td>
 		<td>
-			{ event.Level.String() }
+			{ event.SlogLevel().String() }
 		</td>
 		<td>
 			if event.Msg != "" {

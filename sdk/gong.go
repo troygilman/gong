@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -32,7 +33,7 @@ type Event struct {
 	PID       string
 	Sender    string
 	Type      string
-	Level     slog.Level
+	Level     string
 	Msg       string
 	Attrs     string
 }
@@ -114,7 +115,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 
 		event := Event{
 			Type:  fmt.Sprintf("%T", msg),
-			Level: level,
+			Level: strconv.Itoa(int(level)),
 			Msg:   logMsg,
 			Attrs: attrStr,
 		}

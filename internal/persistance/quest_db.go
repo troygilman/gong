@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -144,7 +145,7 @@ func (db *questDatabase) QueryEvents(
 	}
 
 	if query.Filter.Level != nil {
-		stmt = stmt.Where("level = ?", *query.Filter.Level)
+		stmt = stmt.Where("level >= ?", strconv.Itoa(int(*query.Filter.Level)))
 	}
 
 	err := stmt.Order(order).Limit(max(query.NumEvents, -query.NumEvents)).Scan(ctx)
@@ -173,7 +174,7 @@ func (db *questDatabase) CreateEvents(
 			Symbol("pid", e.PID).
 			Symbol("sender", e.Sender).
 			Symbol("type", e.Type).
-			Int64Column("level", int64(e.Level)).
+			Symbol("level", e.Level).
 			StringColumn("msg", e.Msg).
 			StringColumn("attrs", e.Attrs).
 			At(ctx, e.Timestamp)

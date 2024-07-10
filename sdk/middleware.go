@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -35,10 +36,10 @@ func GongMiddleware() actor.MiddlewareFunc {
 					event.Attrs = attrStr
 				}
 
-				event.Level = level
+				event.Level = strconv.Itoa(int(level))
 				event.Msg = logMsg
 			case actor.Initialized, actor.Started, actor.Stopped:
-				event.Level = slog.LevelInfo
+				event.Level = strconv.Itoa(int(slog.LevelInfo))
 			}
 
 			ctx.Send(gongPID, event)

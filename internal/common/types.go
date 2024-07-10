@@ -88,6 +88,14 @@ type Event struct {
 	sdk.Event
 }
 
+func (e Event) SlogLevel() slog.Level {
+	i, err := strconv.Atoi(e.Level)
+	if err != nil {
+		panic(err)
+	}
+	return slog.Level(i)
+}
+
 type EventList []Event
 
 func (l *EventList) Push(e Event) {
@@ -177,7 +185,7 @@ func (filter Filter) ValidEvent(event Event) bool {
 		return false
 	}
 
-	if filter.Level != nil && *filter.Level > event.Level {
+	if filter.Level != nil && *filter.Level > event.SlogLevel() {
 		return false
 	}
 
