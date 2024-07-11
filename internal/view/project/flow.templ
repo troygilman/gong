@@ -11,19 +11,19 @@ import (
 )
 
 templ FlowTabContent() {
-	<div id="actor-flow-chart-widget" class="grid grid-cols-2 grow max-w-full min-h-0">
-		<div
-			hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
-			hx-trigger="load"
-			hx-include={ common.Includes }
-			class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden"
-		>
-			<span class="loading loading-dots loading-lg"></span>
+	<div id="actor-flow-chart-widget" class="flex flex-col grow max-w-full min-h-0">
+		<div class="flex flex-row items-center border-b border-color p-2 gap-2 w-full">
+			@flowChartFilterType(ctx)
+			@flowChartFilterRange(ctx)
 		</div>
-		<div class="flex flex-col border-l border-color overflow-auto p-4 gap-4">
-			<div class="grid grid-cols-2 gap-4 w-full">
-				@flowChartFilterType(ctx)
-				@flowChartFilterRange(ctx)
+		<div class="grid grid-cols-3 grow w-full min-h-0">
+			<div
+				hx-get={ common.FormatProjectUrl(ctx) + "/chart" }
+				hx-trigger="load"
+				hx-include={ common.Includes }
+				class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
+			>
+				<span class="loading loading-dots loading-lg"></span>
 			</div>
 			@flowChartNodeInfo(ctx)
 		</div>
@@ -39,7 +39,7 @@ func flowChartFilterRange(ctx context.Context) templ.Component {
 
 templ flowChartFilterRangeComponent(rng gong_common.Range) {
 	<div
-		class="flex flex-col"
+		class="flex flex-col w-64"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
 		hx-include={ common.Includes }
@@ -48,9 +48,8 @@ templ flowChartFilterRangeComponent(rng gong_common.Range) {
 		hx-target="#actor-flow-chart-widget"
 		hx-swap="outerHTML"
 	>
-		<div class="text-sm pb-1 pl-2 cursor-default">Lookback Range</div>
 		<div class="bg-base-200 border border-color rounded py-2 px-4">
-			<input type="range" id="flow-range" name="flow_range" min="0" max="4" value={ rng.String() } step="1" class="range range-sm rotate-180 [--range-shdw:oklch(var(--n))]"/>
+			<input type="range" id="flow-range" name="flow_range" min="0" max="4" value={ rng.String() } step="1" class="range range-xs rotate-180 [--range-shdw:oklch(var(--n))]"/>
 			<div class="flex w-full justify-between px-2 pb-4 text-xs">
 				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Month</div></div>
 				<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Week</div></div>
@@ -70,13 +69,10 @@ func flowChartFilterType(ctx context.Context) templ.Component {
 }
 
 templ flowChartFilterTypeComponent(flow string) {
-	<div class="flex flex-col">
-		<div class="text-sm pb-1 pl-2 cursor-default">Flow Type</div>
-		<div role="tablist" class="tabs tabs-boxed border border-color p-2">
-			<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
-			@flowChartFilterTypeItem("Sources", flow)
-			@flowChartFilterTypeItem("Sinks", flow)
-		</div>
+	<div role="tablist" class="tabs tabs-boxed border border-color p-2">
+		<input id="flow" type="hidden" name={ gong_common.ParamFlow } value={ flow }/>
+		@flowChartFilterTypeItem("Sources", flow)
+		@flowChartFilterTypeItem("Sinks", flow)
 	</div>
 }
 
@@ -109,7 +105,7 @@ func flowChartNodeInfo(ctx context.Context) templ.Component {
 templ flowChartNodeInfoComponent(node string) {
 	<div
 		id="node-info-container"
-		class="relative flex grow w-full min-h-0 border border-color rounded items-center justify-center"
+		class="relative flex grow w-full min-h-0 items-center justify-center"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChartNodeInfo) }
 		hx-include={ common.Includes }
@@ -141,7 +137,7 @@ templ flowChartNodeInfoComponent(node string) {
 templ FlowChartNodeInfoContent(info gong_common.SourcesSinksNodeInfo) {
 	<div id="node-info" class="flex flex-col w-full h-full p-2">
 		@flowChartNodeState(info.PID)
-		<div class="stats border border-color">
+		<div class="stats stats-vertical border border-color">
 			<div class="stat">
 				<div class="stat-title">PID</div>
 				<div class="stat-value">{ info.PID }</div>
@@ -179,7 +175,7 @@ templ FlowChart(sourcesSinks []string, flowType string) {
 				{ flowType }
 			</div>
 		</div>
-		<svg id="chart" class="w-full h-full block" preserveAspectRatio="xMidYMid slice"></svg>
+		<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
 		if actorPID, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
