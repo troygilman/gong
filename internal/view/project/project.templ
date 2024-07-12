@@ -25,21 +25,30 @@ templ Project(props gong_common.ProjectProps) {
 			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
 			x-data
 		>
-			<div class="flex flex-col w-12 min-w-12 border-r border-color p-2 gap-4 items-center justify-between">
+			<div class="flex flex-col w-12 min-w-12 border-r border-color p-2 gap-4 items-center justify-between z-50 bg-base-100">
 				@common.LogoIcon("")
-				<div class="btn btn-circle btn-ghost btn-sm p-1">
+				<div class="btn btn-circle btn-ghost btn-sm p-1" @click="$dispatch('toggle', 'my-drawer')">
 					@common.MenuIcon("")
 				</div>
 			</div>
-			<div class="flex flex-col border-r border-color p-2 gap-2 w-56 min-w-56">
-				@ProjectMenu(ctx)
-				@ProjectActorList(props)
+			<div class="flex flex-row h-full grow min-w-0">
+				@common.Drawer(common.DrawerProps{
+					ID:    "my-drawer",
+					Width: "w-56",
+				}) {
+					<div class="flex flex-col border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
+						@ProjectMenu(ctx)
+						@ProjectActorList(props)
+					</div>
+				}
+				<div class="flex grow min-w-0 h-full">
+					if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+						@ActorContent(props.Actors[pid])
+					} else {
+						@ActorContent(gong_common.Actor{})
+					}
+				</div>
 			</div>
-			if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
-				@ActorContent(props.Actors[pid])
-			} else {
-				@ActorContent(gong_common.Actor{})
-			}
 		</div>
 	}
 }
