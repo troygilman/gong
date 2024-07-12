@@ -3,6 +3,7 @@ package project
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	gong_common "gong/internal/common"
 	"gong/internal/view/common"
 )
@@ -36,7 +37,7 @@ templ Project(props gong_common.ProjectProps) {
 					ID:    "my-drawer",
 					Width: "w-56",
 				}) {
-					<div class="flex flex-col border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
+					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
 						@ProjectMenu(ctx)
 						@ProjectActorList(props)
 					</div>
@@ -54,19 +55,34 @@ templ Project(props gong_common.ProjectProps) {
 }
 
 func ProjectMenu(ctx context.Context) templ.Component {
-	if activeTab, ok := ctx.Value(gong_common.CtxTab).(string); ok {
-		return projectMenuComponent(activeTab)
-	} else {
-		return projectMenuComponent(tabLabelOverview)
+	projectID := uuid.Nil
+	if id, ok := ctx.Value(gong_common.CtxProject).(uuid.UUID); ok {
+		projectID = id
 	}
+
+	activeTab := tabLabelOverview
+	if tab, ok := ctx.Value(gong_common.CtxTab).(string); ok {
+		activeTab = tab
+	}
+
+	return projectMenuComponent(projectID, activeTab)
 }
 
-templ projectMenuComponent(activeTab string) {
-	<ul id="project-menu" hx-swap-oob="true" class="menu menu-md p-0">
-		@projectMenuItem(tabLabelOverview, activeTab == tabLabelOverview, common.StatsIcon("size-5", activeTab == tabLabelOverview))
-		@projectMenuItem(tabLabelEvents, activeTab == tabLabelEvents, common.TableIcon("size-5", activeTab == tabLabelEvents))
-		@projectMenuItem(tabLabelFlow, activeTab == tabLabelFlow, common.FlowIcon("size-5", activeTab == tabLabelFlow))
-	</ul>
+templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
+	<div>
+		<div class="dropdown mb-4">
+			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation">{ projectID.String() }</div>
+			<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full">
+				<li><a>Item 1</a></li>
+				<li><a>Item 2</a></li>
+			</ul>
+		</div>
+		<ul id="project-menu" hx-swap-oob="true" class="menu menu-md p-0">
+			@projectMenuItem(tabLabelOverview, activeTab == tabLabelOverview, common.StatsIcon("size-5", activeTab == tabLabelOverview))
+			@projectMenuItem(tabLabelEvents, activeTab == tabLabelEvents, common.TableIcon("size-5", activeTab == tabLabelEvents))
+			@projectMenuItem(tabLabelFlow, activeTab == tabLabelFlow, common.FlowIcon("size-5", activeTab == tabLabelFlow))
+		</ul>
+	</div>
 }
 
 templ projectMenuItem(label string, active bool, icon templ.Component) {
@@ -91,7 +107,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 
 templ ProjectActorList(props gong_common.ProjectProps) {
 	<div class="flex flex-col w-full grow min-h-0 border border-color rounded">
-		<div class="flex items-center pl-4 pt-4 cursor-default text-md">Actors</div>
+		<div class="flex items-center pl-4 pt-4 cursor-default text-md font-bold">Actors</div>
 		<ul
 			id="actor-list"
 			class="menu menu-sm mb-2"
@@ -142,7 +158,7 @@ templ ProjectActorListItem(actor gong_common.Actor, oob bool) {
 		}
 	>
 		<a
-			class={ "flex flex-row items-center justify-between w-full cursor-pointer text-xs", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
+			class={ "flex flex-row items-center justify-between w-full cursor-pointer text-sm", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
 			@ProjectActorBadge(actor)
@@ -155,7 +171,7 @@ templ ProjectActorListItem(actor gong_common.Actor, oob bool) {
 
 templ ProjectActorBadge(actor gong_common.Actor) {
 	<div
-		class={ "badge badge-sm",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
+		class={ "badge",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
 		sse-swap={ gong_common.SseTypeUpdateActorNumEvents + actor.PID }
 		hx-target="this"
 		hx-swap="outerHTML"
@@ -188,7 +204,7 @@ templ ActorContent(actor gong_common.Actor) {
 	>
 		<input id="actor-pid" type="hidden" name={ gong_common.ParamPID } value={ actor.PID }/>
 		<input id="tab" type="hidden" name={ gong_common.ParamTab } value={ ctx.Value(gong_common.CtxTab).(string) }/>
-		<div class="flex flex-row items-center h-12 min-h-12 p-2 font-bold border-b border-color">{ actor.PID }</div>
+		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			@OverviewTabContent(actor)
 		}
