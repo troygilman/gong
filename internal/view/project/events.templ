@@ -11,11 +11,13 @@ import (
 )
 
 templ eventsTabContent(actor gong_common.Actor) {
-	if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
-		@eventsFilter(filter)
-	} else {
-		@eventsFilter(gong_common.Filter{})
-	}
+	<div class="w-full h-fit px-4 py-2 border-b border-color">
+		if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
+			@eventsFilter(filter)
+		} else {
+			@eventsFilter(gong_common.Filter{})
+		}
+	</div>
 	@ProjectActorEventsContainer(actor)
 }
 
@@ -217,7 +219,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 templ eventsFilter(filter gong_common.Filter) {
 	<form
 		id="events-filter"
-		class="join m-4 w-fit"
+		class="join w-fit mb-0"
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-include={ common.Includes }
 		hx-headers={ `{"View": "actor"}` }
@@ -306,7 +308,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<div
 				tabindex="0"
 				role="button"
-				class={ "event-filter-button-container", templ.KV("rounded-l-lg", placement < 0), templ.KV("rounded-r-lg", placement > 0) }
+				class={ "event-filter-button-container", templ.KV("rounded-l", placement < 0), templ.KV("rounded-r", placement > 0) }
 			>
 				<div class={ "event-filter-button", templ.KV("bg-neutral text-neutral-content", active) }>{ label }</div>
 			</div>
