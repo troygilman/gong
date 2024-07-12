@@ -21,27 +21,27 @@ templ Project(props gong_common.ProjectProps) {
 			}
 		</script>
 		<div
-			class="flex flex-row h-screen w-screen max-h-screen max-w-screen"
+			class="flex flex-row h-screen w-screen max-h-screen max-w-screen group"
 			hx-ext="sse"
 			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
 			x-data
 		>
 			<div class="flex flex-col w-12 min-w-12 border-r border-color p-2 gap-4 items-center justify-between z-50 bg-base-100">
 				@common.LogoIcon("")
-				<div class="btn btn-circle btn-ghost btn-sm p-1" @click="$dispatch('toggle', 'my-drawer')">
-					@common.MenuIcon("")
-				</div>
+				<label class="btn btn-circle btn-ghost btn-sm p-1">
+					<input type="checkbox" class="drawer-state"/>
+					<div class="w-full h-full group-has-[.drawer-state:checked]:rotate-90 transition-all duration-300 ease-in-out">
+						@common.MenuIcon("")
+					</div>
+				</label>
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
-				@common.Drawer(common.DrawerProps{
-					ID:    "my-drawer",
-					Width: "w-56",
-				}) {
+				<div class="drawer-content w-56">
 					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
 						@ProjectMenu(ctx)
 						@ProjectActorList(props)
 					</div>
-				}
+				</div>
 				<div class="flex grow min-w-0 h-full">
 					if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
 						@ActorContent(props.Actors[pid])
