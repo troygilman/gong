@@ -292,7 +292,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.attr("x", 16)
       	.attr("y", "0.31em")
 	  	.attr("stroke-width", 0)
-	  	.attr("class", "text-lg font-normal cursor-default")
+	  	.attr("class", "text-lg font-medium cursor-default")
       	.text(d => d.id)
     	.clone(true).lower()
       	.attr("fill", "none")
