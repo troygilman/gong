@@ -141,7 +141,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 		moreBottom = len(events) > 0
 	}
 
-	fmt.Printf("NUM EVENTS: %d\n", len(events))
+	fmt.Printf("%s: NUM EVENTS: %d\n", requestID(eCtx), len(events))
 
 	return view_project.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }

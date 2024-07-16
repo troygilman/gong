@@ -21,21 +21,17 @@ templ eventsTabContent(actor gong_common.Actor) {
 	@ProjectActorEventsContainer(actor)
 }
 
-script initTable(url string) {
-	if (window.Alpine) {
-		initStore();
-	} else {
-		document.addEventListener("alpine:init", () => {
-			initStore();
-		});
-	}
-
-	function initStore() {
-		if (Alpine.store("event")) {
-			Alpine.store("event").destroy();
-		}
-		Alpine.store("event", {
+templ ProjectActorEventsContainer(actor gong_common.Actor) {
+	<div
+		id="events-container"
+		class="grow min-h-0 max-w-full overflow-x-auto relative"
+		hx-ext="sse"
+		hx-include={ common.Includes }
+		hx-sync="this:drop"
+		x-data={ `{
 			init() {
+				this.url = htmx.find("#project-url").value;
+
 				this.intervalID = window.setInterval(() => {
 					this.fetch(true);
 					this.fetch(false);
@@ -43,7 +39,7 @@ script initTable(url string) {
 
 				this.fetch(false)
 
-				this.eventSource = new EventSource(addParamsToURL(url + "/sse/events"));
+				this.eventSource = new EventSource(this.addParamsToURL(this.url + "/sse/events"));
 				this.eventSource.addEventListener("new-events", (event) => {
 					console.log("new-event")
 					Alpine.store("event").moreTop = true;
@@ -58,19 +54,19 @@ script initTable(url string) {
 
 			fetch(isTop) {
 				console.log("fetch()", isTop, this.moreTop, this.moreBottom, this.newEvents)
-				if ((isTop && this.moreTop && shouldLoadTop()) || (!isTop && this.moreBottom && shouldLoadBottom())) {
+				if ((isTop && this.moreTop && this.shouldLoadTop()) || (!isTop && this.moreBottom && this.shouldLoadBottom())) {
 					const values = {
 						n: 0,
 						timestamp: "",
 					}
 					if (isTop) {
 						values.n = 20;
-						values.timestamp = getTopTimestamp();
+						values.timestamp = this.getTopTimestamp();
 					} else {
 						values.n = -20
-						values.timestamp = getBottomTimestamp();
+						values.timestamp = this.getBottomTimestamp();
 					}
-					htmx.ajax("GET", addParamsToURL(url + "/events"), {
+					htmx.ajax("GET", this.addParamsToURL(this.url + "/events"), {
 						source: "#events-spinner",
 						values: values,
 						handler: (src, something) => {
@@ -97,105 +93,90 @@ script initTable(url string) {
 							if (spinner) {
 								htmx.remove(spinner);
 							}
-                            handleEvents(html, isTop);
+                            this.handleEvents(html, isTop);
 						},
 					});
 				}
 			},
 
+			handleEvents(events, isTop) {
+				const maxEvents = 200;
+				const container = document.getElementById("events");
+				if (isTop) {
+					htmx.swap("#events", events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
+					const overflow = container.children.length - maxEvents;
+					if (overflow > 0) {
+						for (let i = maxEvents; i < container.children.length; i++) {
+							htmx.remove(container.children[i]);
+						}
+					}
+					console.log("event swap top - overflow:", overflow)
+				} else {
+					htmx.swap("#events", events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
+					const overflow = container.children.length - maxEvents;
+					if (overflow > 0) {
+						for (let i = 0; i < overflow; i++) {
+							htmx.remove(container.children[i]);
+						}
+					}
+					console.log("event swap bottom - overflow:", overflow)
+				}
+			},
+
+			addParamsToURL(url) {
+				const elem = htmx.find("#includes");
+				const params = new URLSearchParams(htmx.values(elem).entries());
+				return url + "?" + params.toString();
+			},
+
+			shouldLoadTop() {
+				const container = document.getElementById("events-container");
+				return container.scrollTop <= container.scrollHeight * 0.1;
+			},
+
+			shouldLoadBottom() {
+				const container = document.getElementById("events-container");
+				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+			},
+
+			getTopTimestamp() {
+				const events = document.getElementById("events").children;
+				if (events.length > 0) {
+					return events[0].querySelector("input").value;
+				} else {
+					return "";
+				}
+			},
+
+			getBottomTimestamp() {
+				const events = document.getElementById("events").children;
+				if (events.length > 0) {
+					return events[events.length-1].querySelector("input").value;
+				} else {
+					return "";
+				}
+			},
+
+			handleScroll() {
+				const container = document.getElementById("events-container");
+				if (container.scrollTop < this.scrollTop) {
+					this.fetch(true);
+				} else if (container.scrollTop > this.scrollTop) {
+					this.fetch(false);
+				}
+			},
+
+			url: "",
 			moreTop: false,
 			moreBottom: true,
 			newEvents: false,
 			intervalID: 0,
 			eventSource: null,
-		});
-	};
-
-	function addParamsToURL(url) {
-		const elem = htmx.find("#includes");
-		const params = new URLSearchParams(htmx.values(elem).entries());
-		return url + "?" + params.toString();
-	};
-
-	function handleEvents(events, isTop) {
-		const maxEvents = 200;
-		const container = document.getElementById("events");
-		if (isTop) {
-			htmx.swap("#events", events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
-			const overflow = container.children.length - maxEvents;
-			if (overflow > 0) {
-				for (let i = maxEvents; i < container.children.length; i++) {
-					htmx.remove(container.children[i]);
-				}
-			}
-			console.log("event swap top - overflow:", overflow)
-		} else {
-			htmx.swap("#events", events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
-			const overflow = container.children.length - maxEvents;
-			if (overflow > 0) {
-				for (let i = 0; i < overflow; i++) {
-					htmx.remove(container.children[i]);
-				}
-			}
-			console.log("event swap bottom - overflow:", overflow)
-		}
-	};
-
-	function shouldLoadTop() {
-		const container = document.getElementById("events-container");
-		return container.scrollTop <= container.scrollHeight * 0.1;
-	};
-
-	function shouldLoadBottom() {
-		const container = document.getElementById("events-container");
-		return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
-	};
-
-	function getTopTimestamp() {
-		const events = document.getElementById("events").children;
-		if (events.length > 0) {
-			return events[0].querySelector("input").value;
-		} else {
-			return "";
-		}
-	};
-
-	function getBottomTimestamp() {
-		const events = document.getElementById("events").children;
-		if (events.length > 0) {
-			return events[events.length-1].querySelector("input").value;
-		} else {
-			return "";
-		}
-	};
-}
-
-templ ProjectActorEventsContainer(actor gong_common.Actor) {
-	<div
-		id="events-container"
-		class="grow min-h-0 max-w-full overflow-x-auto relative"
-		hx-ext="sse"
-		hx-include={ common.Includes }
-		hx-sync="this:drop"
-		x-data="{ scrollTop: 0 }"
-		@scroll={ fmt.Sprintf("$data.scrollTop = handleScroll('%s', $data)", formatActorPIDCtx(ctx)) }
+			scrollTop: 0,
+		}` }
+		@scroll="$data.handleScroll()"
 	>
-		@initTable(common.FormatProjectUrl(ctx))
-		<script>
-			function handleScroll(pid, { scrollTop }) {
-				const container = document.getElementById("events-container");
-				try {
-					if (container.scrollTop < scrollTop) {
-                        Alpine.store("event").fetch(true);
-					} else if (container.scrollTop > scrollTop) {
-                        Alpine.store("event").fetch(false);
-					}
-				} catch (error) {
-					console.log(error);
-				}
-				return container.scrollTop;
-			}
-		</script>
+		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
 				<tr class="cursor-default">
