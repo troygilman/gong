@@ -32,6 +32,18 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			init() {
 				this.url = htmx.find("#project-url").value;
 
+				this.status = new Uint8Array(new ArrayBuffer(1));
+
+				document.addEventListener("fetch-events", (e) => {
+					if (Atomics.compareExchange(this.status, 0, 0, 1) == 0) {
+						const fetchWrapper = async function(data) {
+							await data._fetch(e.detail);
+							Atomics.store(data.status, 0, 0);
+						}
+						fetchWrapper(this);
+					}
+				});
+
 				this.intervalID = window.setInterval(() => {
 					this.fetch(true);
 					this.fetch(false);
@@ -42,8 +54,8 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 				this.eventSource = new EventSource(this.addParamsToURL(this.url + "/sse/events"));
 				this.eventSource.addEventListener("new-events", (event) => {
 					console.log("new-event")
-					Alpine.store("event").moreTop = true;
-					Alpine.store("event").newEvents = true;
+					this.moreTop = true;
+					this.newEvents = true;
 				});
 			},
 
@@ -53,7 +65,11 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			},
 
 			fetch(isTop) {
-				console.log("fetch()", isTop, this.moreTop, this.moreBottom, this.newEvents)
+				const event = new CustomEvent("fetch-events", { detail: isTop });
+				document.dispatchEvent(event);
+			},
+
+			async _fetch(isTop) {
 				if ((isTop && this.moreTop && this.shouldLoadTop()) || (!isTop && this.moreBottom && this.shouldLoadBottom())) {
 					const values = {
 						n: 0,
@@ -66,7 +82,8 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 						values.n = -20
 						values.timestamp = this.getBottomTimestamp();
 					}
-					htmx.ajax("GET", this.addParamsToURL(this.url + "/events"), {
+					console.log("fetch()", values);
+					await htmx.ajax("GET", this.addParamsToURL(this.url + "/events"), {
 						source: "#events-spinner",
 						values: values,
 						handler: (src, something) => {
@@ -102,8 +119,11 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			handleEvents(events, isTop) {
 				const maxEvents = 200;
 				const container = document.getElementById("events");
+				if (container == null) {
+					return;
+				}
 				if (isTop) {
-					htmx.swap("#events", events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
+					htmx.swap(container, events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
 					const overflow = container.children.length - maxEvents;
 					if (overflow > 0) {
 						for (let i = maxEvents; i < container.children.length; i++) {
@@ -112,7 +132,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 					}
 					console.log("event swap top - overflow:", overflow)
 				} else {
-					htmx.swap("#events", events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
+					htmx.swap(container, events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
 					const overflow = container.children.length - maxEvents;
 					if (overflow > 0) {
 						for (let i = 0; i < overflow; i++) {
@@ -131,27 +151,27 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 
 			shouldLoadTop() {
 				const container = document.getElementById("events-container");
-				return container.scrollTop <= container.scrollHeight * 0.1;
+				return container.scrollTop <= container.scrollHeight * 0.2;
 			},
 
 			shouldLoadBottom() {
 				const container = document.getElementById("events-container");
-				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.9;
+				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.8;
 			},
 
 			getTopTimestamp() {
-				const events = document.getElementById("events").children;
+				const events = htmx.findAll(htmx.find("#events"), ".event");
 				if (events.length > 0) {
-					return events[0].querySelector("input").value;
+					return htmx.find(events[0], "input").value;
 				} else {
 					return "";
 				}
 			},
 
 			getBottomTimestamp() {
-				const events = document.getElementById("events").children;
+				const events = htmx.findAll(htmx.find("#events"), ".event");
 				if (events.length > 0) {
-					return events[events.length-1].querySelector("input").value;
+					return htmx.find(events[events.length-1], "input").value;
 				} else {
 					return "";
 				}
@@ -173,6 +193,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			intervalID: 0,
 			eventSource: null,
 			scrollTop: 0,
+			status: null,
 		}` }
 		@scroll="$data.handleScroll()"
 	>
@@ -187,9 +208,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 					<th>Message</th>
 				</tr>
 			</thead>
-			<tbody
-				id="events"
-			></tbody>
+			<tbody id="events"></tbody>
 		</table>
 		<div id="events-spinner" class="spinner absolute flex top-0 w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
