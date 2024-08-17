@@ -45,9 +45,9 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 				});
 
 				this.intervalID = window.setInterval(() => {
-					this.fetch(true);
-					this.fetch(false);
-				}, 200); // time in ms
+					this.fetch(this.nextIsTop);
+					this.nextIsTop = !this.nextIsTop;
+				}, 10); // time in ms
 
 				this.fetch(false)
 
@@ -70,7 +70,11 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			},
 
 			async _fetch(isTop) {
-				if ((isTop && this.moreTop && this.shouldLoadTop()) || (!isTop && this.moreBottom && this.shouldLoadBottom())) {
+				let currentNumEvents = htmx.find("#events").children.length;
+				let loadTop = isTop && this.moreTop && (this.shouldLoadTop() || currentNumEvents < 100);
+				let loadBottom = !isTop && this.moreBottom && (this.shouldLoadBottom() || currentNumEvents < 100);
+				console.log("_fetch()", isTop, this.moreTop, this.moreBottom);
+				if (loadTop || loadBottom) {
 					const values = {
 						n: 0,
 						timestamp: "",
@@ -190,6 +194,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 			moreTop: false,
 			moreBottom: true,
 			newEvents: false,
+			nextIsTop: true,
 			intervalID: 0,
 			eventSource: null,
 			scrollTop: 0,
