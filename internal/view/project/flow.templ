@@ -247,7 +247,9 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 	    .attr("viewBox", [0, 0, width, height])
 		.call(zoom);
 
-	svg.append("defs").append("marker")
+	const defs = svg.append("defs")
+	
+	const marker = defs.append("marker")
       	.attr("id", "arrow")
        	.attr("viewBox", "0 -5 10 10")
         .attr("refX", 5)
@@ -258,6 +260,22 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
         .append("path")
         .attr("fill", "oklch(var(--bc))")
         .attr("d", "M0,-5L10,0L0,5");
+
+	var filter = defs.append("filter")
+		.attr("id", "glow")
+		.attr("x", "-50%")  // Expand the filter area horizontally
+		.attr("y", "-50%")  // Expand the filter area vertically
+		.attr("width", "200%")  // Increase width of the filter area
+		.attr("height", "200%")  // Increase height of the filter area
+		.attr("filterUnits", "objectBoundingBox");  // Make sure the filter applies to the entire object
+	filter.append("feGaussianBlur")
+		.attr("stdDeviation", "2.5")
+		.attr("result", "coloredBlur");
+	var feMerge = filter.append("feMerge");
+	feMerge.append("feMergeNode")
+		.attr("in", "coloredBlur");
+	feMerge.append("feMergeNode")
+		.attr("in", "SourceGraphic");
 
 	const link = svg.append("g")
 		.attr("id", "links")
@@ -272,8 +290,6 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 
   	const node = svg.append("g")
 		.attr("id", "nodes")
-   		.attr("stroke", "oklch(var(--b2))")
-     	.attr("stroke-width", 4)
        	.selectAll("g")
         .data(nodes)
         .join("g");
@@ -292,6 +308,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
           		return "oklch(var(--a))";
           	}
         })
+		.style("filter", "url(#glow)")
         .on("mouseover", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadiusHover) }})
         .on("mouseleave", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadius) }})
         .on("click", (e, d) => { if (d.group == 2) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
