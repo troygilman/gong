@@ -17,13 +17,14 @@ import (
 )
 
 const (
-	envAuthSecret  = "AUTH_SECRET"
+	EnvAuthSecret  = "AUTH_SECRET"
 	defaultTimeout = 10 * time.Second
 )
 
 type gongApp struct {
 	secret        []byte
 	engine        *actor.Engine
+	controllerPID *actor.PID
 	pids          map[string]*actor.PID
 	producerFuncs map[string]producerFunc
 	db            persistance.Database
@@ -36,9 +37,9 @@ func NewApp(db persistance.Database) (App, error) {
 
 	app.db = db
 
-	secret, ok := os.LookupEnv(envAuthSecret)
+	secret, ok := os.LookupEnv(EnvAuthSecret)
 	if !ok {
-		return nil, fmt.Errorf("%s is not set", envAuthSecret)
+		return nil, fmt.Errorf("%s is not set", EnvAuthSecret)
 	}
 	app.secret = []byte(secret)
 
@@ -65,7 +66,15 @@ func NewApp(db persistance.Database) (App, error) {
 		}
 	}, "event-stream-listener")
 
+	app.controllerPID = engine.Spawn(newController(), kindController)
+
 	return app, nil
+}
+
+func (app *gongApp) Shutdown() error {
+	r := app.engine.Request(app.controllerPID, msgShutdown{}, 10*time.Second)
+	_, err := dolly.HandleResponse[struct{}](r)
+	return err
 }
 
 var nilUUID = uuid.Nil.String()

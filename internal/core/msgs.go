@@ -79,3 +79,5 @@ type msgListenStop struct {
 type msgListenData struct {
 	data []any
 }
+
+type msgShutdown struct{}

@@ -14,6 +14,7 @@ import (
 )
 
 type App interface {
+	Shutdown() error
 	PID(kind string, id string) (*actor.PID, error)
 	Database() persistance.Database
 	JWT(tokenString string) (jwt.RegisteredClaims, error)
@@ -28,9 +29,10 @@ type App interface {
 }
 
 const (
-	kindProject   = "project"
-	kindProcessor = "processor"
-	kindListener  = "listener"
+	kindProject    = "project"
+	kindProcessor  = "processor"
+	kindListener   = "listener"
+	kindController = "controller"
 )
 
 type ListenerType uint

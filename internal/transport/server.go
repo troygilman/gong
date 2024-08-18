@@ -6,12 +6,13 @@ import (
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func RunServer(app core.App, static fs.FS) error {
+func RunServer(app core.App, static fs.FS, port int) (*echo.Echo, <-chan error) {
 	e := echo.New()
 	e.HTTPErrorHandler = httpErrorHandler
 
@@ -29,7 +30,11 @@ func RunServer(app core.App, static fs.FS) error {
 
 	bindProjectHandlers(e)
 
-	return e.Start(":8080")
+	errChan := make(chan error)
+	go func() {
+		errChan <- e.Start(":" + strconv.Itoa(port))
+	}()
+	return e, errChan
 }
 
 func httpErrorHandler(err error, ctx echo.Context) {

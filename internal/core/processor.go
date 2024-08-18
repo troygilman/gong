@@ -135,8 +135,10 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		eventBatch = append(eventBatch, event)
 	}
 
-	if err := p.app.Database().CreateEvents(ctx, eventBatch); err != nil {
-		return err
+	if len(eventBatch) > 0 {
+		if err := p.app.Database().CreateEvents(ctx, eventBatch); err != nil {
+			return err
+		}
 	}
 
 	for pid, actorExists := range p.updates {

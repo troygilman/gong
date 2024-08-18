@@ -40,6 +40,7 @@ type Event struct {
 
 type GongConfig struct {
 	Host      string
+	Port      int
 	Scheme    string
 	ProjectID string
 	QueueSize uint
@@ -87,7 +88,11 @@ func (g *Gong) Receive(ctx *actor.Context) {
 		var conn *websocket.Conn
 		for conn == nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			u := url.URL{Scheme: g.config.Scheme, Host: g.config.Host, Path: fmt.Sprintf("project/%s/connect", g.config.ProjectID)}
+			u := url.URL{
+				Scheme: g.config.Scheme,
+				Host:   g.config.Host + ":" + strconv.Itoa(g.config.Port),
+				Path:   fmt.Sprintf("project/%s/connect", g.config.ProjectID),
+			}
 			conn, _, err = websocket.DefaultDialer.DialContext(ctx, u.String(), nil)
 			if err != nil {
 				fmt.Printf("dial: %s\n", err.Error())

@@ -9,6 +9,8 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+//go:generate mockgen -source=database.go -destination=database_mock.go -package=persistance
+
 type Database interface {
 	QueryEvents(ctx context.Context, query EventsQuery) ([]common.Event, error)
 	CreateEvents(ctx context.Context, events []common.Event) error

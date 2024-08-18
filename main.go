@@ -35,7 +35,10 @@ func run() error {
 		return err
 	}
 
-	if err := transport.RunServer(app, static); err != nil {
+	_, errChan := transport.RunServer(app, static, 8080)
+	err = <-errChan
+	if err != nil {
+		_ = app.Shutdown()
 		return err
 	}
 
