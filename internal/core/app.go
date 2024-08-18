@@ -71,10 +71,8 @@ func NewApp(db persistance.Database) (App, error) {
 	return app, nil
 }
 
-func (app *gongApp) Shutdown() error {
-	r := app.engine.Request(app.controllerPID, msgShutdown{}, 10*time.Second)
-	_, err := dolly.HandleResponse[struct{}](r)
-	return err
+func (app *gongApp) Shutdown() {
+	app.engine.Poison(app.controllerPID).Wait()
 }
 
 var nilUUID = uuid.Nil.String()

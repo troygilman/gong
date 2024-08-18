@@ -69,11 +69,7 @@ func TestIntegration_Client(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	defer func() {
-		if err := app.Shutdown(); err != nil {
-			t.Error(err)
-		}
-	}()
+	defer app.Shutdown()
 
 	// Server
 	e, errChan := transport.RunServer(app, nil, serverPort)

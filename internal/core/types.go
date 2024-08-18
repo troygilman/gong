@@ -14,7 +14,7 @@ import (
 )
 
 type App interface {
-	Shutdown() error
+	Shutdown()
 	PID(kind string, id string) (*actor.PID, error)
 	Database() persistance.Database
 	JWT(tokenString string) (jwt.RegisteredClaims, error)

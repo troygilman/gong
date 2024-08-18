@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"gong/pkg/dolly"
 	"sync"
 
@@ -30,15 +29,12 @@ func (c *controller) Receive(ctx *actor.Context) {
 			if msg.PID != ctx.PID() {
 				c.actors[msg.PID] = struct{}{}
 			}
-		case msgShutdown:
+		case actor.Stopped:
 			wg := &sync.WaitGroup{}
-			fmt.Printf("%+v\n", c.actors)
 			for pid := range c.actors {
 				ctx.Engine().Poison(pid, wg)
 			}
 			wg.Wait()
-			fmt.Println("Finished shutdown")
-			ctx.Respond(struct{}{})
 		}
 		return nil
 	}()
