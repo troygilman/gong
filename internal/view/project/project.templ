@@ -36,7 +36,7 @@ templ Project(props gong_common.ProjectProps) {
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
 				<input id="drawer-state" type="checkbox" class="drawer-state"/>
-				<div class="drawer-content w-56">
+				<div class="drawer-content w-56 max-w-56">
 					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
 						@ProjectMenu(ctx)
 						@ProjectActorList(props)
@@ -69,10 +69,14 @@ func ProjectMenu(ctx context.Context) templ.Component {
 }
 
 templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
-	<div>
-		<div class="dropdown mb-4">
-			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation">{ projectID.String() }</div>
-			<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full">
+	<div class="w-full max-w-full min-w-0">
+		<div class="dropdown mb-4 w-full">
+			<div tabindex="0" role="button" class="btn btn-ghost btn-sm no-animation w-full">
+				<div class="truncate">
+					{ projectID.String() }
+				</div>
+			</div>
+			<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full border border-color">
 				<li><a>Item 1</a></li>
 				<li><a>Item 2</a></li>
 			</ul>
@@ -106,7 +110,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 }
 
 templ ProjectActorList(props gong_common.ProjectProps) {
-	<div class="flex flex-col w-full grow min-h-0 border border-color rounded">
+	<div class="flex flex-col w-full max-w-full min-w-0 grow min-h-0 border border-color rounded">
 		<div class="flex items-center pl-4 pt-4 cursor-default text-md font-bold">Actors</div>
 		<ul
 			id="actor-list"
