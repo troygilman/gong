@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./tmp/main"
-cmd = "templ generate && npx tailwindcss build -c configs/tailwind.config.js -i configs/tailwind.css -o static/css/app.css && go build -o ./tmp/main ."
+cmd = "templ generate && npx tailwindcss build -c configs/tailwind.config.js -i configs/tailwind.css -o static/css/app.css && go generate ./... && go build -o ./tmp/main ."
 delay = 1000
 exclude_dir = ["tmp", "node_modules"]
 exclude_file = []

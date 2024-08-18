@@ -23,6 +23,10 @@
 		@apply border-gray-300;
 	}
 
+	[data-theme="dark"] .border-color {
+		@apply border-gray-700;
+	}
+
 	.spinner {
 		@apply hidden;
 	}
@@ -39,7 +43,7 @@
 		@apply hidden;
 	}
 
-	.drawer-state:checked ~ .drawer-content {
+	.drawer-state:checked~.drawer-content {
 		@apply w-0 -translate-x-full;
 	}
 }

@@ -250,13 +250,13 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 	svg.append("defs").append("marker")
       	.attr("id", "arrow")
        	.attr("viewBox", "0 -5 10 10")
-        .attr("refX", 15)
+        .attr("refX", 5)
         .attr("refY", 0)
         .attr("markerWidth", 4)
         .attr("markerHeight", 4)
         .attr("orient", "auto")
         .append("path")
-        .attr("fill", "oklch(var(--n))")
+        .attr("fill", "oklch(var(--bc))")
         .attr("d", "M0,-5L10,0L0,5");
 
 	const link = svg.append("g")
@@ -267,7 +267,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.selectAll("path")
        	.data(links)
         .join("path")
-        .attr("stroke", "oklch(var(--n))")
+        .attr("stroke", "oklch(var(--bc))")
         .attr("marker-mid", d => "url('#arrow')");
 
   	const node = svg.append("g")
@@ -301,6 +301,7 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.attr("y", "0.31em")
 	  	.attr("stroke-width", 0)
 	  	.attr("class", "text-lg font-medium cursor-default")
+		.attr("fill", "oklch(var(--bc))")
       	.text(d => d.id)
     	.clone(true).lower()
       	.attr("fill", "none")

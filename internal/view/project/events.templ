@@ -319,7 +319,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			</div>
 			<div
 				tabindex="0"
-				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border"
+				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border border-color"
 				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
 				@keydown.enter="updateFilter()"
 			>

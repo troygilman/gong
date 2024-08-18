@@ -27,10 +27,10 @@ templ Project(props gong_common.ProjectProps) {
 			x-data
 		>
 			<div class="flex flex-col w-12 min-w-12 border-r border-color p-2 gap-4 items-center justify-between z-50 bg-base-100">
-				@common.LogoIcon("")
+				@common.LogoIcon("stroke-base-content")
 				<div class="btn btn-circle btn-ghost btn-sm p-1" @click="state = document.getElementById('drawer-state'); state.checked = !state.checked">
 					<div class="w-full h-full group-has-[.drawer-state:checked]/index:rotate-90 transition-all duration-300 ease-in-out">
-						@common.MenuIcon("")
+						@common.MenuIcon("stroke-base-content")
 					</div>
 				</div>
 			</div>
