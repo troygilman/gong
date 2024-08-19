@@ -162,7 +162,7 @@ templ ProjectActorListItem(actor gong_common.Actor, oob bool) {
 		}
 	>
 		<a
-			class={ "flex flex-row items-center justify-between w-full cursor-pointer text-sm", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
+			class={ "flex flex-row items-center justify-between w-full cursor-pointer text-sm px-2", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
 			@ProjectActorBadge(actor)

@@ -249,15 +249,17 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
 
 	const defs = svg.append("defs")
 	
-	const marker = defs.append("marker")
+	const arrow = defs.append("marker")
       	.attr("id", "arrow")
        	.attr("viewBox", "0 -5 10 10")
-        .attr("refX", 5)
-        .attr("refY", 0)
-        .attr("markerWidth", 4)
-        .attr("markerHeight", 4)
+        .attr("refX", 14)
+        .attr("refY", -0.5)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
+		.attr("stroke-width", 2)
+		.attr("stroke", "oklch(var(--b2))")
         .attr("fill", "oklch(var(--bc))")
         .attr("d", "M0,-5L10,0L0,5");
 
@@ -286,13 +288,18 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
        	.data(links)
         .join("path")
         .attr("stroke", "oklch(var(--bc))")
-        .attr("marker-mid", d => "url('#arrow')");
+        .attr("marker-end", "url(#arrow)");
 
   	const node = svg.append("g")
 		.attr("id", "nodes")
        	.selectAll("g")
         .data(nodes)
         .join("g");
+
+	node.append("circle")
+		.attr("stroke-width", 6)
+		.attr("stroke", "oklch(var(--b2))")
+		.attr("r", circleRadius);
 
 	node.append("circle")
 		.attr("class", d => {
@@ -325,22 +332,36 @@ script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
       	.attr("stroke", "oklch(var(--b2))")
       	.attr("stroke-width", 4);
 
-    function linkArc(d) {
-      const r = 0;
-      const midX = (d.source.x + d.target.x) / 2;
-      const midY = (d.source.y + d.target.y) / 2;
-	  var node1 = d.source;
-	  var node2 = d.target;
-	  if (!isSources) {
-		node1 = d.target;
-		node2 = d.source;
-	  }
-      return `
-      	M${node1.x},${node1.y}
-        A${r},${r} 0 0,1 ${midX},${midY}
-        A${r},${r} 0 0,1 ${node2.x},${node2.y}
-      `;
+function linkArc(d) {
+    var node1 = d.source;
+    var node2 = d.target;
+
+    if (!isSources) {
+        node1 = d.target;
+        node2 = d.source;
     }
+
+    // Calculate distances and midpoints
+    const dx = node2.x - node1.x;
+    const dy = node2.y - node1.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    const curvature = 0.4; // Adjust this factor to control the curve
+
+    // Midpoint
+    const midX = (node1.x + node2.x) / 2;
+    const midY = (node1.y + node2.y) / 2;
+
+    // Control point calculation for smooth curve
+    const controlX = midX + curvature * distance * (dy / distance);
+    const controlY = midY - curvature * distance * (dx / distance);
+
+    // Create a smooth curve using a quadratic Bézier curve
+    return `
+        M${node1.x},${node1.y}
+        Q${controlX},${controlY} ${node2.x},${node2.y}
+    `;
+}
 
     // Set the position attributes of links and nodes each time the simulation ticks.
     function ticked() {
