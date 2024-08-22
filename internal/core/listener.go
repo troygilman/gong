@@ -35,6 +35,7 @@ type listener struct {
 }
 
 func (l *listener) Receive(aCtx *actor.Context) {
+	dolly.LogActorMsg(aCtx)
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Started:

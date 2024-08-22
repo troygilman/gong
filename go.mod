@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/a-h/templ v0.2.747
-	github.com/anthdm/hollywood v1.0.1
+	github.com/anthdm/hollywood v1.0.2
 	github.com/gammazero/deque v0.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.17.1
