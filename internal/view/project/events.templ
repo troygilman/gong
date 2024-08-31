@@ -36,8 +36,16 @@ func eventsTabContent(ctx context.Context) templ.Component {
 }
 
 templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) {
-	<div class="w-full h-fit px-4 py-2 border-b border-color">
+	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
+		<div>
+			<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
+				@common.ArrowIcon("")
+			</button>
+			<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
+				@common.ArrowIcon("rotate-180")
+			</button>
+		</div>
 	</div>
 	<div
 		id="events-container"
@@ -170,7 +178,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			</div>
 			<div
 				tabindex="0"
-				class="dropdown-content z-50 shadow bg-base-100 rounded-lg rounded-tl-none w-64 border border-color"
+				class="dropdown-content z-50 shadow bg-base-200 rounded-lg rounded-tl-none w-64 border border-color"
 				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
 				@keydown.enter="updateFilter()"
 			>

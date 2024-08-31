@@ -8,7 +8,7 @@
 	}
 
 	.event-filter-input {
-		@apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent;
+		@apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent bg-inherit placeholder:text-base-content/50;
 	}
 
 	.event-filter-button {
@@ -16,7 +16,7 @@
 	}
 
 	.event-filter-button-container {
-		@apply border border-color overflow-hidden group-focus-within/filter:rounded-b-none group-focus-within/filter:border-b-0;
+		@apply border border-color overflow-hidden group-focus-within/filter:rounded-b-none group-focus-within/filter:border-b-0 bg-base-200;
 	}
 
 	[data-theme="nord"] .border-color {
@@ -43,7 +43,7 @@
 		@apply hidden;
 	}
 
-	.drawer-state:checked~.drawer-content {
+	.drawer-state:checked ~ .drawer-content {
 		@apply w-0 -translate-x-full;
 	}
 }
