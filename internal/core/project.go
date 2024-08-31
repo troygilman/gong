@@ -143,7 +143,6 @@ func (p *project) Receive(aCtx *actor.Context) {
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
 					Timestamp: msg.timestamp,
-					NumEvents: msg.numEvents,
 					Filter:    msg.filter,
 				}
 				go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)

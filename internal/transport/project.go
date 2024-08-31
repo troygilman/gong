@@ -10,8 +10,6 @@ import (
 	view_admin "gong/internal/view/admin"
 	view_project "gong/internal/view/project"
 	"gong/sdk"
-	"strconv"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -98,35 +96,7 @@ func handleGetProject(eCtx echo.Context) error {
 }
 
 func handleGetProjectEvents(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
-
-	projectID := mustProjectID(eCtx)
-
-	actorPID, ok := actorPID(eCtx)
-	if !ok {
-		return errors.New("actorPID is empty")
-	}
-
-	var timestamp time.Time
-	unixNano, err := strconv.ParseInt(eCtx.QueryParam("timestamp"), 10, 64)
-	if err != nil {
-		timestamp = time.Now()
-	} else {
-		timestamp = time.Unix(0, unixNano)
-	}
-
-	filter, ok := filter(eCtx)
-	if !ok {
-		return errors.New("filter is empty")
-	}
-
-	events, err := app.Events(ctx, projectID, actorPID, timestamp, n, filter)
-	if err != nil {
-		events = make(common.EventList, 0)
-	}
-
-	return view_project.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
+	return view_project.EventTableListComponent().Render(eCtx.Request().Context(), eCtx.Response())
 }
 
 func handleConnectSseProject(eCtx echo.Context) error {

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func eventsTabContent(ctx context.Context) templ.Component {
@@ -21,14 +22,14 @@ func eventsTabContent(ctx context.Context) templ.Component {
 		if err != nil {
 			return nil
 		}
-		timeStart = actor.LastEventTime.UnixNano()
+		timeStart = actor.LastEventTime
 	}
 	return eventsTabContentComponent(filter, timeStart)
 }
 
-templ eventsTabContentComponent(filter gong_common.Filter, timeStart int64) {
+templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) {
 	<div class="w-full h-fit px-4 py-2 border-b border-color">
-			@eventsFilter(filter)
+		@eventsFilter(filter)
 	</div>
 	<div
 		id="events-container"
@@ -38,7 +39,7 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart int64) {
 		hx-sync="this:drop"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
-		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={strconv.FormatInt(timeStart, 10)}/>
+		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
 				<tr class="cursor-default">
@@ -49,14 +50,15 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart int64) {
 					<th>Message</th>
 				</tr>
 			</thead>
-			<tbody 
+			<tbody
 				id="events"
 				hx-get={ common.FormatProjectUrl(ctx) + "/events" }
 				hx-trigger="load"
 				hx-include={ common.Includes }
+				hx-indicator="#events-spinner"
 			></tbody>
 		</table>
-		<div id="events-spinner" class="spinner absolute flex top-0 w-full h-full items-center justify-center">
+		<div id="events-spinner" class="htmx-indicator absolute flex top-0 w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 	</div>
@@ -170,18 +172,35 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	</div>
 }
 
-
 func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")
 }
 
-templ ProjectActorEvents(events gong_common.EventList, appendTop bool, moreTop bool, moreBottom bool) {
+templ EventTableListComponent() {
+	@eventTableListComponent(ctx)
+}
+
+func eventTableListComponent(ctx context.Context) templ.Component {
+	app := gong_common.MustValueApp(ctx)
+	projectID := gong_common.MustValueProjectID(ctx)
+	actorPID := gong_common.MustValueActorPID(ctx)
+	timeStart, _ := gong_common.ValueTimeStart(ctx)
+	filter, _ := gong_common.ValueFilter(ctx)
+
+	events, err := app.Events(ctx, projectID, actorPID, timeStart, filter)
+	if err != nil {
+		events = make(gong_common.EventList, 0)
+	}
+	return eventTableList(events)
+}
+
+templ eventTableList(events gong_common.EventList) {
 	for i := len(events)-1; i >= 0; i-- {
-		@projectActorEvent(events[i])
+		@eventTableListItem(events[i])
 	}
 }
 
-templ projectActorEvent(event gong_common.Event) {
+templ eventTableListItem(event gong_common.Event) {
 	<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
 		<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
 		<td>

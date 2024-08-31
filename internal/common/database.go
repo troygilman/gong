@@ -24,7 +24,6 @@ type EventsQuery struct {
 	ProjectID uuid.UUID
 	ActorPID  string
 	EventID   ulid.ULID
-	NumEvents int
 	Timestamp time.Time
 	Filter    Filter
 }

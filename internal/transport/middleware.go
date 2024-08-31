@@ -3,8 +3,10 @@ package transport
 import (
 	"errors"
 	"gong/internal/common"
+	"strconv"
 
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -103,6 +105,13 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			{ // events filter
 				filter := common.NewFilter(ctx)
 				cb = cb.With(common.CtxKeyFilter, filter)
+			}
+
+			{ // time start
+				timeStartStr := ctx.QueryParam(common.ParamTimeStart)
+				if timeStartInt64, err := strconv.ParseInt(timeStartStr, 10, 64); err == nil {
+					cb = cb.With(common.CtxKeyTimeStart, time.Unix(0, timeStartInt64))
+				}
 			}
 
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))

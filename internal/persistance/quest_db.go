@@ -126,29 +126,24 @@ func (db *questDatabase) QueryEvents(
 
 	var events []common.Event
 
-	stmt := db.bunDB.NewSelect().Model(&events).Where("project_id = ?", query.ProjectID).Where("pid = ?", query.ActorPID)
-
-	order := "timestamp DESC"
-	if query.NumEvents > 0 {
-		stmt = stmt.Where("timestamp > ?", query.Timestamp)
-		order = "timestamp ASC"
-	} else {
-		stmt = stmt.Where("timestamp < ?", query.Timestamp)
-	}
+	stmt := db.bunDB.NewSelect().Model(&events).
+		Where("project_id = ?", query.ProjectID).
+		Where("pid = ?", query.ActorPID).
+		Where("timestamp <= ?", query.Timestamp)
 
 	if query.Filter.Type != nil {
-		stmt = stmt.Where("type = ?", *query.Filter.Type)
+		stmt = stmt.Where("type ~ ?", *query.Filter.Type)
 	}
 
 	if query.Filter.Sender != nil {
-		stmt = stmt.Where("sender = ?", *query.Filter.Sender)
+		stmt = stmt.Where("sender ~ ?", *query.Filter.Sender)
 	}
 
 	if query.Filter.Level != nil {
 		stmt = stmt.Where("level >= ?", strconv.Itoa(int(*query.Filter.Level)))
 	}
 
-	err := stmt.Order(order).Limit(max(query.NumEvents, -query.NumEvents)).Scan(ctx)
+	err := stmt.Order("timestamp DESC").Limit(100).Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

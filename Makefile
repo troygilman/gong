@@ -37,3 +37,6 @@ db:
 
 deploy:
 	@fly deploy -c configs/fly.toml
+
+dependencies:
+	@go install go.uber.org/mock/mockgen@latest

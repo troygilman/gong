@@ -165,7 +165,6 @@ func (app *gongApp) Events(
 	projectID uuid.UUID,
 	actorPID string,
 	timestamp time.Time,
-	numEvents int,
 	filter common.Filter,
 ) (events common.EventList, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
@@ -176,7 +175,6 @@ func (app *gongApp) Events(
 	msg := msgGetProjectEvents{
 		actorPID:  actorPID,
 		timestamp: timestamp,
-		numEvents: numEvents,
 		filter:    filter,
 	}
 

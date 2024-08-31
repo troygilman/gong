@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -58,6 +59,10 @@ func ValueFilter(ctx context.Context) (Filter, bool) {
 	return valueHelper[Filter](ctx, CtxKeyFilter)
 }
 
-func ValueTimeStart(ctx context.Context) (int64, bool) {
-	return valueHelper[int64](ctx, CtxKeyTimeStart)
+func ValueTimeStart(ctx context.Context) (time.Time, bool) {
+	return valueHelper[time.Time](ctx, CtxKeyTimeStart)
+}
+
+func MustValueTimeStart(ctx context.Context) time.Time {
+	return mustValueHelper[time.Time](ctx, CtxKeyTimeStart)
 }
