@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	projectUpdatePropsInterval = 100 * time.Millisecond
+	projectUpdatePropsInterval = 1000 * time.Millisecond
 )
 
 type msgUpdateProjectInternal struct{}
@@ -54,7 +54,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			p.actors = make(map[string]common.Actor)
 			p.actorUpdates = make(map[string]common.Actor)
 			p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
-			p.metrics = NewMetricsManager(20)
+			p.metrics = NewMetricsManager(5)
 		case actor.Started:
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 		case actor.Stopped:

@@ -3,6 +3,7 @@ package core
 import (
 	"gong/internal/common"
 	"gong/pkg/dolly"
+	"log"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -77,6 +78,7 @@ func (l *listener) Receive(aCtx *actor.Context) {
 			}
 
 			l.c <- filteredData
+			log.Printf("%+v", filteredData)
 		}
 		return nil
 	}(); err != nil {

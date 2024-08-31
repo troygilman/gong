@@ -33,7 +33,7 @@ bench:
 	@go test -v -run=XXX -bench=. ./...
 
 db:
-	@docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=${DB_PASSWORD} timescale/timescaledb-ha:pg16
+	@docker run -p 9000:9000 -p 9009:9009 -p 8812:8812 questdb/questdb
 
 deploy:
 	@fly deploy -c configs/fly.toml
