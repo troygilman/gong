@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+const (
+	idTimeStart = "time-start"
+)
+
+var eventTableIncludes = []string{
+	idTimeStart,
+}
+
 func eventsTabContent(ctx context.Context) templ.Component {
 	app := gong_common.MustValueApp(ctx)
 	projectID := gong_common.MustValueProjectID(ctx)
@@ -35,7 +43,7 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) 
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		hx-ext="sse"
-		hx-include={ common.Includes }
+		hx-include={ buildIncludeString(common.StandardIncludes) }
 		hx-sync="this:drop"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
@@ -54,7 +62,7 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) 
 				id="events"
 				hx-get={ common.FormatProjectUrl(ctx) + "/events" }
 				hx-trigger="load"
-				hx-include={ common.Includes }
+				hx-include={ buildIncludeString(common.StandardIncludes, eventTableIncludes) }
 				hx-indicator="#events-spinner"
 			></tbody>
 		</table>
@@ -69,7 +77,7 @@ templ eventsFilter(filter gong_common.Filter) {
 		id="events-filter"
 		class="join w-fit mb-0"
 		hx-get={ common.FormatProjectUrl(ctx) }
-		hx-include={ common.Includes }
+		hx-include={ buildIncludeString(common.StandardIncludes) }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -142,7 +150,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
 				hx-get={ common.FormatProjectUrl(ctx) }
-				hx-include={ common.Includes }
+				hx-include={ buildIncludeString(common.StandardIncludes) }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
