@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"crypto/rand"
 	"gong/internal/common"
 	"gong/pkg/dolly"
 	"gong/sdk"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 const (
@@ -21,7 +19,6 @@ const (
 type processor struct {
 	commonActorData
 	actors   map[string]common.Actor
-	entropy  ulid.MonotonicReader
 	updates  map[string]bool
 	events   []sdk.Event
 	repeater actor.SendRepeater
@@ -51,7 +48,6 @@ func (p *processor) Receive(aCtx *actor.Context) {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
 			p.actors = make(map[string]common.Actor)
-			p.entropy = ulid.Monotonic(rand.Reader, 1)
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
@@ -74,11 +70,6 @@ func (p *processor) Receive(aCtx *actor.Context) {
 }
 
 func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err error) {
-	eventID, err := ulid.New(ulid.Timestamp(sdkEvent.Timestamp), p.entropy)
-	if err != nil {
-		return event, err
-	}
-
 	event = common.Event{
 		ProjectID: p.id.String(),
 		Event:     sdkEvent,
@@ -96,14 +87,9 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err err
 
 	actorData.NumEvents++
 
-	lastEventID, err := ulid.Parse(actorData.LastEventID)
-	if err != nil {
-		lastEventID = ulid.ULID{}
-	}
-
-	if eventID.Compare(lastEventID) > 0 {
+	if event.Timestamp.Compare(actorData.LastEventTime) > 0 {
 		actorData.Alive = isActorAlive(event.Type)
-		// actorData.LastEventID = event.ID
+		actorData.LastEventTime = event.Timestamp
 	}
 
 	p.actors[event.PID] = actorData

@@ -25,6 +25,7 @@ const (
 	ParamFlow         = "flow"
 	ParamFlowNode     = "flow_node"
 	ParamFlowRange    = "flow_range"
+	ParamTimeStart    = "time_start"
 )
 
 const (
@@ -146,11 +147,11 @@ type ProjectProps struct {
 }
 
 type Actor struct {
-	PID         string
-	ProjectID   uuid.UUID
-	NumEvents   int
-	Alive       bool
-	LastEventID string
+	PID           string
+	ProjectID     uuid.UUID
+	NumEvents     int
+	Alive         bool
+	LastEventTime time.Time
 }
 
 type Filter struct {

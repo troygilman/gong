@@ -18,6 +18,7 @@ const (
 	CtxKeyFlow      CtxKey = ParamFlow
 	CtxKeyFlowNode  CtxKey = ParamFlowNode
 	CtxKeyFlowRange CtxKey = ParamFlowRange
+	CtxKeyTimeStart CtxKey = ParamTimeStart
 )
 
 func valueHelper[T any](ctx context.Context, key CtxKey) (T, bool) {
@@ -51,4 +52,12 @@ func MustValueProjectID(ctx context.Context) uuid.UUID {
 
 func MustValueActorPID(ctx context.Context) string {
 	return mustValueHelper[string](ctx, CtxKeyPID)
+}
+
+func ValueFilter(ctx context.Context) (Filter, bool) {
+	return valueHelper[Filter](ctx, CtxKeyFilter)
+}
+
+func ValueTimeStart(ctx context.Context) (int64, bool) {
+	return valueHelper[int64](ctx, CtxKeyTimeStart)
 }

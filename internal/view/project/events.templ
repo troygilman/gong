@@ -14,22 +14,22 @@ func eventsTabContent(ctx context.Context) templ.Component {
 	app := gong_common.MustValueApp(ctx)
 	projectID := gong_common.MustValueProjectID(ctx)
 	actorPID := gong_common.MustValueActorPID(ctx)
-	actor, err := app.Actor(ctx, projectID, actorPID)
-	filter := ctx.Value(gong_common.CtxKeyFilter).(gong_common.Filter)
-	if err != nil {
-		return nil
+	filter, _ := gong_common.ValueFilter(ctx)
+	timeStart, ok := gong_common.ValueTimeStart(ctx)
+	if !ok {
+		actor, err := app.Actor(ctx, projectID, actorPID)
+		if err != nil {
+			return nil
+		}
+		timeStart = actor.LastEventTime.UnixNano()
 	}
-	return eventsTabContentComponent(actor, filter)
+	return eventsTabContentComponent(filter, timeStart)
 }
 
-templ eventsTabContentComponent(actor gong_common.Actor, filter gong_common.Filter) {
+templ eventsTabContentComponent(filter gong_common.Filter, timeStart int64) {
 	<div class="w-full h-fit px-4 py-2 border-b border-color">
 			@eventsFilter(filter)
 	</div>
-	@ProjectActorEventsContainer(actor)
-}
-
-templ ProjectActorEventsContainer(actor gong_common.Actor) {
 	<div
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
@@ -38,6 +38,7 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 		hx-sync="this:drop"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
+		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={strconv.FormatInt(timeStart, 10)}/>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
 				<tr class="cursor-default">
@@ -48,7 +49,12 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 					<th>Message</th>
 				</tr>
 			</thead>
-			<tbody id="events"></tbody>
+			<tbody 
+				id="events"
+				hx-get={ common.FormatProjectUrl(ctx) + "/events" }
+				hx-trigger="load"
+				hx-include={ common.Includes }
+			></tbody>
 		</table>
 		<div id="events-spinner" class="spinner absolute flex top-0 w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
@@ -164,12 +170,6 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	</div>
 }
 
-func formatActorPIDCtx(ctx context.Context) string {
-	if pid, ok := ctx.Value(gong_common.CtxKeyPID).(string); ok {
-		return formatActorPID(pid)
-	}
-	return ""
-}
 
 func formatActorPID(pid string) string {
 	return strings.ReplaceAll(pid, "/", "-")

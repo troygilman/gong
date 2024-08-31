@@ -109,16 +109,11 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 	}
 
 	var timestamp time.Time
-	unixNano, err := strconv.Atoi(eCtx.QueryParam("timestamp"))
+	unixNano, err := strconv.ParseInt(eCtx.QueryParam("timestamp"), 10, 64)
 	if err != nil {
 		timestamp = time.Now()
 	} else {
-		timestamp = time.Unix(0, int64(unixNano))
-	}
-
-	n, err := strconv.Atoi(eCtx.QueryParam("n"))
-	if err != nil {
-		return errors.New("'n' must be non-empty")
+		timestamp = time.Unix(0, unixNano)
 	}
 
 	filter, ok := filter(eCtx)
@@ -130,18 +125,6 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 	if err != nil {
 		events = make(common.EventList, 0)
 	}
-
-	appendTop := n > 0
-	moreTop := true
-	moreBottom := true
-
-	if appendTop {
-		moreTop = len(events) > 0
-	} else {
-		moreBottom = len(events) > 0
-	}
-
-	fmt.Printf("%s: NUM EVENTS: %d\n", requestID(eCtx), len(events))
 
 	return view_project.ProjectActorEvents(events, appendTop, moreTop, moreBottom).Render(ctx, eCtx.Response())
 }

@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS 'actors' (
   pid STRING,
   num_events LONG,
   alive BOOLEAN,
-  last_event_id STRING
+  last_event_time TIMESTAMP
 );
