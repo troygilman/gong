@@ -57,12 +57,12 @@ func handleGetProject(eCtx echo.Context) error {
 			return errors.New("pid is empty")
 		}
 
-		nodePID, ok := ctx.Value(common.CtxFlowNode).(string)
+		nodePID, ok := ctx.Value(common.CtxKeyFlowNode).(string)
 		if !ok {
 			return errors.New("flow_node is empty")
 		}
 
-		flowType, ok := ctx.Value(common.CtxFlow).(string)
+		flowType, ok := ctx.Value(common.CtxKeyFlow).(string)
 		if !ok {
 			return errors.New("flow is missing")
 		}
@@ -72,7 +72,7 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		flowRange, ok := ctx.Value(common.CtxFlowRange).(common.Range)
+		flowRange, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range)
 		if !ok {
 			return errors.New("flow_range is missing")
 		}
@@ -244,12 +244,12 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return errors.New("actorPID is missing")
 	}
 
-	flowType, ok := eCtx.Request().Context().Value(common.CtxFlow).(string)
+	flowType, ok := eCtx.Request().Context().Value(common.CtxKeyFlow).(string)
 	if !ok {
 		return errors.New("flow is missing")
 	}
 
-	flowRange, ok := eCtx.Request().Context().Value(common.CtxFlowRange).(common.Range)
+	flowRange, ok := eCtx.Request().Context().Value(common.CtxKeyFlowRange).(common.Range)
 	if !ok {
 		return errors.New("flow range is missing")
 	}

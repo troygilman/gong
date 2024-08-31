@@ -27,19 +27,6 @@ const (
 	ParamFlowRange    = "flow_range"
 )
 
-type CtxKey string
-
-const (
-	CtxApp       CtxKey = "app"
-	CtxProject   CtxKey = "projectID"
-	CtxPID       CtxKey = ParamPID
-	CtxTab       CtxKey = ParamTab
-	CtxFilter    CtxKey = "filter"
-	CtxFlow      CtxKey = ParamFlow
-	CtxFlowNode  CtxKey = ParamFlowNode
-	CtxFlowRange CtxKey = ParamFlowRange
-)
-
 const (
 	ProjectViewActor             = "actor"
 	ProjectViewFlowChart         = "flow-chart"

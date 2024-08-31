@@ -31,7 +31,7 @@ templ FlowTabContent() {
 }
 
 func flowChartFilterRange(ctx context.Context) templ.Component {
-	if rng, ok := ctx.Value(gong_common.CtxFlowRange).(gong_common.Range); ok {
+	if rng, ok := ctx.Value(gong_common.CtxKeyFlowRange).(gong_common.Range); ok {
 		return flowChartFilterRangeComponent(rng)
 	}
 	return flowChartFilterRangeComponent(gong_common.Range(1))
@@ -84,7 +84,7 @@ templ flowChartFilterRangeComponent(rng gong_common.Range) {
 }
 
 func flowChartFilterType(ctx context.Context) templ.Component {
-	if flow, ok := ctx.Value(gong_common.CtxFlow).(string); ok {
+	if flow, ok := ctx.Value(gong_common.CtxKeyFlow).(string); ok {
 		return flowChartFilterTypeComponent(flow)
 	}
 	return flowChartFilterTypeComponent("Sources")
@@ -105,7 +105,7 @@ templ flowChartFilterTypeItem(label string, active string) {
 		if label != active {
 			hx-get={ common.FormatProjectUrl(ctx) }
 			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewFlowChart) }
-			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, gong_common.CtxFlow, label) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, gong_common.CtxKeyFlow, label) }
 			hx-include={ common.Includes }
 			hx-push-url="true"
 			hx-trigger="click"
@@ -116,7 +116,7 @@ templ flowChartFilterTypeItem(label string, active string) {
 }
 
 func flowChartNodeInfo(ctx context.Context) templ.Component {
-	if node, ok := ctx.Value(gong_common.CtxFlowNode).(string); ok {
+	if node, ok := ctx.Value(gong_common.CtxKeyFlowNode).(string); ok {
 		log.Println("flowChartNodeInfo: node found", node)
 		return flowChartNodeInfoComponent(node)
 	}
@@ -198,7 +198,7 @@ templ FlowChart(sourcesSinks []string, flowType string) {
 			</div>
 		</div>
 		<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
-		if actorPID, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+		if actorPID, ok := ctx.Value(gong_common.CtxKeyPID).(string); ok {
 			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
 	</div>

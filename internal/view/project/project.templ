@@ -43,7 +43,7 @@ templ Project(props gong_common.ProjectProps) {
 					</div>
 				</div>
 				<div class="flex grow min-w-0 h-full">
-					if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+					if pid, ok := ctx.Value(gong_common.CtxKeyPID).(string); ok {
 						@ActorContent(props.Actors[pid])
 					} else {
 						@ActorContent(gong_common.Actor{})
@@ -56,12 +56,12 @@ templ Project(props gong_common.ProjectProps) {
 
 func ProjectMenu(ctx context.Context) templ.Component {
 	projectID := uuid.Nil
-	if id, ok := ctx.Value(gong_common.CtxProject).(uuid.UUID); ok {
+	if id, ok := ctx.Value(gong_common.CtxKeyProjectID).(uuid.UUID); ok {
 		projectID = id
 	}
 
 	activeTab := tabLabelOverview
-	if tab, ok := ctx.Value(gong_common.CtxTab).(string); ok {
+	if tab, ok := ctx.Value(gong_common.CtxKeyTab).(string); ok {
 		activeTab = tab
 	}
 
@@ -127,7 +127,7 @@ templ ProjectActorList(props gong_common.ProjectProps) {
 }
 
 func isCurrentPID(ctx context.Context, actorPID string) bool {
-	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(gong_common.CtxKeyPID).(string); ok {
 		return pid == actorPID
 	}
 	return false
@@ -207,7 +207,7 @@ templ ActorContent(actor gong_common.Actor) {
 		hx-swap-oob="true"
 	>
 		<input id="actor-pid" type="hidden" name={ gong_common.ParamPID } value={ actor.PID }/>
-		<input id="tab" type="hidden" name={ gong_common.ParamTab } value={ ctx.Value(gong_common.CtxTab).(string) }/>
+		<input id="tab" type="hidden" name={ gong_common.ParamTab } value={ ctx.Value(gong_common.CtxKeyTab).(string) }/>
 		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			@OverviewTabContent(actor)
@@ -222,7 +222,7 @@ templ ActorContent(actor gong_common.Actor) {
 }
 
 templ tabContent(label string) {
-	if activeTab, ok := ctx.Value(gong_common.CtxTab).(string); ok && label == activeTab {
+	if activeTab, ok := ctx.Value(gong_common.CtxKeyTab).(string); ok && label == activeTab {
 		<div
 			class="flex flex-col grow min-h-0"
 		>

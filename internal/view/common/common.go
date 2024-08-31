@@ -10,7 +10,7 @@ import (
 )
 
 func FormatProjectUrl(ctx context.Context) string {
-	url := fmt.Sprintf("/project/%s", ctx.Value(common.CtxProject).(uuid.UUID).String())
+	url := fmt.Sprintf("/project/%s", ctx.Value(common.CtxKeyProjectID).(uuid.UUID).String())
 	return string(templ.URL(url))
 }
 

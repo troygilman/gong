@@ -23,7 +23,7 @@ func middlewareWithApp(app common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxApp, app)
+			cb = cb.With(common.CtxKeyApp, app)
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 
 			ctx.Set("app", app)
@@ -55,17 +55,17 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 			cb := common.NewContextBuilder(ctx.Request().Context())
 
 			{ // project ID
-				projectID, err := uuid.Parse(ctx.Param(string(common.CtxProject)))
+				projectID, err := uuid.Parse(ctx.Param(string(common.CtxKeyProjectID)))
 				if err != nil {
 					return errors.New("projectID is empty")
 				}
-				cb = cb.With(common.CtxProject, projectID)
+				cb = cb.With(common.CtxKeyProjectID, projectID)
 			}
 
 			{ // actor PID
 				actorPID := ctx.QueryParam(common.ParamPID)
 				if actorPID != "" {
-					cb = cb.With(common.CtxPID, actorPID)
+					cb = cb.With(common.CtxKeyPID, actorPID)
 				}
 			}
 
@@ -74,7 +74,7 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				if tab == "" {
 					tab = "Events"
 				}
-				cb = cb.With(common.CtxTab, tab)
+				cb = cb.With(common.CtxKeyTab, tab)
 			}
 
 			{ // flow chart type
@@ -82,13 +82,13 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				if flowType == "" {
 					flowType = "Sources"
 				}
-				cb = cb.With(common.CtxFlow, flowType)
+				cb = cb.With(common.CtxKeyFlow, flowType)
 			}
 
 			{ // flow chart node
 				flowNode := ctx.QueryParam(common.ParamFlowNode)
 				if flowNode != "" {
-					cb = cb.With(common.CtxFlowNode, flowNode)
+					cb = cb.With(common.CtxKeyFlowNode, flowNode)
 				}
 			}
 
@@ -96,13 +96,13 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				flowRange := ctx.QueryParam(common.ParamFlowRange)
 				var r common.Range
 				if err := r.Parse(flowRange); err == nil {
-					cb = cb.With(common.CtxFlowRange, r)
+					cb = cb.With(common.CtxKeyFlowRange, r)
 				}
 			}
 
 			{ // events filter
 				filter := common.NewFilter(ctx)
-				cb = cb.With(common.CtxFilter, filter)
+				cb = cb.With(common.CtxKeyFilter, filter)
 			}
 
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))

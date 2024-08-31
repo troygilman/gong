@@ -59,21 +59,21 @@ func requestID(ctx echo.Context) string {
 }
 
 func mustProjectID(ctx echo.Context) uuid.UUID {
-	return ctx.Request().Context().Value(common.CtxProject).(uuid.UUID)
+	return ctx.Request().Context().Value(common.CtxKeyProjectID).(uuid.UUID)
 }
 
 func actorPID(ctx echo.Context) (string, bool) {
-	actorPID, ok := ctx.Request().Context().Value(common.CtxPID).(string)
+	actorPID, ok := ctx.Request().Context().Value(common.CtxKeyPID).(string)
 	return actorPID, ok
 }
 
 func tab(ctx echo.Context) (string, bool) {
-	tab, ok := ctx.Request().Context().Value(common.CtxTab).(string)
+	tab, ok := ctx.Request().Context().Value(common.CtxKeyTab).(string)
 	return tab, ok
 }
 
 func filter(ctx echo.Context) (common.Filter, bool) {
-	filter, ok := ctx.Request().Context().Value(common.CtxFilter).(common.Filter)
+	filter, ok := ctx.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
 	return filter, ok
 }
 

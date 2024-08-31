@@ -11,23 +11,20 @@ import (
 )
 
 func eventsTabContent(ctx context.Context) templ.Component {
-	app := gong_common.MustApp(ctx)
-	projectID := gong_common.MustProjectID(ctx)
-	actorPID := gong_common.MustActorPID(ctx)
+	app := gong_common.MustValueApp(ctx)
+	projectID := gong_common.MustValueProjectID(ctx)
+	actorPID := gong_common.MustValueActorPID(ctx)
 	actor, err := app.Actor(ctx, projectID, actorPID)
+	filter := ctx.Value(gong_common.CtxKeyFilter).(gong_common.Filter)
 	if err != nil {
 		return nil
 	}
-	return eventsTabContentComponent(actor)
+	return eventsTabContentComponent(actor, filter)
 }
 
-templ eventsTabContentComponent(actor gong_common.Actor) {
+templ eventsTabContentComponent(actor gong_common.Actor, filter gong_common.Filter) {
 	<div class="w-full h-fit px-4 py-2 border-b border-color">
-		if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
 			@eventsFilter(filter)
-		} else {
-			@eventsFilter(gong_common.Filter{})
-		}
 	</div>
 	@ProjectActorEventsContainer(actor)
 }
@@ -168,7 +165,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 }
 
 func formatActorPIDCtx(ctx context.Context) string {
-	if pid, ok := ctx.Value(gong_common.CtxPID).(string); ok {
+	if pid, ok := ctx.Value(gong_common.CtxKeyPID).(string); ok {
 		return formatActorPID(pid)
 	}
 	return ""
