@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"gong/internal/common"
-	"gong/internal/persistance"
 	"gong/pkg/dolly"
 	"log"
 	"time"
@@ -27,11 +26,11 @@ type project struct {
 	eventUpdates []common.Event
 	metricUpdate Metric
 	repeater     actor.SendRepeater
-	listeners    map[ListenerType]map[*actor.PID]struct{}
+	listeners    map[common.ListenerType]map[*actor.PID]struct{}
 	metrics      MetricsManager
 }
 
-func NewProjectProducerWithApp(app App) actor.Producer {
+func NewProjectProducerWithApp(app common.App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
 			commonActorData: commonActorData{
@@ -53,7 +52,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 		case actor.Initialized:
 			p.actors = make(map[string]common.Actor)
 			p.actorUpdates = make(map[string]common.Actor)
-			p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
+			p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
 			p.metrics = NewMetricsManager(5)
 		case actor.Started:
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
@@ -97,7 +96,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			for listenerType, listeners := range p.listeners {
 				for listenerPID := range listeners {
 					switch listenerType {
-					case ListenerTypeProject:
+					case common.ListenerTypeProject:
 						for _, actor := range p.actorUpdates {
 							_, exists := p.actors[actor.PID]
 							if exists {
@@ -110,11 +109,11 @@ func (p *project) Receive(aCtx *actor.Context) {
 								})
 							}
 						}
-					case ListenerTypeEvents:
+					case common.ListenerTypeEvents:
 						for _, event := range p.eventUpdates {
 							listenerData[listenerPID] = append(listenerData[listenerPID], event)
 						}
-					case ListenerTypeMetrics:
+					case common.ListenerTypeMetrics:
 						listenerData[listenerPID] = append(listenerData[listenerPID], p.metrics.Group())
 					default:
 					}
@@ -140,7 +139,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 		case msgGetProjectEvents:
 			_, ok := p.actors[msg.actorPID]
 			if ok {
-				query := persistance.EventsQuery{
+				query := common.EventsQuery{
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
 					Timestamp: msg.timestamp,
@@ -159,7 +158,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := persistance.ActorSourcesSinksQuery{
+				query := common.ActorSourcesSinksQuery{
 					Sources:   msg.sources,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -178,7 +177,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := persistance.SourcesSinksNodeInfoQuery{
+				query := common.SourcesSinksNodeInfoQuery{
 					Source:    msg.source,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -236,7 +235,7 @@ func (p *project) Create(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
+func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, query common.EventsQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -251,7 +250,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 	})
 }
 
-func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
+func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db common.Database, query common.ActorSourcesSinksQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -266,7 +265,7 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 	})
 }
 
-func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.SourcesSinksNodeInfoQuery) {
+func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db common.Database, query common.SourcesSinksNodeInfoQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

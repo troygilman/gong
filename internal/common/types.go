@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/anthdm/hollywood/actor"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -28,6 +30,7 @@ const (
 type CtxKey string
 
 const (
+	CtxApp       CtxKey = "app"
 	CtxProject   CtxKey = "projectID"
 	CtxPID       CtxKey = ParamPID
 	CtxTab       CtxKey = ParamTab
@@ -41,6 +44,29 @@ const (
 	ProjectViewActor             = "actor"
 	ProjectViewFlowChart         = "flow-chart"
 	ProjectViewFlowChartNodeInfo = "flow-chart-node-info"
+)
+
+type App interface {
+	Shutdown()
+	PID(kind string, id string) (*actor.PID, error)
+	Database() Database
+	JWT(tokenString string) (jwt.RegisteredClaims, error)
+	Actor(ctx context.Context, projectID uuid.UUID, actorPID string) (actor Actor, err error)
+	ProjectProps(ctx context.Context, projectID uuid.UUID) (project ProjectProps, err error)
+	Events(ctx context.Context, projectID uuid.UUID, actorPID string, timestamp time.Time, numEvents int, filter Filter) (events EventList, err error)
+	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
+	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, sources bool, rng Range) (pids []string, err error)
+	SourcesSinksNodeInfo(ctx context.Context, projectID uuid.UUID, actorPID string, nodePID string, source bool, rng Range) (SourcesSinksNodeInfo, error)
+	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter Filter) (<-chan []any, error)
+	ListenStop(ctx context.Context, id string) error
+}
+
+type ListenerType uint
+
+const (
+	ListenerTypeProject ListenerType = iota
+	ListenerTypeEvents
+	ListenerTypeMetrics
 )
 
 type Range int

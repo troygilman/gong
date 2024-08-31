@@ -10,7 +10,18 @@ import (
 	"strings"
 )
 
-templ eventsTabContent(actor gong_common.Actor) {
+func eventsTabContent(ctx context.Context) templ.Component {
+	app := gong_common.MustApp(ctx)
+	projectID := gong_common.MustProjectID(ctx)
+	actorPID := gong_common.MustActorPID(ctx)
+	actor, err := app.Actor(ctx, projectID, actorPID)
+	if err != nil {
+		return nil
+	}
+	return eventsTabContentComponent(actor)
+}
+
+templ eventsTabContentComponent(actor gong_common.Actor) {
 	<div class="w-full h-fit px-4 py-2 border-b border-color">
 		if filter, ok := ctx.Value(gong_common.CtxFilter).(gong_common.Filter); ok {
 			@eventsFilter(filter)
@@ -28,179 +39,6 @@ templ ProjectActorEventsContainer(actor gong_common.Actor) {
 		hx-ext="sse"
 		hx-include={ common.Includes }
 		hx-sync="this:drop"
-		x-data={ `{
-			init() {
-				this.url = htmx.find("#project-url").value;
-
-				this.status = new Uint8Array(new ArrayBuffer(1));
-
-				document.addEventListener("fetch-events", (e) => {
-					if (Atomics.compareExchange(this.status, 0, 0, 1) == 0) {
-						const fetchWrapper = async function(data) {
-							await data._fetch(e.detail);
-							Atomics.store(data.status, 0, 0);
-						}
-						fetchWrapper(this);
-					}
-				});
-
-				this.intervalID = window.setInterval(() => {
-					this.fetch(this.nextIsTop);
-					this.nextIsTop = !this.nextIsTop;
-				}, 10); // time in ms
-
-				this.fetch(false)
-
-				this.eventSource = new EventSource(this.addParamsToURL(this.url + "/sse/events"));
-				this.eventSource.addEventListener("new-events", (event) => {
-					console.log("new-event")
-					this.moreTop = true;
-					this.newEvents = true;
-				});
-			},
-
-			destroy() {
-				clearInterval(this.intervalID);
-				this.eventSource.close();
-			},
-
-			fetch(isTop) {
-				const event = new CustomEvent("fetch-events", { detail: isTop });
-				document.dispatchEvent(event);
-			},
-
-			async _fetch(isTop) {
-				let currentNumEvents = htmx.find("#events").children.length;
-				let loadTop = isTop && this.moreTop && (this.shouldLoadTop() || currentNumEvents < 100);
-				let loadBottom = !isTop && this.moreBottom && (this.shouldLoadBottom() || currentNumEvents < 100);
-				console.log("_fetch()", isTop, this.moreTop, this.moreBottom);
-				if (loadTop || loadBottom) {
-					const values = {
-						n: 0,
-						timestamp: "",
-					}
-					if (isTop) {
-						values.n = 20;
-						values.timestamp = this.getTopTimestamp();
-					} else {
-						values.n = -20
-						values.timestamp = this.getBottomTimestamp();
-					}
-					console.log("fetch()", values);
-					await htmx.ajax("GET", this.addParamsToURL(this.url + "/events"), {
-						source: "#events-spinner",
-						values: values,
-						handler: (src, something) => {
-							const html = something.xhr.responseText;
-							if (isTop) {
-								if (html == "") {
-									if (!this.newEvents) {
-										this.moreTop = false;
-									}
-								} else {
-									this.moreTop = true;
-									this.newEvents = false;
-								}
-								this.moreBottom = true;
-							} else {
-								if (html == "") {
-									this.moreBottom = false;
-								} else {
-									this.moreBottom = true;
-								}
-								this.moreTop = true;
-							}
-							const spinner = htmx.find("#events-spinner");
-							if (spinner) {
-								htmx.remove(spinner);
-							}
-                            this.handleEvents(html, isTop);
-						},
-					});
-				}
-			},
-
-			handleEvents(events, isTop) {
-				const maxEvents = 200;
-				const container = document.getElementById("events");
-				if (container == null) {
-					return;
-				}
-				if (isTop) {
-					htmx.swap(container, events, {swapStyle: "afterbegin"}, {eventInfo: {isTop: isTop}});
-					const overflow = container.children.length - maxEvents;
-					if (overflow > 0) {
-						for (let i = maxEvents; i < container.children.length; i++) {
-							htmx.remove(container.children[i]);
-						}
-					}
-					console.log("event swap top - overflow:", overflow)
-				} else {
-					htmx.swap(container, events, {swapStyle: "beforeend"}, {eventInfo: {isTop: isTop}});
-					const overflow = container.children.length - maxEvents;
-					if (overflow > 0) {
-						for (let i = 0; i < overflow; i++) {
-							htmx.remove(container.children[i]);
-						}
-					}
-					console.log("event swap bottom - overflow:", overflow)
-				}
-			},
-
-			addParamsToURL(url) {
-				const elem = htmx.find("#includes");
-				const params = new URLSearchParams(htmx.values(elem).entries());
-				return url + "?" + params.toString();
-			},
-
-			shouldLoadTop() {
-				const container = document.getElementById("events-container");
-				return container.scrollTop <= container.scrollHeight * 0.2;
-			},
-
-			shouldLoadBottom() {
-				const container = document.getElementById("events-container");
-				return container.scrollTop + container.offsetHeight >= container.scrollHeight * 0.8;
-			},
-
-			getTopTimestamp() {
-				const events = htmx.findAll(htmx.find("#events"), ".event");
-				if (events.length > 0) {
-					return htmx.find(events[0], "input").value;
-				} else {
-					return "";
-				}
-			},
-
-			getBottomTimestamp() {
-				const events = htmx.findAll(htmx.find("#events"), ".event");
-				if (events.length > 0) {
-					return htmx.find(events[events.length-1], "input").value;
-				} else {
-					return "";
-				}
-			},
-
-			handleScroll() {
-				const container = document.getElementById("events-container");
-				if (container.scrollTop < this.scrollTop) {
-					this.fetch(true);
-				} else if (container.scrollTop > this.scrollTop) {
-					this.fetch(false);
-				}
-			},
-
-			url: "",
-			moreTop: false,
-			moreBottom: true,
-			newEvents: false,
-			nextIsTop: true,
-			intervalID: 0,
-			eventSource: null,
-			scrollTop: 0,
-			status: null,
-		}` }
-		@scroll="$data.handleScroll()"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
 		<table id="events-table" class="table table-pin-rows table-sm">

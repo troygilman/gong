@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gong/internal/common"
 	"gong/internal/core"
-	"gong/internal/persistance"
 	"gong/internal/transport"
 	"gong/sdk"
 	"log/slog"
@@ -33,7 +32,7 @@ func TestIntegration_Client(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	db := persistance.NewMockDatabase(controller)
+	db := common.NewMockDatabase(controller)
 
 	db.EXPECT().QueryActors(
 		gomock.Any(),

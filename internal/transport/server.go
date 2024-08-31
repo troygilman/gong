@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"gong/internal/core"
+	"gong/internal/common"
 	"io/fs"
 	"log"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func RunServer(app core.App, static fs.FS, port int) (*echo.Echo, <-chan error) {
+func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error) {
 	e := echo.New()
 	e.HTTPErrorHandler = httpErrorHandler
 

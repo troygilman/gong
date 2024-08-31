@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"gong/internal/common"
-	"gong/internal/core"
 	"io"
 	"log"
 	"net/http"
@@ -17,8 +16,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func mustApp(ctx echo.Context) core.App {
-	app, ok := ctx.Get("app").(core.App)
+func mustApp(ctx echo.Context) common.App {
+	app, ok := ctx.Get("app").(common.App)
 	if !ok {
 		panic(fmt.Sprintln("App does not exist in context"))
 	}
@@ -78,7 +77,7 @@ func filter(ctx echo.Context) (common.Filter, bool) {
 	return filter, ok
 }
 
-func sse(eCtx echo.Context, listenerType core.ListenerType, f func(sses []any) error) error {
+func sse(eCtx echo.Context, listenerType common.ListenerType, f func(sses []any) error) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"gong/internal/common"
-	"gong/internal/persistance"
 	"gong/pkg/dolly"
 	"gong/sdk"
 	"os"
@@ -27,12 +26,12 @@ type gongApp struct {
 	controllerPID *actor.PID
 	pids          map[string]*actor.PID
 	producerFuncs map[string]producerFunc
-	db            persistance.Database
+	db            common.Database
 }
 
-type producerFunc func(App) actor.Producer
+type producerFunc func(common.App) actor.Producer
 
-func NewApp(db persistance.Database) (App, error) {
+func NewApp(db common.Database) (common.App, error) {
 	app := new(gongApp)
 
 	app.db = db
@@ -99,7 +98,7 @@ func (app *gongApp) PID(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
-func (app *gongApp) Database() persistance.Database {
+func (app *gongApp) Database() common.Database {
 	return app.db
 }
 
@@ -266,7 +265,7 @@ func (app *gongApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
-	lType ListenerType,
+	lType common.ListenerType,
 	filter common.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)

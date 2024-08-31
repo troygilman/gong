@@ -1,24 +1,23 @@
-package persistance
+package common
 
 import (
 	"context"
-	"gong/internal/common"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
 )
 
-//go:generate mockgen -source=database.go -destination=database_mock.go -package=persistance
+//go:generate mockgen -source=database.go -destination=database_mock.go -package=common
 
 type Database interface {
-	QueryEvents(ctx context.Context, query EventsQuery) ([]common.Event, error)
-	CreateEvents(ctx context.Context, events []common.Event) error
-	QueryActors(ctx context.Context, projectID uuid.UUID) ([]common.Actor, error)
-	CreateActor(ctx context.Context, actor common.Actor) error
-	UpdateActor(ctx context.Context, actor common.Actor) error
+	QueryEvents(ctx context.Context, query EventsQuery) ([]Event, error)
+	CreateEvents(ctx context.Context, events []Event) error
+	QueryActors(ctx context.Context, projectID uuid.UUID) ([]Actor, error)
+	CreateActor(ctx context.Context, actor Actor) error
+	UpdateActor(ctx context.Context, actor Actor) error
 	QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
-	QuerySourcesSinksNodeInfo(context.Context, SourcesSinksNodeInfoQuery) (common.SourcesSinksNodeInfo, error)
+	QuerySourcesSinksNodeInfo(context.Context, SourcesSinksNodeInfoQuery) (SourcesSinksNodeInfo, error)
 }
 
 type EventsQuery struct {
@@ -27,7 +26,7 @@ type EventsQuery struct {
 	EventID   ulid.ULID
 	NumEvents int
 	Timestamp time.Time
-	Filter    common.Filter
+	Filter    Filter
 }
 
 type ActorSourcesSinksQuery struct {

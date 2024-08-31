@@ -69,11 +69,11 @@ type rspGetSourcesSinksNodeInfo struct {
 }
 
 type msgListenStart struct {
-	lType ListenerType
+	lType common.ListenerType
 }
 
 type msgListenStop struct {
-	lType ListenerType
+	lType common.ListenerType
 }
 
 type msgListenData struct {

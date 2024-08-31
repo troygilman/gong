@@ -34,7 +34,7 @@ type questDatabase struct {
 	client questdb.LineSender
 }
 
-func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
+func NewQuestDatabase(sqlMigrations fs.FS) (common.Database, error) {
 	hostname, ok := os.LookupEnv(envDatabaseHostname)
 	if !ok {
 		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
@@ -121,7 +121,7 @@ func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 
 func (db *questDatabase) QueryEvents(
 	ctx context.Context,
-	query EventsQuery,
+	query common.EventsQuery,
 ) ([]common.Event, error) {
 
 	var events []common.Event
@@ -221,7 +221,7 @@ func (db *questDatabase) UpdateActor(
 
 func (db *questDatabase) QueryActorSourcesSinks(
 	ctx context.Context,
-	query ActorSourcesSinksQuery,
+	query common.ActorSourcesSinksQuery,
 ) ([]string, error) {
 	var actors []struct {
 		bun.BaseModel `bun:"table:events"`
@@ -263,7 +263,7 @@ func (db *questDatabase) QueryActorSourcesSinks(
 
 func (db *questDatabase) QuerySourcesSinksNodeInfo(
 	ctx context.Context,
-	query SourcesSinksNodeInfoQuery,
+	query common.SourcesSinksNodeInfoQuery,
 ) (info common.SourcesSinksNodeInfo, err error) {
 	var actorPid string
 	var sender string

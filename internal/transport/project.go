@@ -148,7 +148,7 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 
 func handleConnectSseProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, core.ListenerTypeProject, func(sses []any) error {
+	return sse(eCtx, common.ListenerTypeProject, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
 			case common.SseNewActor:
@@ -177,7 +177,7 @@ func handleConnectSseProject(eCtx echo.Context) error {
 
 func handleConnectSseEvents(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, core.ListenerTypeEvents, func(sses []any) error {
+	return sse(eCtx, common.ListenerTypeEvents, func(sses []any) error {
 		eventCount := 0
 		for _, sse := range sses {
 			switch sse := sse.(type) {
@@ -284,7 +284,7 @@ func handleGetProjectAdmin(eCtx echo.Context) error {
 
 func handleConnectSseProjectAdmin(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, core.ListenerTypeMetrics, func(sses []any) error {
+	return sse(eCtx, common.ListenerTypeMetrics, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
 			case core.MetricGroup:

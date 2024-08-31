@@ -27,7 +27,7 @@ type processor struct {
 	repeater actor.SendRepeater
 }
 
-func NewProcessorProducerWithApp(app App) actor.Producer {
+func NewProcessorProducerWithApp(app common.App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
 			commonActorData: commonActorData{

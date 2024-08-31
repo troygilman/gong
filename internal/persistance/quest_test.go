@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func benchmarkCreateEvents(n int, numEvents int, db Database) error {
+func benchmarkCreateEvents(n int, numEvents int, db common.Database) error {
 	projectID := uuid.MustParse("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	for range n {
 		events := make([]common.Event, numEvents)
