@@ -121,44 +121,44 @@ func NewQuestDatabase(sqlMigrations fs.FS) (common.Database, error) {
 func (db *questDatabase) QueryEvents(
 	ctx context.Context,
 	query common.EventsQuery,
-) ([]common.Event, error) {
-
-	var events []common.Event
-
-	filterType := ""
-	if query.Filter.Type != nil {
-		filterType = *query.Filter.Type
-	}
-
-	filterSender := ""
-	if query.Filter.Sender != nil {
-		filterSender = *query.Filter.Sender
-	}
-
-	filterLevel := ""
-	if query.Filter.Level != nil {
-		filterLevel = strconv.Itoa(int(*query.Filter.Level))
-	}
-
+) ([]common.Event, int, error) {
 	pageSize := 100
+
+	subq := db.bunDB.NewSelect().Model(&common.Event{}).
+		Where("project_id = ?", query.ProjectID).
+		Where("pid = ?", query.ActorPID).
+		Where("timestamp <= ?", query.Timestamp).
+		Order("timestamp DESC")
+
+	if query.Filter.Type != nil {
+		subq = subq.Where("type ~ ?", *query.Filter.Type)
+	}
+
+	if query.Filter.Sender != nil {
+		subq = subq.Where("sender ~ ?", *query.Filter.Sender)
+	}
+
+	if query.Filter.Level != nil {
+		subq = subq.Where("level >= ?", strconv.Itoa(int(*query.Filter.Level)))
+	}
+
+	count, err := subq.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	maxPageIndex := count / pageSize
+
+	log.Println("Count:", count, "MaxPageIndex:", maxPageIndex)
+
 	lowerLimit := query.PageIndex * pageSize
 	upperLimit := (query.PageIndex + 1) * pageSize
 
-	stmt := db.bunDB.NewRaw("SELECT * FROM events WHERE project_id = ? AND pid = ? AND timestamp <= ? AND type ~ ? AND sender ~ ? AND level ~ ? ORDER BY timestamp DESC LIMIT ?, ?",
-		query.ProjectID,
-		query.ActorPID,
-		query.Timestamp,
-		filterType,
-		filterSender,
-		filterLevel,
-		lowerLimit,
-		upperLimit,
-	)
-	if err := stmt.Scan(ctx, &events); err != nil {
-		return nil, err
+	var events []common.Event
+	if err := db.bunDB.NewRaw("SELECT * FROM (?) LIMIT ?, ?", subq, lowerLimit, upperLimit).Scan(ctx, &events); err != nil {
+		return nil, 0, err
 	}
 
-	return events, nil
+	return events, maxPageIndex, nil
 }
 
 func (db *questDatabase) CreateEvents(

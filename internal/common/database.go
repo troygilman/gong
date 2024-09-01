@@ -11,7 +11,7 @@ import (
 //go:generate mockgen -source=database.go -destination=database_mock.go -package=common
 
 type Database interface {
-	QueryEvents(ctx context.Context, query EventsQuery) ([]Event, error)
+	QueryEvents(ctx context.Context, query EventsQuery) ([]Event, int, error)
 	CreateEvents(ctx context.Context, events []Event) error
 	QueryActors(ctx context.Context, projectID uuid.UUID) ([]Actor, error)
 	CreateActor(ctx context.Context, actor Actor) error

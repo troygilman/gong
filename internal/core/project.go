@@ -239,14 +239,15 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, qu
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	events, err := db.QueryEvents(ctx, query)
+	events, maxPageIdx, err := db.QueryEvents(ctx, query)
 	if err != nil {
 		engine.Send(sender, err)
 		return
 	}
 
 	engine.Send(sender, rspGetProjectEvents{
-		events: events,
+		events:       events,
+		maxPageIndex: maxPageIdx,
 	})
 }
 

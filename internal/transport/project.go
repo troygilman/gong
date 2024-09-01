@@ -96,7 +96,7 @@ func handleGetProject(eCtx echo.Context) error {
 }
 
 func handleGetProjectEvents(eCtx echo.Context) error {
-	return view_project.EventTableListComponent().Render(eCtx.Request().Context(), eCtx.Response())
+	return view_project.EventTableComponent(eCtx.Request().Context(), false).Render(eCtx.Request().Context(), eCtx.Response())
 }
 
 func handleConnectSseProject(eCtx echo.Context) error {

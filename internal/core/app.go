@@ -167,10 +167,10 @@ func (app *gongApp) Events(
 	timestamp time.Time,
 	filter common.Filter,
 	pageIndex int,
-) (events common.EventList, err error) {
+) (events common.EventList, maxPageIndex int, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
-		return events, err
+		return events, 0, err
 	}
 
 	msg := msgGetProjectEvents{
@@ -183,10 +183,10 @@ func (app *gongApp) Events(
 	r := app.engine.Request(projectPID, msg, defaultTimeout)
 	response, err := dolly.HandleResponse[rspGetProjectEvents](r)
 	if err != nil {
-		return events, err
+		return events, 0, err
 	}
 
-	return response.events, nil
+	return response.events, response.maxPageIndex, nil
 }
 
 func (app *gongApp) ProcessEvents(

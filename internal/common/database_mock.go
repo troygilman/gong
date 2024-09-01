@@ -99,12 +99,13 @@ func (mr *MockDatabaseMockRecorder) QueryActors(ctx, projectID any) *gomock.Call
 }
 
 // QueryEvents mocks base method.
-func (m *MockDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]Event, error) {
+func (m *MockDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]Event, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryEvents", ctx, query)
 	ret0, _ := ret[0].([]Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryEvents indicates an expected call of QueryEvents.

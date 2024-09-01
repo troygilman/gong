@@ -35,8 +35,9 @@ type msgGetProjectEvents struct {
 }
 
 type rspGetProjectEvents struct {
-	events common.EventList
-	actor  common.Actor
+	events       common.EventList
+	maxPageIndex int
+	actor        common.Actor
 }
 
 type msgProcessorUpdateState struct{}
