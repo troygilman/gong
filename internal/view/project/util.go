@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func buildIncludeString(includes ...[]string) string {
+func buildIncludes(includes ...[]string) string {
 	var result []string
 	for _, include := range includes {
 		result = append(result, include...)

@@ -25,6 +25,7 @@ type EventsQuery struct {
 	ActorPID  string
 	EventID   ulid.ULID
 	Timestamp time.Time
+	PageIndex int
 	Filter    Filter
 }
 

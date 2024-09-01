@@ -30,6 +30,7 @@ type msgGetProjectEvents struct {
 	actorPID  string
 	eventID   ulid.ULID
 	timestamp time.Time
+	pageIndex int
 	filter    common.Filter
 }
 

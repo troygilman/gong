@@ -10,7 +10,7 @@ import (
 
 templ Project(props gong_common.ProjectProps) {
 	@common.Index() {
-		<div id="includes" hx-include={ buildIncludeString(common.StandardIncludes) }></div>
+		<div id="includes" hx-include={ buildIncludes(common.StandardIncludes) }></div>
 		<script>
 			const next = htmx.createEventSource;
 			htmx.createEventSource = function(url) {
@@ -96,7 +96,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 			hx-get={ common.FormatProjectUrl(ctx) }
 			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
-			hx-include={ buildIncludeString(common.StandardIncludes) }
+			hx-include={ buildIncludes(common.StandardIncludes) }
 			hx-push-url="true"
 			hx-trigger="click"
 			hx-swap="none"
@@ -154,7 +154,7 @@ templ ProjectActorListItem(actor gong_common.Actor, oob bool) {
 		hx-get={ common.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, gong_common.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
-		hx-include={ buildIncludeString(common.StandardIncludes) }
+		hx-include={ buildIncludes(common.StandardIncludes) }
 		hx-trigger="click"
 		hx-push-url="true"
 		if oob {

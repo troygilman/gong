@@ -12,11 +12,15 @@ import (
 )
 
 const (
-	idTimeStart = "time-start"
+	idTimeStart    = "time-start"
+	idEventsFilter = "events-filter"
+	idPageIndex    = "page-index"
 )
 
 var eventTableIncludes = []string{
 	idTimeStart,
+	idEventsFilter,
+	idPageIndex,
 }
 
 func eventsTabContent(ctx context.Context) templ.Component {
@@ -24,6 +28,7 @@ func eventsTabContent(ctx context.Context) templ.Component {
 	projectID := gong_common.MustValueProjectID(ctx)
 	actorPID := gong_common.MustValueActorPID(ctx)
 	filter, _ := gong_common.ValueFilter(ctx)
+	pageIdx, _ := gong_common.ValuePageIndex(ctx)
 	timeStart, ok := gong_common.ValueTimeStart(ctx)
 	if !ok {
 		actor, err := app.Actor(ctx, projectID, actorPID)
@@ -32,17 +37,41 @@ func eventsTabContent(ctx context.Context) templ.Component {
 		}
 		timeStart = actor.LastEventTime
 	}
-	return eventsTabContentComponent(filter, timeStart)
+	return eventsTabContentComponent(filter, timeStart, pageIdx)
 }
 
-templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) {
+templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time, pageIdx int) {
 	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
-		<div>
-			<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
+		<div class="join">
+			<button
+				class="join-item button fill-base-content disabled:fill-base-content/50"
+				if pageIdx == 0 {
+					disabled
+				}
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+				hx-headers={ `{"View": "actor"}` }
+				hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, pageIdx-1) }
+				hx-trigger="click"
+				hx-swap="none"
+				hx-push-url="true"
+			>
 				@common.ArrowIcon("")
 			</button>
-			<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
+			<div class="join-item button !text-base-content" disabled>
+				{ strconv.Itoa(pageIdx) }
+			</div>
+			<button
+				class="join-item button fill-base-content disabled:fill-base-content/50"
+				hx-get={ common.FormatProjectUrl(ctx) }
+				hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+				hx-headers={ `{"View": "actor"}` }
+				hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, pageIdx+1) }
+				hx-trigger="click"
+				hx-swap="none"
+				hx-push-url="true"
+			>
 				@common.ArrowIcon("rotate-180")
 			</button>
 		</div>
@@ -51,11 +80,10 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) 
 		id="events-container"
 		class="grow min-h-0 max-w-full overflow-x-auto relative"
 		hx-ext="sse"
-		hx-include={ buildIncludeString(common.StandardIncludes) }
-		hx-sync="this:drop"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
 		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
+		<input id="page-index" type="hidden" name={ gong_common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
 		<table id="events-table" class="table table-pin-rows table-sm">
 			<thead>
 				<tr class="cursor-default">
@@ -70,7 +98,7 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) 
 				id="events"
 				hx-get={ common.FormatProjectUrl(ctx) + "/events" }
 				hx-trigger="load"
-				hx-include={ buildIncludeString(common.StandardIncludes, eventTableIncludes) }
+				hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
 				hx-indicator="#events-spinner"
 			></tbody>
 		</table>
@@ -82,10 +110,10 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time) 
 
 templ eventsFilter(filter gong_common.Filter) {
 	<form
-		id="events-filter"
+		id={ idEventsFilter }
 		class="join w-fit mb-0"
 		hx-get={ common.FormatProjectUrl(ctx) }
-		hx-include={ buildIncludeString(common.StandardIncludes) }
+		hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -158,7 +186,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
 				hx-get={ common.FormatProjectUrl(ctx) }
-				hx-include={ buildIncludeString(common.StandardIncludes) }
+				hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
@@ -201,9 +229,10 @@ func eventTableListComponent(ctx context.Context) templ.Component {
 	projectID := gong_common.MustValueProjectID(ctx)
 	actorPID := gong_common.MustValueActorPID(ctx)
 	timeStart, _ := gong_common.ValueTimeStart(ctx)
+	pageIdx, _ := gong_common.ValuePageIndex(ctx)
 	filter, _ := gong_common.ValueFilter(ctx)
 
-	events, err := app.Events(ctx, projectID, actorPID, timeStart, filter)
+	events, err := app.Events(ctx, projectID, actorPID, timeStart, filter, pageIdx)
 	if err != nil {
 		events = make(gong_common.EventList, 0)
 	}
@@ -211,36 +240,32 @@ func eventTableListComponent(ctx context.Context) templ.Component {
 }
 
 templ eventTableList(events gong_common.EventList) {
-	for i := len(events)-1; i >= 0; i-- {
-		@eventTableListItem(events[i])
+	for _, event := range events {
+		<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
+			<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
+			<td>
+				{ event.Timestamp.String() }
+			</td>
+			<td>
+				{ event.Type }
+			</td>
+			<td>
+				if event.Sender != "" {
+					{ event.Sender }
+				} else {
+					N/A
+				}
+			</td>
+			<td>
+				{ event.SlogLevel().String() }
+			</td>
+			<td>
+				if event.Msg != "" {
+					{ event.Msg }
+				} else {
+					N/A
+				}
+			</td>
+		</tr>
 	}
-}
-
-templ eventTableListItem(event gong_common.Event) {
-	<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
-		<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
-		<td>
-			{ event.Timestamp.String() }
-		</td>
-		<td>
-			{ event.Type }
-		</td>
-		<td>
-			if event.Sender != "" {
-				{ event.Sender }
-			} else {
-				N/A
-			}
-		</td>
-		<td>
-			{ event.SlogLevel().String() }
-		</td>
-		<td>
-			if event.Msg != "" {
-				{ event.Msg }
-			} else {
-				N/A
-			}
-		</td>
-	</tr>
 }

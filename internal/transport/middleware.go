@@ -114,6 +114,13 @@ func middlewareProjectContext() echo.MiddlewareFunc {
 				}
 			}
 
+			{
+				pageIdxStr := ctx.QueryParam(common.ParamPageIndex)
+				if pageIdx, err := strconv.Atoi(pageIdxStr); err == nil {
+					cb = cb.With(common.CtxKeyPageIndex, pageIdx)
+				}
+			}
+
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}

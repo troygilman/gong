@@ -46,6 +46,10 @@
 	.drawer-state:checked ~ .drawer-content {
 		@apply w-0 -translate-x-full;
 	}
+
+	.button {
+		@apply btn btn-sm w-8 h-8 no-animation border border-color p-1;
+	}
 }
 
 [x-cloak] {

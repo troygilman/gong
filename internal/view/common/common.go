@@ -17,7 +17,6 @@ func FormatProjectUrl(ctx context.Context) string {
 const (
 	IdActorPID  = "actor-pid"
 	IdTab       = "tab"
-	IdFilter    = "events-filter"
 	IdFlow      = "flow"
 	IdFlowNode  = "flow-node"
 	IdFlowRange = "flow-range"
@@ -26,7 +25,6 @@ const (
 var StandardIncludes = []string{
 	IdActorPID,
 	IdTab,
-	IdFilter,
 	IdFlow,
 	IdFlowNode,
 	IdFlowRange,

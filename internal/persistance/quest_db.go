@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"slices"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -126,31 +125,38 @@ func (db *questDatabase) QueryEvents(
 
 	var events []common.Event
 
-	stmt := db.bunDB.NewSelect().Model(&events).
-		Where("project_id = ?", query.ProjectID).
-		Where("pid = ?", query.ActorPID).
-		Where("timestamp <= ?", query.Timestamp)
-
+	filterType := ""
 	if query.Filter.Type != nil {
-		stmt = stmt.Where("type ~ ?", *query.Filter.Type)
+		filterType = *query.Filter.Type
 	}
 
+	filterSender := ""
 	if query.Filter.Sender != nil {
-		stmt = stmt.Where("sender ~ ?", *query.Filter.Sender)
+		filterSender = *query.Filter.Sender
 	}
 
+	filterLevel := ""
 	if query.Filter.Level != nil {
-		stmt = stmt.Where("level >= ?", strconv.Itoa(int(*query.Filter.Level)))
+		filterLevel = strconv.Itoa(int(*query.Filter.Level))
 	}
 
-	err := stmt.Order("timestamp DESC").Limit(100).Scan(ctx)
-	if err != nil {
+	pageSize := 100
+	lowerLimit := query.PageIndex * pageSize
+	upperLimit := (query.PageIndex + 1) * pageSize
+
+	stmt := db.bunDB.NewRaw("SELECT * FROM events WHERE project_id = ? AND pid = ? AND timestamp <= ? AND type ~ ? AND sender ~ ? AND level ~ ? ORDER BY timestamp DESC LIMIT ?, ?",
+		query.ProjectID,
+		query.ActorPID,
+		query.Timestamp,
+		filterType,
+		filterSender,
+		filterLevel,
+		lowerLimit,
+		upperLimit,
+	)
+	if err := stmt.Scan(ctx, &events); err != nil {
 		return nil, err
 	}
-
-	slices.SortFunc(events, func(a common.Event, b common.Event) int {
-		return a.Timestamp.Compare(b.Timestamp)
-	})
 
 	return events, nil
 }

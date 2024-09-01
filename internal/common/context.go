@@ -20,6 +20,7 @@ const (
 	CtxKeyFlowNode  CtxKey = ParamFlowNode
 	CtxKeyFlowRange CtxKey = ParamFlowRange
 	CtxKeyTimeStart CtxKey = ParamTimeStart
+	CtxKeyPageIndex CtxKey = ParamPageIndex
 )
 
 func valueHelper[T any](ctx context.Context, key CtxKey) (T, bool) {
@@ -65,4 +66,8 @@ func ValueTimeStart(ctx context.Context) (time.Time, bool) {
 
 func MustValueTimeStart(ctx context.Context) time.Time {
 	return mustValueHelper[time.Time](ctx, CtxKeyTimeStart)
+}
+
+func ValuePageIndex(ctx context.Context) (int, bool) {
+	return valueHelper[int](ctx, CtxKeyPageIndex)
 }

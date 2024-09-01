@@ -26,6 +26,7 @@ const (
 	ParamFlowNode     = "flow_node"
 	ParamFlowRange    = "flow_range"
 	ParamTimeStart    = "time_start"
+	ParamPageIndex    = "page_index"
 )
 
 const (
@@ -41,7 +42,7 @@ type App interface {
 	JWT(tokenString string) (jwt.RegisteredClaims, error)
 	Actor(ctx context.Context, projectID uuid.UUID, actorPID string) (actor Actor, err error)
 	ProjectProps(ctx context.Context, projectID uuid.UUID) (project ProjectProps, err error)
-	Events(ctx context.Context, projectID uuid.UUID, actorPID string, timestamp time.Time, filter Filter) (events EventList, err error)
+	Events(ctx context.Context, projectID uuid.UUID, actorPID string, timestamp time.Time, filter Filter, pageIndex int) (events EventList, err error)
 	ProcessEvents(ctx context.Context, projectID uuid.UUID, events []sdk.Event) error
 	SourcesSinks(ctx context.Context, projectID uuid.UUID, actorPID string, sources bool, rng Range) (pids []string, err error)
 	SourcesSinksNodeInfo(ctx context.Context, projectID uuid.UUID, actorPID string, nodePID string, source bool, rng Range) (SourcesSinksNodeInfo, error)
