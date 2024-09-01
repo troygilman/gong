@@ -148,8 +148,6 @@ func (db *questDatabase) QueryEvents(
 	}
 	maxPageIndex := count / pageSize
 
-	log.Println("Count:", count, "MaxPageIndex:", maxPageIndex)
-
 	lowerLimit := query.PageIndex * pageSize
 	upperLimit := (query.PageIndex + 1) * pageSize
 
