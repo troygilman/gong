@@ -138,9 +138,7 @@ func (db *questDatabase) QueryEvents(
 		subq = subq.Where("sender ~ ?", *query.Filter.Sender)
 	}
 
-	if query.Filter.Level != nil {
-		subq = subq.Where("level >= ?", strconv.Itoa(int(*query.Filter.Level)))
-	}
+	subq = subq.Where("level >= ?", strconv.Itoa(int(query.Filter.Level)))
 
 	count, err := subq.Count(ctx)
 	if err != nil {

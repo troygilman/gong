@@ -172,7 +172,7 @@ templ eventsFilter(filter gong_common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Level", gong_common.ParamFilterLevel, filter.Level != nil, 1) {
+		@eventsFilterItem("Level", gong_common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -183,7 +183,7 @@ templ eventsFilter(filter gong_common.Filter) {
 	</form>
 }
 
-templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Level) {
+templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Level) {
 	<div class="form-control">
 		<label class="label cursor-pointer py-1">
 			<span class="label-text">{ label }</span>
@@ -192,7 +192,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected *slog.Lev
 				name={ gong_common.ParamFilterLevel }
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
-				if selected != nil && *selected == level {
+				if selected == level {
 					checked
 				}
 			/>

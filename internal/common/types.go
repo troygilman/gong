@@ -159,7 +159,7 @@ type Filter struct {
 	PID    *string
 	Type   *string
 	Sender *string
-	Level  *slog.Level
+	Level  slog.Level
 }
 
 func NewFilter(ctx echo.Context) (filter Filter) {
@@ -178,10 +178,10 @@ func NewFilter(ctx echo.Context) (filter Filter) {
 		filter.Sender = &sender
 	}
 
-	level, err := strconv.Atoi(ctx.QueryParam(ParamFilterLevel))
-	if err == nil {
-		sLevel := slog.Level(level)
-		filter.Level = &sLevel
+	if level, err := strconv.Atoi(ctx.QueryParam(ParamFilterLevel)); err != nil {
+		filter.Level = slog.LevelDebug
+	} else {
+		filter.Level = slog.Level(level)
 	}
 
 	return filter
@@ -200,7 +200,7 @@ func (filter Filter) ValidEvent(event Event) bool {
 		return false
 	}
 
-	if filter.Level != nil && *filter.Level > event.SlogLevel() {
+	if filter.Level > event.SlogLevel() {
 		return false
 	}
 
