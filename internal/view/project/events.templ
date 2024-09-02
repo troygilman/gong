@@ -47,14 +47,14 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time, 
 	</div>
 	<div
 		id="events-container"
-		class="grow min-h-0 max-w-full overflow-x-auto relative"
+		class="relative flex flex-col grow min-h-0 max-w-full overflow-x-auto"
 		hx-ext="sse"
 	>
 		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
 		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
 		<input id="page-index" type="hidden" name={ gong_common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
 		@EventTableComponent(ctx, true)
-		<div id="events-spinner" class="htmx-indicator absolute flex top-0 w-full h-full items-center justify-center">
+		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
 		</div>
 	</div>
@@ -250,6 +250,7 @@ func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
 
 	events := []gong_common.Event{}
 	maxPageIdx := 0
+
 	if !lazy {
 		var err error
 		events, maxPageIdx, err = app.Events(ctx, projectID, actorPID, timeStart, filter, pageIdx)
@@ -257,6 +258,7 @@ func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
 			events = []gong_common.Event{}
 		}
 	}
+
 	return eventTableComponent(events, lazy, pageIdx, maxPageIdx)
 }
 
@@ -287,35 +289,44 @@ templ eventTable(events gong_common.EventList, lazy bool) {
 				<th>Message</th>
 			</tr>
 		</thead>
-		<tbody>
-			for _, event := range events {
-				<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
-					<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
-					<td>
-						{ event.Timestamp.String() }
-					</td>
-					<td>
-						{ event.Type }
-					</td>
-					<td>
-						if event.Sender != "" {
-							{ event.Sender }
-						} else {
-							N/A
-						}
-					</td>
-					<td>
-						{ event.SlogLevel().String() }
-					</td>
-					<td>
-						if event.Msg != "" {
-							{ event.Msg }
-						} else {
-							N/A
-						}
-					</td>
-				</tr>
-			}
-		</tbody>
+		if lazy || len(events) > 0 {
+			<tbody>
+				for _, event := range events {
+					<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
+						<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
+						<td>
+							{ event.Timestamp.String() }
+						</td>
+						<td>
+							{ event.Type }
+						</td>
+						<td>
+							if event.Sender != "" {
+								{ event.Sender }
+							} else {
+								N/A
+							}
+						</td>
+						<td>
+							{ event.SlogLevel().String() }
+						</td>
+						<td>
+							if event.Msg != "" {
+								{ event.Msg }
+							} else {
+								N/A
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		}
 	</table>
+	if !lazy && len(events) == 0 {
+		<div class="flex flex-col grow min-h-0 items-center justify-center">
+			@common.DataErrorIcon("w-24 h-24")
+			<div class="text-2xl">No events found</div>
+			<div class="">No events match the selected filters</div>
+		</div>
+	}
 }
