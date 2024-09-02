@@ -1,8 +1,8 @@
 package core
 
 import (
-	"gong/internal/common"
-	"gong/sdk"
+	"stagebase/internal/common"
+	"stagebase/sdk"
 	"time"
 
 	"github.com/oklog/ulid/v2"

@@ -3,10 +3,10 @@ package internal
 import (
 	"context"
 	"fmt"
-	"gong/internal/common"
-	"gong/internal/core"
-	"gong/internal/transport"
-	"gong/sdk"
+	"stagebase/internal/common"
+	"stagebase/internal/core"
+	"stagebase/internal/transport"
+	"stagebase/sdk"
 	"log/slog"
 	"net/http"
 	"os"
@@ -89,19 +89,19 @@ func TestIntegration_Client(t *testing.T) {
 		return
 	}
 
-	config := sdk.NewDefaultGongConfig(projectIdString)
+	config := sdk.NewDefaultStagebaseConfig(projectIdString)
 	config.Host = "localhost"
 	config.Port = serverPort
 	config.Scheme = "ws"
 	config.QueueSize = 1000
-	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
+	stagebasePID := engine.Spawn(sdk.NewStagebase(config), "stagebase", actor.WithID("primary"))
 
 	start := time.Now()
-	serverPID := engine.Spawn(newServer(numClients, numEventsPerClient), "server", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
+	serverPID := engine.Spawn(newServer(numClients, numEventsPerClient), "server", actor.WithID("1"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
 	engine.Poison(serverPID).Wait()
 
 	fmt.Println("Clients stopped")
-	engine.Poison(gongPID).Wait()
+	engine.Poison(stagebasePID).Wait()
 	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
 
 	totalCount := 0
@@ -145,7 +145,7 @@ func (s *server) Receive(ctx *actor.Context) {
 				newClient(),
 				"client",
 				actor.WithID(strconv.Itoa(i)),
-				actor.WithMiddleware(sdk.GongMiddleware()),
+				actor.WithMiddleware(sdk.StagebaseMiddleware()),
 			))
 		}
 	case actor.Started:

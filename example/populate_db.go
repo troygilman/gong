@@ -1,7 +1,7 @@
 package example
 
 import (
-	"gong/sdk"
+	"stagebase/sdk"
 	"sync"
 	"time"
 
@@ -16,9 +16,9 @@ func ExamplePopulateDB() error {
 
 	server1 := "local/server/1"
 
-	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
+	config := sdk.NewDefaultStagebaseConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	config.QueueSize = 100000
-	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
+	stagebasePID := engine.Spawn(sdk.NewStagebase(config), "stagebase", actor.WithID("primary"))
 
 	now := time.Now()
 	day := time.Hour * 24
@@ -28,18 +28,18 @@ func ExamplePopulateDB() error {
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
 			Sender:    server1,
 		}
-		engine.Send(gongPID, e)
+		engine.Send(stagebasePID, e)
 		e = sdk.Event{
 			PID:       "local/client/2",
 			Timestamp: now.Add(-time.Duration(i/1000000) * day),
 			Sender:    server1,
 		}
-		engine.Send(gongPID, e)
+		engine.Send(stagebasePID, e)
 	}
 
 	time.Sleep(5 * time.Second)
 	wg := &sync.WaitGroup{}
-	engine.Poison(gongPID, wg)
+	engine.Poison(stagebasePID, wg)
 	wg.Wait()
 
 	return nil

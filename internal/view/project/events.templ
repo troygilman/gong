@@ -3,9 +3,9 @@ package project
 import (
 	"context"
 	"fmt"
-	gong_common "gong/internal/common"
-	"gong/internal/view/common"
 	"log/slog"
+	"stagebase/internal/common"
+	"stagebase/internal/view"
 	"strconv"
 	"strings"
 	"time"
@@ -24,12 +24,12 @@ var eventTableIncludes = []string{
 }
 
 func eventsTabContent(ctx context.Context) templ.Component {
-	app := gong_common.MustValueApp(ctx)
-	projectID := gong_common.MustValueProjectID(ctx)
-	actorPID := gong_common.MustValueActorPID(ctx)
-	filter, _ := gong_common.ValueFilter(ctx)
-	pageIdx, _ := gong_common.ValuePageIndex(ctx)
-	timeStart, ok := gong_common.ValueTimeStart(ctx)
+	app := common.MustValueApp(ctx)
+	projectID := common.MustValueProjectID(ctx)
+	actorPID := common.MustValueActorPID(ctx)
+	filter, _ := common.ValueFilter(ctx)
+	pageIdx, _ := common.ValuePageIndex(ctx)
+	timeStart, ok := common.ValueTimeStart(ctx)
 	if !ok {
 		actor, err := app.Actor(ctx, projectID, actorPID)
 		if err != nil {
@@ -40,7 +40,7 @@ func eventsTabContent(ctx context.Context) templ.Component {
 	return eventsTabContentComponent(filter, timeStart, pageIdx)
 }
 
-templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time, pageIdx int) {
+templ eventsTabContentComponent(filter common.Filter, timeStart time.Time, pageIdx int) {
 	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
 		@eventTablePaginationControls(pageIdx, 0)
@@ -50,9 +50,9 @@ templ eventsTabContentComponent(filter gong_common.Filter, timeStart time.Time, 
 		class="relative flex flex-col grow min-h-0 max-w-full overflow-x-auto"
 		hx-ext="sse"
 	>
-		<input id="project-url" type="hidden" value={ common.FormatProjectUrl(ctx) }/>
-		<input id="time-start" type="hidden" name={ gong_common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
-		<input id="page-index" type="hidden" name={ gong_common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
+		<input id="project-url" type="hidden" value={ view.FormatProjectUrl(ctx) }/>
+		<input id="time-start" type="hidden" name={ common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
+		<input id="page-index" type="hidden" name={ common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
 		@EventTableComponent(ctx, true)
 		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
@@ -64,10 +64,10 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 	<div id="pagination-controls" hx-swap-oob="true" class="join">
 		<button
 			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ common.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+			hx-get={ view.FormatProjectUrl(ctx) }
+			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, 0) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, 0) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -75,14 +75,14 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 				disabled
 			}
 		>
-			@common.DoubleArrowIcon("")
+			@view.DoubleArrowIcon("")
 		</button>
 		<button
 			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ common.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+			hx-get={ view.FormatProjectUrl(ctx) }
+			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, pageIndex-1) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex-1) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -90,17 +90,17 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 				disabled
 			}
 		>
-			@common.ArrowIcon("")
+			@view.ArrowIcon("")
 		</button>
 		<div class="join-item button w-fit min-w-8 !text-base-content" disabled>
 			{ strconv.Itoa(pageIndex) }
 		</div>
 		<button
 			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ common.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+			hx-get={ view.FormatProjectUrl(ctx) }
+			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, pageIndex+1) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex+1) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -108,14 +108,14 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 				disabled
 			}
 		>
-			@common.ArrowIcon("rotate-180")
+			@view.ArrowIcon("rotate-180")
 		</button>
 		<button
 			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ common.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+			hx-get={ view.FormatProjectUrl(ctx) }
+			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, gong_common.ParamPageIndex, maxPageIndex) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, maxPageIndex) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -123,17 +123,17 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 				disabled
 			}
 		>
-			@common.DoubleArrowIcon("rotate-180")
+			@view.DoubleArrowIcon("rotate-180")
 		</button>
 	</div>
 }
 
-templ eventsFilter(filter gong_common.Filter) {
+templ eventsFilter(filter common.Filter) {
 	<form
 		id={ idEventsFilter }
 		class="join w-fit mb-0"
-		hx-get={ common.FormatProjectUrl(ctx) }
-		hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+		hx-get={ view.FormatProjectUrl(ctx) }
+		hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -150,10 +150,10 @@ templ eventsFilter(filter gong_common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("Type", gong_common.ParamFilterType, filter.Type != nil, -1) {
+		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, -1) {
 			<input
 				class="event-filter-input"
-				name={ gong_common.ParamFilterType }
+				name={ common.ParamFilterType }
 				type="text"
 				placeholder="actor.Started"
 				if filter.Type != nil {
@@ -161,10 +161,10 @@ templ eventsFilter(filter gong_common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Sender", gong_common.ParamFilterSender, filter.Sender != nil, 0) {
+		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
 			<input
 				class="event-filter-input"
-				name={ gong_common.ParamFilterSender }
+				name={ common.ParamFilterSender }
 				type="text"
 				placeholder="local/server/primary"
 				if filter.Sender != nil {
@@ -172,7 +172,7 @@ templ eventsFilter(filter gong_common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Level", gong_common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
+		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -189,7 +189,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 			<span class="label-text">{ label }</span>
 			<input
 				type="radio"
-				name={ gong_common.ParamFilterLevel }
+				name={ common.ParamFilterLevel }
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
 				if selected == level {
@@ -205,15 +205,15 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 		if active {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ common.FormatProjectUrl(ctx) }
-				hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+				hx-get={ view.FormatProjectUrl(ctx) }
+				hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
 			>
-				@common.CloseIcon("inline-block w-4 h-4 stroke-current")
+				@view.CloseIcon("inline-block w-4 h-4 stroke-current")
 			</span>
 		}
 		<div class="dropdown group/filter">
@@ -241,41 +241,41 @@ func formatActorPID(pid string) string {
 }
 
 func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
-	app := gong_common.MustValueApp(ctx)
-	projectID := gong_common.MustValueProjectID(ctx)
-	actorPID := gong_common.MustValueActorPID(ctx)
-	timeStart, _ := gong_common.ValueTimeStart(ctx)
-	pageIdx, _ := gong_common.ValuePageIndex(ctx)
-	filter, _ := gong_common.ValueFilter(ctx)
+	app := common.MustValueApp(ctx)
+	projectID := common.MustValueProjectID(ctx)
+	actorPID := common.MustValueActorPID(ctx)
+	timeStart, _ := common.ValueTimeStart(ctx)
+	pageIdx, _ := common.ValuePageIndex(ctx)
+	filter, _ := common.ValueFilter(ctx)
 
-	events := []gong_common.Event{}
+	events := []common.Event{}
 	maxPageIdx := 0
 
 	if !lazy {
 		var err error
 		events, maxPageIdx, err = app.Events(ctx, projectID, actorPID, timeStart, filter, pageIdx)
 		if err != nil {
-			events = []gong_common.Event{}
+			events = []common.Event{}
 		}
 	}
 
 	return eventTableComponent(events, lazy, pageIdx, maxPageIdx)
 }
 
-templ eventTableComponent(events gong_common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
+templ eventTableComponent(events common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
 	if !lazy {
 		@eventTablePaginationControls(pageIdx, maxPageIdx)
 	}
 	@eventTable(events, lazy)
 }
 
-templ eventTable(events gong_common.EventList, lazy bool) {
+templ eventTable(events common.EventList, lazy bool) {
 	<table
 		class="table table-pin-rows table-sm"
 		if lazy {
-			hx-get={ common.FormatProjectUrl(ctx) + "/events" }
+			hx-get={ view.FormatProjectUrl(ctx) + "/events" }
 			hx-trigger="load"
-			hx-include={ buildIncludes(common.StandardIncludes, eventTableIncludes) }
+			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-indicator="#events-spinner"
 			hx-swap="outerHTML"
 		}
@@ -324,7 +324,7 @@ templ eventTable(events gong_common.EventList, lazy bool) {
 	</table>
 	if !lazy && len(events) == 0 {
 		<div class="flex flex-col grow min-h-0 items-center justify-center">
-			@common.DataErrorIcon("w-24 h-24")
+			@view.DataErrorIcon("w-24 h-24")
 			<div class="text-2xl">No events found</div>
 			<div class="">No events match the selected filters</div>
 		</div>

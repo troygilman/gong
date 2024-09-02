@@ -1,8 +1,8 @@
 package core
 
 import (
-	"gong/internal/common"
-	"gong/pkg/dolly"
+	"stagebase/internal/common"
+	"stagebase/pkg/dolly"
 
 	"github.com/google/uuid"
 )

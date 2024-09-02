@@ -2,7 +2,7 @@ package persistance
 
 import (
 	"context"
-	"gong/internal/common"
+	"stagebase/internal/common"
 	"testing"
 
 	"github.com/google/uuid"

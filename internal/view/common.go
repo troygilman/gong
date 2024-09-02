@@ -1,9 +1,9 @@
-package common
+package view
 
 import (
 	"context"
 	"fmt"
-	"gong/internal/common"
+	"stagebase/internal/common"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"

@@ -2,22 +2,22 @@ package view
 
 import (
 	"fmt"
-	gong_common "gong/internal/common"
-	"gong/internal/view/common"
+	"stagebase/internal/common"
+	"stagebase/internal/view"
 )
 
 templ Admin() {
-	@common.Index() {
-		<div hx-ext="sse" sse-connect={ common.FormatProjectUrl(ctx) + "/admin/sse" }>
+	@view.Index() {
+		<div hx-ext="sse" sse-connect={ view.FormatProjectUrl(ctx) + "/admin/sse" }>
 			<div>
 				Metrics
 				<div class="flex flex-row">
 					<div class="pr-2">Latency (ms):</div>
-					@Metric(0, gong_common.SseTypeUpdateMetricLatency)
+					@Metric(0, common.SseTypeUpdateMetricLatency)
 				</div>
 				<div class="flex flex-row">
 					<div class="pr-2">Throughput (events/sec):</div>
-					@Metric(0, gong_common.SseTypeUpdateMetricThroughput)
+					@Metric(0, common.SseTypeUpdateMetricThroughput)
 				</div>
 			</div>
 		</div>

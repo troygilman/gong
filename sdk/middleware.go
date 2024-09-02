@@ -11,7 +11,7 @@ import (
 	"github.com/anthdm/hollywood/actor"
 )
 
-func GongMiddleware() actor.MiddlewareFunc {
+func StagebaseMiddleware() actor.MiddlewareFunc {
 	return func(next actor.ReceiveFunc) actor.ReceiveFunc {
 		return func(ctx *actor.Context) {
 			event := Event{
@@ -42,7 +42,7 @@ func GongMiddleware() actor.MiddlewareFunc {
 				event.Level = strconv.Itoa(int(slog.LevelInfo))
 			}
 
-			ctx.Send(gongPID, event)
+			ctx.Send(stagebasePID, event)
 
 			next(ctx)
 		}

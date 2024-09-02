@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	gongPID *actor.PID = nil
+	stagebasePID *actor.PID = nil
 )
 
 type Event struct {
@@ -38,7 +38,7 @@ type Event struct {
 	Attrs     string
 }
 
-type GongConfig struct {
+type StagebaseConfig struct {
 	Host      string
 	Port      int
 	Scheme    string
@@ -47,8 +47,8 @@ type GongConfig struct {
 	Logger    *slog.Logger
 }
 
-func NewDefaultGongConfig(projectID string) GongConfig {
-	return GongConfig{
+func NewDefaultStagebaseConfig(projectID string) StagebaseConfig {
+	return StagebaseConfig{
 		Host:      serverHost,
 		Scheme:    "wss",
 		ProjectID: projectID,
@@ -57,25 +57,25 @@ func NewDefaultGongConfig(projectID string) GongConfig {
 	}
 }
 
-type Gong struct {
-	config GongConfig
+type Stagebase struct {
+	config StagebaseConfig
 	events chan<- Event
 	done   <-chan struct{}
 	count  int
 }
 
-func NewGong(config GongConfig) actor.Producer {
+func NewStagebase(config StagebaseConfig) actor.Producer {
 	return func() actor.Receiver {
-		return &Gong{
+		return &Stagebase{
 			config: config,
 		}
 	}
 }
 
-func (g *Gong) Receive(ctx *actor.Context) {
+func (g *Stagebase) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		gongPID = ctx.PID()
+		stagebasePID = ctx.PID()
 		ctx.Engine().Subscribe(ctx.PID())
 	case actor.Started:
 		events := make(chan Event, g.config.QueueSize)
@@ -100,14 +100,14 @@ func (g *Gong) Receive(ctx *actor.Context) {
 			cancel()
 		}
 
-		fmt.Println("Gong connected")
+		fmt.Println("Stagebase connected")
 		go connect(conn, events, func(err error) {
 			if g.config.Logger != nil {
-				g.config.Logger.Error("Gong: " + err.Error())
+				g.config.Logger.Error("Stagebase: " + err.Error())
 			}
 		}, done)
 	case actor.Stopped:
-		fmt.Printf("Stopping Gong - count: %d\n", g.count)
+		fmt.Printf("Stopping Stagebase - count: %d\n", g.count)
 		close(g.events)
 		<-g.done
 	case actor.EventLogger:
@@ -168,7 +168,7 @@ func (g *Gong) Receive(ctx *actor.Context) {
 	}
 }
 
-func (g *Gong) pushEvent(e Event) error {
+func (g *Stagebase) pushEvent(e Event) error {
 	g.events <- e
 	g.count++
 	// select {

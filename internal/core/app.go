@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gong/internal/common"
-	"gong/pkg/dolly"
-	"gong/sdk"
+	"stagebase/internal/common"
+	"stagebase/pkg/dolly"
+	"stagebase/sdk"
 	"os"
 	"time"
 
@@ -20,7 +20,7 @@ const (
 	defaultTimeout = 10 * time.Second
 )
 
-type gongApp struct {
+type stagebaseApp struct {
 	secret        []byte
 	engine        *actor.Engine
 	controllerPID *actor.PID
@@ -32,7 +32,7 @@ type gongApp struct {
 type producerFunc func(common.App) actor.Producer
 
 func NewApp(db common.Database) (common.App, error) {
-	app := new(gongApp)
+	app := new(stagebaseApp)
 
 	app.db = db
 
@@ -70,13 +70,13 @@ func NewApp(db common.Database) (common.App, error) {
 	return app, nil
 }
 
-func (app *gongApp) Shutdown() {
+func (app *stagebaseApp) Shutdown() {
 	app.engine.Poison(app.controllerPID).Wait()
 }
 
 var nilUUID = uuid.Nil.String()
 
-func (app *gongApp) PID(kind string, id string) (*actor.PID, error) {
+func (app *stagebaseApp) PID(kind string, id string) (*actor.PID, error) {
 	if id == nilUUID {
 		return nil, errors.New("invalid actor id")
 	}
@@ -98,11 +98,11 @@ func (app *gongApp) PID(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
-func (app *gongApp) Database() common.Database {
+func (app *stagebaseApp) Database() common.Database {
 	return app.db
 }
 
-func (app *gongApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
+func (app *stagebaseApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	var claims jwt.RegisteredClaims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -119,7 +119,7 @@ func (app *gongApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	return claims, nil
 }
 
-func (app *gongApp) Actor(
+func (app *stagebaseApp) Actor(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
@@ -142,7 +142,7 @@ func (app *gongApp) Actor(
 	return response.actor, nil
 }
 
-func (app *gongApp) ProjectProps(
+func (app *stagebaseApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) (project common.ProjectProps, err error) {
@@ -160,7 +160,7 @@ func (app *gongApp) ProjectProps(
 	return response.props, nil
 }
 
-func (app *gongApp) Events(
+func (app *stagebaseApp) Events(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
@@ -189,7 +189,7 @@ func (app *gongApp) Events(
 	return response.events, response.maxPageIndex, nil
 }
 
-func (app *gongApp) ProcessEvents(
+func (app *stagebaseApp) ProcessEvents(
 	ctx context.Context,
 	projectID uuid.UUID,
 	events []sdk.Event,
@@ -205,7 +205,7 @@ func (app *gongApp) ProcessEvents(
 	return nil
 }
 
-func (app *gongApp) SourcesSinks(
+func (app *stagebaseApp) SourcesSinks(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
@@ -232,7 +232,7 @@ func (app *gongApp) SourcesSinks(
 	return response.sourcesSinks, nil
 }
 
-func (app *gongApp) SourcesSinksNodeInfo(
+func (app *stagebaseApp) SourcesSinksNodeInfo(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
@@ -261,7 +261,7 @@ func (app *gongApp) SourcesSinksNodeInfo(
 	return response.info, nil
 }
 
-func (app *gongApp) ListenStart(
+func (app *stagebaseApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
@@ -273,7 +273,7 @@ func (app *gongApp) ListenStart(
 	return c, nil
 }
 
-func (app *gongApp) ListenStop(
+func (app *stagebaseApp) ListenStop(
 	ctx context.Context,
 	id string,
 ) error {

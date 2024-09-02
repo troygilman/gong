@@ -1,7 +1,7 @@
 package core
 
 import (
-	"gong/pkg/dolly"
+	"stagebase/pkg/dolly"
 	"sync"
 
 	"github.com/anthdm/hollywood/actor"

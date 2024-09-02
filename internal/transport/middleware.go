@@ -2,7 +2,7 @@ package transport
 
 import (
 	"errors"
-	"gong/internal/common"
+	"stagebase/internal/common"
 	"log/slog"
 	"strconv"
 
@@ -26,7 +26,7 @@ func withRequestID() echo.MiddlewareFunc {
 func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger := common.Logger(ctx.Request().Context())
+			logger := common.MustLogger(ctx.Request().Context())
 			logger = common.WithContextHandler(slog.Default(), keys...)
 			cb := common.NewContextBuilder(ctx.Request().Context())
 			cb = cb.With(common.CtxKeyLogger, logger)
@@ -39,7 +39,7 @@ func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
 func middlewareLogRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger := common.Logger(ctx.Request().Context())
+			logger := common.MustLogger(ctx.Request().Context())
 			logger.InfoContext(ctx.Request().Context(), "REQUEST", "method", ctx.Request().Method, "uri", ctx.Request().RequestURI)
 			return next(ctx)
 		}

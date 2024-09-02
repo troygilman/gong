@@ -2,13 +2,13 @@ package main
 
 import (
 	"embed"
-	"gong/example"
-	"gong/internal/common"
-	"gong/internal/core"
-	"gong/internal/persistance"
-	"gong/internal/transport"
 	"log"
 	"os"
+	"stagebase/example"
+	"stagebase/internal/common"
+	"stagebase/internal/core"
+	"stagebase/internal/persistance"
+	"stagebase/internal/transport"
 )
 
 //go:embed static

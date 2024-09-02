@@ -2,7 +2,7 @@ package example
 
 import (
 	"fmt"
-	"gong/sdk"
+	"stagebase/sdk"
 	"log/slog"
 	"sync"
 	"time"
@@ -16,23 +16,23 @@ func ExampleClient() error {
 		return err
 	}
 
-	config := sdk.NewDefaultGongConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
+	config := sdk.NewDefaultStagebaseConfig("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	config.Host = "localhost"
 	config.Port = 8080
 	config.Scheme = "ws"
 	config.QueueSize = 10000
-	gongPID := engine.Spawn(sdk.NewGong(config), "gong", actor.WithID("primary"))
+	stagebasePID := engine.Spawn(sdk.NewStagebase(config), "stagebase", actor.WithID("primary"))
 
 	start := time.Now()
 	wg := &sync.WaitGroup{}
-	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
-	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.GongMiddleware()))
-	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("1"), actor.WithMiddleware(sdk.GongMiddleware()))
+	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
+	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
+	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("1"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
 
 	wg.Wait()
 	fmt.Println("Clients stopped")
 
-	engine.Poison(gongPID, wg).Wait()
+	engine.Poison(stagebasePID, wg).Wait()
 
 	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
 	return nil

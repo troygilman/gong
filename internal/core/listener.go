@@ -1,8 +1,8 @@
 package core
 
 import (
-	"gong/internal/common"
-	"gong/pkg/dolly"
+	"stagebase/internal/common"
+	"stagebase/pkg/dolly"
 	"log"
 
 	"github.com/anthdm/hollywood/actor"

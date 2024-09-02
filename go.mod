@@ -1,4 +1,4 @@
-module gong
+module stagebase
 
 go 1.22.0
 
