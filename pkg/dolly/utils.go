@@ -2,7 +2,8 @@ package dolly
 
 import (
 	"errors"
-	"log"
+	"fmt"
+	"log/slog"
 
 	"github.com/anthdm/hollywood/actor"
 )
@@ -35,10 +36,10 @@ func HandleResponse[T any](response *actor.Response) (T, error) {
 
 func LogActorError(ctx *actor.Context, err error) {
 	if err != nil {
-		log.Printf("ERROR: %s - %T - %s", ctx.PID().GetID(), ctx.Message(), err.Error())
+		slog.ErrorContext(ctx.Context(), err.Error(), "actor", ctx.PID().GetID(), "type", fmt.Sprintf("%T", ctx.Message()))
 	}
 }
 
 func LogActorMsg(ctx *actor.Context) {
-	log.Printf("MESSAGE: %s - %T", ctx.PID().GetID(), ctx.Message())
+	slog.InfoContext(ctx.Context(), "MESSAGE", "actor", ctx.PID().GetID(), "type", fmt.Sprintf("%T", ctx.Message()))
 }

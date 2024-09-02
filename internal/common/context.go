@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,6 +12,8 @@ import (
 type CtxKey string
 
 const (
+	CtxKeyRequestID CtxKey = "request_id"
+	CtxKeyLogger    CtxKey = "logger"
 	CtxKeyApp       CtxKey = "app"
 	CtxKeyProjectID CtxKey = "projectID"
 	CtxKeyPID       CtxKey = ParamPID
@@ -33,6 +36,14 @@ func mustValueHelper[T any](ctx context.Context, key CtxKey) (val T) {
 		return val
 	} else {
 		panic(fmt.Sprintf("value %s of type %T does not exist in context", key, val))
+	}
+}
+
+func MustLogger(ctx context.Context) *slog.Logger {
+	if logger, ok := ctx.Value(CtxKeyLogger).(*slog.Logger); ok {
+		return logger
+	} else {
+		return slog.Default()
 	}
 }
 

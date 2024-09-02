@@ -3,19 +3,44 @@ package transport
 import (
 	"errors"
 	"gong/internal/common"
+	"log/slog"
 	"strconv"
 
-	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
+func withRequestID() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			cb := common.NewContextBuilder(ctx.Request().Context())
+			cb = cb.With(common.CtxKeyRequestID, ctx.Response().Header().Get(echo.HeaderXRequestID))
+			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
+			return next(ctx)
+		}
+	}
+}
+
+func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			logger := common.Logger(ctx.Request().Context())
+			logger = common.WithContextHandler(slog.Default(), keys...)
+			cb := common.NewContextBuilder(ctx.Request().Context())
+			cb = cb.With(common.CtxKeyLogger, logger)
+			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
+			return next(ctx)
+		}
+	}
+}
+
 func middlewareLogRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			log.Printf("%s: %s %s", ctx.Request().Method, ctx.Request().RequestURI, requestID(ctx))
+			logger := common.Logger(ctx.Request().Context())
+			logger.InfoContext(ctx.Request().Context(), "REQUEST", "method", ctx.Request().Method, "uri", ctx.Request().RequestURI)
 			return next(ctx)
 		}
 	}

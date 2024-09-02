@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"gong/example"
+	"gong/internal/common"
 	"gong/internal/core"
 	"gong/internal/persistance"
 	"gong/internal/transport"
@@ -25,6 +26,8 @@ func main() {
 }
 
 func run() error {
+	common.ConfigureLogger()
+
 	db, err := persistance.NewQuestDatabase(migrations)
 	if err != nil {
 		return err
