@@ -3,7 +3,7 @@ package transport
 import (
 	"errors"
 	"log/slog"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"strconv"
 
 	"time"
@@ -15,8 +15,8 @@ import (
 func withRequestID() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxKeyRequestID, ctx.Response().Header().Get(echo.HeaderXRequestID))
+			cb := internal.NewContextBuilder(ctx.Request().Context())
+			cb = cb.With(internal.CtxKeyRequestID, ctx.Response().Header().Get(echo.HeaderXRequestID))
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}
@@ -34,13 +34,13 @@ func withHeaders() echo.MiddlewareFunc {
 	}
 }
 
-func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
+func withContextLogger(keys ...internal.CtxKey) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger := common.MustLogger(ctx.Request().Context())
-			logger = common.WithContextHandler(slog.Default(), keys...)
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxKeyLogger, logger)
+			logger := internal.MustLogger(ctx.Request().Context())
+			logger = internal.WithContextHandler(slog.Default(), keys...)
+			cb := internal.NewContextBuilder(ctx.Request().Context())
+			cb = cb.With(internal.CtxKeyLogger, logger)
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}
@@ -50,18 +50,18 @@ func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
 func logRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger := common.MustLogger(ctx.Request().Context())
+			logger := internal.MustLogger(ctx.Request().Context())
 			logger.InfoContext(ctx.Request().Context(), "REQUEST", "method", ctx.Request().Method, "uri", ctx.Request().RequestURI)
 			return next(ctx)
 		}
 	}
 }
 
-func withApp(app common.App) echo.MiddlewareFunc {
+func withApp(app internal.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxKeyApp, app)
+			cb := internal.NewContextBuilder(ctx.Request().Context())
+			cb = cb.With(internal.CtxKeyApp, app)
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 
 			ctx.Set("app", app)
@@ -70,7 +70,7 @@ func withApp(app common.App) echo.MiddlewareFunc {
 	}
 }
 
-func withJWT(app common.App) echo.MiddlewareFunc {
+func withJWT(app internal.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			tokenCookie, err := ctx.Cookie("auth-token")
@@ -90,70 +90,70 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 func withProjectContext() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
+			cb := internal.NewContextBuilder(ctx.Request().Context())
 
 			{ // project ID
-				projectID, err := uuid.Parse(ctx.Param(string(common.CtxKeyProjectID)))
+				projectID, err := uuid.Parse(ctx.Param(string(internal.CtxKeyProjectID)))
 				if err != nil {
 					return errors.New("projectID is empty")
 				}
-				cb = cb.With(common.CtxKeyProjectID, projectID)
+				cb = cb.With(internal.CtxKeyProjectID, projectID)
 			}
 
 			{ // actor PID
-				actorPID := ctx.QueryParam(common.ParamPID)
+				actorPID := ctx.QueryParam(internal.ParamPID)
 				if actorPID != "" {
-					cb = cb.With(common.CtxKeyPID, actorPID)
+					cb = cb.With(internal.CtxKeyPID, actorPID)
 				}
 			}
 
 			{ // tab
-				tab := ctx.QueryParam(common.ParamTab)
+				tab := ctx.QueryParam(internal.ParamTab)
 				if tab == "" {
 					tab = "Events"
 				}
-				cb = cb.With(common.CtxKeyTab, tab)
+				cb = cb.With(internal.CtxKeyTab, tab)
 			}
 
 			{ // flow chart type
-				flowType := ctx.QueryParam(common.ParamFlow)
+				flowType := ctx.QueryParam(internal.ParamFlow)
 				if flowType == "" {
 					flowType = "Sources"
 				}
-				cb = cb.With(common.CtxKeyFlow, flowType)
+				cb = cb.With(internal.CtxKeyFlow, flowType)
 			}
 
 			{ // flow chart node
-				flowNode := ctx.QueryParam(common.ParamFlowNode)
+				flowNode := ctx.QueryParam(internal.ParamFlowNode)
 				if flowNode != "" {
-					cb = cb.With(common.CtxKeyFlowNode, flowNode)
+					cb = cb.With(internal.CtxKeyFlowNode, flowNode)
 				}
 			}
 
 			{ // flow chart range
-				flowRange := ctx.QueryParam(common.ParamFlowRange)
-				var r common.Range
+				flowRange := ctx.QueryParam(internal.ParamFlowRange)
+				var r internal.Range
 				if err := r.Parse(flowRange); err == nil {
-					cb = cb.With(common.CtxKeyFlowRange, r)
+					cb = cb.With(internal.CtxKeyFlowRange, r)
 				}
 			}
 
 			{ // events filter
-				filter := common.NewFilter(ctx)
-				cb = cb.With(common.CtxKeyFilter, filter)
+				filter := internal.NewFilter(ctx)
+				cb = cb.With(internal.CtxKeyFilter, filter)
 			}
 
 			{ // time start
-				timeStartStr := ctx.QueryParam(common.ParamTimeStart)
+				timeStartStr := ctx.QueryParam(internal.ParamTimeStart)
 				if timeStartInt64, err := strconv.ParseInt(timeStartStr, 10, 64); err == nil {
-					cb = cb.With(common.CtxKeyTimeStart, time.Unix(0, timeStartInt64))
+					cb = cb.With(internal.CtxKeyTimeStart, time.Unix(0, timeStartInt64))
 				}
 			}
 
 			{
-				pageIdxStr := ctx.QueryParam(common.ParamPageIndex)
+				pageIdxStr := ctx.QueryParam(internal.ParamPageIndex)
 				if pageIdx, err := strconv.Atoi(pageIdxStr); err == nil {
-					cb = cb.With(common.CtxKeyPageIndex, pageIdx)
+					cb = cb.With(internal.CtxKeyPageIndex, pageIdx)
 				}
 			}
 

@@ -1,4 +1,4 @@
-package common
+package internal
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func (h contextHandler) observe(ctx context.Context) []slog.Attr {
 
 type loggerOption func(*loggerConfig)
 
-func ConfigureLogger(options ...loggerOption) {
+func ConfigureDefaultLogger(options ...loggerOption) {
 	config := newLoggerConfig()
 	config.apply(options...)
 	slog.SetDefault(slog.New(config.build()))

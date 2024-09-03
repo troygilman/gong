@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"stagebase/internal/common"
-	"stagebase/pkg/dolly"
 	"log"
+	"stagebase/internal"
+	"stagebase/pkg/dolly"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -21,16 +21,16 @@ type msgUpdateProjectInternal struct{}
 
 type project struct {
 	commonActorData
-	actors       map[string]common.Actor
-	actorUpdates map[string]common.Actor
-	eventUpdates []common.Event
+	actors       map[string]internal.Actor
+	actorUpdates map[string]internal.Actor
+	eventUpdates []internal.Event
 	metricUpdate Metric
 	repeater     actor.SendRepeater
-	listeners    map[common.ListenerType]map[*actor.PID]struct{}
+	listeners    map[internal.ListenerType]map[*actor.PID]struct{}
 	metrics      MetricsManager
 }
 
-func NewProjectProducerWithApp(app common.App) actor.Producer {
+func NewProjectProducerWithApp(app internal.App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
 			commonActorData: commonActorData{
@@ -50,18 +50,18 @@ func (p *project) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
-			p.actors = make(map[string]common.Actor)
-			p.actorUpdates = make(map[string]common.Actor)
-			p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
+			p.actors = make(map[string]internal.Actor)
+			p.actorUpdates = make(map[string]internal.Actor)
+			p.listeners = make(map[internal.ListenerType]map[*actor.PID]struct{})
 			p.metrics = NewMetricsManager(5)
 		case actor.Started:
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
 		case msgGetProjectProps:
-			props := common.ProjectProps{
+			props := internal.ProjectProps{
 				ID:     p.id,
-				Actors: make(map[string]common.Actor, 0),
+				Actors: make(map[string]internal.Actor, 0),
 			}
 			for pid, data := range p.actors {
 				props.Actors[pid] = data
@@ -96,24 +96,24 @@ func (p *project) Receive(aCtx *actor.Context) {
 			for listenerType, listeners := range p.listeners {
 				for listenerPID := range listeners {
 					switch listenerType {
-					case common.ListenerTypeProject:
+					case internal.ListenerTypeProject:
 						for _, actor := range p.actorUpdates {
 							_, exists := p.actors[actor.PID]
 							if exists {
-								listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewEvents{
+								listenerData[listenerPID] = append(listenerData[listenerPID], internal.SseNewEvents{
 									Actor: actor,
 								})
 							} else {
-								listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewActor{
+								listenerData[listenerPID] = append(listenerData[listenerPID], internal.SseNewActor{
 									Actor: actor,
 								})
 							}
 						}
-					case common.ListenerTypeEvents:
+					case internal.ListenerTypeEvents:
 						for _, event := range p.eventUpdates {
 							listenerData[listenerPID] = append(listenerData[listenerPID], event)
 						}
-					case common.ListenerTypeMetrics:
+					case internal.ListenerTypeMetrics:
 						listenerData[listenerPID] = append(listenerData[listenerPID], p.metrics.Group())
 					default:
 					}
@@ -134,12 +134,12 @@ func (p *project) Receive(aCtx *actor.Context) {
 				p.actors[actor.PID] = actor
 				delete(p.actorUpdates, actor.PID)
 			}
-			p.eventUpdates = []common.Event{}
+			p.eventUpdates = []internal.Event{}
 
 		case msgGetProjectEvents:
 			_, ok := p.actors[msg.actorPID]
 			if ok {
-				query := common.EventsQuery{
+				query := internal.EventsQuery{
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
 					Timestamp: msg.timestamp,
@@ -158,7 +158,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := common.ActorSourcesSinksQuery{
+				query := internal.ActorSourcesSinksQuery{
 					Sources:   msg.sources,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -177,7 +177,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := common.SourcesSinksNodeInfoQuery{
+				query := internal.SourcesSinksNodeInfoQuery{
 					Source:    msg.source,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -235,7 +235,7 @@ func (p *project) Create(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, query common.EventsQuery) {
+func queryEvents(engine *actor.Engine, sender *actor.PID, db internal.Database, query internal.EventsQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -251,7 +251,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, qu
 	})
 }
 
-func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db common.Database, query common.ActorSourcesSinksQuery) {
+func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db internal.Database, query internal.ActorSourcesSinksQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -266,7 +266,7 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db common.Databa
 	})
 }
 
-func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db common.Database, query common.SourcesSinksNodeInfoQuery) {
+func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db internal.Database, query internal.SourcesSinksNodeInfoQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

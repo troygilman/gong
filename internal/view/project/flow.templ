@@ -3,10 +3,8 @@ package project
 import (
 	"context"
 	"fmt"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 	"log"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/view"
 )
 
@@ -31,13 +29,13 @@ templ FlowTabContent() {
 }
 
 func flowChartFilterRange(ctx context.Context) templ.Component {
-	if rng, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range); ok {
+	if rng, ok := ctx.Value(internal.CtxKeyFlowRange).(internal.Range); ok {
 		return flowChartFilterRangeComponent(rng)
 	}
-	return flowChartFilterRangeComponent(common.Range(1))
+	return flowChartFilterRangeComponent(internal.Range(1))
 }
 
-templ flowChartFilterRangeComponent(rng common.Range) {
+templ flowChartFilterRangeComponent(rng internal.Range) {
 	<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
 		@view.DateIcon("")
 	</button>
@@ -53,7 +51,7 @@ templ flowChartFilterRangeComponent(rng common.Range) {
 			<div
 				class="flex flex-col w-full"
 				hx-get={ view.FormatProjectUrl(ctx) }
-				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
+				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, internal.ProjectViewFlowChart) }
 				hx-include={ buildIncludes(view.StandardIncludes) }
 				hx-push-url="true"
 				hx-trigger="flow-chart-filter-range-submit"
@@ -84,7 +82,7 @@ templ flowChartFilterRangeComponent(rng common.Range) {
 }
 
 func flowChartFilterType(ctx context.Context) templ.Component {
-	if flow, ok := ctx.Value(common.CtxKeyFlow).(string); ok {
+	if flow, ok := ctx.Value(internal.CtxKeyFlow).(string); ok {
 		return flowChartFilterTypeComponent(flow)
 	}
 	return flowChartFilterTypeComponent("Sources")
@@ -92,7 +90,7 @@ func flowChartFilterType(ctx context.Context) templ.Component {
 
 templ flowChartFilterTypeComponent(flow string) {
 	<div role="tablist" class="tabs tabs-boxed tabs-sm border border-color">
-		<input id="flow" type="hidden" name={ common.ParamFlow } value={ flow }/>
+		<input id="flow" type="hidden" name={ internal.ParamFlow } value={ flow }/>
 		@flowChartFilterTypeItem("Sources", flow)
 		@flowChartFilterTypeItem("Sinks", flow)
 	</div>
@@ -104,8 +102,8 @@ templ flowChartFilterTypeItem(label string, active string) {
 		class={ "tab", templ.KV("tab-active !bg-neutral !text-neutral-content", label == active) }
 		if label != active {
 			hx-get={ view.FormatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
-			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, common.CtxKeyFlow, label) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, internal.ProjectViewFlowChart) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, internal.CtxKeyFlow, label) }
 			hx-include={ buildIncludes(view.StandardIncludes) }
 			hx-push-url="true"
 			hx-trigger="click"
@@ -116,7 +114,7 @@ templ flowChartFilterTypeItem(label string, active string) {
 }
 
 func flowChartNodeInfo(ctx context.Context) templ.Component {
-	if node, ok := ctx.Value(common.CtxKeyFlowNode).(string); ok {
+	if node, ok := ctx.Value(internal.CtxKeyFlowNode).(string); ok {
 		log.Println("flowChartNodeInfo: node found", node)
 		return flowChartNodeInfoComponent(node)
 	}
@@ -129,9 +127,9 @@ templ flowChartNodeInfoComponent(node string) {
 		id="node-info-container"
 		class="relative flex grow w-full min-h-0 items-center justify-center"
 		hx-get={ view.FormatProjectUrl(ctx) }
-		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChartNodeInfo) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, internal.ProjectViewFlowChartNodeInfo) }
 		hx-include={ buildIncludes(view.StandardIncludes) }
-		hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event)}`, common.ParamFlowNode) }
+		hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event)}`, internal.ParamFlowNode) }
 		hx-target="#node-info"
 		hx-swap="outerHTML"
 		hx-push-url="true"
@@ -156,7 +154,7 @@ templ flowChartNodeInfoComponent(node string) {
 	</div>
 }
 
-templ FlowChartNodeInfoContent(info common.SourcesSinksNodeInfo) {
+templ FlowChartNodeInfoContent(info internal.SourcesSinksNodeInfo) {
 	<div id="node-info" class="flex flex-col w-full h-full p-2">
 		@flowChartNodeState(info.PID)
 		<div class="stats stats-vertical border border-color">
@@ -167,7 +165,7 @@ templ FlowChartNodeInfoContent(info common.SourcesSinksNodeInfo) {
 			</div>
 			<div class="stat">
 				<div class="stat-title">Events</div>
-				<div class="stat-value">{  message.NewPrinter(language.English).Sprintf("%d", info.MsgCount) }</div>
+				<div class="stat-value">{  fmt.Sprintf("%d", info.MsgCount) }</div>
 				<div class="stat-desc">nice</div>
 			</div>
 		</div>
@@ -182,7 +180,7 @@ templ FlowChartNodeInfoContentEmpty(node string) {
 }
 
 templ flowChartNodeState(node string) {
-	<input id="flow-node" name={ common.ParamFlowNode } type="hidden" value={ node }/>
+	<input id="flow-node" name={ internal.ParamFlowNode } type="hidden" value={ node }/>
 }
 
 templ FlowChart(sourcesSinks []string, flowType string) {
@@ -198,7 +196,7 @@ templ FlowChart(sourcesSinks []string, flowType string) {
 			</div>
 		</div>
 		<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
-		if actorPID, ok := ctx.Value(common.CtxKeyPID).(string); ok {
+		if actorPID, ok := ctx.Value(internal.CtxKeyPID).(string); ok {
 			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
 		}
 	</div>

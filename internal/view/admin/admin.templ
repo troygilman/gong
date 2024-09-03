@@ -2,7 +2,7 @@ package view
 
 import (
 	"fmt"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/view"
 )
 
@@ -13,11 +13,11 @@ templ Admin() {
 				Metrics
 				<div class="flex flex-row">
 					<div class="pr-2">Latency (ms):</div>
-					@Metric(0, common.SseTypeUpdateMetricLatency)
+					@Metric(0, internal.SseTypeUpdateMetricLatency)
 				</div>
 				<div class="flex flex-row">
 					<div class="pr-2">Throughput (events/sec):</div>
-					@Metric(0, common.SseTypeUpdateMetricThroughput)
+					@Metric(0, internal.SseTypeUpdateMetricThroughput)
 				</div>
 			</div>
 		</div>

@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"stagebase/internal/common"
 	"io"
 	"log"
 	"net/http"
+	"stagebase/internal"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -16,8 +16,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func mustApp(ctx echo.Context) common.App {
-	app, ok := ctx.Get("app").(common.App)
+func mustApp(ctx echo.Context) internal.App {
+	app, ok := ctx.Get("app").(internal.App)
 	if !ok {
 		panic(fmt.Sprintln("App does not exist in context"))
 	}
@@ -59,25 +59,25 @@ func requestID(ctx echo.Context) string {
 }
 
 func mustProjectID(ctx echo.Context) uuid.UUID {
-	return ctx.Request().Context().Value(common.CtxKeyProjectID).(uuid.UUID)
+	return ctx.Request().Context().Value(internal.CtxKeyProjectID).(uuid.UUID)
 }
 
 func actorPID(ctx echo.Context) (string, bool) {
-	actorPID, ok := ctx.Request().Context().Value(common.CtxKeyPID).(string)
+	actorPID, ok := ctx.Request().Context().Value(internal.CtxKeyPID).(string)
 	return actorPID, ok
 }
 
 func tab(ctx echo.Context) (string, bool) {
-	tab, ok := ctx.Request().Context().Value(common.CtxKeyTab).(string)
+	tab, ok := ctx.Request().Context().Value(internal.CtxKeyTab).(string)
 	return tab, ok
 }
 
-func filter(ctx echo.Context) (common.Filter, bool) {
-	filter, ok := ctx.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
+func filter(ctx echo.Context) (internal.Filter, bool) {
+	filter, ok := ctx.Request().Context().Value(internal.CtxKeyFilter).(internal.Filter)
 	return filter, ok
 }
 
-func sse(eCtx echo.Context, listenerType common.ListenerType, f func(sses []any) error) error {
+func sse(eCtx echo.Context, listenerType internal.ListenerType, f func(sses []any) error) error {
 	ctx := eCtx.Request().Context()
 	app := mustApp(eCtx)
 

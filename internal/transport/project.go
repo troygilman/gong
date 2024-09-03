@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/core"
 	view_admin "stagebase/internal/view/admin"
 	view_project "stagebase/internal/view/project"
@@ -27,7 +27,7 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	},
 		withProjectContext(),
-		withContextLogger(common.CtxKeyFilter),
+		withContextLogger(internal.CtxKeyFilter),
 		logRequest(),
 	)
 }
@@ -38,7 +38,7 @@ func handleGetProject(eCtx echo.Context) error {
 	projectID := mustProjectID(eCtx)
 
 	switch eCtx.Request().Header.Get("View") {
-	case common.ProjectViewActor:
+	case internal.ProjectViewActor:
 		actorPID, ok := actorPID(eCtx)
 		if !ok {
 			return errors.New("actorPID is empty")
@@ -51,20 +51,20 @@ func handleGetProject(eCtx echo.Context) error {
 
 		return view_project.ProjectActor(actor).Render(ctx, eCtx.Response())
 
-	case common.ProjectViewFlowChart:
+	case internal.ProjectViewFlowChart:
 		return view_project.FlowTabContent().Render(ctx, eCtx.Response())
-	case common.ProjectViewFlowChartNodeInfo:
+	case internal.ProjectViewFlowChartNodeInfo:
 		actorPID, ok := actorPID(eCtx)
 		if !ok {
 			return errors.New("pid is empty")
 		}
 
-		nodePID, ok := ctx.Value(common.CtxKeyFlowNode).(string)
+		nodePID, ok := ctx.Value(internal.CtxKeyFlowNode).(string)
 		if !ok {
 			return errors.New("flow_node is empty")
 		}
 
-		flowType, ok := ctx.Value(common.CtxKeyFlow).(string)
+		flowType, ok := ctx.Value(internal.CtxKeyFlow).(string)
 		if !ok {
 			return errors.New("flow is missing")
 		}
@@ -74,7 +74,7 @@ func handleGetProject(eCtx echo.Context) error {
 			return err
 		}
 
-		flowRange, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range)
+		flowRange, ok := ctx.Value(internal.CtxKeyFlowRange).(internal.Range)
 		if !ok {
 			return errors.New("flow_range is missing")
 		}
@@ -105,23 +105,23 @@ func handleGetProjectEvents(eCtx echo.Context) error {
 
 func handleConnectSseProject(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeProject, func(sses []any) error {
+	return sse(eCtx, internal.ListenerTypeProject, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
-			case common.SseNewActor:
+			case internal.SseNewActor:
 				if err := writeServerSentEvent(
 					ctx,
 					eCtx.Response(),
-					common.SseTypeNewActor,
+					internal.SseTypeNewActor,
 					view_project.ProjectActorListItem(sse.Actor, false),
 				); err != nil {
 					return err
 				}
-			case common.SseNewEvents:
+			case internal.SseNewEvents:
 				if err := writeServerSentEvent(
 					ctx,
 					eCtx.Response(),
-					common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
+					internal.SseTypeUpdateActorNumEvents+sse.Actor.PID,
 					view_project.ProjectActorBadge(sse.Actor),
 				); err != nil {
 					return err
@@ -134,11 +134,11 @@ func handleConnectSseProject(eCtx echo.Context) error {
 
 func handleConnectSseEvents(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeEvents, func(sses []any) error {
+	return sse(eCtx, internal.ListenerTypeEvents, func(sses []any) error {
 		eventCount := 0
 		for _, sse := range sses {
 			switch sse := sse.(type) {
-			case common.Event:
+			case internal.Event:
 				eventCount++
 			default:
 				_ = sse
@@ -149,7 +149,7 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 			if err := writeServerSentEvent(
 				ctx,
 				eCtx.Response(),
-				common.SseTypeNewEvents,
+				internal.SseTypeNewEvents,
 				nil,
 			); err != nil {
 				return err
@@ -201,12 +201,12 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return errors.New("actorPID is missing")
 	}
 
-	flowType, ok := eCtx.Request().Context().Value(common.CtxKeyFlow).(string)
+	flowType, ok := eCtx.Request().Context().Value(internal.CtxKeyFlow).(string)
 	if !ok {
 		return errors.New("flow is missing")
 	}
 
-	flowRange, ok := eCtx.Request().Context().Value(common.CtxKeyFlowRange).(common.Range)
+	flowRange, ok := eCtx.Request().Context().Value(internal.CtxKeyFlowRange).(internal.Range)
 	if !ok {
 		return errors.New("flow range is missing")
 	}
@@ -241,23 +241,23 @@ func handleGetProjectAdmin(eCtx echo.Context) error {
 
 func handleConnectSseProjectAdmin(eCtx echo.Context) error {
 	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeMetrics, func(sses []any) error {
+	return sse(eCtx, internal.ListenerTypeMetrics, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
 			case core.MetricGroup:
 				if err := writeServerSentEvent(
 					ctx,
 					eCtx.Response(),
-					common.SseTypeUpdateMetricLatency,
-					view_admin.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
+					internal.SseTypeUpdateMetricLatency,
+					view_admin.Metric(sse.Avg.Latency, internal.SseTypeUpdateMetricLatency),
 				); err != nil {
 					return err
 				}
 				if err := writeServerSentEvent(
 					ctx,
 					eCtx.Response(),
-					common.SseTypeUpdateMetricThroughput,
-					view_admin.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
+					internal.SseTypeUpdateMetricThroughput,
+					view_admin.Metric(sse.Avg.Throughput, internal.SseTypeUpdateMetricThroughput),
 				); err != nil {
 					return err
 				}

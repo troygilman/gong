@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"stagebase/internal/common"
+	"os"
+	"stagebase/internal"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
-	"os"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -26,12 +26,12 @@ type stagebaseApp struct {
 	controllerPID *actor.PID
 	pids          map[string]*actor.PID
 	producerFuncs map[string]producerFunc
-	db            common.Database
+	db            internal.Database
 }
 
-type producerFunc func(common.App) actor.Producer
+type producerFunc func(internal.App) actor.Producer
 
-func NewApp(db common.Database) (common.App, error) {
+func NewApp(db internal.Database) (internal.App, error) {
 	app := new(stagebaseApp)
 
 	app.db = db
@@ -98,7 +98,7 @@ func (app *stagebaseApp) PID(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
-func (app *stagebaseApp) Database() common.Database {
+func (app *stagebaseApp) Database() internal.Database {
 	return app.db
 }
 
@@ -123,7 +123,7 @@ func (app *stagebaseApp) Actor(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-) (actor common.Actor, err error) {
+) (actor internal.Actor, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return actor, err
@@ -145,7 +145,7 @@ func (app *stagebaseApp) Actor(
 func (app *stagebaseApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
-) (project common.ProjectProps, err error) {
+) (project internal.ProjectProps, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return project, err
@@ -165,9 +165,9 @@ func (app *stagebaseApp) Events(
 	projectID uuid.UUID,
 	actorPID string,
 	timestamp time.Time,
-	filter common.Filter,
+	filter internal.Filter,
 	pageIndex int,
-) (events common.EventList, maxPageIndex int, err error) {
+) (events internal.EventList, maxPageIndex int, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return events, 0, err
@@ -210,7 +210,7 @@ func (app *stagebaseApp) SourcesSinks(
 	projectID uuid.UUID,
 	actorPID string,
 	sources bool,
-	rng common.Range,
+	rng internal.Range,
 ) (pids []string, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
@@ -238,8 +238,8 @@ func (app *stagebaseApp) SourcesSinksNodeInfo(
 	actorPID string,
 	nodePID string,
 	source bool,
-	rng common.Range,
-) (info common.SourcesSinksNodeInfo, err error) {
+	rng internal.Range,
+) (info internal.SourcesSinksNodeInfo, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return info, err
@@ -265,8 +265,8 @@ func (app *stagebaseApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
-	lType common.ListenerType,
-	filter common.Filter,
+	lType internal.ListenerType,
+	filter internal.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)
 	app.engine.Spawn(NewListenerProducer(app, projectID, lType, c, filter), kindListener, actor.WithID(id))

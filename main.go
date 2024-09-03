@@ -3,9 +3,10 @@ package main
 import (
 	"embed"
 	"log"
+	"log/slog"
 	"os"
 	"stagebase/example"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/core"
 	"stagebase/internal/persistance"
 	"stagebase/internal/transport"
@@ -26,7 +27,11 @@ func main() {
 }
 
 func run() error {
-	common.ConfigureLogger()
+	internal.ConfigureDefaultLogger(
+		internal.WithHandlerOptions(&slog.HandlerOptions{
+			AddSource: true,
+		}),
+	)
 
 	db, err := persistance.NewQuestDatabase(migrations)
 	if err != nil {

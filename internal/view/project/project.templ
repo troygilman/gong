@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/view"
 )
 
-templ Project(props common.ProjectProps) {
+templ Project(props internal.ProjectProps) {
 	@view.Index() {
 		<div id="includes" hx-include={ buildIncludes(view.StandardIncludes) }></div>
 		<script>
@@ -43,10 +43,10 @@ templ Project(props common.ProjectProps) {
 					</div>
 				</div>
 				<div class="flex grow min-w-0 h-full">
-					if pid, ok := ctx.Value(common.CtxKeyPID).(string); ok {
+					if pid, ok := ctx.Value(internal.CtxKeyPID).(string); ok {
 						@ActorContent(props.Actors[pid])
 					} else {
-						@ActorContent(common.Actor{})
+						@ActorContent(internal.Actor{})
 					}
 				</div>
 			</div>
@@ -56,12 +56,12 @@ templ Project(props common.ProjectProps) {
 
 func ProjectMenu(ctx context.Context) templ.Component {
 	projectID := uuid.Nil
-	if id, ok := ctx.Value(common.CtxKeyProjectID).(uuid.UUID); ok {
+	if id, ok := ctx.Value(internal.CtxKeyProjectID).(uuid.UUID); ok {
 		projectID = id
 	}
 
 	activeTab := tabLabelOverview
-	if tab, ok := ctx.Value(common.CtxKeyTab).(string); ok {
+	if tab, ok := ctx.Value(internal.CtxKeyTab).(string); ok {
 		activeTab = tab
 	}
 
@@ -94,7 +94,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 		class="max-w-full"
 		if !active {
 			hx-get={ view.FormatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, internal.ProjectViewActor) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
 			hx-include={ buildIncludes(view.StandardIncludes) }
 			hx-push-url="true"
@@ -109,13 +109,13 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 	</li>
 }
 
-templ ProjectActorList(props common.ProjectProps) {
+templ ProjectActorList(props internal.ProjectProps) {
 	<div class="flex flex-col w-full max-w-full min-w-0 grow min-h-0 border border-color rounded">
 		<div class="flex items-center pl-4 pt-4 cursor-default text-md font-bold">Actors</div>
 		<ul
 			id="actor-list"
 			class="menu menu-sm mb-2"
-			sse-swap={ common.SseTypeNewActor }
+			sse-swap={ internal.SseTypeNewActor }
 			hx-swap="afterbegin"
 			x-data="{ active: ''}"
 		>
@@ -127,7 +127,7 @@ templ ProjectActorList(props common.ProjectProps) {
 }
 
 func isCurrentPID(ctx context.Context, actorPID string) bool {
-	if pid, ok := ctx.Value(common.CtxKeyPID).(string); ok {
+	if pid, ok := ctx.Value(internal.CtxKeyPID).(string); ok {
 		return pid == actorPID
 	}
 	return false
@@ -147,12 +147,12 @@ script resetActiveListItem(id string) {
 	}
 }
 
-templ ProjectActorListItem(actor common.Actor, oob bool) {
+templ ProjectActorListItem(actor internal.Actor, oob bool) {
 	<li
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
 		hx-get={ view.FormatProjectUrl(ctx) }
-		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, internal.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
 		hx-include={ buildIncludes(view.StandardIncludes) }
 		hx-trigger="click"
@@ -173,10 +173,10 @@ templ ProjectActorListItem(actor common.Actor, oob bool) {
 	</li>
 }
 
-templ ProjectActorBadge(actor common.Actor) {
+templ ProjectActorBadge(actor internal.Actor) {
 	<div
 		class={ "badge",  templ.KV("badge-success", actor.Alive), templ.KV("badge-error", !actor.Alive) }
-		sse-swap={ common.SseTypeUpdateActorNumEvents + actor.PID }
+		sse-swap={ internal.SseTypeUpdateActorNumEvents + actor.PID }
 		hx-target="this"
 		hx-swap="outerHTML"
 	>
@@ -194,20 +194,20 @@ const (
 	tabLabelFlow     = "Flow"
 )
 
-templ ProjectActor(actor common.Actor) {
+templ ProjectActor(actor internal.Actor) {
 	@ActorContent(actor)
 	@ProjectActorListItem(actor, true)
 	@ProjectMenu(ctx)
 }
 
-templ ActorContent(actor common.Actor) {
+templ ActorContent(actor internal.Actor) {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
-		<input id="actor-pid" type="hidden" name={ common.ParamPID } value={ actor.PID }/>
-		<input id="tab" type="hidden" name={ common.ParamTab } value={ ctx.Value(common.CtxKeyTab).(string) }/>
+		<input id="actor-pid" type="hidden" name={ internal.ParamPID } value={ actor.PID }/>
+		<input id="tab" type="hidden" name={ internal.ParamTab } value={ ctx.Value(internal.CtxKeyTab).(string) }/>
 		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			@OverviewTabContent(actor)
@@ -222,7 +222,7 @@ templ ActorContent(actor common.Actor) {
 }
 
 templ tabContent(label string) {
-	if activeTab, ok := ctx.Value(common.CtxKeyTab).(string); ok && label == activeTab {
+	if activeTab, ok := ctx.Value(internal.CtxKeyTab).(string); ok && label == activeTab {
 		<div
 			class="flex flex-col grow min-h-0"
 		>

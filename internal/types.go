@@ -1,11 +1,11 @@
-package common
+package internal
 
 import (
 	"context"
 	"errors"
-	"stagebase/sdk"
 	"log/slog"
 	"sort"
+	"stagebase/sdk"
 	"strconv"
 	"time"
 

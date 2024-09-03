@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"stagebase/internal/view"
 	"strconv"
 	"strings"
@@ -24,12 +24,12 @@ var eventTableIncludes = []string{
 }
 
 func eventsTabContent(ctx context.Context) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
-	actorPID := common.MustValueActorPID(ctx)
-	filter, _ := common.ValueFilter(ctx)
-	pageIdx, _ := common.ValuePageIndex(ctx)
-	timeStart, ok := common.ValueTimeStart(ctx)
+	app := internal.MustValueApp(ctx)
+	projectID := internal.MustValueProjectID(ctx)
+	actorPID := internal.MustValueActorPID(ctx)
+	filter, _ := internal.ValueFilter(ctx)
+	pageIdx, _ := internal.ValuePageIndex(ctx)
+	timeStart, ok := internal.ValueTimeStart(ctx)
 	if !ok {
 		actor, err := app.Actor(ctx, projectID, actorPID)
 		if err != nil {
@@ -40,7 +40,7 @@ func eventsTabContent(ctx context.Context) templ.Component {
 	return eventsTabContentComponent(filter, timeStart, pageIdx)
 }
 
-templ eventsTabContentComponent(filter common.Filter, timeStart time.Time, pageIdx int) {
+templ eventsTabContentComponent(filter internal.Filter, timeStart time.Time, pageIdx int) {
 	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
 		@eventTablePaginationControls(pageIdx, 0)
@@ -51,8 +51,8 @@ templ eventsTabContentComponent(filter common.Filter, timeStart time.Time, pageI
 		hx-ext="sse"
 	>
 		<input id="project-url" type="hidden" value={ view.FormatProjectUrl(ctx) }/>
-		<input id="time-start" type="hidden" name={ common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
-		<input id="page-index" type="hidden" name={ common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
+		<input id="time-start" type="hidden" name={ internal.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
+		<input id="page-index" type="hidden" name={ internal.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
 		@EventTableComponent(ctx, true)
 		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
 			<span class="loading loading-dots loading-lg"></span>
@@ -67,7 +67,7 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 			hx-get={ view.FormatProjectUrl(ctx) }
 			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, 0) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, internal.ParamPageIndex, 0) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -82,7 +82,7 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 			hx-get={ view.FormatProjectUrl(ctx) }
 			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex-1) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, internal.ParamPageIndex, pageIndex-1) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -100,7 +100,7 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 			hx-get={ view.FormatProjectUrl(ctx) }
 			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex+1) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, internal.ParamPageIndex, pageIndex+1) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -115,7 +115,7 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 			hx-get={ view.FormatProjectUrl(ctx) }
 			hx-include={ buildIncludes(view.StandardIncludes, eventTableIncludes) }
 			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, maxPageIndex) }
+			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, internal.ParamPageIndex, maxPageIndex) }
 			hx-trigger="click"
 			hx-swap="none"
 			hx-push-url="true"
@@ -128,7 +128,7 @@ templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
 	</div>
 }
 
-templ eventsFilter(filter common.Filter) {
+templ eventsFilter(filter internal.Filter) {
 	<form
 		id={ idEventsFilter }
 		class="join w-fit mb-0"
@@ -150,10 +150,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			}
 		</script>
-		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, -1) {
+		@eventsFilterItem("Type", internal.ParamFilterType, filter.Type != nil, -1) {
 			<input
 				class="event-filter-input"
-				name={ common.ParamFilterType }
+				name={ internal.ParamFilterType }
 				type="text"
 				placeholder="actor.Started"
 				if filter.Type != nil {
@@ -161,10 +161,10 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
+		@eventsFilterItem("Sender", internal.ParamFilterSender, filter.Sender != nil, 0) {
 			<input
 				class="event-filter-input"
-				name={ common.ParamFilterSender }
+				name={ internal.ParamFilterSender }
 				type="text"
 				placeholder="local/server/primary"
 				if filter.Sender != nil {
@@ -172,7 +172,7 @@ templ eventsFilter(filter common.Filter) {
 				}
 			/>
 		}
-		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
+		@eventsFilterItem("Level", internal.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
 				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
@@ -189,7 +189,7 @@ templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Leve
 			<span class="label-text">{ label }</span>
 			<input
 				type="radio"
-				name={ common.ParamFilterLevel }
+				name={ internal.ParamFilterLevel }
 				class="radio"
 				value={ strconv.Itoa(int(level)) }
 				if selected == level {
@@ -241,35 +241,35 @@ func formatActorPID(pid string) string {
 }
 
 func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
-	actorPID := common.MustValueActorPID(ctx)
-	timeStart, _ := common.ValueTimeStart(ctx)
-	pageIdx, _ := common.ValuePageIndex(ctx)
-	filter, _ := common.ValueFilter(ctx)
+	app := internal.MustValueApp(ctx)
+	projectID := internal.MustValueProjectID(ctx)
+	actorPID := internal.MustValueActorPID(ctx)
+	timeStart, _ := internal.ValueTimeStart(ctx)
+	pageIdx, _ := internal.ValuePageIndex(ctx)
+	filter, _ := internal.ValueFilter(ctx)
 
-	events := []common.Event{}
+	events := []internal.Event{}
 	maxPageIdx := 0
 
 	if !lazy {
 		var err error
 		events, maxPageIdx, err = app.Events(ctx, projectID, actorPID, timeStart, filter, pageIdx)
 		if err != nil {
-			events = []common.Event{}
+			events = []internal.Event{}
 		}
 	}
 
 	return eventTableComponent(events, lazy, pageIdx, maxPageIdx)
 }
 
-templ eventTableComponent(events common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
+templ eventTableComponent(events internal.EventList, lazy bool, pageIdx int, maxPageIdx int) {
 	if !lazy {
 		@eventTablePaginationControls(pageIdx, maxPageIdx)
 	}
 	@eventTable(events, lazy)
 }
 
-templ eventTable(events common.EventList, lazy bool) {
+templ eventTable(events internal.EventList, lazy bool) {
 	<table
 		class="table table-pin-rows table-sm"
 		if lazy {

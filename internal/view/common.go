@@ -3,14 +3,14 @@ package view
 import (
 	"context"
 	"fmt"
-	"stagebase/internal/common"
+	"stagebase/internal"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
 )
 
 func FormatProjectUrl(ctx context.Context) string {
-	url := fmt.Sprintf("/project/%s", ctx.Value(common.CtxKeyProjectID).(uuid.UUID).String())
+	url := fmt.Sprintf("/project/%s", ctx.Value(internal.CtxKeyProjectID).(uuid.UUID).String())
 	return string(templ.URL(url))
 }
 

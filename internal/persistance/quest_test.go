@@ -2,18 +2,18 @@ package persistance
 
 import (
 	"context"
-	"stagebase/internal/common"
+	"stagebase/internal"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
-func benchmarkCreateEvents(n int, numEvents int, db common.Database) error {
+func benchmarkCreateEvents(n int, numEvents int, db internal.Database) error {
 	projectID := uuid.MustParse("2db8b7bc-5237-4a01-bf7a-d0339da782d9")
 	for range n {
-		events := make([]common.Event, numEvents)
+		events := make([]internal.Event, numEvents)
 		for idx := range numEvents {
-			events[idx] = common.Event{
+			events[idx] = internal.Event{
 				ProjectID: projectID.String(),
 			}
 		}
