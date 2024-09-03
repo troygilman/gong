@@ -2,8 +2,8 @@ package transport
 
 import (
 	"errors"
-	"stagebase/internal/common"
 	"log/slog"
+	"stagebase/internal/common"
 	"strconv"
 
 	"time"
@@ -23,6 +23,17 @@ func withRequestID() echo.MiddlewareFunc {
 	}
 }
 
+func withHeaders() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			ctx.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			ctx.Response().Header().Set("Pragma", "no-cache")
+			ctx.Response().Header().Set("Expires", "0")
+			return next(ctx)
+		}
+	}
+}
+
 func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
@@ -36,7 +47,7 @@ func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
 	}
 }
 
-func middlewareLogRequest() echo.MiddlewareFunc {
+func logRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			logger := common.MustLogger(ctx.Request().Context())
@@ -46,7 +57,7 @@ func middlewareLogRequest() echo.MiddlewareFunc {
 	}
 }
 
-func middlewareWithApp(app common.App) echo.MiddlewareFunc {
+func withApp(app common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			cb := common.NewContextBuilder(ctx.Request().Context())
@@ -59,7 +70,7 @@ func middlewareWithApp(app common.App) echo.MiddlewareFunc {
 	}
 }
 
-func middlewareJWT(app common.App) echo.MiddlewareFunc {
+func withJWT(app common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			tokenCookie, err := ctx.Cookie("auth-token")
@@ -76,7 +87,7 @@ func middlewareJWT(app common.App) echo.MiddlewareFunc {
 	}
 }
 
-func middlewareProjectContext() echo.MiddlewareFunc {
+func withProjectContext() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			cb := common.NewContextBuilder(ctx.Request().Context())

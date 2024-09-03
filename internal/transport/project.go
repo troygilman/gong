@@ -25,7 +25,11 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/connect", handleConnectProject)
 		e.GET("/admin", handleGetProjectAdmin)
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
-	}, middlewareProjectContext(), middlewareLogRequest())
+	},
+		withProjectContext(),
+		withContextLogger(common.CtxKeyFilter),
+		logRequest(),
+	)
 }
 
 func handleGetProject(eCtx echo.Context) error {

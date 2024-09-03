@@ -22,10 +22,10 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 	e.Any("/debug/pprof/symbol", makeHandler(pprof.Symbol))
 	e.Any("/debug/pprof/trace", makeHandler(pprof.Trace))
 
-	e.Use(middleware.RequestID())
-	e.Use(withRequestID())
+	e.Use(withHeaders())
+	e.Use(middleware.RequestID(), withRequestID())
 	e.Use(withContextLogger(common.CtxKeyRequestID))
-	e.Use(middlewareWithApp(app))
+	e.Use(withApp(app))
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 
