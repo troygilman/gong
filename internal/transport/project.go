@@ -26,8 +26,11 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/admin", handleGetProjectAdmin)
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	},
+		withContextLogger(
+			internal.CtxKeyFilter,
+			internal.CtxKeyPID,
+		),
 		withProjectContext(),
-		withContextLogger(internal.CtxKeyFilter),
 		logRequest(),
 	)
 }
@@ -90,12 +93,7 @@ func handleGetProject(eCtx echo.Context) error {
 			return view_project.FlowChartNodeInfoContentEmpty("").Render(ctx, eCtx.Response())
 		}
 	default:
-		props, err := app.ProjectProps(ctx, projectID)
-		if err != nil {
-			return err
-		}
-
-		return view_project.Project(props).Render(ctx, eCtx.Response())
+		return view_project.ProjectComponent(ctx).Render(ctx, eCtx.Response())
 	}
 }
 

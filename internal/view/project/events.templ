@@ -23,7 +23,7 @@ var eventTableIncludes = []string{
 	idPageIndex,
 }
 
-func eventsTabContent(ctx context.Context) templ.Component {
+func EventContentComponent(ctx context.Context) templ.Component {
 	app := internal.MustValueApp(ctx)
 	projectID := internal.MustValueProjectID(ctx)
 	actorPID := internal.MustValueActorPID(ctx)
@@ -37,10 +37,10 @@ func eventsTabContent(ctx context.Context) templ.Component {
 		}
 		timeStart = actor.LastEventTime
 	}
-	return eventsTabContentComponent(filter, timeStart, pageIdx)
+	return eventContentComponent(filter, timeStart, pageIdx)
 }
 
-templ eventsTabContentComponent(filter internal.Filter, timeStart time.Time, pageIdx int) {
+templ eventContentComponent(filter internal.Filter, timeStart time.Time, pageIdx int) {
 	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
 		@eventTablePaginationControls(pageIdx, 0)

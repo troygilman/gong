@@ -8,7 +8,18 @@ import (
 	"stagebase/internal/view"
 )
 
-templ Project(props internal.ProjectProps) {
+func ProjectComponent(ctx context.Context) templ.Component {
+	app := internal.MustValueApp(ctx)
+	projectID := internal.MustValueProjectID(ctx)
+	pid, _ := internal.CtxPID(ctx)
+	props, err := app.ProjectProps(ctx, projectID)
+	if err != nil {
+		panic(err)
+	}
+	return projectComponent(props, pid)
+}
+
+templ projectComponent(props internal.ProjectProps, pid string) {
 	@view.Index() {
 		<div id="includes" hx-include={ buildIncludes(view.StandardIncludes) }></div>
 		<script>
@@ -24,7 +35,7 @@ templ Project(props internal.ProjectProps) {
 			class="flex flex-row h-screen w-screen max-h-screen max-w-screen font-medium"
 			hx-ext="sse"
 			sse-connect={ "/project/" + props.ID.String() + "/sse/project" }
-			x-data
+			x-data="{ pid: '' }"
 		>
 			<div class="flex flex-col w-12 min-w-12 border-r border-color p-2 gap-4 items-center justify-between z-50 bg-base-100">
 				@view.LogoIcon("stroke-base-content")
@@ -36,6 +47,7 @@ templ Project(props internal.ProjectProps) {
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
 				<input id="drawer-state" type="checkbox" class="drawer-state"/>
+				@StatePID(pid)
 				<div class="drawer-content w-56 max-w-56">
 					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
 						@ProjectMenu(ctx)
@@ -43,7 +55,7 @@ templ Project(props internal.ProjectProps) {
 					</div>
 				</div>
 				<div class="flex grow min-w-0 h-full">
-					if pid, ok := ctx.Value(internal.CtxKeyPID).(string); ok {
+					if pid != "" {
 						@ActorContent(props.Actors[pid])
 					} else {
 						@ActorContent(internal.Actor{})
@@ -52,6 +64,17 @@ templ Project(props internal.ProjectProps) {
 			</div>
 		</div>
 	}
+}
+
+templ StatePID(pid string) {
+	<input
+		type="hidden"
+		hx-swap-oob="true"
+		id={ view.IdentifierPID }
+		name={ internal.ParamPID }
+		value={ pid }
+		x-init="pid = $el.value"
+	/>
 }
 
 func ProjectMenu(ctx context.Context) templ.Component {
@@ -126,27 +149,6 @@ templ ProjectActorList(props internal.ProjectProps) {
 	</div>
 }
 
-func isCurrentPID(ctx context.Context, actorPID string) bool {
-	if pid, ok := ctx.Value(internal.CtxKeyPID).(string); ok {
-		return pid == actorPID
-	}
-	return false
-}
-
-script resetActiveListItem(id string) {
-	console.log("reset", id)
-	const activeElems = document.getElementById('actor-list').querySelectorAll('.active');
-	for (const elem of activeElems) {
-		if (elem.parentNode.id !== id) {
-			elem.classList.remove('active');
-			const scripts = elem.querySelectorAll('script');
-			for (const script of scripts) {
-				htmx.remove(script);
-			}
-		}
-	}
-}
-
 templ ProjectActorListItem(actor internal.Actor, oob bool) {
 	<li
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
@@ -162,13 +164,11 @@ templ ProjectActorListItem(actor internal.Actor, oob bool) {
 		}
 	>
 		<a
-			class={ "flex flex-row items-center justify-between w-full cursor-pointer text-sm px-2", templ.KV("active", isCurrentPID(ctx, actor.PID)) }
+			class="flex flex-row items-center justify-between w-full cursor-pointer text-sm px-2"
+			:class={ fmt.Sprintf("{ 'active': pid == '%s' }", actor.PID) }
 		>
 			<div class="grow min-w-0 mr-2 truncate">{ actor.PID }</div>
 			@ProjectActorBadge(actor)
-			if isCurrentPID(ctx, actor.PID) {
-				@resetActiveListItem("actor-list-item-" + formatActorPID(actor.PID))
-			}
 		</a>
 	</li>
 }
@@ -198,6 +198,7 @@ templ ProjectActor(actor internal.Actor) {
 	@ActorContent(actor)
 	@ProjectActorListItem(actor, true)
 	@ProjectMenu(ctx)
+	@StatePID(actor.PID)
 }
 
 templ ActorContent(actor internal.Actor) {
@@ -206,14 +207,13 @@ templ ActorContent(actor internal.Actor) {
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
-		<input id="actor-pid" type="hidden" name={ internal.ParamPID } value={ actor.PID }/>
 		<input id="tab" type="hidden" name={ internal.ParamTab } value={ ctx.Value(internal.CtxKeyTab).(string) }/>
 		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			@OverviewTabContent(actor)
 		}
 		@tabContent(tabLabelEvents) {
-			@eventsTabContent(ctx)
+			@EventContentComponent(ctx)
 		}
 		@tabContent(tabLabelFlow) {
 			@FlowTabContent()

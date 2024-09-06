@@ -15,15 +15,15 @@ func FormatProjectUrl(ctx context.Context) string {
 }
 
 const (
-	IdActorPID  = "actor-pid"
-	IdTab       = "tab"
-	IdFlow      = "flow"
-	IdFlowNode  = "flow-node"
-	IdFlowRange = "flow-range"
+	IdentifierPID = "actor-pid"
+	IdTab         = "tab"
+	IdFlow        = "flow"
+	IdFlowNode    = "flow-node"
+	IdFlowRange   = "flow-range"
 )
 
 var StandardIncludes = []string{
-	IdActorPID,
+	IdentifierPID,
 	IdTab,
 	IdFlow,
 	IdFlowNode,
