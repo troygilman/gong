@@ -27,7 +27,7 @@ func bindProjectHandlers(g gong.Group) {
 		e.GET("/admin", handleGetProjectAdmin)
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	},
-		gong.WithContext(
+		gong.ContextExtractors(
 			extractProjectID,
 			extractActorPID,
 			extractTab,
@@ -38,7 +38,7 @@ func bindProjectHandlers(g gong.Group) {
 			extractPageIndex,
 			extractTimeStart,
 		),
-		withContextLogger(
+		gong.ContextLogHandler(
 			common.CtxKeyFilter,
 			common.CtxKeyPID,
 		),

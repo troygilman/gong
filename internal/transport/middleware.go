@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"log/slog"
 	"stagebase/internal/common"
 
 	"github.com/labstack/echo/v4"
@@ -24,19 +23,6 @@ func withHeaders() echo.MiddlewareFunc {
 			ctx.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			ctx.Response().Header().Set("Pragma", "no-cache")
 			ctx.Response().Header().Set("Expires", "0")
-			return next(ctx)
-		}
-	}
-}
-
-func withContextLogger(keys ...common.CtxKey) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			logger := common.MustLogger(ctx.Request().Context())
-			logger = common.WithContextHandler(slog.Default(), keys...)
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxKeyLogger, logger)
-			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}
 	}

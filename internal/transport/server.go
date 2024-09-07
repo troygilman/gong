@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"stagebase/internal/common"
+	"stagebase/pkg/gong"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -22,10 +23,13 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 	e.Any("/debug/pprof/symbol", makeHandler(pprof.Symbol))
 	e.Any("/debug/pprof/trace", makeHandler(pprof.Trace))
 
-	e.Use(withHeaders())
-	e.Use(middleware.RequestID(), withRequestID())
-	e.Use(withContextLogger(common.CtxKeyRequestID))
-	e.Use(withApp(app))
+	e.Use(
+		withHeaders(),
+		middleware.RequestID(),
+		withRequestID(),
+		gong.ContextLogHandler(common.CtxKeyRequestID),
+		withApp(app),
+	)
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 

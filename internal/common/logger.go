@@ -1,38 +1,10 @@
 package common
 
 import (
-	"context"
 	"io"
 	"log/slog"
 	"os"
 )
-
-func WithContextHandler(logger *slog.Logger, keys ...CtxKey) *slog.Logger {
-	return slog.New(contextHandler{
-		Handler: logger.Handler(),
-		keys:    keys,
-	})
-}
-
-type contextHandler struct {
-	slog.Handler
-	keys []CtxKey
-}
-
-func (h contextHandler) Handle(ctx context.Context, r slog.Record) error {
-	r.AddAttrs(h.observe(ctx)...)
-	return h.Handler.Handle(ctx, r)
-}
-
-func (h contextHandler) observe(ctx context.Context) []slog.Attr {
-	attrs := []slog.Attr{}
-	for _, key := range h.keys {
-		if val := ctx.Value(key); val != nil {
-			attrs = append(attrs, slog.Any(string(key), val))
-		}
-	}
-	return attrs
-}
 
 type loggerOption func(*loggerConfig)
 
