@@ -1,14 +1,9 @@
 package transport
 
 import (
-	"errors"
 	"log/slog"
 	"stagebase/internal/common"
-	"strconv"
 
-	"time"
-
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -87,76 +82,18 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 	}
 }
 
-func withProjectContext() echo.MiddlewareFunc {
+type echoExtractor func(echo.Context) (common.CtxKey, any)
+
+func withContextBuilder(extractors ...echoExtractor) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			cb := common.NewContextBuilder(ctx.Request().Context())
-
-			{ // project ID
-				projectID, err := uuid.Parse(ctx.Param(string(common.CtxKeyProjectID)))
-				if err != nil {
-					return errors.New("projectID is empty")
-				}
-				cb = cb.With(common.CtxKeyProjectID, projectID)
-			}
-
-			{ // actor PID
-				actorPID := ctx.QueryParam(common.ParamPID)
-				if actorPID != "" {
-					cb = cb.With(common.CtxKeyPID, actorPID)
+			for _, extractor := range extractors {
+				key, value := extractor(ctx)
+				if value != nil {
+					cb = cb.With(key, value)
 				}
 			}
-
-			{ // tab
-				tab := ctx.QueryParam(common.ParamTab)
-				if tab == "" {
-					tab = "Events"
-				}
-				cb = cb.With(common.CtxKeyTab, tab)
-			}
-
-			{ // flow chart type
-				flowType := ctx.QueryParam(common.ParamFlow)
-				if flowType == "" {
-					flowType = "Sources"
-				}
-				cb = cb.With(common.CtxKeyFlow, flowType)
-			}
-
-			{ // flow chart node
-				flowNode := ctx.QueryParam(common.ParamFlowNode)
-				if flowNode != "" {
-					cb = cb.With(common.CtxKeyFlowNode, flowNode)
-				}
-			}
-
-			{ // flow chart range
-				flowRange := ctx.QueryParam(common.ParamFlowRange)
-				var r common.Range
-				if err := r.Parse(flowRange); err == nil {
-					cb = cb.With(common.CtxKeyFlowRange, r)
-				}
-			}
-
-			{ // events filter
-				filter := common.NewFilter(ctx)
-				cb = cb.With(common.CtxKeyFilter, filter)
-			}
-
-			{ // time start
-				timeStartStr := ctx.QueryParam(common.ParamTimeStart)
-				if timeStartInt64, err := strconv.ParseInt(timeStartStr, 10, 64); err == nil {
-					cb = cb.With(common.CtxKeyTimeStart, time.Unix(0, timeStartInt64))
-				}
-			}
-
-			{
-				pageIdxStr := ctx.QueryParam(common.ParamPageIndex)
-				if pageIdx, err := strconv.Atoi(pageIdxStr); err == nil {
-					cb = cb.With(common.CtxKeyPageIndex, pageIdx)
-				}
-			}
-
 			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
 			return next(ctx)
 		}

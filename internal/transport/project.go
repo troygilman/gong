@@ -26,11 +26,21 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/admin", handleGetProjectAdmin)
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	},
+		withContextBuilder(
+			extractProjectID,
+			extractActorPID,
+			extractTab,
+			extractFilter,
+			extractFlowType,
+			extractFlowNode,
+			extractFlowRange,
+			extractPageIndex,
+			extractTimeStart,
+		),
 		withContextLogger(
 			common.CtxKeyFilter,
 			common.CtxKeyPID,
 		),
-		withProjectContext(),
 		logRequest(),
 	)
 }
