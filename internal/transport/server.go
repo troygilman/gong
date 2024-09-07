@@ -45,15 +45,6 @@ func httpErrorHandler(err error, ctx echo.Context) {
 	}
 }
 
-type groupable interface {
-	Group(string, ...echo.MiddlewareFunc) *echo.Group
-}
-
-func newGroup(e groupable, path string, f func(e *echo.Group), middlewares ...echo.MiddlewareFunc) {
-	group := e.Group(path, middlewares...)
-	f(group)
-}
-
 func makeHandler(handler http.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		handler(c.Response().Writer, c.Request())

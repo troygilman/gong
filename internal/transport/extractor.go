@@ -9,60 +9,60 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func extractProjectID(ctx echo.Context) (common.CtxKey, any) {
-	projectID, err := uuid.Parse(ctx.Param(string(common.CtxKeyProjectID)))
+func extractProjectID(e echo.Context) (any, any) {
+	projectID, err := uuid.Parse(e.Param(string(common.CtxKeyProjectID)))
 	if err != nil {
 		return "", nil
 	}
 	return common.CtxKeyProjectID, projectID
 }
 
-func extractActorPID(ctx echo.Context) (common.CtxKey, any) {
-	actorPID := ctx.QueryParam(common.ParamPID)
+func extractActorPID(e echo.Context) (any, any) {
+	actorPID := e.QueryParam(common.ParamPID)
 	if actorPID == "" {
 		return "", nil
 	}
 	return common.CtxKeyPID, actorPID
 }
 
-func extractTab(ctx echo.Context) (common.CtxKey, any) {
-	tab := ctx.QueryParam(common.ParamTab)
+func extractTab(e echo.Context) (any, any) {
+	tab := e.QueryParam(common.ParamTab)
 	if tab == "" {
 		tab = "Events"
 	}
 	return common.CtxKeyTab, tab
 }
 
-func extractFlowType(ctx echo.Context) (common.CtxKey, any) {
-	flowType := ctx.QueryParam(common.ParamFlow)
+func extractFlowType(e echo.Context) (any, any) {
+	flowType := e.QueryParam(common.ParamFlow)
 	if flowType == "" {
 		flowType = "Sources"
 	}
 	return common.CtxKeyFlow, flowType
 }
 
-func extractFlowNode(ctx echo.Context) (common.CtxKey, any) {
-	flowNode := ctx.QueryParam(common.ParamFlowNode)
+func extractFlowNode(e echo.Context) (any, any) {
+	flowNode := e.QueryParam(common.ParamFlowNode)
 	if flowNode == "" {
 		return "", nil
 	}
 	return common.CtxKeyFlowNode, flowNode
 }
 
-func extractFlowRange(ctx echo.Context) (common.CtxKey, any) {
+func extractFlowRange(e echo.Context) (any, any) {
 	var flowRange common.Range
-	if err := flowRange.Parse(ctx.QueryParam(common.ParamFlowRange)); err != nil {
+	if err := flowRange.Parse(e.QueryParam(common.ParamFlowRange)); err != nil {
 		return "", nil
 	}
 	return common.CtxKeyFlowRange, flowRange
 }
 
-func extractFilter(ctx echo.Context) (common.CtxKey, any) {
-	return common.CtxKeyFilter, common.NewFilter(ctx)
+func extractFilter(e echo.Context) (any, any) {
+	return common.CtxKeyFilter, common.NewFilter(e)
 }
 
-func extractTimeStart(ctx echo.Context) (common.CtxKey, any) {
-	timeStartStr := ctx.QueryParam(common.ParamTimeStart)
+func extractTimeStart(e echo.Context) (any, any) {
+	timeStartStr := e.QueryParam(common.ParamTimeStart)
 	timeStartInt64, err := strconv.ParseInt(timeStartStr, 10, 64)
 	if err != nil {
 		return "", nil
@@ -70,8 +70,8 @@ func extractTimeStart(ctx echo.Context) (common.CtxKey, any) {
 	return common.CtxKeyTimeStart, time.Unix(0, timeStartInt64)
 }
 
-func extractPageIndex(ctx echo.Context) (common.CtxKey, any) {
-	pageIdxStr := ctx.QueryParam(common.ParamPageIndex)
+func extractPageIndex(e echo.Context) (any, any) {
+	pageIdxStr := e.QueryParam(common.ParamPageIndex)
 	pageIdx, err := strconv.Atoi(pageIdxStr)
 	if err != nil {
 		return "", nil

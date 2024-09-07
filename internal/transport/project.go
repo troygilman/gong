@@ -9,14 +9,15 @@ import (
 	"stagebase/internal/core"
 	view_admin "stagebase/internal/view/admin"
 	view_project "stagebase/internal/view/project"
+	"stagebase/pkg/gong"
 	"stagebase/sdk"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
-func bindProjectHandlers(e groupable) {
-	newGroup(e, "/project/:projectID", func(e *echo.Group) {
+func bindProjectHandlers(g gong.Group) {
+	gong.NewGroup(g, "/project/:projectID", func(e *echo.Group) {
 		e.GET("", handleGetProject)
 		e.GET("/events", handleGetProjectEvents)
 		e.GET("/sse/project", handleConnectSseProject)
@@ -26,7 +27,7 @@ func bindProjectHandlers(e groupable) {
 		e.GET("/admin", handleGetProjectAdmin)
 		e.GET("/admin/sse", handleConnectSseProjectAdmin)
 	},
-		withContextBuilder(
+		gong.WithContext(
 			extractProjectID,
 			extractActorPID,
 			extractTab,

@@ -81,21 +81,3 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 		}
 	}
 }
-
-type echoExtractor func(echo.Context) (common.CtxKey, any)
-
-func withContextBuilder(extractors ...echoExtractor) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			for _, extractor := range extractors {
-				key, value := extractor(ctx)
-				if value != nil {
-					cb = cb.With(key, value)
-				}
-			}
-			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
-			return next(ctx)
-		}
-	}
-}
