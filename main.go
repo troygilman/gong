@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"stagebase/example"
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"stagebase/internal/core"
 	"stagebase/internal/persistance"
 	"stagebase/internal/transport"
@@ -27,8 +27,8 @@ func main() {
 }
 
 func run() error {
-	internal.ConfigureDefaultLogger(
-		internal.WithHandlerOptions(&slog.HandlerOptions{
+	common.ConfigureDefaultLogger(
+		common.WithHandlerOptions(&slog.HandlerOptions{
 			AddSource: true,
 		}),
 	)

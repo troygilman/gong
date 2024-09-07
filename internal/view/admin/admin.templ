@@ -2,22 +2,22 @@ package view
 
 import (
 	"fmt"
-	"stagebase/internal"
-	"stagebase/internal/view"
+	"stagebase/internal/common"
+	commonView "stagebase/internal/view/common"
 )
 
 templ Admin() {
-	@view.Index() {
-		<div hx-ext="sse" sse-connect={ view.FormatProjectUrl(ctx) + "/admin/sse" }>
+	@commonView.Index() {
+		<div hx-ext="sse" sse-connect={ commonView.FormatProjectUrl(ctx) + "/admin/sse" }>
 			<div>
 				Metrics
 				<div class="flex flex-row">
 					<div class="pr-2">Latency (ms):</div>
-					@Metric(0, internal.SseTypeUpdateMetricLatency)
+					@Metric(0, common.SseTypeUpdateMetricLatency)
 				</div>
 				<div class="flex flex-row">
 					<div class="pr-2">Throughput (events/sec):</div>
-					@Metric(0, internal.SseTypeUpdateMetricThroughput)
+					@Metric(0, common.SseTypeUpdateMetricThroughput)
 				</div>
 			</div>
 		</div>

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"stagebase/internal/core"
 	"stagebase/internal/transport"
 	"stagebase/sdk"
@@ -32,33 +32,33 @@ func TestIntegration_Client(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	db := internal.NewMockDatabase(controller)
+	db := common.NewMockDatabase(controller)
 
 	db.EXPECT().QueryActors(
 		gomock.Any(),
 		uuid.MustParse(projectIdString),
 	).Return(
-		[]internal.Actor{},
+		[]common.Actor{},
 		nil,
 	)
 
 	countChan := make(chan int, 100)
 	db.EXPECT().CreateEvents(
 		gomock.Any(),
-		gomock.AssignableToTypeOf([]internal.Event{}),
-	).DoAndReturn(func(_ context.Context, events []internal.Event) error {
+		gomock.AssignableToTypeOf([]common.Event{}),
+	).DoAndReturn(func(_ context.Context, events []common.Event) error {
 		countChan <- len(events)
 		return nil
 	}).AnyTimes()
 
 	db.EXPECT().CreateActor(
 		gomock.Any(),
-		gomock.AssignableToTypeOf(internal.Actor{}),
+		gomock.AssignableToTypeOf(common.Actor{}),
 	).Return(nil).AnyTimes()
 
 	db.EXPECT().UpdateActor(
 		gomock.Any(),
-		gomock.AssignableToTypeOf(internal.Actor{}),
+		gomock.AssignableToTypeOf(common.Actor{}),
 	).Return(nil).AnyTimes()
 
 	// App

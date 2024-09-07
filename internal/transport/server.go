@@ -5,14 +5,14 @@ import (
 	"log"
 	"net/http"
 	"net/http/pprof"
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func RunServer(app internal.App, static fs.FS, port int) (*echo.Echo, <-chan error) {
+func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error) {
 	e := echo.New()
 	e.HTTPErrorHandler = httpErrorHandler
 
@@ -24,7 +24,7 @@ func RunServer(app internal.App, static fs.FS, port int) (*echo.Echo, <-chan err
 
 	e.Use(withHeaders())
 	e.Use(middleware.RequestID(), withRequestID())
-	e.Use(withContextLogger(internal.CtxKeyRequestID))
+	e.Use(withContextLogger(common.CtxKeyRequestID))
 	e.Use(withApp(app))
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))

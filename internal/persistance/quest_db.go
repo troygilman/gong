@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -33,7 +33,7 @@ type questDatabase struct {
 	client questdb.LineSender
 }
 
-func NewQuestDatabase(sqlMigrations fs.FS) (internal.Database, error) {
+func NewQuestDatabase(sqlMigrations fs.FS) (common.Database, error) {
 	hostname, ok := os.LookupEnv(envDatabaseHostname)
 	if !ok {
 		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
@@ -120,11 +120,11 @@ func NewQuestDatabase(sqlMigrations fs.FS) (internal.Database, error) {
 
 func (db *questDatabase) QueryEvents(
 	ctx context.Context,
-	query internal.EventsQuery,
-) ([]internal.Event, int, error) {
+	query common.EventsQuery,
+) ([]common.Event, int, error) {
 	pageSize := 100
 
-	subq := db.bunDB.NewSelect().Model(&internal.Event{}).
+	subq := db.bunDB.NewSelect().Model(&common.Event{}).
 		Where("project_id = ?", query.ProjectID).
 		Where("pid = ?", query.ActorPID).
 		Where("timestamp <= ?", query.Timestamp).
@@ -149,7 +149,7 @@ func (db *questDatabase) QueryEvents(
 	lowerLimit := query.PageIndex * pageSize
 	upperLimit := (query.PageIndex + 1) * pageSize
 
-	var events []internal.Event
+	var events []common.Event
 	if err := db.bunDB.NewRaw("SELECT * FROM (?) LIMIT ?, ?", subq, lowerLimit, upperLimit).Scan(ctx, &events); err != nil {
 		return nil, 0, err
 	}
@@ -159,7 +159,7 @@ func (db *questDatabase) QueryEvents(
 
 func (db *questDatabase) CreateEvents(
 	ctx context.Context,
-	events []internal.Event,
+	events []common.Event,
 ) error {
 	if len(events) == 0 {
 		return nil
@@ -190,8 +190,8 @@ func (db *questDatabase) CreateEvents(
 func (db *questDatabase) QueryActors(
 	ctx context.Context,
 	projectID uuid.UUID,
-) ([]internal.Actor, error) {
-	var actors []internal.Actor
+) ([]common.Actor, error) {
+	var actors []common.Actor
 
 	err := db.bunDB.NewSelect().Model(&actors).Where("project_id = ?", projectID.String()).Scan(ctx)
 	if err != nil {
@@ -202,7 +202,7 @@ func (db *questDatabase) QueryActors(
 }
 
 func (db *questDatabase) CreateActor(
-	ctx context.Context, actor internal.Actor,
+	ctx context.Context, actor common.Actor,
 ) error {
 	_, err := db.bunDB.NewInsert().Model(&actor).Exec(ctx)
 	return err
@@ -210,7 +210,7 @@ func (db *questDatabase) CreateActor(
 
 func (db *questDatabase) UpdateActor(
 	ctx context.Context,
-	actor internal.Actor,
+	actor common.Actor,
 ) error {
 	_, err := db.bunDB.NewUpdate().Model(&actor).Where("project_id = ? AND pid = ?", actor.ProjectID, actor.PID).Exec(ctx)
 	return err
@@ -218,7 +218,7 @@ func (db *questDatabase) UpdateActor(
 
 func (db *questDatabase) QueryActorSourcesSinks(
 	ctx context.Context,
-	query internal.ActorSourcesSinksQuery,
+	query common.ActorSourcesSinksQuery,
 ) ([]string, error) {
 	var actors []struct {
 		bun.BaseModel `bun:"table:events"`
@@ -260,8 +260,8 @@ func (db *questDatabase) QueryActorSourcesSinks(
 
 func (db *questDatabase) QuerySourcesSinksNodeInfo(
 	ctx context.Context,
-	query internal.SourcesSinksNodeInfoQuery,
-) (info internal.SourcesSinksNodeInfo, err error) {
+	query common.SourcesSinksNodeInfoQuery,
+) (info common.SourcesSinksNodeInfo, err error) {
 	var actorPid string
 	var sender string
 

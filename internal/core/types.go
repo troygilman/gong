@@ -1,7 +1,7 @@
 package core
 
 import (
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"stagebase/pkg/dolly"
 
 	"github.com/google/uuid"
@@ -16,7 +16,7 @@ const (
 
 type commonActorData struct {
 	id          uuid.UUID
-	app         internal.App
+	app         common.App
 	poisonTimer dolly.PoisonTimer
 }
 

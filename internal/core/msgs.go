@@ -1,7 +1,7 @@
 package core
 
 import (
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"stagebase/sdk"
 	"time"
 
@@ -15,7 +15,7 @@ type msgSdkEvents struct {
 type msgGetProjectProps struct{}
 
 type rspGetProjectProps struct {
-	props internal.ProjectProps
+	props common.ProjectProps
 }
 
 type msgGetProjectActorProps struct {
@@ -23,7 +23,7 @@ type msgGetProjectActorProps struct {
 }
 
 type rspGetProjectActor struct {
-	actor internal.Actor
+	actor common.Actor
 }
 
 type msgGetProjectEvents struct {
@@ -31,27 +31,27 @@ type msgGetProjectEvents struct {
 	eventID   ulid.ULID
 	timestamp time.Time
 	pageIndex int
-	filter    internal.Filter
+	filter    common.Filter
 }
 
 type rspGetProjectEvents struct {
-	events       internal.EventList
+	events       common.EventList
 	maxPageIndex int
-	actor        internal.Actor
+	actor        common.Actor
 }
 
 type msgProcessorUpdateState struct{}
 
 type msgUpdateProject struct {
-	actors []internal.Actor
-	events []internal.Event
+	actors []common.Actor
+	events []common.Event
 	metric Metric
 }
 
 type msgGetActorSourcesSinks struct {
 	actorPID string
 	sources  bool
-	rng      internal.Range
+	rng      common.Range
 }
 
 type rspGetActorSourcesSinks struct {
@@ -62,19 +62,19 @@ type msgGetSourcesSinksNodeInfo struct {
 	actorPID string
 	nodePID  string
 	source   bool
-	rng      internal.Range
+	rng      common.Range
 }
 
 type rspGetSourcesSinksNodeInfo struct {
-	info internal.SourcesSinksNodeInfo
+	info common.SourcesSinksNodeInfo
 }
 
 type msgListenStart struct {
-	lType internal.ListenerType
+	lType common.ListenerType
 }
 
 type msgListenStop struct {
-	lType internal.ListenerType
+	lType common.ListenerType
 }
 
 type msgListenData struct {

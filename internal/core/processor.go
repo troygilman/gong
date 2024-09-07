@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"slices"
-	"stagebase/internal"
+	"stagebase/internal/common"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
 	"time"
@@ -18,13 +18,13 @@ const (
 
 type processor struct {
 	commonActorData
-	actors   map[string]internal.Actor
+	actors   map[string]common.Actor
 	updates  map[string]bool
 	events   []sdk.Event
 	repeater actor.SendRepeater
 }
 
-func NewProcessorProducerWithApp(app internal.App) actor.Producer {
+func NewProcessorProducerWithApp(app common.App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
 			commonActorData: commonActorData{
@@ -47,7 +47,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
-			p.actors = make(map[string]internal.Actor)
+			p.actors = make(map[string]common.Actor)
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
@@ -69,15 +69,15 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	}
 }
 
-func (p *processor) handleEvent(sdkEvent sdk.Event) (event internal.Event, err error) {
-	event = internal.Event{
+func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err error) {
+	event = common.Event{
 		ProjectID: p.id.String(),
 		Event:     sdkEvent,
 	}
 
 	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorData = internal.Actor{
+		actorData = common.Actor{
 			PID:       event.PID,
 			ProjectID: p.id,
 			NumEvents: 0,
@@ -111,7 +111,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	}()
 
 	sdkEventBatch := p.events[:batchSize]
-	eventBatch := make([]internal.Event, 0, len(sdkEventBatch))
+	eventBatch := make([]common.Event, 0, len(sdkEventBatch))
 
 	for _, sdkEvent := range sdkEventBatch {
 		event, err := p.handleEvent(sdkEvent)
@@ -139,7 +139,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		}
 	}
 
-	actors := make([]internal.Actor, 0)
+	actors := make([]common.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}

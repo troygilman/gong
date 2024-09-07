@@ -1,4 +1,4 @@
-package internal
+package common
 
 const (
 	SseTypeNewActor               = "new-actor"
