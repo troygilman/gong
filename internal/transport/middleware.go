@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"stagebase/internal/common"
+	"stagebase/pkg/gong"
 
 	"github.com/labstack/echo/v4"
 )
@@ -32,7 +33,7 @@ func withHeaders() echo.MiddlewareFunc {
 func logRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger := common.MustLogger(ctx.Request().Context())
+			logger := gong.Logger(ctx.Request().Context())
 			logger.InfoContext(ctx.Request().Context(), "REQUEST", "method", ctx.Request().Method, "uri", ctx.Request().RequestURI)
 			return next(ctx)
 		}
@@ -72,8 +73,7 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 func projectMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(e echo.Context) error {
-			_, ok := actorPID(e)
-			if !ok {
+			if _, ok := actorPID(e); !ok {
 				app := mustApp(e)
 				projectID := mustProjectID(e)
 				projectProps, err := app.ProjectProps(e.Request().Context(), projectID)

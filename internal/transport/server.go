@@ -27,7 +27,9 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 		withHeaders(),
 		middleware.RequestID(),
 		withRequestID(),
-		gong.ContextLogHandler(common.CtxKeyRequestID),
+		gong.ContextLogHandler(
+			common.CtxKeyRequestID,
+		),
 		withApp(app),
 	)
 

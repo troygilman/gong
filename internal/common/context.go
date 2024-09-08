@@ -3,47 +3,38 @@ package common
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
+
+	"stagebase/pkg/gong"
 
 	"github.com/google/uuid"
 )
 
-type CtxKey string
-
 const (
-	CtxKeyRequestID CtxKey = "request_id"
-	CtxKeyLogger    CtxKey = "logger"
-	CtxKeyApp       CtxKey = "app"
-	CtxKeyProjectID CtxKey = "projectID"
-	CtxKeyPID       CtxKey = ParamPID
-	CtxKeyTab       CtxKey = ParamTab
-	CtxKeyFilter    CtxKey = "filter"
-	CtxKeyFlow      CtxKey = ParamFlow
-	CtxKeyFlowNode  CtxKey = ParamFlowNode
-	CtxKeyFlowRange CtxKey = ParamFlowRange
-	CtxKeyTimeStart CtxKey = ParamTimeStart
-	CtxKeyPageIndex CtxKey = ParamPageIndex
+	CtxKeyRequestID gong.Key = "request_id"
+	CtxKeyLogger    gong.Key = "logger"
+	CtxKeyApp       gong.Key = "app"
+	CtxKeyProjectID gong.Key = "projectID"
+	CtxKeyPID       gong.Key = ParamPID
+	CtxKeyTab       gong.Key = ParamTab
+	CtxKeyFilter    gong.Key = "filter"
+	CtxKeyFlow      gong.Key = ParamFlow
+	CtxKeyFlowNode  gong.Key = ParamFlowNode
+	CtxKeyFlowRange gong.Key = ParamFlowRange
+	CtxKeyTimeStart gong.Key = ParamTimeStart
+	CtxKeyPageIndex gong.Key = ParamPageIndex
 )
 
-func valueHelper[T any](ctx context.Context, key CtxKey) (T, bool) {
+func valueHelper[T any](ctx context.Context, key gong.Key) (T, bool) {
 	val, ok := ctx.Value(key).(T)
 	return val, ok
 }
 
-func mustValueHelper[T any](ctx context.Context, key CtxKey) (val T) {
+func mustValueHelper[T any](ctx context.Context, key gong.Key) (val T) {
 	if val, ok := valueHelper[T](ctx, key); ok {
 		return val
 	} else {
 		panic(fmt.Sprintf("value %s of type %T does not exist in context", key, val))
-	}
-}
-
-func MustLogger(ctx context.Context) *slog.Logger {
-	if logger, ok := ctx.Value(CtxKeyLogger).(*slog.Logger); ok {
-		return logger
-	} else {
-		return slog.Default()
 	}
 }
 
