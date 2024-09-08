@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"sort"
-	"stagebase/pkg/gong"
 	"stagebase/sdk"
 	"strconv"
 	"time"
@@ -134,7 +133,7 @@ func NewContextBuilder(ctx context.Context) ContextBuilder {
 	}
 }
 
-func (cb ContextBuilder) With(key gong.Key, val any) ContextBuilder {
+func (cb ContextBuilder) With(key CtxKey, val any) ContextBuilder {
 	cb.ctx = context.WithValue(cb.ctx, key, val)
 	return cb
 }
