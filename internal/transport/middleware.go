@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"stagebase/internal/common"
 
 	"github.com/labstack/echo/v4"
@@ -64,6 +65,29 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 			}
 			ctx.Set("claims", claims)
 			return next(ctx)
+		}
+	}
+}
+
+func projectMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(e echo.Context) error {
+			_, ok := actorPID(e)
+			if !ok {
+				app := mustApp(e)
+				projectID := mustProjectID(e)
+				projectProps, err := app.ProjectProps(e.Request().Context(), projectID)
+				if err != nil {
+					return err
+				}
+				for _, actor := range projectProps.Actors {
+					ctx := e.Request().Context()
+					ctx = context.WithValue(ctx, common.CtxKeyPID, actor.PID)
+					e.SetRequest(e.Request().WithContext(ctx))
+					break
+				}
+			}
+			return next(e)
 		}
 	}
 }
