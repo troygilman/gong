@@ -2,7 +2,6 @@ package transport
 
 import (
 	"io/fs"
-	"log"
 	"net/http"
 	"net/http/pprof"
 	"stagebase/internal/common"
@@ -24,6 +23,9 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 	e.Any("/debug/pprof/trace", makeHandler(pprof.Trace))
 
 	e.Use(
+		middleware.RecoverWithConfig(middleware.RecoverConfig{
+			LogErrorFunc: newPanicError,
+		}),
 		withHeaders(),
 		middleware.RequestID(),
 		withRequestID(),
@@ -44,11 +46,17 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 	return e, errChan
 }
 
-func httpErrorHandler(err error, ctx echo.Context) {
+func httpErrorHandler(err error, e echo.Context) {
 	switch err := err.(type) {
 	default:
-		log.Printf("ERROR: %s %s - %s", ctx.Request().Method, ctx.Request().RequestURI, err.Error())
+		ctx := e.Request().Context()
+		logger := gong.Logger(ctx)
+		logger.ErrorContext(ctx, err.Error(), "method", e.Request().Method, "uri", e.Request().RequestURI)
 	}
+}
+
+func newPanicError(e echo.Context, err error, stack []byte) error {
+	return err
 }
 
 func makeHandler(handler http.HandlerFunc) echo.HandlerFunc {

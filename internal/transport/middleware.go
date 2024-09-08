@@ -32,10 +32,11 @@ func withHeaders() echo.MiddlewareFunc {
 
 func logRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			logger := gong.Logger(ctx.Request().Context())
-			logger.InfoContext(ctx.Request().Context(), "REQUEST", "method", ctx.Request().Method, "uri", ctx.Request().RequestURI)
-			return next(ctx)
+		return func(e echo.Context) error {
+			ctx := e.Request().Context()
+			logger := gong.Logger(ctx)
+			logger.InfoContext(ctx, "REQUEST", "method", e.Request().Method, "uri", e.Request().RequestURI)
+			return next(e)
 		}
 	}
 }
