@@ -62,6 +62,10 @@ func CtxPID(ctx context.Context) (string, bool) {
 	return valueHelper[string](ctx, CtxKeyPID)
 }
 
+func MustCtxPID(ctx context.Context) string {
+	return mustValueHelper[string](ctx, CtxKeyPID)
+}
+
 func MustValueActorPID(ctx context.Context) string {
 	return mustValueHelper[string](ctx, CtxKeyPID)
 }

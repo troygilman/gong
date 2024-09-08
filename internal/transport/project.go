@@ -17,16 +17,17 @@ import (
 )
 
 func bindProjectHandlers(g gong.Group) {
-	gong.NewGroup(g, "/project/:projectID", func(e *echo.Group) {
-		e.GET("", handleGetProject)
-		e.GET("/events", handleGetProjectEvents)
-		e.GET("/sse/project", handleConnectSseProject)
-		e.GET("/sse/events", handleConnectSseEvents)
-		e.GET("/chart", handleGetActorChart)
-		e.GET("/connect", handleConnectProject)
-		e.GET("/admin", handleGetProjectAdmin)
-		e.GET("/admin/sse", handleConnectSseProjectAdmin)
-	},
+	gong.NewGroup(g, "/project/:projectID",
+		func(e *echo.Group) {
+			e.GET("", handleGetProject)
+			e.GET("/events", handleGetProjectEvents)
+			e.GET("/sse/project", handleConnectSseProject)
+			e.GET("/sse/events", handleConnectSseEvents)
+			e.GET("/chart", handleGetActorChart)
+			e.GET("/connect", handleConnectProject)
+			e.GET("/admin", handleGetProjectAdmin)
+			e.GET("/admin/sse", handleConnectSseProjectAdmin)
+		},
 		gong.ContextLogHandler(
 			common.CtxKeyFilter,
 			common.CtxKeyPID,
@@ -47,70 +48,23 @@ func bindProjectHandlers(g gong.Group) {
 	)
 }
 
-func handleGetProject(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
-	projectID := mustProjectID(eCtx)
-
-	switch eCtx.Request().Header.Get("View") {
+func handleGetProject(e echo.Context) error {
+	ctx := e.Request().Context()
+	switch e.Request().Header.Get("View") {
 	case common.ProjectViewActor:
-		actorPID, ok := actorPID(eCtx)
-		if !ok {
-			return errors.New("actorPID is empty")
-		}
-
-		actor, err := app.Actor(ctx, projectID, actorPID)
-		if err != nil {
-			return err
-		}
-
-		return view_project.ProjectActor(actor).Render(ctx, eCtx.Response())
-
+		return view_project.ProjectActorComponent(ctx).Render(ctx, e.Response())
 	case common.ProjectViewFlowChart:
-		return view_project.FlowTabContent().Render(ctx, eCtx.Response())
+		return view_project.FlowTabContent().Render(ctx, e.Response())
 	case common.ProjectViewFlowChartNodeInfo:
-		actorPID, ok := actorPID(eCtx)
-		if !ok {
-			return errors.New("pid is empty")
-		}
-
-		nodePID, ok := ctx.Value(common.CtxKeyFlowNode).(string)
-		if !ok {
-			return errors.New("flow_node is empty")
-		}
-
-		flowType, ok := ctx.Value(common.CtxKeyFlow).(string)
-		if !ok {
-			return errors.New("flow is missing")
-		}
-
-		source, err := isSources(flowType)
-		if err != nil {
-			return err
-		}
-
-		flowRange, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range)
-		if !ok {
-			return errors.New("flow_range is missing")
-		}
-
-		nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source, flowRange)
-		if err != nil {
-			return err
-		}
-
-		if nodeInfo.MsgCount > 0 {
-			return view_project.FlowChartNodeInfoContent(nodeInfo).Render(ctx, eCtx.Response())
-		} else {
-			return view_project.FlowChartNodeInfoContentEmpty("").Render(ctx, eCtx.Response())
-		}
+		return view_project.FlowChartNodeInfoComponent(ctx, false).Render(ctx, e.Response())
 	default:
-		return view_project.ProjectComponent(ctx).Render(ctx, eCtx.Response())
+		return view_project.ProjectComponent(ctx).Render(ctx, e.Response())
 	}
 }
 
-func handleGetProjectEvents(eCtx echo.Context) error {
-	return view_project.EventTableComponent(eCtx.Request().Context(), false).Render(eCtx.Request().Context(), eCtx.Response())
+func handleGetProjectEvents(e echo.Context) error {
+	ctx := e.Request().Context()
+	return view_project.EventTableComponent(ctx, false).Render(ctx, e.Response())
 }
 
 func handleConnectSseProject(eCtx echo.Context) error {

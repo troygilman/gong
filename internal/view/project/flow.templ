@@ -2,8 +2,8 @@ package project
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"stagebase/internal/common"
 	commonView "stagebase/internal/view/common"
 )
@@ -23,7 +23,7 @@ templ FlowTabContent() {
 			>
 				<span class="loading loading-dots loading-lg"></span>
 			</div>
-			@flowChartNodeInfo(ctx)
+			@FlowChartNodeInfoComponent(ctx, true)
 		</div>
 	</div>
 }
@@ -113,16 +113,59 @@ templ flowChartFilterTypeItem(label string, active string) {
 	>{ label }</a>
 }
 
-func flowChartNodeInfo(ctx context.Context) templ.Component {
-	if node, ok := ctx.Value(common.CtxKeyFlowNode).(string); ok {
-		log.Println("flowChartNodeInfo: node found", node)
-		return flowChartNodeInfoComponent(node)
+func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component {
+	if lazy {
+		node, _ := ctx.Value(common.CtxKeyFlowNode).(string)
+		return flowChartNodeInfoEmptyComponent(node)
 	}
-	log.Println("flowChartNodeInfo: node not found")
-	return flowChartNodeInfoComponent("")
+
+	app := common.MustValueApp(ctx)
+	projectID := common.MustValueProjectID(ctx)
+	actorPID := common.MustValueActorPID(ctx)
+
+	nodePID, ok := ctx.Value(common.CtxKeyFlowNode).(string)
+	if !ok {
+		panic("flow_node is empty")
+	}
+
+	flowType, ok := ctx.Value(common.CtxKeyFlow).(string)
+	if !ok {
+		panic("flow is missing")
+	}
+
+	source, err := isSources(flowType)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	flowRange, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range)
+	if !ok {
+		panic("flow_range is missing")
+	}
+
+	nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source, flowRange)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if nodeInfo.MsgCount == 0 {
+		return flowChartNodeInfoComponent(nodeInfo)
+	}
+	return flowChartNodeInfoComponent(nodeInfo)
 }
 
-templ flowChartNodeInfoComponent(node string) {
+func isSources(flowType string) (bool, error) {
+	switch flowType {
+	case "Sources":
+		return true, nil
+	case "Sinks":
+		return false, nil
+	default:
+		return false, errors.New("invalid flow type")
+	}
+}
+
+templ flowChartNodeInfoEmptyComponent(node string) {
 	<div
 		id="node-info-container"
 		class="relative flex grow w-full min-h-0 items-center justify-center"
@@ -149,12 +192,15 @@ templ flowChartNodeInfoComponent(node string) {
 				}
 			}
 		</script>
-		@FlowChartNodeInfoContentEmpty(node)
+		@flowChartNodeState(node)
+		<div id="node-info" class="w-full h-full flex items-center justify-center">
+			Select a source/sink
+		</div>
 		<span class="absolute htmx-indicator loading loading-dots loading-lg"></span>
 	</div>
 }
 
-templ FlowChartNodeInfoContent(info common.SourcesSinksNodeInfo) {
+templ flowChartNodeInfoComponent(info common.SourcesSinksNodeInfo) {
 	<div id="node-info" class="flex flex-col w-full h-full p-2">
 		@flowChartNodeState(info.PID)
 		<div class="stats stats-vertical border border-color">
@@ -169,13 +215,6 @@ templ FlowChartNodeInfoContent(info common.SourcesSinksNodeInfo) {
 				<div class="stat-desc">nice</div>
 			</div>
 		</div>
-	</div>
-}
-
-templ FlowChartNodeInfoContentEmpty(node string) {
-	<div id="node-info" class="w-full h-full flex items-center justify-center">
-		@flowChartNodeState(node)
-		Select a source/sink
 	</div>
 }
 

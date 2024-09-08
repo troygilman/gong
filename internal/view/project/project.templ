@@ -194,7 +194,18 @@ const (
 	tabLabelFlow     = "Flow"
 )
 
-templ ProjectActor(actor common.Actor) {
+func ProjectActorComponent(ctx context.Context) templ.Component {
+	app := common.MustValueApp(ctx)
+	projectID := common.MustValueProjectID(ctx)
+	actorPID := common.MustCtxPID(ctx)
+	actor, err := app.Actor(ctx, projectID, actorPID)
+	if err != nil {
+		panic(err.Error())
+	}
+	return projectActor(actor)
+}
+
+templ projectActor(actor common.Actor) {
 	@ActorContent(actor)
 	@ProjectActorListItem(actor, true)
 	@ProjectMenu(ctx)
