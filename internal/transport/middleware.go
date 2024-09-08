@@ -10,22 +10,22 @@ import (
 
 func withRequestID() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
-			cb = cb.With(common.CtxKeyRequestID, ctx.Response().Header().Get(echo.HeaderXRequestID))
-			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
-			return next(ctx)
+		return func(e echo.Context) error {
+			cb := common.NewContextBuilder(e.Request().Context())
+			cb = cb.With(common.CtxKeyRequestID, e.Response().Header().Get(echo.HeaderXRequestID))
+			e.SetRequest(e.Request().WithContext(cb.Build()))
+			return next(e)
 		}
 	}
 }
 
 func withHeaders() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			ctx.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			ctx.Response().Header().Set("Pragma", "no-cache")
-			ctx.Response().Header().Set("Expires", "0")
-			return next(ctx)
+		return func(e echo.Context) error {
+			e.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			e.Response().Header().Set("Pragma", "no-cache")
+			e.Response().Header().Set("Expires", "0")
+			return next(e)
 		}
 	}
 }
@@ -43,21 +43,21 @@ func logRequest() echo.MiddlewareFunc {
 
 func withApp(app common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			cb := common.NewContextBuilder(ctx.Request().Context())
+		return func(e echo.Context) error {
+			cb := common.NewContextBuilder(e.Request().Context())
 			cb = cb.With(common.CtxKeyApp, app)
-			ctx.SetRequest(ctx.Request().WithContext(cb.Build()))
+			e.SetRequest(e.Request().WithContext(cb.Build()))
 
-			ctx.Set("app", app)
-			return next(ctx)
+			e.Set("app", app)
+			return next(e)
 		}
 	}
 }
 
 func withJWT(app common.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			tokenCookie, err := ctx.Cookie("auth-token")
+		return func(e echo.Context) error {
+			tokenCookie, err := e.Cookie("auth-token")
 			if err != nil {
 				return err
 			}
@@ -65,8 +65,8 @@ func withJWT(app common.App) echo.MiddlewareFunc {
 			if err != nil {
 				return err
 			}
-			ctx.Set("claims", claims)
-			return next(ctx)
+			e.Set("claims", claims)
+			return next(e)
 		}
 	}
 }

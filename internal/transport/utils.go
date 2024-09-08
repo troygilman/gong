@@ -16,16 +16,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func mustApp(ctx echo.Context) common.App {
-	app, ok := ctx.Get("app").(common.App)
+func mustApp(e echo.Context) common.App {
+	app, ok := e.Get("app").(common.App)
 	if !ok {
 		panic(fmt.Sprintln("App does not exist in context"))
 	}
 	return app
-}
-
-func renderView(echoCtx echo.Context, ctx context.Context, view templ.Component) error {
-	return view.Render(ctx, echoCtx.Response())
 }
 
 func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data any) error {
@@ -54,45 +50,40 @@ func writeServerSentEvent(ctx context.Context, w io.Writer, event string, data a
 	return nil
 }
 
-func requestID(ctx echo.Context) string {
-	return ctx.Response().Header().Get(echo.HeaderXRequestID)
+func requestID(e echo.Context) string {
+	return e.Response().Header().Get(echo.HeaderXRequestID)
 }
 
-func mustProjectID(ctx echo.Context) uuid.UUID {
-	return ctx.Request().Context().Value(common.CtxKeyProjectID).(uuid.UUID)
+func mustProjectID(e echo.Context) uuid.UUID {
+	return e.Request().Context().Value(common.CtxKeyProjectID).(uuid.UUID)
 }
 
-func actorPID(ctx echo.Context) (string, bool) {
-	actorPID, ok := ctx.Request().Context().Value(common.CtxKeyPID).(string)
+func actorPID(e echo.Context) (string, bool) {
+	actorPID, ok := e.Request().Context().Value(common.CtxKeyPID).(string)
 	return actorPID, ok
 }
 
-func tab(ctx echo.Context) (string, bool) {
-	tab, ok := ctx.Request().Context().Value(common.CtxKeyTab).(string)
-	return tab, ok
-}
-
-func filter(ctx echo.Context) (common.Filter, bool) {
-	filter, ok := ctx.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
+func filter(e echo.Context) (common.Filter, bool) {
+	filter, ok := e.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
 	return filter, ok
 }
 
-func sse(eCtx echo.Context, listenerType common.ListenerType, f func(sses []any) error) error {
-	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
+func sse(e echo.Context, listenerType common.ListenerType, f func(sses []any) error) error {
+	ctx := e.Request().Context()
+	app := mustApp(e)
 
-	flusher, ok := eCtx.Response().Writer.(http.Flusher)
+	flusher, ok := e.Response().Writer.(http.Flusher)
 	if !ok {
 		return errors.New("sse not supported")
 	}
 
-	eCtx.Response().Header().Set("Content-Type", "text/event-stream")
+	e.Response().Header().Set("Content-Type", "text/event-stream")
 
-	requestID := requestID(eCtx)
+	requestID := requestID(e)
 
-	projectID := mustProjectID(eCtx)
+	projectID := mustProjectID(e)
 
-	filter, _ := filter(eCtx)
+	filter, _ := filter(e)
 
 	sseChan, err := app.ListenStart(ctx, projectID, requestID, listenerType, filter)
 	if err != nil {

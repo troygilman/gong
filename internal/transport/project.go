@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"stagebase/internal/common"
 	"stagebase/internal/core"
-	view_admin "stagebase/internal/view/admin"
-	view_project "stagebase/internal/view/project"
+	adminView "stagebase/internal/view/admin"
+	projectView "stagebase/internal/view/project"
 	"stagebase/pkg/gong"
 	"stagebase/sdk"
 
@@ -52,41 +52,41 @@ func handleGetProject(e echo.Context) error {
 	ctx := e.Request().Context()
 	switch e.Request().Header.Get("View") {
 	case common.ProjectViewActor:
-		return view_project.ProjectActorComponent(ctx).Render(ctx, e.Response())
+		return projectView.ProjectActorComponent(ctx).Render(ctx, e.Response())
 	case common.ProjectViewFlowChart:
-		return view_project.FlowTabContent().Render(ctx, e.Response())
+		return projectView.FlowTabContent().Render(ctx, e.Response())
 	case common.ProjectViewFlowChartNodeInfo:
-		return view_project.FlowChartNodeInfoComponent(ctx, false).Render(ctx, e.Response())
+		return projectView.FlowChartNodeInfoComponent(ctx, false).Render(ctx, e.Response())
 	default:
-		return view_project.ProjectComponent(ctx).Render(ctx, e.Response())
+		return projectView.ProjectComponent(ctx).Render(ctx, e.Response())
 	}
 }
 
 func handleGetProjectEvents(e echo.Context) error {
 	ctx := e.Request().Context()
-	return view_project.EventTableComponent(ctx, false).Render(ctx, e.Response())
+	return projectView.EventTableComponent(ctx, false).Render(ctx, e.Response())
 }
 
-func handleConnectSseProject(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeProject, func(sses []any) error {
+func handleConnectSseProject(e echo.Context) error {
+	ctx := e.Request().Context()
+	return sse(e, common.ListenerTypeProject, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
 			case common.SseNewActor:
 				if err := writeServerSentEvent(
 					ctx,
-					eCtx.Response(),
+					e.Response(),
 					common.SseTypeNewActor,
-					view_project.ProjectActorListItem(sse.Actor, false),
+					projectView.ProjectActorListItem(sse.Actor, false),
 				); err != nil {
 					return err
 				}
 			case common.SseNewEvents:
 				if err := writeServerSentEvent(
 					ctx,
-					eCtx.Response(),
+					e.Response(),
 					common.SseTypeUpdateActorNumEvents+sse.Actor.PID,
-					view_project.ProjectActorBadge(sse.Actor),
+					projectView.ProjectActorBadge(sse.Actor),
 				); err != nil {
 					return err
 				}
@@ -96,9 +96,9 @@ func handleConnectSseProject(eCtx echo.Context) error {
 	})
 }
 
-func handleConnectSseEvents(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeEvents, func(sses []any) error {
+func handleConnectSseEvents(e echo.Context) error {
+	ctx := e.Request().Context()
+	return sse(e, common.ListenerTypeEvents, func(sses []any) error {
 		eventCount := 0
 		for _, sse := range sses {
 			switch sse := sse.(type) {
@@ -112,7 +112,7 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 		if eventCount > 0 {
 			if err := writeServerSentEvent(
 				ctx,
-				eCtx.Response(),
+				e.Response(),
 				common.SseTypeNewEvents,
 				nil,
 			); err != nil {
@@ -126,13 +126,13 @@ func handleConnectSseEvents(eCtx echo.Context) error {
 
 var upgrader = websocket.Upgrader{}
 
-func handleConnectProject(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
+func handleConnectProject(e echo.Context) error {
+	ctx := e.Request().Context()
+	app := mustApp(e)
 
-	projectID := mustProjectID(eCtx)
+	projectID := mustProjectID(e)
 
-	c, err := upgrader.Upgrade(eCtx.Response().Writer, eCtx.Request(), nil)
+	c, err := upgrader.Upgrade(e.Response().Writer, e.Request(), nil)
 	if err != nil {
 		return err
 	}
@@ -155,22 +155,22 @@ func handleConnectProject(eCtx echo.Context) error {
 	}
 }
 
-func handleGetActorChart(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	app := mustApp(eCtx)
-	projectID := mustProjectID(eCtx)
+func handleGetActorChart(e echo.Context) error {
+	ctx := e.Request().Context()
+	app := mustApp(e)
+	projectID := mustProjectID(e)
 
-	actorPID, ok := actorPID(eCtx)
+	actorPID, ok := actorPID(e)
 	if !ok {
 		return errors.New("actorPID is missing")
 	}
 
-	flowType, ok := eCtx.Request().Context().Value(common.CtxKeyFlow).(string)
+	flowType, ok := e.Request().Context().Value(common.CtxKeyFlow).(string)
 	if !ok {
 		return errors.New("flow is missing")
 	}
 
-	flowRange, ok := eCtx.Request().Context().Value(common.CtxKeyFlowRange).(common.Range)
+	flowRange, ok := e.Request().Context().Value(common.CtxKeyFlowRange).(common.Range)
 	if !ok {
 		return errors.New("flow range is missing")
 	}
@@ -185,7 +185,7 @@ func handleGetActorChart(eCtx echo.Context) error {
 		return err
 	}
 
-	return view_project.FlowChart(pids, flowType).Render(ctx, eCtx.Response())
+	return projectView.FlowChart(pids, flowType).Render(ctx, e.Response())
 }
 
 func isSources(flowType string) (bool, error) {
@@ -199,29 +199,29 @@ func isSources(flowType string) (bool, error) {
 	}
 }
 
-func handleGetProjectAdmin(eCtx echo.Context) error {
-	return view_admin.Admin().Render(eCtx.Request().Context(), eCtx.Response())
+func handleGetProjectAdmin(e echo.Context) error {
+	return adminView.Admin().Render(e.Request().Context(), e.Response())
 }
 
-func handleConnectSseProjectAdmin(eCtx echo.Context) error {
-	ctx := eCtx.Request().Context()
-	return sse(eCtx, common.ListenerTypeMetrics, func(sses []any) error {
+func handleConnectSseProjectAdmin(e echo.Context) error {
+	ctx := e.Request().Context()
+	return sse(e, common.ListenerTypeMetrics, func(sses []any) error {
 		for _, sse := range sses {
 			switch sse := sse.(type) {
 			case core.MetricGroup:
 				if err := writeServerSentEvent(
 					ctx,
-					eCtx.Response(),
+					e.Response(),
 					common.SseTypeUpdateMetricLatency,
-					view_admin.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
+					adminView.Metric(sse.Avg.Latency, common.SseTypeUpdateMetricLatency),
 				); err != nil {
 					return err
 				}
 				if err := writeServerSentEvent(
 					ctx,
-					eCtx.Response(),
+					e.Response(),
 					common.SseTypeUpdateMetricThroughput,
-					view_admin.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
+					adminView.Metric(sse.Avg.Throughput, common.SseTypeUpdateMetricThroughput),
 				); err != nil {
 					return err
 				}
