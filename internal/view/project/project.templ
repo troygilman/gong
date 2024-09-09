@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"hash/fnv"
 	"stagebase/internal/common"
 	commonView "stagebase/internal/view/common"
 )
@@ -78,17 +79,12 @@ templ StatePID(pid string) {
 }
 
 func ProjectMenu(ctx context.Context) templ.Component {
-	projectID := uuid.Nil
-	if id, ok := ctx.Value(common.CtxKeyProjectID).(uuid.UUID); ok {
-		projectID = id
+	projectID := common.MustValueProjectID(ctx)
+	tab, ok := ctx.Value(common.CtxKeyTab).(string)
+	if !ok {
+		panic("tab does not exist in context")
 	}
-
-	activeTab := tabLabelOverview
-	if tab, ok := ctx.Value(common.CtxKeyTab).(string); ok {
-		activeTab = tab
-	}
-
-	return projectMenuComponent(projectID, activeTab)
+	return projectMenuComponent(projectID, tab)
 }
 
 templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
@@ -105,9 +101,9 @@ templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
 			</ul>
 		</div>
 		<ul id="project-menu" hx-swap-oob="true" class="menu menu-md p-0">
-			@projectMenuItem(tabLabelOverview, activeTab == tabLabelOverview, commonView.StatsIcon("size-5", activeTab == tabLabelOverview))
-			@projectMenuItem(tabLabelEvents, activeTab == tabLabelEvents, commonView.TableIcon("size-5", activeTab == tabLabelEvents))
-			@projectMenuItem(tabLabelFlow, activeTab == tabLabelFlow, commonView.FlowIcon("size-5", activeTab == tabLabelFlow))
+			@projectMenuItem(TabLabelOverview, activeTab == TabLabelOverview, commonView.StatsIcon("size-5", activeTab == TabLabelOverview))
+			@projectMenuItem(TabLabelEvents, activeTab == TabLabelEvents, commonView.TableIcon("size-5", activeTab == TabLabelEvents))
+			@projectMenuItem(TabLabelFlow, activeTab == TabLabelFlow, commonView.FlowIcon("size-5", activeTab == TabLabelFlow))
 		</ul>
 	</div>
 }
@@ -147,6 +143,12 @@ templ ProjectActorList(props common.ProjectProps) {
 			}
 		</ul>
 	</div>
+}
+
+func formatActorPID(pid string) string {
+	h := fnv.New32a()
+	h.Write([]byte(pid))
+	return fmt.Sprint(h.Sum32())
 }
 
 templ ProjectActorListItem(actor common.Actor, oob bool) {
@@ -189,9 +191,9 @@ templ ProjectActorBadge(actor common.Actor) {
 }
 
 const (
-	tabLabelOverview = "Overview"
-	tabLabelEvents   = "Events"
-	tabLabelFlow     = "Flow"
+	TabLabelOverview = "Overview"
+	TabLabelEvents   = "Events"
+	TabLabelFlow     = "Flow"
 )
 
 func ProjectActorComponent(ctx context.Context) templ.Component {
@@ -220,13 +222,13 @@ templ ActorContent(actor common.Actor) {
 	>
 		<input id="tab" type="hidden" name={ common.ParamTab } value={ ctx.Value(common.CtxKeyTab).(string) }/>
 		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
-		@tabContent(tabLabelOverview) {
+		@tabContent(TabLabelOverview) {
 			@OverviewTabContent(actor)
 		}
-		@tabContent(tabLabelEvents) {
+		@tabContent(TabLabelEvents) {
 			@EventContentComponent(ctx)
 		}
-		@tabContent(tabLabelFlow) {
+		@tabContent(TabLabelFlow) {
 			@FlowTabContent()
 		}
 	</div>

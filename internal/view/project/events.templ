@@ -7,7 +7,6 @@ import (
 	"stagebase/internal/common"
 	commonView "stagebase/internal/view/common"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -204,10 +203,6 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			</div>
 		</div>
 	</div>
-}
-
-func formatActorPID(pid string) string {
-	return strings.ReplaceAll(pid, "/", "-")
 }
 
 func EventTableComponent(ctx context.Context, lazy bool) templ.Component {

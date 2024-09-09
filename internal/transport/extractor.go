@@ -2,6 +2,7 @@ package transport
 
 import (
 	"stagebase/internal/common"
+	projectView "stagebase/internal/view/project"
 	"strconv"
 	"time"
 
@@ -28,7 +29,7 @@ func extractActorPID(e echo.Context) (any, any) {
 func extractTab(e echo.Context) (any, any) {
 	tab := e.QueryParam(common.ParamTab)
 	if tab == "" {
-		tab = "Events"
+		tab = projectView.TabLabelOverview
 	}
 	return common.CtxKeyTab, tab
 }
