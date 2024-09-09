@@ -20,7 +20,7 @@ func bindProjectHandlers(g gong.Group) {
 	gong.NewGroup(g, "/project/:projectID",
 		func(e *echo.Group) {
 			e.GET("", handleGetProject)
-			e.GET("/events", handleGetProjectEvents)
+			e.GET("/events", gong.NewTemplHandler(projectView.EventTableComponent(false)))
 			e.GET("/sse/project", handleConnectSseProject)
 			e.GET("/sse/events", handleConnectSseEvents)
 			e.GET("/chart", handleGetActorChart)
@@ -60,11 +60,6 @@ func handleGetProject(e echo.Context) error {
 	default:
 		return projectView.ProjectComponent(ctx).Render(ctx, e.Response())
 	}
-}
-
-func handleGetProjectEvents(e echo.Context) error {
-	ctx := e.Request().Context()
-	return projectView.EventTableComponent(ctx, false).Render(ctx, e.Response())
 }
 
 func handleConnectSseProject(e echo.Context) error {

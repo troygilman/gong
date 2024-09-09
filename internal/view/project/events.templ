@@ -52,7 +52,7 @@ templ eventContentComponent(filter common.Filter, timeStart time.Time, pageIdx i
 		<input id="project-url" type="hidden" value={ commonView.FormatProjectUrl(ctx) }/>
 		<input id="time-start" type="hidden" name={ common.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
 		<input id="page-index" type="hidden" name={ common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
-		@EventTableComponent(ctx, true)
+		@EventTableComponent(true)
 		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
 			<span class="loading loading-spinner w-16"></span>
 		</div>
@@ -205,7 +205,11 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 	</div>
 }
 
-func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
+templ EventTableComponent(lazy bool) {
+	@eventTableComponent(ctx, lazy)
+}
+
+func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 	app := common.MustCtxApp(ctx)
 	projectID := common.MustCtxProjectID(ctx)
 	actorPID := common.MustCtxActorPID(ctx)
@@ -224,17 +228,10 @@ func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
 		}
 	}
 
-	return eventTableComponent(events, lazy, pageIdx, maxPageIdx)
+	return eventTable(events, lazy, pageIdx, maxPageIdx)
 }
 
-templ eventTableComponent(events common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
-	if !lazy {
-		@eventTablePaginationControl(pageIdx, maxPageIdx)
-	}
-	@eventTable(events, lazy)
-}
-
-templ eventTable(events common.EventList, lazy bool) {
+templ eventTable(events common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
 	<table
 		class="table table-pin-rows table-sm"
 		if lazy {
@@ -293,5 +290,8 @@ templ eventTable(events common.EventList, lazy bool) {
 			<div class="text-2xl">No events found</div>
 			<div class="">No events match the selected filters</div>
 		</div>
+	}
+	if !lazy {
+		@eventTablePaginationControl(pageIdx, maxPageIdx)
 	}
 }

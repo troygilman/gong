@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 )
 
@@ -80,4 +81,10 @@ func (h contextLogHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 	r.Add(attrs...)
 	return h.Handler.Handle(ctx, r)
+}
+
+func NewTemplHandler(component templ.Component) echo.HandlerFunc {
+	return func(e echo.Context) error {
+		return component.Render(e.Request().Context(), e.Response())
+	}
 }
