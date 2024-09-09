@@ -119,9 +119,9 @@ func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component 
 		return flowChartNodeInfoEmptyComponent(node)
 	}
 
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
-	actorPID := common.MustValueActorPID(ctx)
+	app := common.MustCtxApp(ctx)
+	projectID := common.MustCtxProjectID(ctx)
+	actorPID := common.MustCtxActorPID(ctx)
 
 	nodePID, ok := ctx.Value(common.CtxKeyFlowNode).(string)
 	if !ok {

@@ -10,8 +10,8 @@ import (
 )
 
 func ProjectComponent(ctx context.Context) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
+	app := common.MustCtxApp(ctx)
+	projectID := common.MustCtxProjectID(ctx)
 	pid, _ := common.CtxPID(ctx)
 	props, err := app.ProjectProps(ctx, projectID)
 	if err != nil {
@@ -79,7 +79,7 @@ templ StatePID(pid string) {
 }
 
 func ProjectMenu(ctx context.Context) templ.Component {
-	projectID := common.MustValueProjectID(ctx)
+	projectID := common.MustCtxProjectID(ctx)
 	tab, ok := ctx.Value(common.CtxKeyTab).(string)
 	if !ok {
 		panic("tab does not exist in context")
@@ -197,8 +197,8 @@ const (
 )
 
 func ProjectActorComponent(ctx context.Context) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
+	app := common.MustCtxApp(ctx)
+	projectID := common.MustCtxProjectID(ctx)
 	actorPID := common.MustCtxPID(ctx)
 	actor, err := app.Actor(ctx, projectID, actorPID)
 	if err != nil {

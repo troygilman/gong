@@ -23,12 +23,12 @@ var eventTableIncludes = []string{
 }
 
 func EventContentComponent(ctx context.Context) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
-	actorPID := common.MustValueActorPID(ctx)
-	filter, _ := common.ValueFilter(ctx)
-	pageIdx, _ := common.ValuePageIndex(ctx)
-	timeStart, ok := common.ValueTimeStart(ctx)
+	app := common.MustCtxApp(ctx)
+	projectID := common.MustCtxProjectID(ctx)
+	actorPID := common.MustCtxActorPID(ctx)
+	filter, _ := common.CtxFilter(ctx)
+	pageIdx, _ := common.CtxPageIndex(ctx)
+	timeStart, ok := common.CtxTimeStart(ctx)
 	if !ok {
 		actor, err := app.Actor(ctx, projectID, actorPID)
 		if err != nil {
@@ -206,12 +206,12 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 }
 
 func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
-	app := common.MustValueApp(ctx)
-	projectID := common.MustValueProjectID(ctx)
-	actorPID := common.MustValueActorPID(ctx)
-	timeStart, _ := common.ValueTimeStart(ctx)
-	pageIdx, _ := common.ValuePageIndex(ctx)
-	filter, _ := common.ValueFilter(ctx)
+	app := common.MustCtxApp(ctx)
+	projectID := common.MustCtxProjectID(ctx)
+	actorPID := common.MustCtxActorPID(ctx)
+	timeStart, _ := common.CtxTimeStart(ctx)
+	pageIdx, _ := common.CtxPageIndex(ctx)
+	filter, _ := common.CtxFilter(ctx)
 
 	events := []common.Event{}
 	maxPageIdx := 0
