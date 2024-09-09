@@ -18,10 +18,10 @@ templ FlowTabContent() {
 			<div
 				hx-get={ commonView.FormatProjectUrl(ctx) + "/chart" }
 				hx-trigger="load"
-				hx-include={ buildIncludes(commonView.StandardIncludes) }
+				hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 				class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
 			>
-				<span class="loading loading-dots loading-lg"></span>
+				<span class="loading loading-spinner w-16"></span>
 			</div>
 			@FlowChartNodeInfoComponent(ctx, true)
 		</div>
@@ -52,7 +52,7 @@ templ flowChartFilterRangeComponent(rng common.Range) {
 				class="flex flex-col w-full"
 				hx-get={ commonView.FormatProjectUrl(ctx) }
 				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
-				hx-include={ buildIncludes(commonView.StandardIncludes) }
+				hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 				hx-push-url="true"
 				hx-trigger="flow-chart-filter-range-submit"
 				hx-target="#actor-flow-chart-widget"
@@ -104,7 +104,7 @@ templ flowChartFilterTypeItem(label string, active string) {
 			hx-get={ commonView.FormatProjectUrl(ctx) }
 			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
 			hx-vals={ fmt.Sprintf(`{"%s": "%s"}`, common.CtxKeyFlow, label) }
-			hx-include={ buildIncludes(commonView.StandardIncludes) }
+			hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 			hx-push-url="true"
 			hx-trigger="click"
 			hx-target="#actor-flow-chart-widget"
@@ -171,7 +171,7 @@ templ flowChartNodeInfoEmptyComponent(node string) {
 		class="relative flex grow w-full min-h-0 items-center justify-center"
 		hx-get={ commonView.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChartNodeInfo) }
-		hx-include={ buildIncludes(commonView.StandardIncludes) }
+		hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 		hx-vals={ fmt.Sprintf(`js:{"%s": getNode(event)}`, common.ParamFlowNode) }
 		hx-target="#node-info"
 		hx-swap="outerHTML"
@@ -196,7 +196,7 @@ templ flowChartNodeInfoEmptyComponent(node string) {
 		<div id="node-info" class="w-full h-full flex items-center justify-center">
 			Select a source/sink
 		</div>
-		<span class="absolute htmx-indicator loading loading-dots loading-lg"></span>
+		<span class="absolute htmx-indicator loading loading-spinner w-16"></span>
 	</div>
 }
 

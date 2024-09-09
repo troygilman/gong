@@ -21,7 +21,7 @@ func ProjectComponent(ctx context.Context) templ.Component {
 
 templ projectComponent(props common.ProjectProps, pid string) {
 	@commonView.Index() {
-		<div id="includes" hx-include={ buildIncludes(commonView.StandardIncludes) }></div>
+		<div id="includes" hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }></div>
 		<script>
 			const next = htmx.createEventSource;
 			htmx.createEventSource = function(url) {
@@ -119,7 +119,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 			hx-get={ commonView.FormatProjectUrl(ctx) }
 			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
-			hx-include={ buildIncludes(commonView.StandardIncludes) }
+			hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 			hx-push-url="true"
 			hx-trigger="click"
 			hx-swap="none"
@@ -156,7 +156,7 @@ templ ProjectActorListItem(actor common.Actor, oob bool) {
 		hx-get={ commonView.FormatProjectUrl(ctx) }
 		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewActor) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
-		hx-include={ buildIncludes(commonView.StandardIncludes) }
+		hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
 		hx-trigger="click"
 		hx-push-url="true"
 		if oob {

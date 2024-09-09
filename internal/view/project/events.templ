@@ -43,7 +43,7 @@ func EventContentComponent(ctx context.Context) templ.Component {
 templ eventContentComponent(filter common.Filter, timeStart time.Time, pageIdx int) {
 	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
-		@eventTablePaginationControls(pageIdx, 0)
+		@eventTablePaginationControl(pageIdx, 0)
 	</div>
 	<div
 		id="events-container"
@@ -55,77 +55,47 @@ templ eventContentComponent(filter common.Filter, timeStart time.Time, pageIdx i
 		<input id="page-index" type="hidden" name={ common.ParamPageIndex } value={ strconv.Itoa(pageIdx) }/>
 		@EventTableComponent(ctx, true)
 		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
-			<span class="loading loading-dots loading-lg"></span>
+			<span class="loading loading-spinner w-16"></span>
 		</div>
 	</div>
 }
 
-templ eventTablePaginationControls(pageIndex int, maxPageIndex int) {
+templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 	<div id="pagination-controls" hx-swap-oob="true" class="join">
-		<button
-			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ commonView.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
-			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, 0) }
-			hx-trigger="click"
-			hx-swap="none"
-			hx-push-url="true"
-			if pageIndex == 0 {
-				disabled
-			}
-		>
+		@eventTablePaginationControlItem(pageIndex, 0, 0) {
 			@commonView.DoubleArrowIcon("")
-		</button>
-		<button
-			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ commonView.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
-			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex-1) }
-			hx-trigger="click"
-			hx-swap="none"
-			hx-push-url="true"
-			if pageIndex == 0 {
-				disabled
-			}
-		>
+		}
+		@eventTablePaginationControlItem(pageIndex, pageIndex-1, 0) {
 			@commonView.ArrowIcon("")
-		</button>
+		}
 		<div class="join-item button w-fit min-w-8 !text-base-content" disabled>
 			{ strconv.Itoa(pageIndex) }
 		</div>
-		<button
-			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ commonView.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
-			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, pageIndex+1) }
-			hx-trigger="click"
-			hx-swap="none"
-			hx-push-url="true"
-			if pageIndex == maxPageIndex {
-				disabled
-			}
-		>
+		@eventTablePaginationControlItem(pageIndex, pageIndex+1, maxPageIndex) {
 			@commonView.ArrowIcon("rotate-180")
-		</button>
-		<button
-			class="join-item button fill-base-content disabled:fill-base-content/50"
-			hx-get={ commonView.FormatProjectUrl(ctx) }
-			hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
-			hx-headers={ `{"View": "actor"}` }
-			hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, maxPageIndex) }
-			hx-trigger="click"
-			hx-swap="none"
-			hx-push-url="true"
-			if pageIndex == maxPageIndex {
-				disabled
-			}
-		>
+		}
+		@eventTablePaginationControlItem(pageIndex, maxPageIndex, maxPageIndex) {
 			@commonView.DoubleArrowIcon("rotate-180")
-		</button>
+		}
 	</div>
+}
+
+templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int) {
+	<button
+		class="join-item button fill-base-content disabled:fill-base-content/50"
+		hx-get={ commonView.FormatProjectUrl(ctx) }
+		hx-include={ commonView.BuildIncludes(commonView.StandardIncludes, eventTableIncludes) }
+		hx-headers={ `{"View": "actor"}` }
+		hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, common.ParamPageIndex, nextPage) }
+		hx-trigger="click"
+		hx-swap="none"
+		hx-push-url="true"
+		if page == disableOnPage {
+			disabled
+		}
+	>
+		{ children... }
+	</button>
 }
 
 templ eventsFilter(filter common.Filter) {
@@ -133,7 +103,7 @@ templ eventsFilter(filter common.Filter) {
 		id={ idEventsFilter }
 		class="join w-fit mb-0"
 		hx-get={ commonView.FormatProjectUrl(ctx) }
-		hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
+		hx-include={ commonView.BuildIncludes(commonView.StandardIncludes, eventTableIncludes) }
 		hx-headers={ `{"View": "actor"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -206,7 +176,7 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
 				hx-get={ commonView.FormatProjectUrl(ctx) }
-				hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
+				hx-include={ commonView.BuildIncludes(commonView.StandardIncludes, eventTableIncludes) }
 				hx-params={ "not " + name }
 				hx-headers={ `{"View": "actor"}` }
 				hx-trigger="click"
@@ -264,7 +234,7 @@ func EventTableComponent(ctx context.Context, lazy bool) templ.Component {
 
 templ eventTableComponent(events common.EventList, lazy bool, pageIdx int, maxPageIdx int) {
 	if !lazy {
-		@eventTablePaginationControls(pageIdx, maxPageIdx)
+		@eventTablePaginationControl(pageIdx, maxPageIdx)
 	}
 	@eventTable(events, lazy)
 }
@@ -275,7 +245,7 @@ templ eventTable(events common.EventList, lazy bool) {
 		if lazy {
 			hx-get={ commonView.FormatProjectUrl(ctx) + "/events" }
 			hx-trigger="load"
-			hx-include={ buildIncludes(commonView.StandardIncludes, eventTableIncludes) }
+			hx-include={ commonView.BuildIncludes(commonView.StandardIncludes, eventTableIncludes) }
 			hx-indicator="#events-spinner"
 			hx-swap="outerHTML"
 		}
