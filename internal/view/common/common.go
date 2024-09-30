@@ -21,6 +21,7 @@ const (
 	IdFlow        = "flow"
 	IdFlowNode    = "flow-node"
 	IdFlowRange   = "flow-range"
+	IdFromTime    = "filter-from-time"
 )
 
 var StandardIncludes = []string{
@@ -29,6 +30,7 @@ var StandardIncludes = []string{
 	IdFlow,
 	IdFlowNode,
 	IdFlowRange,
+	IdFromTime,
 }
 
 func BuildIncludes(includes ...[]string) string {

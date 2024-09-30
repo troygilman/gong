@@ -5,14 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"stagebase/internal/common"
+	"stagebase/internal/components/timefilter"
 	commonView "stagebase/internal/view/common"
+	"time"
 )
 
 templ FlowTabContent() {
 	<div id="actor-flow-chart-widget" class="flex flex-col grow max-w-full min-h-0">
 		<div class="flex flex-row items-center border-b border-color py-2 px-4 gap-2 w-full">
 			@flowChartFilterType(ctx)
-			@flowChartFilterRange(ctx)
+			@timefilter.Component(ctx, commonView.FormatProjectUrl(ctx), common.ProjectViewFlowChart)
 		</div>
 		<div class="grid grid-cols-3 grow w-full min-h-0">
 			<div
@@ -28,59 +30,6 @@ templ FlowTabContent() {
 	</div>
 }
 
-func flowChartFilterRange(ctx context.Context) templ.Component {
-	if rng, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range); ok {
-		return flowChartFilterRangeComponent(rng)
-	}
-	return flowChartFilterRangeComponent(common.Range(1))
-}
-
-templ flowChartFilterRangeComponent(rng common.Range) {
-	<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
-		@commonView.DateIcon("")
-	</button>
-	<dialog id="my_modal_1" class="modal">
-		<form method="dialog" class="modal-backdrop">
-			<button></button>
-		</form>
-		<div class="modal-box">
-			<form method="dialog">
-				Lookback Range
-				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-			</form>
-			<div
-				class="flex flex-col w-full"
-				hx-get={ commonView.FormatProjectUrl(ctx) }
-				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, common.ProjectViewFlowChart) }
-				hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
-				hx-push-url="true"
-				hx-trigger="flow-chart-filter-range-submit"
-				hx-target="#actor-flow-chart-widget"
-				hx-swap="outerHTML"
-			>
-				<div class="bg-base-200 border border-color rounded py-2 px-4">
-					<input type="range" id="flow-range" name="flow_range" min="0" max="4" value={ rng.String() } step="1" class="range range-xs rotate-180 [--range-shdw:oklch(var(--n))]"/>
-					<div class="flex w-full justify-between px-2 pb-4 text-xs">
-						<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Month</div></div>
-						<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Week</div></div>
-						<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Day</div></div>
-						<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Hour</div></div>
-						<div class="relative">|<div class="absolute -left-4 text-nowrap">1 Min</div></div>
-					</div>
-				</div>
-				<div class="flex flex-row justify-end pt-4">
-					<div
-						class="btn btn-sm border border-color"
-						@click="$dispatch('flow-chart-filter-range-submit')"
-					>
-						Ok
-					</div>
-				</div>
-			</div>
-		</div>
-	</dialog>
-}
-
 func flowChartFilterType(ctx context.Context) templ.Component {
 	if flow, ok := ctx.Value(common.CtxKeyFlow).(string); ok {
 		return flowChartFilterTypeComponent(flow)
@@ -90,7 +39,7 @@ func flowChartFilterType(ctx context.Context) templ.Component {
 
 templ flowChartFilterTypeComponent(flow string) {
 	<div role="tablist" class="tabs tabs-boxed tabs-sm border border-color">
-		<input id="flow" type="hidden" name={ common.ParamFlow } value={ flow }/>
+		<input include id="flow" type="hidden" name={ common.ParamFlow } value={ flow }/>
 		@flowChartFilterTypeItem("Sources", flow)
 		@flowChartFilterTypeItem("Sinks", flow)
 	</div>
@@ -138,12 +87,19 @@ func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component 
 		panic(err.Error())
 	}
 
-	flowRange, ok := ctx.Value(common.CtxKeyFlowRange).(common.Range)
+	timeFilter, ok := timefilter.FromCtx(ctx)
 	if !ok {
-		panic("flow_range is missing")
+		panic("time filter is missing")
 	}
 
-	nodeInfo, err := app.SourcesSinksNodeInfo(ctx, projectID, actorPID, nodePID, source, flowRange)
+	nodeInfo, err := app.Database().QuerySourcesSinksNodeInfo(ctx, common.SourcesSinksNodeInfoQuery{
+		Source:    source,
+		ProjectID: projectID,
+		ActorPID:  actorPID,
+		NodePID:   nodePID,
+		MinTime:   timeFilter.Time(),
+		MaxTime:   time.Now(),
+	})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -219,7 +175,7 @@ templ flowChartNodeInfoComponent(info common.SourcesSinksNodeInfo) {
 }
 
 templ flowChartNodeState(node string) {
-	<input id="flow-node" name={ common.ParamFlowNode } type="hidden" value={ node }/>
+	<input include id="flow-node" name={ common.ParamFlowNode } type="hidden" value={ node }/>
 }
 
 templ FlowChart(sourcesSinks []string, flowType string) {

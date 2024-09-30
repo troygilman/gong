@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"stagebase/internal/common"
+	"stagebase/internal/components/timefilter"
 	"stagebase/internal/core"
 	adminView "stagebase/internal/view/admin"
 	projectView "stagebase/internal/view/project"
 	"stagebase/pkg/gong"
 	"stagebase/sdk"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -42,6 +44,7 @@ func bindProjectHandlers(g gong.Group) {
 			extractFlowRange,
 			extractPageIndex,
 			extractTimeStart,
+			timefilter.Extract,
 		),
 		projectMiddleware(),
 		logRequest(),
@@ -165,9 +168,9 @@ func handleGetActorChart(e echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
-	flowRange, ok := e.Request().Context().Value(common.CtxKeyFlowRange).(common.Range)
+	timeFilter, ok := timefilter.FromCtx(ctx)
 	if !ok {
-		return errors.New("flow range is missing")
+		return errors.New("time filter is missing")
 	}
 
 	sources, err := isSources(flowType)
@@ -175,12 +178,18 @@ func handleGetActorChart(e echo.Context) error {
 		return err
 	}
 
-	pids, err := app.SourcesSinks(ctx, projectID, actorPID, sources, flowRange)
+	nodes, err := app.Database().QueryActorSourcesSinks(ctx, common.ActorSourcesSinksQuery{
+		Sources:   sources,
+		ProjectID: projectID,
+		ActorPID:  actorPID,
+		MinTime:   timeFilter.Time(),
+		MaxTime:   time.Now(),
+	})
 	if err != nil {
 		return err
 	}
 
-	return projectView.FlowChart(pids, flowType).Render(ctx, e.Response())
+	return projectView.FlowChart(nodes, flowType).Render(ctx, e.Response())
 }
 
 func isSources(flowType string) (bool, error) {

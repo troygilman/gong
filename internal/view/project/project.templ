@@ -47,7 +47,7 @@ templ projectComponent(props common.ProjectProps, pid string) {
 				</div>
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
-				<input id="drawer-state" type="checkbox" class="drawer-state"/>
+				<input include id="drawer-state" type="checkbox" class="drawer-state"/>
 				@StatePID(pid)
 				<div class="drawer-content w-56 max-w-56">
 					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
@@ -69,6 +69,7 @@ templ projectComponent(props common.ProjectProps, pid string) {
 
 templ StatePID(pid string) {
 	<input
+		include
 		type="hidden"
 		hx-swap-oob="true"
 		id={ commonView.IdentifierPID }
@@ -220,7 +221,7 @@ templ ActorContent(actor common.Actor) {
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
-		<input id="tab" type="hidden" name={ common.ParamTab } value={ ctx.Value(common.CtxKeyTab).(string) }/>
+		<input include id="tab" type="hidden" name={ common.ParamTab } value={ ctx.Value(common.CtxKeyTab).(string) }/>
 		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(TabLabelOverview) {
 			@OverviewTabContent(actor)

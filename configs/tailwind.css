@@ -3,63 +3,63 @@
 @tailwind utilities;
 
 @layer components {
-	.event {
-		@apply text-nowrap;
-	}
+    .event {
+        @apply text-nowrap;
+    }
 
-	.event-filter-input {
-		@apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent bg-inherit placeholder:text-base-content/50;
-	}
+    .event-filter-input {
+        @apply input input-sm w-full max-w-xs focus:outline-none focus:border-transparent bg-inherit placeholder:text-base-content/50;
+    }
 
-	.event-filter-button {
-		@apply btn btn-sm btn-ghost hover:bg-base-content/10 hover:text-base-content rounded-none no-animation;
-	}
+    .event-filter-button {
+        @apply btn btn-sm btn-ghost hover:bg-base-content/10 hover:text-base-content rounded-none no-animation;
+    }
 
-	.event-filter-button-container {
-		@apply border border-color overflow-hidden group-focus-within/filter:rounded-b-none group-focus-within/filter:border-b-0 bg-base-200;
-	}
+    .event-filter-button-container {
+        @apply border border-color overflow-hidden group-focus-within/filter:rounded-b-none group-focus-within/filter:border-b-0 bg-base-200;
+    }
 
-	[data-theme="nord"] .border-color {
-		@apply border-gray-300;
-	}
+    [data-theme="nord"] .border-color {
+        @apply border-gray-300;
+    }
 
-	[data-theme="dark"] .border-color {
-		@apply border-gray-700;
-	}
+    [data-theme="dark"] .border-color {
+        @apply border-gray-700;
+    }
 
-	.spinner {
-		@apply hidden;
-	}
+    .spinner {
+        @apply hidden;
+    }
 
-	.htmx-request.spinner {
-		@apply flex;
-	}
+    .htmx-request.spinner {
+        @apply flex;
+    }
 
-	.htmx-indicator {
-		@apply opacity-0 ease-in;
-	}
+    .htmx-indicator {
+        @apply opacity-0 ease-in;
+    }
 
-	.htmx-request.htmx-indicator {
-		@apply opacity-100;
-	}
+    .htmx-request.htmx-indicator {
+        @apply opacity-100;
+    }
 
-	.drawer-content {
-		@apply transition-width duration-300 ease-in-out overflow-hidden translate-x-0;
-	}
+    .drawer-content {
+        @apply transition-width duration-300 ease-in-out overflow-hidden translate-x-0;
+    }
 
-	.drawer-state {
-		@apply hidden;
-	}
+    .drawer-state {
+        @apply hidden;
+    }
 
-	.drawer-state:checked ~ .drawer-content {
-		@apply w-0 -translate-x-full;
-	}
+    .drawer-state:checked ~ .drawer-content {
+        @apply w-0 -translate-x-full;
+    }
 
-	.button {
-		@apply btn btn-sm w-8 h-8 no-animation border border-color p-1;
-	}
+    .button {
+        @apply btn btn-sm w-8 h-8 no-animation border border-color p-1;
+    }
 }
 
 [x-cloak] {
-	display: none !important;
+    display: none !important;
 }

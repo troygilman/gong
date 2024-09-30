@@ -63,11 +63,6 @@ func actorPID(e echo.Context) (string, bool) {
 	return actorPID, ok
 }
 
-func filter(e echo.Context) (common.Filter, bool) {
-	filter, ok := e.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
-	return filter, ok
-}
-
 func sse(e echo.Context, listenerType common.ListenerType, f func(sses []any) error) error {
 	ctx := e.Request().Context()
 	app := mustApp(e)
@@ -83,7 +78,7 @@ func sse(e echo.Context, listenerType common.ListenerType, f func(sses []any) er
 
 	projectID := mustProjectID(e)
 
-	filter, _ := filter(e)
+	filter, ok := e.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
 
 	sseChan, err := app.ListenStart(ctx, projectID, requestID, listenerType, filter)
 	if err != nil {

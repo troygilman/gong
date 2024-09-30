@@ -1,0 +1,127 @@
+package timefilter
+
+import (
+	"context"
+	"fmt"
+	"github.com/labstack/echo/v4"
+	"stagebase/internal/components"
+	"time"
+)
+
+const (
+	ctxKey          = "time-filter"
+	paramName       = "from"
+	timeFilter15min = "now-15min"
+	timeFilter30min = "now-30min"
+	timeFilter1hr   = "now-1hr"
+	timeFilter3hr   = "now-3hr"
+	timeFilter24hr  = "now-24hr"
+)
+
+var timeMapping = map[string]time.Duration{
+	timeFilter15min: 15 * time.Minute,
+	timeFilter30min: 30 * time.Minute,
+	timeFilter1hr:   time.Hour,
+	timeFilter3hr:   3 * time.Hour,
+	timeFilter24hr:  24 * time.Hour,
+}
+
+type TimeFilter struct {
+	from string
+}
+
+func Extract(e echo.Context) (any, any) {
+	from := e.QueryParam(paramName)
+	switch from {
+	case timeFilter15min:
+	case timeFilter30min:
+	case timeFilter1hr:
+	case timeFilter3hr:
+	case timeFilter24hr:
+	default:
+		from = timeFilter15min
+	}
+
+	f := TimeFilter{
+		from: from,
+	}
+
+	return ctxKey, f
+}
+
+func FromCtx(ctx context.Context) (TimeFilter, bool) {
+	f, ok := ctx.Value(ctxKey).(TimeFilter)
+	return f, ok
+}
+
+func (filter TimeFilter) Time() time.Time {
+	return time.Now().Add(-timeMapping[filter.from])
+}
+
+func (f TimeFilter) Filter() {
+
+}
+
+templ Component(ctx context.Context, url string, view string) {
+	if filter, ok := FromCtx(ctx); ok {
+		<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
+			@components.CalandarIcon("")
+		</button>
+		<dialog id="my_modal_1" class="modal">
+			<form method="dialog" class="modal-backdrop">
+				<button></button>
+			</form>
+			<div class="modal-box">
+				<form method="dialog">
+					Lookback Range
+					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+				</form>
+				<div
+					class="flex flex-col w-full"
+					hx-get={ url }
+					hx-headers={ fmt.Sprintf(`{"View": "%s"}`, view) }
+					hx-include="[include]"
+					hx-push-url="true"
+					hx-trigger="flow-chart-filter-range-submit"
+					hx-target="#actor-flow-chart-widget"
+					hx-swap="outerHTML"
+				>
+					<div class="bg-base-200 border border-color rounded py-2 px-4">
+						<div class="flex flex-row items-center gap-2">
+							<div>Last</div>
+							<select
+								include
+								id="filter-from-time"
+								name={ paramName }
+								class="select select-sm select-bordered focus:outline-none"
+							>
+								@filter.option("15 mins", timeFilter15min)
+								@filter.option("30 mins", timeFilter30min)
+								@filter.option("1 hr", timeFilter1hr)
+								@filter.option("3 hrs", timeFilter3hr)
+								@filter.option("24 hrs", timeFilter24hr)
+							</select>
+						</div>
+					</div>
+					<div class="flex flex-row justify-end pt-4">
+						<div
+							class="btn btn-sm border border-color"
+							@click="$dispatch('flow-chart-filter-range-submit')"
+						>Ok</div>
+					</div>
+				</div>
+			</div>
+		</dialog>
+	}
+}
+
+templ (filter TimeFilter) option(text string, value string) {
+	<option
+		value={ value }
+		if value == filter.from {
+			selected
+		}
+	>
+		{ text }
+	</option>
+}
