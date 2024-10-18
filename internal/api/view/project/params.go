@@ -15,6 +15,7 @@ const (
 	paramTab      = "tab"
 	paramFilter   = "filter"
 	paramPage     = "page"
+	paramView     = "view"
 )
 
 func extractActorPID(e echo.Context) (any, any) {
@@ -60,4 +61,9 @@ func extractPageIndex(e echo.Context) (any, any) {
 		return nil, nil
 	}
 	return paramPage, pageIdx
+}
+
+func extractView(e echo.Context) (any, any) {
+	view := e.Request().Header.Get("View")
+	return paramView, view
 }

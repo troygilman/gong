@@ -13,11 +13,12 @@ import (
 func Configure(g gong.Group) {
 	gong.NewGroup(g, "/project/:project_id",
 		func(e *echo.Group) {
-			e.GET("", gong.NewTemplHandler(ProjectComponent))
+			e.GET("", gong.NewTemplHandler(projectProducer))
 			e.GET("/sse", handleConnectSseProject)
 		},
 		gong.ContextExtractors(
 			common.ExtractProjectId,
+			extractView,
 			extractActorPID,
 			extractTab,
 			extractFlowType,
@@ -28,9 +29,10 @@ func Configure(g gong.Group) {
 		),
 		gong.ContextLogHandler(
 			common.ParamProjectId,
+			paramView,
 		),
 		defaultActorMiddleware(),
-		// common.LogRequet(),
+		common.LogRequestMiddleware(),
 	)
 }
 

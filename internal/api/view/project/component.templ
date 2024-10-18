@@ -23,15 +23,22 @@ const (
 	sseTypeNewEvents            = "new-events"
 )
 
-func ProjectComponent(ctx context.Context) templ.Component {
+func projectProducer(ctx context.Context) templ.Component {
+	view := ctx.Value(paramView).(string)
 	app := common.MustGetApp(ctx)
 	projectId := common.MustGetProjectId(ctx)
-	pid := mustGetActorPid(ctx)
-	props, err := app.ProjectProps(ctx, projectId)
-	if err != nil {
-		panic(err)
+
+	switch view {
+	case viewActor:
+		return ProjectActorComponent(ctx)
+	default:
+		pid := mustGetActorPid(ctx)
+		props, err := app.ProjectProps(ctx, projectId)
+		if err != nil {
+			panic(err)
+		}
+		return projectComponent(props, pid)
 	}
-	return projectComponent(props, pid)
 }
 
 templ projectComponent(props model.ProjectProps, pid string) {

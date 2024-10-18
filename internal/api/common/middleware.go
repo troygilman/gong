@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"log"
 	"stagebase/internal/core"
 	"stagebase/pkg/gong"
 
@@ -25,17 +26,19 @@ func WithHeadersMiddleware() echo.MiddlewareFunc {
 			e.Response().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			e.Response().Header().Set("Pragma", "no-cache")
 			e.Response().Header().Set("Expires", "0")
+			e.Response().Header().Set("Access-Control-Allow-Headers", "*")
 			return next(e)
 		}
 	}
 }
 
-func logRequest() echo.MiddlewareFunc {
+func LogRequestMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(e echo.Context) error {
 			ctx := e.Request().Context()
 			logger := gong.Logger(ctx)
 			logger.InfoContext(ctx, "REQUEST", "method", e.Request().Method, "uri", e.Request().RequestURI)
+			log.Printf("%+v\n", e.Request().Header)
 			return next(e)
 		}
 	}
