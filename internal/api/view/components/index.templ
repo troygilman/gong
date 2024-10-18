@@ -1,0 +1,23 @@
+package components
+
+templ Index() {
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+			<script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx-ext-sse@2.0.0/sse.js"></script>
+			<script src="https://unpkg.com/htmx-ext-debug@2.0.0/debug.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+			<link rel="stylesheet" type="text/css" href="/static/css/app.css"/>
+			<title>Stagebase</title>
+		</head>
+		<body>
+			<div id="body-content" class="group/index">
+				{ children... }
+			</div>
+		</body>
+	</html>
+}

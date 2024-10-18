@@ -27,7 +27,7 @@ func RunServer(app core.App, static fs.FS, port int) (*echo.Echo, <-chan error) 
 
 	e.Use(
 		middleware.RecoverWithConfig(middleware.RecoverConfig{
-			LogErrorFunc: newPanicError,
+			//LogErrorFunc: newPanicError,
 		}),
 		common.WithHeadersMiddleware(),
 		middleware.RequestID(),
