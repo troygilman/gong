@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"stagebase/internal/common"
+	"stagebase/internal/core/model"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
 	"time"
@@ -29,9 +30,9 @@ type stagebaseApp struct {
 	db            common.Database
 }
 
-type producerFunc func(common.App) actor.Producer
+type producerFunc func(App) actor.Producer
 
-func NewApp(db common.Database) (common.App, error) {
+func NewApp(db common.Database) (App, error) {
 	app := new(stagebaseApp)
 
 	app.db = db
@@ -123,7 +124,7 @@ func (app *stagebaseApp) Actor(
 	ctx context.Context,
 	projectID uuid.UUID,
 	actorPID string,
-) (actor common.Actor, err error) {
+) (actor model.Actor, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return actor, err
@@ -145,7 +146,7 @@ func (app *stagebaseApp) Actor(
 func (app *stagebaseApp) ProjectProps(
 	ctx context.Context,
 	projectID uuid.UUID,
-) (project common.ProjectProps, err error) {
+) (project model.ProjectProps, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return project, err
@@ -265,7 +266,7 @@ func (app *stagebaseApp) ListenStart(
 	ctx context.Context,
 	projectID uuid.UUID,
 	id string,
-	lType common.ListenerType,
+	lType ListenerType,
 	filter common.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)

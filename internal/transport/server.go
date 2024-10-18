@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/pprof"
+	"stagebase/internal/api/view/project"
 	"stagebase/internal/common"
 	"stagebase/pkg/gong"
 	"strconv"
@@ -29,15 +30,16 @@ func RunServer(app common.App, static fs.FS, port int) (*echo.Echo, <-chan error
 		withHeaders(),
 		middleware.RequestID(),
 		withRequestID(),
-		gong.ContextLogHandler(
-			common.CtxKeyRequestID,
-		),
+		// gong.ContextLogHandler(
+		// 	common.CtxKeyRequestID,
+		// ),
 		withApp(app),
 	)
 
 	e.StaticFS("/static", echo.MustSubFS(static, "static"))
 
-	bindProjectHandlers(e)
+	// bindProjectHandlers(e)
+	project.Configure(e)
 
 	errChan := make(chan error)
 	go func() {

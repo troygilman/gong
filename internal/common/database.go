@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"stagebase/internal/core/model"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,9 +14,9 @@ import (
 type Database interface {
 	QueryEvents(ctx context.Context, query EventsQuery) ([]Event, int, error)
 	CreateEvents(ctx context.Context, events []Event) error
-	QueryActors(ctx context.Context, projectID uuid.UUID) ([]Actor, error)
-	CreateActor(ctx context.Context, actor Actor) error
-	UpdateActor(ctx context.Context, actor Actor) error
+	QueryActors(ctx context.Context, projectID uuid.UUID) ([]model.Actor, error)
+	CreateActor(ctx context.Context, actor model.Actor) error
+	UpdateActor(ctx context.Context, actor model.Actor) error
 	QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
 	QuerySourcesSinksNodeInfo(context.Context, SourcesSinksNodeInfoQuery) (SourcesSinksNodeInfo, error)
 }

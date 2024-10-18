@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"os"
 	"stagebase/example"
+	"stagebase/internal/api"
 	"stagebase/internal/common"
 	"stagebase/internal/core"
 	"stagebase/internal/persistance"
-	"stagebase/internal/transport"
 )
 
 //go:embed static
@@ -43,7 +43,7 @@ func run() error {
 		return err
 	}
 
-	_, errChan := transport.RunServer(app, static, 8080)
+	_, errChan := api.RunServer(app, static, 8080)
 	err = <-errChan
 	if err != nil {
 		app.Shutdown()

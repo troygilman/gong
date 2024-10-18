@@ -47,8 +47,6 @@ func withApp(app common.App) echo.MiddlewareFunc {
 			cb := common.NewContextBuilder(e.Request().Context())
 			cb = cb.With(common.CtxKeyApp, app)
 			e.SetRequest(e.Request().WithContext(cb.Build()))
-
-			e.Set("app", app)
 			return next(e)
 		}
 	}

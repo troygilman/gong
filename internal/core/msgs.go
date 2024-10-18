@@ -2,6 +2,7 @@ package core
 
 import (
 	"stagebase/internal/common"
+	"stagebase/internal/core/model"
 	"stagebase/sdk"
 	"time"
 
@@ -15,7 +16,7 @@ type msgSdkEvents struct {
 type msgGetProjectProps struct{}
 
 type rspGetProjectProps struct {
-	props common.ProjectProps
+	props model.ProjectProps
 }
 
 type msgGetProjectActorProps struct {
@@ -23,7 +24,7 @@ type msgGetProjectActorProps struct {
 }
 
 type rspGetProjectActor struct {
-	actor common.Actor
+	actor model.Actor
 }
 
 type msgGetProjectEvents struct {
@@ -43,7 +44,7 @@ type rspGetProjectEvents struct {
 type msgProcessorUpdateState struct{}
 
 type msgUpdateProject struct {
-	actors []common.Actor
+	actors []model.Actor
 	events []common.Event
 	metric Metric
 }
@@ -70,13 +71,21 @@ type rspGetSourcesSinksNodeInfo struct {
 }
 
 type msgListenStart struct {
-	lType common.ListenerType
+	lType ListenerType
 }
 
 type msgListenStop struct {
-	lType common.ListenerType
+	lType ListenerType
 }
 
 type msgListenData struct {
 	data []any
+}
+
+type SseNewActorMsg struct {
+	Actor model.Actor
+}
+
+type SseNewEventsMsg struct {
+	Actor model.Actor
 }

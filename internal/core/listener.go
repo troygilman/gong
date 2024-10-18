@@ -10,9 +10,9 @@ import (
 )
 
 func NewListenerProducer(
-	app common.App,
+	app App,
 	projectID uuid.UUID,
-	lType common.ListenerType,
+	lType ListenerType,
 	c chan<- []any,
 	filter common.Filter,
 ) actor.Producer {
@@ -28,9 +28,9 @@ func NewListenerProducer(
 }
 
 type listener struct {
-	app       common.App
+	app       App
 	projectID uuid.UUID
-	lType     common.ListenerType
+	lType     ListenerType
 	c         chan<- []any
 	filter    common.Filter
 }
@@ -60,15 +60,15 @@ func (l *listener) Receive(aCtx *actor.Context) {
 
 			for _, data := range msg.data {
 				switch l.lType {
-				case common.ListenerTypeProject:
+				case ListenerTypeProject:
 					filteredData = msg.data
-				case common.ListenerTypeEvents:
+				case ListenerTypeEvents:
 					if event, ok := data.(common.Event); ok {
 						if l.filter.ValidEvent(event) {
 							filteredData = append(filteredData, event)
 						}
 					}
-				case common.ListenerTypeMetrics:
+				case ListenerTypeMetrics:
 					if metricGroup, ok := data.(MetricGroup); ok {
 						filteredData = append(filteredData, metricGroup)
 					}

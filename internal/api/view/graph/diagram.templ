@@ -1,0 +1,233 @@
+package graph
+
+import "stagebase/internal/common"
+
+func Component(isLazy bool, url string) templ.Component {
+	lazyUrl := "/project/" + "/graph/diagram"
+
+	data := graphData{
+		nodes: []graphNodeData{
+			{id: "node1"},
+			{id: "node2"},
+		},
+		links: []graphLinkData{
+			{
+				source: "node1",
+				target: "node2",
+			},
+		},
+	}
+	return diagramComponent(isLazy, lazyUrl, data, "")
+}
+
+templ diagramComponent(isLazy bool, lazyUrl string, data graphData, node string) {
+	if graph, ok := FromCtx(ctx); ok {
+		if isLazy {
+			<div
+				hx-get={ lazyUrl }
+				hx-trigger="load"
+				hx-include="[include]"
+				class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
+			>
+				<span class="loading loading-spinner w-16"></span>
+			</div>
+		} else {
+			<div class="flex relative h-full w-full items-center justify-center">
+				if graph.graphType != common.GraphTypeAll {
+					<div class="flex flex-col absolute top-4 left-4 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
+						<div class="flex items-center justify-start">
+							<div class="badge badge-primary badge-sm mr-2"></div>
+							Actor
+						</div>
+						<div class="flex items-center justify-start">
+							<div class="badge badge-accent badge-sm mr-2"></div>
+							{ string(graph.graphType) }
+						</div>
+					</div>
+				}
+				<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
+				@initGraph(data, node)
+			</div>
+		}
+	}
+}
+
+type graphData struct {
+	nodes []graphNodeData
+	links []graphLinkData
+}
+
+type graphNodeData struct {
+	id string
+}
+
+type graphLinkData struct {
+	source string
+	target string
+}
+
+script initGraph(data graphData, node string) {
+	const width = 1000;
+	const height =  1000;
+	const circleRadius = 12;
+	const circleRadiusHover = 14;
+
+	// Specify the color scale.
+	const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+	// The force simulation mutates links and nodes, so create a copy
+	// so that re-evaluating this cell produces the same result.
+	const links = data.links.map(d => ({...d}));
+	const nodes = data.nodes.map(d => ({...d}));
+
+	// Create a simulation with several forces.
+	const simulation = d3.forceSimulation(nodes)
+		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
+	    .force("charge", d3.forceManyBody().strength(-10000))
+	    .force("center", d3.forceCenter(width / 2, height / 2))
+		.velocityDecay(0.2)
+	    .on("tick", ticked);
+
+
+	const zoom = d3.zoom().on("zoom", handleZoom);
+
+	// Create the SVG container.
+	const svg = d3.select("#chart")
+	    .attr("viewBox", [0, 0, width, height])
+		.call(zoom);
+
+	const defs = svg.append("defs")
+
+	const arrow = defs.append("marker")
+      	.attr("id", "arrow")
+       	.attr("viewBox", "0 -5 10 10")
+        .attr("refX", 16)
+        .attr("refY", -0.5)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .append("path")
+		.attr("stroke-width", 2)
+		.attr("stroke", "oklch(var(--b2))")
+        .attr("fill", "oklch(var(--bc))")
+        .attr("d", "M0,-5L10,0L0,5");
+
+	var filter = defs.append("filter")
+		.attr("id", "glow")
+		.attr("x", "-50%")  // Expand the filter area horizontally
+		.attr("y", "-50%")  // Expand the filter area vertically
+		.attr("width", "200%")  // Increase width of the filter area
+		.attr("height", "200%")  // Increase height of the filter area
+		.attr("filterUnits", "objectBoundingBox");  // Make sure the filter applies to the entire object
+	filter.append("feGaussianBlur")
+		.attr("stdDeviation", "2.5")
+		.attr("result", "coloredBlur");
+	var feMerge = filter.append("feMerge");
+	feMerge.append("feMergeNode")
+		.attr("in", "coloredBlur");
+	feMerge.append("feMergeNode")
+		.attr("in", "SourceGraphic");
+
+	const link = svg.append("g")
+		.attr("id", "links")
+    	.attr("fill", "none")
+     	.attr("stroke-width", 4)
+		.attr("opacity", 0.2)
+      	.selectAll("path")
+       	.data(links)
+        .join("path")
+        .attr("stroke", "oklch(var(--bc))")
+        .attr("marker-end", "url(#arrow)");
+
+  	const node = svg.append("g")
+		.attr("id", "nodes")
+       	.selectAll("g")
+        .data(nodes)
+        .join("g");
+
+	node.append("circle")
+		.attr("stroke-width", 10)
+		.attr("stroke", "oklch(var(--b2))")
+		.attr("r", circleRadius);
+
+	node.append("circle")
+		.attr("class", d => {
+			if (d.id != node) {
+				return "cursor-pointer";
+			}
+		})
+        .attr("r", circleRadius)
+        .attr("fill", d => {
+        	if (d.id != node) {
+         		return "oklch(var(--p))";
+         	} else {
+          		return "oklch(var(--a))";
+          	}
+        })
+		.style("filter", "url(#glow)")
+        .on("mouseover", (e, d) => { if (d.id != node) { d3.select(e.target).attr("r", circleRadiusHover) }})
+        .on("mouseleave", (e, d) => { if (d.id != node) { d3.select(e.target).attr("r", circleRadius) }})
+        .on("click", (e, d) => { if (d.id != node) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
+
+	node.append("text")
+      	.attr("x", 16)
+      	.attr("y", "0.31em")
+	  	.attr("stroke-width", 0)
+	  	.attr("class", "text-lg font-medium cursor-default")
+		.attr("fill", "oklch(var(--bc))")
+      	.text(d => d.id)
+    	.clone(true).lower()
+      	.attr("fill", "none")
+      	.attr("stroke", "oklch(var(--b2))")
+      	.attr("stroke-width", 4);
+
+function linkArc(d) {
+    var node1 = d.source;
+    var node2 = d.target;
+
+    if (!isSources) {
+        node1 = d.target;
+        node2 = d.source;
+    }
+
+    // Calculate distances and midpoints
+    const dx = node2.x - node1.x;
+    const dy = node2.y - node1.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const curvature = 0.4; // Adjust this factor to control the curve
+
+    // Midpoint
+    const midX = (node1.x + node2.x) / 2;
+    const midY = (node1.y + node2.y) / 2;
+
+    // Control point calculation for smooth curve
+    const controlX = midX + curvature * distance * (dy / distance);
+    const controlY = midY - curvature * distance * (dx / distance);
+
+    // Create a smooth curve using a quadratic Bézier curve
+    return `
+        M${node1.x},${node1.y}
+        Q${controlX},${controlY} ${node2.x},${node2.y}
+    `;
+}
+
+    // Set the position attributes of links and nodes each time the simulation ticks.
+    function ticked() {
+    	link.attr("d", linkArc);
+        node.attr("transform", d => {
+			return `translate(${d.x},${d.y})`
+		});
+    };
+
+    function handleZoom(e) {
+    	svg.select("#nodes")
+     		.attr("transform", d => {
+				return e.transform;
+			});
+    	svg.select("#links")
+     		.attr("transform", d => {
+				return e.transform;
+			});
+    }
+}

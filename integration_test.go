@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"stagebase/internal/api"
 	"stagebase/internal/common"
 	"stagebase/internal/core"
-	"stagebase/internal/transport"
 	"stagebase/sdk"
 	"strconv"
 	"sync"
@@ -71,7 +71,7 @@ func TestIntegration_Client(t *testing.T) {
 	defer app.Shutdown()
 
 	// Server
-	e, errChan := transport.RunServer(app, nil, serverPort)
+	e, errChan := api.RunServer(app, nil, serverPort)
 	defer func() {
 		fmt.Println("Shutting down server")
 		e.Shutdown(context.Background())

@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"stagebase/internal/common"
+	"stagebase/internal/core/model"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
 	"time"
@@ -18,13 +19,13 @@ const (
 
 type processor struct {
 	commonActorData
-	actors   map[string]common.Actor
+	actors   map[string]model.Actor
 	updates  map[string]bool
 	events   []sdk.Event
 	repeater actor.SendRepeater
 }
 
-func NewProcessorProducerWithApp(app common.App) actor.Producer {
+func NewProcessorProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &processor{
 			commonActorData: commonActorData{
@@ -47,7 +48,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
-			p.actors = make(map[string]common.Actor)
+			p.actors = make(map[string]model.Actor)
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
@@ -77,7 +78,7 @@ func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err err
 
 	actorData, actorExists := p.actors[event.PID]
 	if !actorExists {
-		actorData = common.Actor{
+		actorData = model.Actor{
 			PID:       event.PID,
 			ProjectID: p.id,
 			NumEvents: 0,
@@ -139,7 +140,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		}
 	}
 
-	actors := make([]common.Actor, 0)
+	actors := make([]model.Actor, 0)
 	for pid := range p.updates {
 		actors = append(actors, p.actors[pid])
 	}

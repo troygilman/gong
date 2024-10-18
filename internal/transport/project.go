@@ -5,8 +5,9 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"stagebase/internal/api/view/graph"
+	"stagebase/internal/api/view/timefilter"
 	"stagebase/internal/common"
-	"stagebase/internal/components/timefilter"
 	"stagebase/internal/core"
 	adminView "stagebase/internal/view/admin"
 	projectView "stagebase/internal/view/project"
@@ -22,18 +23,18 @@ func bindProjectHandlers(g gong.Group) {
 	gong.NewGroup(g, "/project/:projectID",
 		func(e *echo.Group) {
 			e.GET("", handleGetProject)
-			e.GET("/events", gong.NewTemplHandler(projectView.EventTableComponent(false)))
+			// e.GET("/events", gong.NewTemplHandler(projectView.EventTableComponent(false)))
 			e.GET("/sse/project", handleConnectSseProject)
 			e.GET("/sse/events", handleConnectSseEvents)
-			e.GET("/chart", handleGetActorChart)
+			e.GET("/graph/diagram", handleGetActorChart)
 			e.GET("/connect", handleConnectProject)
 			e.GET("/admin", handleGetProjectAdmin)
 			e.GET("/admin/sse", handleConnectSseProjectAdmin)
 		},
-		gong.ContextLogHandler(
-			common.CtxKeyFilter,
-			common.CtxKeyPID,
-		),
+		// gong.ContextLogHandler(
+		// 	common.CtxKeyFilter,
+		// 	common.CtxKeyPID,
+		// ),
 		gong.ContextExtractors(
 			extractProjectID,
 			extractActorPID,
@@ -45,6 +46,7 @@ func bindProjectHandlers(g gong.Group) {
 			extractPageIndex,
 			extractTimeStart,
 			timefilter.Extract,
+			graph.Extract,
 		),
 		projectMiddleware(),
 		logRequest(),
@@ -168,10 +170,7 @@ func handleGetActorChart(e echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
-	timeFilter, ok := timefilter.FromCtx(ctx)
-	if !ok {
-		return errors.New("time filter is missing")
-	}
+	timeFilter := timefilter.FromCtx(ctx)
 
 	sources, err := isSources(flowType)
 	if err != nil {
@@ -188,8 +187,9 @@ func handleGetActorChart(e echo.Context) error {
 	if err != nil {
 		return err
 	}
+	_ = nodes
 
-	return projectView.FlowChart(nodes, flowType).Render(ctx, e.Response())
+	return graph.Component(false, "").Render(ctx, e.Response())
 }
 
 func isSources(flowType string) (bool, error) {

@@ -211,3 +211,11 @@ type SourcesSinksNodeInfo struct {
 	PID      string
 	MsgCount int64
 }
+
+type GraphType string
+
+const (
+	GraphTypeAll     = "All"
+	GraphTypeSources = "Sources"
+	GraphTypeSinks   = "Sinks"
+)

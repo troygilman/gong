@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"stagebase/internal/api/view/graph"
+	"stagebase/internal/api/view/timefilter"
 	"stagebase/internal/common"
-	"stagebase/internal/components/timefilter"
 	commonView "stagebase/internal/view/common"
 	"time"
 )
@@ -14,17 +15,10 @@ templ FlowTabContent() {
 	<div id="actor-flow-chart-widget" class="flex flex-col grow max-w-full min-h-0">
 		<div class="flex flex-row items-center border-b border-color py-2 px-4 gap-2 w-full">
 			@flowChartFilterType(ctx)
-			@timefilter.Component(ctx, commonView.FormatProjectUrl(ctx), common.ProjectViewFlowChart)
+			@timefilter.FromCtx(ctx).Component(commonView.FormatProjectUrl(ctx), common.ProjectViewFlowChart)
 		</div>
 		<div class="grid grid-cols-3 grow w-full min-h-0">
-			<div
-				hx-get={ commonView.FormatProjectUrl(ctx) + "/chart" }
-				hx-trigger="load"
-				hx-include={ commonView.BuildIncludes(commonView.StandardIncludes) }
-				class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
-			>
-				<span class="loading loading-spinner w-16"></span>
-			</div>
+			@graph.Component(true, commonView.FormatProjectUrl(ctx))
 			@FlowChartNodeInfoComponent(ctx, true)
 		</div>
 	</div>
@@ -87,10 +81,7 @@ func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component 
 		panic(err.Error())
 	}
 
-	timeFilter, ok := timefilter.FromCtx(ctx)
-	if !ok {
-		panic("time filter is missing")
-	}
+	timeFilter := timefilter.FromCtx(ctx)
 
 	nodeInfo, err := app.Database().QuerySourcesSinksNodeInfo(ctx, common.SourcesSinksNodeInfoQuery{
 		Source:    source,
@@ -176,202 +167,4 @@ templ flowChartNodeInfoComponent(info common.SourcesSinksNodeInfo) {
 
 templ flowChartNodeState(node string) {
 	<input include id="flow-node" name={ common.ParamFlowNode } type="hidden" value={ node }/>
-}
-
-templ FlowChart(sourcesSinks []string, flowType string) {
-	<div class="flex relative h-full w-full items-center justify-center">
-		<div class="flex flex-col absolute top-4 left-4 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
-			<div class="flex items-center justify-start">
-				<div class="badge badge-primary badge-sm mr-2"></div>
-				Actor
-			</div>
-			<div class="flex items-center justify-start">
-				<div class="badge badge-accent badge-sm mr-2"></div>
-				{ flowType }
-			</div>
-		</div>
-		<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
-		if actorPID, ok := ctx.Value(common.CtxKeyPID).(string); ok {
-			@initFlowChart(actorPID, sourcesSinks, flowType == "Sources")
-		}
-	</div>
-}
-
-script initFlowChart(actorPID string, sourcesSinks []string, isSources bool) {
-	const width = 1000;
-	const height =  1000;
-	const circleRadius = 12;
-	const circleRadiusHover = 14;
-
-	let data = {
-		"nodes": [
-			{"id": actorPID, "group": 1},
-		],
-		"links": [],
-	}
-
-	for (let i = 0; i < sourcesSinks.length; i++) {
-		let pid = sourcesSinks[i];
-		data.nodes.push({"id": pid, "group": 2});
-		data.links.push({"source": pid, "target": actorPID, "value": 1});
-	};
-
-	// Specify the color scale.
-	const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-	// The force simulation mutates links and nodes, so create a copy
-	// so that re-evaluating this cell produces the same result.
-	const links = data.links.map(d => ({...d}));
-	const nodes = data.nodes.map(d => ({...d}));
-
-	// Create a simulation with several forces.
-	const simulation = d3.forceSimulation(nodes)
-		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
-	    .force("charge", d3.forceManyBody().strength(-10000))
-	    .force("center", d3.forceCenter(width / 2, height / 2))
-		.velocityDecay(0.2)
-	    .on("tick", ticked);
-
-
-	const zoom = d3.zoom().on("zoom", handleZoom);
-
-	// Create the SVG container.
-	const svg = d3.select("#chart")
-	    .attr("viewBox", [0, 0, width, height])
-		.call(zoom);
-
-	const defs = svg.append("defs")
-
-	const arrow = defs.append("marker")
-      	.attr("id", "arrow")
-       	.attr("viewBox", "0 -5 10 10")
-        .attr("refX", 16)
-        .attr("refY", -0.5)
-        .attr("markerWidth", 5)
-        .attr("markerHeight", 5)
-        .attr("orient", "auto")
-        .append("path")
-		.attr("stroke-width", 2)
-		.attr("stroke", "oklch(var(--b2))")
-        .attr("fill", "oklch(var(--bc))")
-        .attr("d", "M0,-5L10,0L0,5");
-
-	var filter = defs.append("filter")
-		.attr("id", "glow")
-		.attr("x", "-50%")  // Expand the filter area horizontally
-		.attr("y", "-50%")  // Expand the filter area vertically
-		.attr("width", "200%")  // Increase width of the filter area
-		.attr("height", "200%")  // Increase height of the filter area
-		.attr("filterUnits", "objectBoundingBox");  // Make sure the filter applies to the entire object
-	filter.append("feGaussianBlur")
-		.attr("stdDeviation", "2.5")
-		.attr("result", "coloredBlur");
-	var feMerge = filter.append("feMerge");
-	feMerge.append("feMergeNode")
-		.attr("in", "coloredBlur");
-	feMerge.append("feMergeNode")
-		.attr("in", "SourceGraphic");
-
-	const link = svg.append("g")
-		.attr("id", "links")
-    	.attr("fill", "none")
-     	.attr("stroke-width", 4)
-		.attr("opacity", 0.2)
-      	.selectAll("path")
-       	.data(links)
-        .join("path")
-        .attr("stroke", "oklch(var(--bc))")
-        .attr("marker-end", "url(#arrow)");
-
-  	const node = svg.append("g")
-		.attr("id", "nodes")
-       	.selectAll("g")
-        .data(nodes)
-        .join("g");
-
-	node.append("circle")
-		.attr("stroke-width", 10)
-		.attr("stroke", "oklch(var(--b2))")
-		.attr("r", circleRadius);
-
-	node.append("circle")
-		.attr("class", d => {
-			if (d.group == 2) {
-				return "cursor-pointer";
-			}
-		})
-        .attr("r", circleRadius)
-        .attr("fill", d => {
-        	if (d.group == 1) {
-         		return "oklch(var(--p))";
-         	} else {
-          		return "oklch(var(--a))";
-          	}
-        })
-		.style("filter", "url(#glow)")
-        .on("mouseover", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadiusHover) }})
-        .on("mouseleave", (e, d) => { if (d.group == 2) { d3.select(e.target).attr("r", circleRadius) }})
-        .on("click", (e, d) => { if (d.group == 2) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
-
-	node.append("text")
-      	.attr("x", 16)
-      	.attr("y", "0.31em")
-	  	.attr("stroke-width", 0)
-	  	.attr("class", "text-lg font-medium cursor-default")
-		.attr("fill", "oklch(var(--bc))")
-      	.text(d => d.id)
-    	.clone(true).lower()
-      	.attr("fill", "none")
-      	.attr("stroke", "oklch(var(--b2))")
-      	.attr("stroke-width", 4);
-
-function linkArc(d) {
-    var node1 = d.source;
-    var node2 = d.target;
-
-    if (!isSources) {
-        node1 = d.target;
-        node2 = d.source;
-    }
-
-    // Calculate distances and midpoints
-    const dx = node2.x - node1.x;
-    const dy = node2.y - node1.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    const curvature = 0.4; // Adjust this factor to control the curve
-
-    // Midpoint
-    const midX = (node1.x + node2.x) / 2;
-    const midY = (node1.y + node2.y) / 2;
-
-    // Control point calculation for smooth curve
-    const controlX = midX + curvature * distance * (dy / distance);
-    const controlY = midY - curvature * distance * (dx / distance);
-
-    // Create a smooth curve using a quadratic Bézier curve
-    return `
-        M${node1.x},${node1.y}
-        Q${controlX},${controlY} ${node2.x},${node2.y}
-    `;
-}
-
-    // Set the position attributes of links and nodes each time the simulation ticks.
-    function ticked() {
-    	link.attr("d", linkArc);
-        node.attr("transform", d => {
-			return `translate(${d.x},${d.y})`
-		});
-    };
-
-    function handleZoom(e) {
-    	svg.select("#nodes")
-     		.attr("transform", d => {
-				return e.transform;
-			});
-    	svg.select("#links")
-     		.attr("transform", d => {
-				return e.transform;
-			});
-    }
 }

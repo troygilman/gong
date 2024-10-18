@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"stagebase/internal/common"
+	"stagebase/internal/core/model"
 	"stagebase/pkg/dolly"
 	"time"
 
@@ -21,16 +22,16 @@ type msgUpdateProjectInternal struct{}
 
 type project struct {
 	commonActorData
-	actors       map[string]common.Actor
-	actorUpdates map[string]common.Actor
+	actors       map[string]model.Actor
+	actorUpdates map[string]model.Actor
 	eventUpdates []common.Event
 	metricUpdate Metric
 	repeater     actor.SendRepeater
-	listeners    map[common.ListenerType]map[*actor.PID]struct{}
+	listeners    map[ListenerType]map[*actor.PID]struct{}
 	metrics      MetricsManager
 }
 
-func NewProjectProducerWithApp(app common.App) actor.Producer {
+func NewProjectProducerWithApp(app App) actor.Producer {
 	return func() actor.Receiver {
 		return &project{
 			commonActorData: commonActorData{
@@ -50,18 +51,18 @@ func (p *project) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Initialized:
-			p.actors = make(map[string]common.Actor)
-			p.actorUpdates = make(map[string]common.Actor)
-			p.listeners = make(map[common.ListenerType]map[*actor.PID]struct{})
+			p.actors = make(map[string]model.Actor)
+			p.actorUpdates = make(map[string]model.Actor)
+			p.listeners = make(map[ListenerType]map[*actor.PID]struct{})
 			p.metrics = NewMetricsManager(5)
 		case actor.Started:
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
 		case msgGetProjectProps:
-			props := common.ProjectProps{
+			props := model.ProjectProps{
 				ID:     p.id,
-				Actors: make(map[string]common.Actor, 0),
+				Actors: make(map[string]model.Actor, 0),
 			}
 			for pid, data := range p.actors {
 				props.Actors[pid] = data
@@ -96,24 +97,24 @@ func (p *project) Receive(aCtx *actor.Context) {
 			for listenerType, listeners := range p.listeners {
 				for listenerPID := range listeners {
 					switch listenerType {
-					case common.ListenerTypeProject:
+					case ListenerTypeProject:
 						for _, actor := range p.actorUpdates {
 							_, exists := p.actors[actor.PID]
 							if exists {
-								listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewEvents{
+								listenerData[listenerPID] = append(listenerData[listenerPID], SseNewEventsMsg{
 									Actor: actor,
 								})
 							} else {
-								listenerData[listenerPID] = append(listenerData[listenerPID], common.SseNewActor{
+								listenerData[listenerPID] = append(listenerData[listenerPID], SseNewActorMsg{
 									Actor: actor,
 								})
 							}
 						}
-					case common.ListenerTypeEvents:
+					case ListenerTypeEvents:
 						for _, event := range p.eventUpdates {
 							listenerData[listenerPID] = append(listenerData[listenerPID], event)
 						}
-					case common.ListenerTypeMetrics:
+					case ListenerTypeMetrics:
 						listenerData[listenerPID] = append(listenerData[listenerPID], p.metrics.Group())
 					default:
 					}

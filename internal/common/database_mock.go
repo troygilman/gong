@@ -12,6 +12,7 @@ package common
 import (
 	context "context"
 	reflect "reflect"
+	model "stagebase/internal/core/model"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -41,7 +42,7 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // CreateActor mocks base method.
-func (m *MockDatabase) CreateActor(ctx context.Context, actor Actor) error {
+func (m *MockDatabase) CreateActor(ctx context.Context, actor model.Actor) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateActor", ctx, actor)
 	ret0, _ := ret[0].(error)
@@ -84,10 +85,10 @@ func (mr *MockDatabaseMockRecorder) QueryActorSourcesSinks(ctx, query any) *gomo
 }
 
 // QueryActors mocks base method.
-func (m *MockDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]Actor, error) {
+func (m *MockDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]model.Actor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryActors", ctx, projectID)
-	ret0, _ := ret[0].([]Actor)
+	ret0, _ := ret[0].([]model.Actor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -130,7 +131,7 @@ func (mr *MockDatabaseMockRecorder) QuerySourcesSinksNodeInfo(arg0, arg1 any) *g
 }
 
 // UpdateActor mocks base method.
-func (m *MockDatabase) UpdateActor(ctx context.Context, actor Actor) error {
+func (m *MockDatabase) UpdateActor(ctx context.Context, actor model.Actor) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateActor", ctx, actor)
 	ret0, _ := ret[0].(error)

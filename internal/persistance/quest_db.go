@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"stagebase/internal/common"
+	"stagebase/internal/core/model"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -190,8 +191,8 @@ func (db *questDatabase) CreateEvents(
 func (db *questDatabase) QueryActors(
 	ctx context.Context,
 	projectID uuid.UUID,
-) ([]common.Actor, error) {
-	var actors []common.Actor
+) ([]model.Actor, error) {
+	var actors []model.Actor
 
 	err := db.bunDB.NewSelect().Model(&actors).Where("project_id = ?", projectID.String()).Scan(ctx)
 	if err != nil {
@@ -202,7 +203,7 @@ func (db *questDatabase) QueryActors(
 }
 
 func (db *questDatabase) CreateActor(
-	ctx context.Context, actor common.Actor,
+	ctx context.Context, actor model.Actor,
 ) error {
 	_, err := db.bunDB.NewInsert().Model(&actor).Exec(ctx)
 	return err
@@ -210,7 +211,7 @@ func (db *questDatabase) CreateActor(
 
 func (db *questDatabase) UpdateActor(
 	ctx context.Context,
-	actor common.Actor,
+	actor model.Actor,
 ) error {
 	_, err := db.bunDB.NewUpdate().Model(&actor).Where("project_id = ? AND pid = ?", actor.ProjectID, actor.PID).Exec(ctx)
 	return err
