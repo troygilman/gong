@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	viewActor             = "actor"
+	viewTab               = "tab"
 	viewFlowChart         = "flow-chart"
 	viewFlowChartNodeInfo = "flow-chart-node-info"
 )
@@ -37,7 +37,7 @@ func projectProducer(ctx context.Context) templ.Component {
 	projectId := common.MustGetProjectId(ctx)
 
 	switch view {
-	case viewActor:
+	case viewTab:
 		return ProjectActorComponent(ctx)
 	default:
 		pid := mustGetActorPid(ctx)
@@ -323,9 +323,9 @@ func projectMenuItem(label string, active bool, icon templ.Component) templ.Comp
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewActor))
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewTab))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 148, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 148, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -497,9 +497,9 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewActor))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewTab))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 191, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 191, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -801,6 +801,10 @@ func ActorContent(actor model.Actor) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = EventContentComponent(ctx).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return templ_7745c5c3_Err
 		})
 		templ_7745c5c3_Err = tabContent(tabLabelEvents).Render(templ.WithChildren(ctx, templ_7745c5c3_Var35), templ_7745c5c3_Buffer)

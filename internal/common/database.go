@@ -27,7 +27,7 @@ type EventsQuery struct {
 	EventID   ulid.ULID
 	Timestamp time.Time
 	PageIndex int
-	Filter    Filter
+	Filter    model.Filter
 }
 
 type ActorSourcesSinksQuery struct {

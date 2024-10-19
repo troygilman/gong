@@ -34,7 +34,7 @@ type questDatabase struct {
 	client questdb.LineSender
 }
 
-func NewQuestDatabase(sqlMigrations fs.FS) (common.Database, error) {
+func NewQuestDatabase(sqlMigrations fs.FS) (Database, error) {
 	hostname, ok := os.LookupEnv(envDatabaseHostname)
 	if !ok {
 		return nil, fmt.Errorf("%s not set", envDatabaseHostname)
@@ -121,8 +121,8 @@ func NewQuestDatabase(sqlMigrations fs.FS) (common.Database, error) {
 
 func (db *questDatabase) QueryEvents(
 	ctx context.Context,
-	query common.EventsQuery,
-) ([]common.Event, int, error) {
+	query EventsQuery,
+) ([]model.Event, int, error) {
 	pageSize := 100
 
 	subq := db.bunDB.NewSelect().Model(&common.Event{}).
@@ -150,7 +150,7 @@ func (db *questDatabase) QueryEvents(
 	lowerLimit := query.PageIndex * pageSize
 	upperLimit := (query.PageIndex + 1) * pageSize
 
-	var events []common.Event
+	var events []model.Event
 	if err := db.bunDB.NewRaw("SELECT * FROM (?) LIMIT ?, ?", subq, lowerLimit, upperLimit).Scan(ctx, &events); err != nil {
 		return nil, 0, err
 	}
@@ -160,7 +160,7 @@ func (db *questDatabase) QueryEvents(
 
 func (db *questDatabase) CreateEvents(
 	ctx context.Context,
-	events []common.Event,
+	events []model.Event,
 ) error {
 	if len(events) == 0 {
 		return nil
@@ -219,7 +219,7 @@ func (db *questDatabase) UpdateActor(
 
 func (db *questDatabase) QueryActorSourcesSinks(
 	ctx context.Context,
-	query common.ActorSourcesSinksQuery,
+	query ActorSourcesSinksQuery,
 ) ([]string, error) {
 	var actors []struct {
 		bun.BaseModel `bun:"table:events"`
@@ -261,8 +261,8 @@ func (db *questDatabase) QueryActorSourcesSinks(
 
 func (db *questDatabase) QuerySourcesSinksNodeInfo(
 	ctx context.Context,
-	query common.SourcesSinksNodeInfoQuery,
-) (info common.SourcesSinksNodeInfo, err error) {
+	query SourcesSinksNodeInfoQuery,
+) (info model.SourcesSinksNodeInfo, err error) {
 	var actorPid string
 	var sender string
 

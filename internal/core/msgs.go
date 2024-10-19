@@ -32,20 +32,20 @@ type msgGetProjectEvents struct {
 	eventID   ulid.ULID
 	timestamp time.Time
 	pageIndex int
-	filter    common.Filter
+	filter    model.Filter
 }
 
 type rspGetProjectEvents struct {
-	events       common.EventList
+	events       []model.Event
 	maxPageIndex int
-	actor        common.Actor
+	actor        model.Actor
 }
 
 type msgProcessorUpdateState struct{}
 
 type msgUpdateProject struct {
 	actors []model.Actor
-	events []common.Event
+	events []model.Event
 	metric Metric
 }
 
@@ -67,7 +67,7 @@ type msgGetSourcesSinksNodeInfo struct {
 }
 
 type rspGetSourcesSinksNodeInfo struct {
-	info common.SourcesSinksNodeInfo
+	info model.SourcesSinksNodeInfo
 }
 
 type msgListenStart struct {

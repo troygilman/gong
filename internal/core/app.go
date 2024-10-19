@@ -7,6 +7,7 @@ import (
 	"os"
 	"stagebase/internal/common"
 	"stagebase/internal/core/model"
+	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
 	"time"
@@ -27,12 +28,12 @@ type stagebaseApp struct {
 	controllerPID *actor.PID
 	pids          map[string]*actor.PID
 	producerFuncs map[string]producerFunc
-	db            common.Database
+	db            persistance.Database
 }
 
 type producerFunc func(App) actor.Producer
 
-func NewApp(db common.Database) (App, error) {
+func NewApp(db persistance.Database) (App, error) {
 	app := new(stagebaseApp)
 
 	app.db = db
@@ -99,7 +100,7 @@ func (app *stagebaseApp) PID(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
-func (app *stagebaseApp) Database() common.Database {
+func (app *stagebaseApp) Database() persistance.Database {
 	return app.db
 }
 
@@ -166,9 +167,9 @@ func (app *stagebaseApp) Events(
 	projectID uuid.UUID,
 	actorPID string,
 	timestamp time.Time,
-	filter common.Filter,
+	filter model.Filter,
 	pageIndex int,
-) (events common.EventList, maxPageIndex int, err error) {
+) (events []model.Event, maxPageIndex int, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return events, 0, err
@@ -240,7 +241,7 @@ func (app *stagebaseApp) SourcesSinksNodeInfo(
 	nodePID string,
 	source bool,
 	rng common.Range,
-) (info common.SourcesSinksNodeInfo, err error) {
+) (info model.SourcesSinksNodeInfo, err error) {
 	projectPID, err := app.PID(kindProject, projectID.String())
 	if err != nil {
 		return info, err

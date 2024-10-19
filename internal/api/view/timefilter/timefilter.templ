@@ -49,9 +49,9 @@ func Extract(e echo.Context) (any, any) {
 	return ctxKey, f
 }
 
-func FromCtx(e context.Context) TimeFilter {
-	f, _ := e.Value(ctxKey).(TimeFilter)
-	return f
+func FromCtx(e context.Context) (TimeFilter, bool) {
+	f, ok := e.Value(ctxKey).(TimeFilter)
+	return f, ok
 }
 
 func (filter TimeFilter) Time() time.Time {

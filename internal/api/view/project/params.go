@@ -54,13 +54,16 @@ func extractFlowNode(e echo.Context) (any, any) {
 	return paramFlowNode, flowNode
 }
 
-func extractPageIndex(e echo.Context) (any, any) {
-	pageIdxStr := e.QueryParam(paramPage)
-	pageIdx, err := strconv.Atoi(pageIdxStr)
+func extractPage(e echo.Context) (any, any) {
+	page, err := strconv.Atoi(e.QueryParam(paramPage))
 	if err != nil {
-		return nil, nil
+		return paramPage, 0
 	}
-	return paramPage, pageIdx
+	return paramPage, page
+}
+
+func mustGetPage(ctx context.Context) int {
+	return common.MustGetHelper[int](ctx, paramPage)
 }
 
 func extractView(e echo.Context) (any, any) {

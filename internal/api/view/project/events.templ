@@ -1,0 +1,301 @@
+package project
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"log/slog"
+	"stagebase/internal/api/common"
+	"stagebase/internal/api/view/icons"
+	"stagebase/internal/api/view/timefilter"
+	"stagebase/internal/core/model"
+	"stagebase/pkg/gong"
+	"strconv"
+	"time"
+)
+
+func EventContentComponent(ctx context.Context) templ.Component {
+	app := common.MustGetApp(ctx)
+	projectID := common.MustGetProjectId(ctx)
+	actorPID := mustGetActorPid(ctx)
+	filter := common.MustGetFilter(ctx)
+	page := mustGetPage(ctx)
+	timeFilter, ok := timefilter.FromCtx(ctx)
+
+	var from time.Time
+	if ok {
+		from = timeFilter.Time()
+	} else {
+		actor, err := app.Actor(ctx, projectID, actorPID)
+		if err != nil {
+			return nil
+		}
+		from = actor.LastEventTime
+	}
+	return eventContentComponent(filter, from, page)
+}
+
+templ eventContentComponent(filter model.Filter, timeStart time.Time, pageIdx int) {
+	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
+		@eventsFilter(filter)
+		@eventTablePaginationControl(pageIdx, 0)
+	</div>
+	<div
+		id="events-container"
+		class="relative flex flex-col grow min-h-0 max-w-full overflow-x-auto"
+		hx-ext="sse"
+	>
+		<input id="project-url" type="hidden" value={ formatProjectUrl(ctx) }/>
+		//<input include id="time-start" type="hidden" name={ time.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
+		<input include id="page-index" type="hidden" name={ paramPage } value={ strconv.Itoa(pageIdx) }/>
+		@EventTableComponent(true)
+		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
+			<span class="loading loading-spinner w-16"></span>
+		</div>
+	</div>
+}
+
+templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
+	<div id="pagination-controls" hx-swap-oob="true" class="join">
+		@eventTablePaginationControlItem(pageIndex, 0, 0) {
+			@icons.DoubleArrowIcon("")
+		}
+		@eventTablePaginationControlItem(pageIndex, pageIndex-1, 0) {
+			@icons.ArrowIcon("")
+		}
+		<div class="join-item button-sm w-fit min-w-8 !text-base-content" disabled>
+			{ strconv.Itoa(pageIndex) }
+		</div>
+		@eventTablePaginationControlItem(pageIndex, pageIndex+1, maxPageIndex) {
+			@icons.ArrowIcon("rotate-180")
+		}
+		@eventTablePaginationControlItem(pageIndex, maxPageIndex, maxPageIndex) {
+			@icons.DoubleArrowIcon("rotate-180")
+		}
+	</div>
+}
+
+templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int) {
+	<button
+		class="join-item button-sm fill-base-content disabled:fill-base-content/50"
+		hx-get={ formatProjectUrl(ctx) }
+		hx-include="[include]"
+		hx-headers={ `{"View": "page"}` }
+		hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, paramPage, nextPage) }
+		hx-trigger="click"
+		hx-swap="none"
+		hx-push-url="true"
+		if page == disableOnPage {
+			disabled
+		}
+	>
+		{ children... }
+	</button>
+}
+
+templ eventsFilter(filter model.Filter) {
+	<form
+		id="events-filter"
+		class="join w-fit mb-0"
+		hx-get={ formatProjectUrl(ctx) }
+		hx-include="[include]"
+		hx-headers={ `{"View": "tab"}` }
+		hx-trigger="submit"
+		hx-swap="none"
+		hx-push-url="true"
+		include
+	>
+		<script>
+			function updateFilter() {
+				console.log("updateFilter()");
+				const inputs = document.getElementById('events-filter').querySelectorAll("input");
+				for (const input of inputs) {
+					if (input.value !== input.defaultValue || input.checked !== input.defaultChecked) {
+						htmx.trigger('#events-filter', 'submit', {});
+					}
+				}
+			}
+		</script>
+		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, -1) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterType }
+				type="text"
+				placeholder="actor.Started"
+				if filter.Type != nil {
+					value={ *filter.Type }
+				}
+			/>
+		}
+		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterSender }
+				type="text"
+				placeholder="local/server/primary"
+				if filter.Sender != nil {
+					value={ *filter.Sender }
+				}
+			/>
+		}
+		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
+			<div class="px-2 py-1">
+				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
+				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
+				@eventsFilterLevelOption("WARN", slog.LevelWarn, filter.Level)
+				@eventsFilterLevelOption("ERROR", slog.LevelError, filter.Level)
+			</div>
+		}
+	</form>
+}
+
+templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Level) {
+	<div class="form-control">
+		<label class="label cursor-pointer py-1">
+			<span class="label-text">{ label }</span>
+			<input
+				type="radio"
+				name={ common.ParamFilterLevel }
+				class="radio"
+				value={ strconv.Itoa(int(level)) }
+				if selected == level {
+					checked
+				}
+			/>
+		</label>
+	</div>
+}
+
+templ eventsFilterItem(label string, name string, active bool, placement int) {
+	<div class="join-item indicator">
+		if active {
+			<span
+				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
+				hx-get={ formatProjectUrl(ctx) }
+				hx-include="[include]"
+				hx-params={ "not " + name }
+				hx-headers={ `{"View": "actor"}` }
+				hx-trigger="click"
+				hx-swap="none"
+				hx-push-url="true"
+			>
+				@icons.CloseIcon("inline-block w-4 h-4 stroke-current")
+			</span>
+		}
+		<div class="dropdown group/filter">
+			<div
+				tabindex="0"
+				role="button"
+				class={ "event-filter-button-container", templ.KV("rounded-l", placement < 0), templ.KV("rounded-r", placement > 0) }
+			>
+				<div class={ "event-filter-button", templ.KV("bg-neutral text-neutral-content", active) }>{ label }</div>
+			</div>
+			<div
+				tabindex="0"
+				class="dropdown-content z-50 shadow bg-base-200 rounded-lg rounded-tl-none w-64 border border-color"
+				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
+				@keydown.enter="updateFilter()"
+			>
+				{ children... }
+			</div>
+		</div>
+	</div>
+}
+
+templ EventTableComponent(lazy bool) {
+	@eventTableComponent(ctx, lazy)
+}
+
+func eventTableProducer(lazy bool) gong.ComponentProducer {
+	return func(ctx context.Context) templ.Component {
+		return eventTableComponent(ctx, lazy)
+	}
+}
+
+func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
+	app := common.MustGetApp(ctx)
+	projectID := common.MustGetProjectId(ctx)
+	actorPID := mustGetActorPid(ctx)
+	filter := common.MustGetFilter(ctx)
+	page := mustGetPage(ctx)
+	timeFilter, _ := timefilter.FromCtx(ctx)
+
+	events := []model.Event{}
+	maxPageIdx := 0
+
+	if !lazy {
+		var err error
+		log.Printf("%+v", filter)
+		events, maxPageIdx, err = app.Events(ctx, projectID, actorPID, timeFilter.Time(), filter, page)
+		if err != nil {
+			events = []model.Event{}
+		}
+	}
+
+	return eventTable(events, lazy, page, maxPageIdx)
+}
+
+templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {
+	<table
+		class="table table-pin-rows table-sm"
+		if lazy {
+			hx-get={ formatProjectUrl(ctx) + "/events" }
+			hx-trigger="load"
+			hx-include="[include]"
+			hx-indicator="#events-spinner"
+			hx-swap="outerHTML"
+		}
+	>
+		<thead>
+			<tr class="cursor-default">
+				<th>Timestamp</th>
+				<th>Type</th>
+				<th>Sender</th>
+				<th>Level</th>
+				<th>Message</th>
+			</tr>
+		</thead>
+		if lazy || len(events) > 0 {
+			<tbody>
+				for _, event := range events {
+					<tr id={ fmt.Sprintf("event-%s", strconv.Itoa(int(event.Timestamp.UnixNano()))) } class="event">
+						<input type="hidden" value={ strconv.Itoa(int(event.Timestamp.UnixNano())) }/>
+						<td>
+							{ event.Timestamp.String() }
+						</td>
+						<td>
+							{ event.Type }
+						</td>
+						<td>
+							if event.Sender != "" {
+								{ event.Sender }
+							} else {
+								N/A
+							}
+						</td>
+						<td>
+							{ event.SlogLevel().String() }
+						</td>
+						<td>
+							if event.Msg != "" {
+								{ event.Msg }
+							} else {
+								N/A
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		}
+	</table>
+	if !lazy && len(events) == 0 {
+		<div class="flex flex-col grow min-h-0 items-center justify-center">
+			@icons.DataErrorIcon("w-24 h-24")
+			<div class="text-2xl">No events found</div>
+			<div class="">No events match the selected filters</div>
+		</div>
+	}
+	if !lazy {
+		@eventTablePaginationControl(pageIdx, maxPageIdx)
+	}
+}

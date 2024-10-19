@@ -9,6 +9,7 @@ import (
 	"stagebase/internal/api"
 	"stagebase/internal/common"
 	"stagebase/internal/core"
+	"stagebase/internal/persistance"
 	"stagebase/sdk"
 	"strconv"
 	"sync"
@@ -32,7 +33,7 @@ func TestIntegration_Client(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	db := common.NewMockDatabase(controller)
+	db := persistance.NewMockDatabase(controller)
 
 	db.EXPECT().QueryActors(
 		gomock.Any(),

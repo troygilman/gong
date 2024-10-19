@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"slices"
-	"stagebase/internal/common"
 	"stagebase/internal/core/model"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
@@ -70,8 +69,8 @@ func (p *processor) Receive(aCtx *actor.Context) {
 	}
 }
 
-func (p *processor) handleEvent(sdkEvent sdk.Event) (event common.Event, err error) {
-	event = common.Event{
+func (p *processor) handleEvent(sdkEvent sdk.Event) (event model.Event, err error) {
+	event = model.Event{
 		ProjectID: p.id.String(),
 		Event:     sdkEvent,
 	}
@@ -112,7 +111,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	}()
 
 	sdkEventBatch := p.events[:batchSize]
-	eventBatch := make([]common.Event, 0, len(sdkEventBatch))
+	eventBatch := make([]model.Event, 0, len(sdkEventBatch))
 
 	for _, sdkEvent := range sdkEventBatch {
 		event, err := p.handleEvent(sdkEvent)

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"stagebase/internal/common"
 	"stagebase/internal/core/model"
+	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"time"
 
@@ -24,7 +24,7 @@ type project struct {
 	commonActorData
 	actors       map[string]model.Actor
 	actorUpdates map[string]model.Actor
-	eventUpdates []common.Event
+	eventUpdates []model.Event
 	metricUpdate Metric
 	repeater     actor.SendRepeater
 	listeners    map[ListenerType]map[*actor.PID]struct{}
@@ -135,12 +135,12 @@ func (p *project) Receive(aCtx *actor.Context) {
 				p.actors[actor.PID] = actor
 				delete(p.actorUpdates, actor.PID)
 			}
-			p.eventUpdates = []common.Event{}
+			p.eventUpdates = []model.Event{}
 
 		case msgGetProjectEvents:
 			_, ok := p.actors[msg.actorPID]
 			if ok {
-				query := common.EventsQuery{
+				query := persistance.EventsQuery{
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
 					Timestamp: msg.timestamp,
@@ -159,7 +159,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := common.ActorSourcesSinksQuery{
+				query := persistance.ActorSourcesSinksQuery{
 					Sources:   msg.sources,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -178,7 +178,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 					return err
 				}
 
-				query := common.SourcesSinksNodeInfoQuery{
+				query := persistance.SourcesSinksNodeInfoQuery{
 					Source:    msg.source,
 					ProjectID: p.id,
 					ActorPID:  msg.actorPID,
@@ -236,7 +236,7 @@ func (p *project) Create(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, query common.EventsQuery) {
+func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -252,7 +252,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db common.Database, qu
 	})
 }
 
-func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db common.Database, query common.ActorSourcesSinksQuery) {
+func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -267,7 +267,7 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db common.Databa
 	})
 }
 
-func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db common.Database, query common.SourcesSinksNodeInfoQuery) {
+func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.SourcesSinksNodeInfoQuery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

@@ -14,6 +14,7 @@ func Configure(g gong.Group) {
 	gong.NewGroup(g, "/project/:project_id",
 		func(e *echo.Group) {
 			e.GET("", gong.NewTemplHandler(projectProducer))
+			e.GET("/events", gong.NewTemplHandler(eventTableProducer(false)))
 			e.GET("/sse", handleConnectSseProject)
 		},
 		gong.ContextExtractors(
@@ -23,7 +24,8 @@ func Configure(g gong.Group) {
 			extractTab,
 			extractFlowType,
 			extractFlowNode,
-			extractPageIndex,
+			extractPage,
+			common.ExtractFilter,
 			timefilter.Extract,
 			graph.Extract,
 		),

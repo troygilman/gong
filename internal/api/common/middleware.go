@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"log"
 	"stagebase/internal/core"
 	"stagebase/pkg/gong"
 
@@ -38,7 +37,6 @@ func LogRequestMiddleware() echo.MiddlewareFunc {
 			ctx := e.Request().Context()
 			logger := gong.Logger(ctx)
 			logger.InfoContext(ctx, "REQUEST", "method", e.Request().Method, "uri", e.Request().RequestURI)
-			log.Printf("%+v\n", e.Request().Header)
 			return next(e)
 		}
 	}
