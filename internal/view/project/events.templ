@@ -67,7 +67,7 @@ templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 		@eventTablePaginationControlItem(pageIndex, pageIndex-1, 0) {
 			@commonView.ArrowIcon("")
 		}
-		<div class="join-item button w-fit min-w-8 !text-base-content" disabled>
+		<div class="join-item button-sm w-fit min-w-8 !text-base-content" disabled>
 			{ strconv.Itoa(pageIndex) }
 		</div>
 		@eventTablePaginationControlItem(pageIndex, pageIndex+1, maxPageIndex) {
@@ -81,7 +81,7 @@ templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 
 templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int) {
 	<button
-		class="join-item button fill-base-content disabled:fill-base-content/50"
+		class="join-item button-sm fill-base-content disabled:fill-base-content/50"
 		hx-get={ commonView.FormatProjectUrl(ctx) }
 		hx-include={ commonView.BuildIncludes(commonView.StandardIncludes, eventTableIncludes) }
 		hx-headers={ `{"View": "actor"}` }
