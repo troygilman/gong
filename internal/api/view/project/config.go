@@ -26,6 +26,8 @@ func Configure(g gong.Group) {
 			extractFlowType,
 			extractFlowNode,
 			events.ExtractPage,
+			events.ExtractFromFixed,
+			events.ExtractToFixed,
 			common.ExtractFilter,
 			timefilter.Extract,
 			graph.Extract,

@@ -15,7 +15,7 @@ templ FlowTabContent() {
 	<div id="actor-flow-chart-widget" class="flex flex-col grow max-w-full min-h-0">
 		<div class="flex flex-row items-center border-b border-color py-2 px-4 gap-2 w-full">
 			@flowChartFilterType(ctx)
-			@timefilter.FromCtx(ctx).Component(commonView.FormatProjectUrl(ctx), common.ProjectViewFlowChart)
+			@timefilter.MustGetTimeFilter(ctx).Component(common.ProjectViewFlowChart)
 		</div>
 		<div class="grid grid-cols-3 grow w-full min-h-0">
 			@graph.Component(true, commonView.FormatProjectUrl(ctx))
@@ -81,14 +81,14 @@ func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component 
 		panic(err.Error())
 	}
 
-	timeFilter := timefilter.FromCtx(ctx)
+	timeFilter := timefilter.MustGetTimeFilter(ctx)
 
 	nodeInfo, err := app.Database().QuerySourcesSinksNodeInfo(ctx, common.SourcesSinksNodeInfoQuery{
 		Source:    source,
 		ProjectID: projectID,
 		ActorPID:  actorPID,
 		NodePID:   nodePID,
-		MinTime:   timeFilter.Time(),
+		MinTime:   timeFilter.From,
 		MaxTime:   time.Now(),
 	})
 	if err != nil {

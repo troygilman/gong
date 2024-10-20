@@ -12,13 +12,17 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/icons"
 	"time"
 )
 
 const (
-	ctxKey          = "time-filter"
-	paramName       = "from"
+	TimeFilterParam = "time_filter"
+	FromParam       = "from"
+	ToParam         = "to"
+	FromNanosParam  = "from_nanos"
+	ToNanosParam    = "to_nanos"
 	timeFilter15min = "now-15min"
 	timeFilter30min = "now-30min"
 	timeFilter1hr   = "now-1hr"
@@ -35,42 +39,36 @@ var timeMapping = map[string]time.Duration{
 }
 
 type TimeFilter struct {
-	from string
+	From    time.Time
+	To      time.Time
+	fromStr string
 }
 
 func Extract(e echo.Context) (any, any) {
-	from := e.QueryParam(paramName)
-	switch from {
-	case timeFilter15min:
-	case timeFilter30min:
-	case timeFilter1hr:
-	case timeFilter3hr:
-	case timeFilter24hr:
-	default:
-		from = timeFilter15min
-	}
+	filter := TimeFilter{}
 
-	f := TimeFilter{
-		from: from,
+	fromStr := e.QueryParam(FromParam)
+	if _, ok := timeMapping[fromStr]; ok {
+		filter.fromStr = fromStr
+	} else {
+		filter.fromStr = timeFilter15min
 	}
+	filter.From = time.Now().Add(-timeMapping[filter.fromStr])
 
-	return ctxKey, f
+	filter.To = time.Now()
+
+	return TimeFilterParam, filter
 }
 
-func FromCtx(e context.Context) (TimeFilter, bool) {
-	f, ok := e.Value(ctxKey).(TimeFilter)
-	return f, ok
-}
-
-func (filter TimeFilter) Time() time.Time {
-	return time.Now().Add(-timeMapping[filter.from])
+func MustGetTimeFilter(ctx context.Context) TimeFilter {
+	return common.MustGetHelper[TimeFilter](ctx, TimeFilterParam)
 }
 
 func (f TimeFilter) Filter() {
 
 }
 
-func (filter TimeFilter) Component(url string, view string) templ.Component {
+func (filter TimeFilter) Component(view string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -99,42 +97,29 @@ func (filter TimeFilter) Component(url string, view string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button> <dialog id=\"my_modal_1\" class=\"modal\"><form method=\"dialog\" class=\"modal-backdrop\"><button></button></form><div class=\"modal-box\"><form method=\"dialog\">Lookback Range <button class=\"btn btn-sm btn-circle btn-ghost absolute right-2 top-2\">✕</button></form><div class=\"flex flex-col w-full\" hx-get=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button> <dialog id=\"my_modal_1\" class=\"modal\"><form method=\"dialog\" class=\"modal-backdrop\"><button></button></form><div class=\"modal-box\"><form method=\"dialog\">Lookback Range <button class=\"btn btn-sm btn-circle btn-ghost absolute right-2 top-2\">✕</button></form><div class=\"flex flex-col w-full\" hx-get hx-headers=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(url)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, view))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 80, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 79, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-headers=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-include=\"[include]\" hx-push-url=\"true\" hx-trigger=\"flow-chart-filter-range-submit\"><div class=\"bg-base-200 border border-color rounded py-2 px-4\"><div class=\"flex flex-row items-center gap-2\"><div>Last</div><select id=\"filter-from-time\" include name=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, view))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(FromParam)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 81, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 90, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-include=\"[include]\" hx-push-url=\"true\" hx-trigger=\"flow-chart-filter-range-submit\" hx-target=\"#actor-flow-chart-widget\" hx-swap=\"outerHTML\"><div class=\"bg-base-200 border border-color rounded py-2 px-4\"><div class=\"flex flex-row items-center gap-2\"><div>Last</div><select include id=\"filter-from-time\" name=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(paramName)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 94, Col: 23}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -186,21 +171,21 @@ func (filter TimeFilter) option(text string, value string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(value)
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 118, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 114, Col: 15}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -208,7 +193,7 @@ func (filter TimeFilter) option(text string, value string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if value == filter.from {
+		if value == filter.fromStr {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" selected")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -218,12 +203,12 @@ func (filter TimeFilter) option(text string, value string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(text)
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 123, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 119, Col: 8}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

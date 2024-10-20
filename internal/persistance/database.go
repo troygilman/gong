@@ -22,7 +22,8 @@ type Database interface {
 
 type EventsQuery struct {
 	ProjectID uuid.UUID
-	Timestamp time.Time
+	From      time.Time
+	To        time.Time
 	PageIndex int
 	Filter    model.Filter
 }

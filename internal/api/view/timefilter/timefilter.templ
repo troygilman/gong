@@ -4,13 +4,17 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/icons"
 	"time"
 )
 
 const (
-	ctxKey          = "time-filter"
-	paramName       = "from"
+	TimeFilterParam = "time_filter"
+	FromParam       = "from"
+	ToParam         = "to"
+	FromNanosParam  = "from_nanos"
+	ToNanosParam    = "to_nanos"
 	timeFilter15min = "now-15min"
 	timeFilter30min = "now-30min"
 	timeFilter1hr   = "now-1hr"
@@ -27,42 +31,36 @@ var timeMapping = map[string]time.Duration{
 }
 
 type TimeFilter struct {
-	from string
+	From    time.Time
+	To      time.Time
+	fromStr string
 }
 
 func Extract(e echo.Context) (any, any) {
-	from := e.QueryParam(paramName)
-	switch from {
-	case timeFilter15min:
-	case timeFilter30min:
-	case timeFilter1hr:
-	case timeFilter3hr:
-	case timeFilter24hr:
-	default:
-		from = timeFilter15min
-	}
+	filter := TimeFilter{}
 
-	f := TimeFilter{
-		from: from,
+	fromStr := e.QueryParam(FromParam)
+	if _, ok := timeMapping[fromStr]; ok {
+		filter.fromStr = fromStr
+	} else {
+		filter.fromStr = timeFilter15min
 	}
+	filter.From = time.Now().Add(-timeMapping[filter.fromStr])
 
-	return ctxKey, f
+	filter.To = time.Now()
+
+	return TimeFilterParam, filter
 }
 
-func FromCtx(e context.Context) (TimeFilter, bool) {
-	f, ok := e.Value(ctxKey).(TimeFilter)
-	return f, ok
-}
-
-func (filter TimeFilter) Time() time.Time {
-	return time.Now().Add(-timeMapping[filter.from])
+func MustGetTimeFilter(ctx context.Context) TimeFilter {
+	return common.MustGetHelper[TimeFilter](ctx, TimeFilterParam)
 }
 
 func (f TimeFilter) Filter() {
 
 }
 
-templ (filter TimeFilter) Component(url string, view string) {
+templ (filter TimeFilter) Component(view string) {
 	<button class="btn btn-sm btn-square no-animation border border-color p-1" onclick="my_modal_1.showModal()">
 		@icons.CalandarIcon("")
 	</button>
@@ -77,21 +75,19 @@ templ (filter TimeFilter) Component(url string, view string) {
 			</form>
 			<div
 				class="flex flex-col w-full"
-				hx-get={ url }
+				hx-get
 				hx-headers={ fmt.Sprintf(`{"View": "%s"}`, view) }
 				hx-include="[include]"
 				hx-push-url="true"
 				hx-trigger="flow-chart-filter-range-submit"
-				hx-target="#actor-flow-chart-widget"
-				hx-swap="outerHTML"
 			>
 				<div class="bg-base-200 border border-color rounded py-2 px-4">
 					<div class="flex flex-row items-center gap-2">
 						<div>Last</div>
 						<select
-							include
 							id="filter-from-time"
-							name={ paramName }
+							include
+							name={ FromParam }
 							class="select select-sm select-bordered focus:outline-none"
 						>
 							@filter.option("15 mins", timeFilter15min)
@@ -116,7 +112,7 @@ templ (filter TimeFilter) Component(url string, view string) {
 templ (filter TimeFilter) option(text string, value string) {
 	<option
 		value={ value }
-		if value == filter.from {
+		if value == filter.fromStr {
 			selected
 		}
 	>

@@ -4,13 +4,16 @@ import (
 	"context"
 	"stagebase/internal/api/common"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 const (
-	ParamPage  = "page"
-	EventsView = "events"
+	ParamPage      = "page"
+	FromFixedParam = "from_fixed"
+	ToFixedParam   = "to_fixed"
+	EventsView     = "events"
 )
 
 func ExtractPage(e echo.Context) (any, any) {
@@ -23,4 +26,20 @@ func ExtractPage(e echo.Context) (any, any) {
 
 func MustGetPage(ctx context.Context) int {
 	return common.MustGetHelper[int](ctx, ParamPage)
+}
+
+func ExtractFromFixed(e echo.Context) (any, any) {
+	fromNanos, err := strconv.Atoi(e.QueryParam(FromFixedParam))
+	if err != nil {
+		return nil, nil
+	}
+	return FromFixedParam, time.Unix(0, int64(fromNanos))
+}
+
+func ExtractToFixed(e echo.Context) (any, any) {
+	toNanos, err := strconv.Atoi(e.QueryParam(ToFixedParam))
+	if err != nil {
+		return nil, nil
+	}
+	return ToFixedParam, time.Unix(0, int64(toNanos))
 }

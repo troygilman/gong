@@ -127,7 +127,8 @@ func (db *questDatabase) QueryEvents(
 
 	subq := db.bunDB.NewSelect().Model(&common.Event{}).
 		Where("project_id = ?", query.ProjectID).
-		Where("timestamp <= ?", query.Timestamp).
+		Where("timestamp >= ?", query.From).
+		Where("timestamp <= ?", query.To).
 		Order("timestamp DESC")
 
 	if query.Filter.Type != nil {

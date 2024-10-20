@@ -16,30 +16,29 @@ import (
 func EventContentComponent(ctx context.Context) templ.Component {
 	filter := common.MustGetFilter(ctx)
 	page := MustGetPage(ctx)
-	timeFilter, ok := timefilter.FromCtx(ctx)
-
-	var from time.Time
-	if ok {
-		from = timeFilter.Time()
-	} else {
-		from = time.Now()
-	}
-	return eventContentComponent(filter, from, page)
+	timeFilter := timefilter.MustGetTimeFilter(ctx)
+	return eventContentComponent(filter, timeFilter, page)
 }
 
-templ eventContentComponent(filter model.Filter, timeStart time.Time, pageIdx int) {
+templ eventContentComponent(filter model.Filter, timeFilter timefilter.TimeFilter, pageIdx int) {
 	<div class="flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between">
-		@eventsFilter(filter)
+		<div class="flex items-center gap-2">
+			@eventsFilter(filter)
+			@timefilter.MustGetTimeFilter(ctx).Component("")
+		</div>
 		@eventTablePaginationControl(pageIdx, 0)
 	</div>
-	<div
-		id="events-container"
-		class="relative flex flex-col grow min-h-0 max-w-full overflow-x-auto"
-		hx-ext="sse"
-	>
-		<input include id="page-index" type="hidden" name={ ParamPage } value={ strconv.Itoa(pageIdx) }/>
-		@EventTableComponent(true)
-		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
+	<div class="flex grow min-h-0 relative">
+		<div
+			id="events-container"
+			class="flex flex-col grow overflow-y-auto"
+			hx-ext="sse"
+		>
+			<input id="from-fixed" type="hidden" name={ FromFixedParam } value={ strconv.Itoa(int(timeFilter.From.UnixNano())) }/>
+			<input id="to-fixed" type="hidden" name={ ToFixedParam } value={ strconv.Itoa(int(timeFilter.To.UnixNano())) }/>
+			@EventTableComponent(true)
+		</div>
+		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center pointer-events-none">
 			<span class="loading loading-spinner w-16"></span>
 		</div>
 	</div>
@@ -54,6 +53,7 @@ templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 			@icons.ArrowIcon("")
 		}
 		<div class="join-item button-sm w-fit min-w-8 !text-base-content" disabled>
+			<input id="page-index" type="hidden" name={ ParamPage } value={ strconv.Itoa(pageIndex) }/>
 			{ strconv.Itoa(pageIndex) }
 		</div>
 		@eventTablePaginationControlItem(pageIndex, pageIndex+1, maxPageIndex) {
@@ -69,12 +69,13 @@ templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int)
 	<button
 		class="join-item button-sm fill-base-content disabled:fill-base-content/50"
 		hx-get
-		hx-include="[include]"
-		hx-headers={ `{"View": "tab"}` }
+		hx-include="[include], #page-index, #from-fixed, #to-fixed"
+		hx-headers={ `{"View": "events"}` }
 		hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, ParamPage, nextPage) }
 		hx-trigger="click"
-		hx-swap="none"
-		hx-push-url="true"
+		hx-target="#event-table"
+		hx-swap="outerHTML"
+		hx-indicator="#events-spinner"
 		if page == disableOnPage {
 			disabled
 		}
@@ -98,16 +99,18 @@ func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 	projectID := common.MustGetProjectId(ctx)
 	filter := common.MustGetFilter(ctx)
 	page := MustGetPage(ctx)
-	timeFilter, _ := timefilter.FromCtx(ctx)
 
 	events := []model.Event{}
 	maxPageIdx := 0
 
 	if !lazy {
 		var err error
+		from := ctx.Value(FromFixedParam).(time.Time)
+		to := ctx.Value(ToFixedParam).(time.Time)
 		events, maxPageIdx, err = app.Database().QueryEvents(ctx, persistance.EventsQuery{
 			ProjectID: projectID,
-			Timestamp: timeFilter.Time(),
+			From:      from,
+			To:        to,
 			PageIndex: page,
 			Filter:    filter,
 		})
@@ -121,16 +124,18 @@ func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 
 templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {
 	<table
+		id="event-table"
 		class="table table-pin-rows table-sm"
 		if lazy {
 			hx-get
-			hx-include="[include]"
+			hx-include="[include], #from-fixed, #to-fixed"
 			hx-headers={ `{"View": "events"}` }
 			hx-trigger="load"
 			hx-indicator="#events-spinner"
 			hx-swap="outerHTML"
 		}
 	>
+		<input type="hidden" name="" value=""/>
 		if len(events) > 0 {
 			<thead>
 				<tr class="cursor-default">

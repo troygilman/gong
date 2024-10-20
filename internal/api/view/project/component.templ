@@ -64,7 +64,7 @@ templ projectComponent(props model.ProjectProps, pid string) {
 			});
 		</script>
 		<div
-			class="flex flex-row h-screen w-screen max-h-screen max-w-screen font-medium"
+			class="flex flex-row h-screen w-screen max-h-screen max-w-screen overflow-hidden font-medium"
 			hx-ext="sse"
 			sse-connect={ "/project/" + props.ID.String() + "/sse" }
 			x-data="{ pid: '' }"
