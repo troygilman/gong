@@ -127,7 +127,6 @@ func (db *questDatabase) QueryEvents(
 
 	subq := db.bunDB.NewSelect().Model(&common.Event{}).
 		Where("project_id = ?", query.ProjectID).
-		Where("pid = ?", query.ActorPID).
 		Where("timestamp <= ?", query.Timestamp).
 		Order("timestamp DESC")
 
@@ -137,6 +136,10 @@ func (db *questDatabase) QueryEvents(
 
 	if query.Filter.Sender != nil {
 		subq = subq.Where("sender ~ ?", *query.Filter.Sender)
+	}
+
+	if query.Filter.Receiver != nil {
+		subq = subq.Where("pid ~ ?", *&query.Filter.Receiver)
 	}
 
 	subq = subq.Where("level >= ?", strconv.Itoa(int(query.Filter.Level)))

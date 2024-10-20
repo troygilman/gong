@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 //go:generate mockgen -source=database.go -destination=database_mock.go -package=persistance
@@ -23,8 +22,6 @@ type Database interface {
 
 type EventsQuery struct {
 	ProjectID uuid.UUID
-	ActorPID  string
-	EventID   ulid.ULID
 	Timestamp time.Time
 	PageIndex int
 	Filter    model.Filter

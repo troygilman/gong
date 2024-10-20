@@ -3,6 +3,7 @@ package project
 import (
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/graph"
+	"stagebase/internal/api/view/project/events"
 	"stagebase/internal/api/view/timefilter"
 	"stagebase/internal/core"
 	"stagebase/pkg/gong"
@@ -14,7 +15,7 @@ func Configure(g gong.Group) {
 	gong.NewGroup(g, "/project/:project_id",
 		func(e *echo.Group) {
 			e.GET("", gong.NewTemplHandler(projectProducer))
-			e.GET("/events", gong.NewTemplHandler(eventTableProducer(false)))
+			e.GET("/events", gong.NewTemplHandler(events.EventTableProducer(false)))
 			e.GET("/sse", handleConnectSseProject)
 		},
 		gong.ContextExtractors(
@@ -24,7 +25,7 @@ func Configure(g gong.Group) {
 			extractTab,
 			extractFlowType,
 			extractFlowNode,
-			extractPage,
+			events.ExtractPage,
 			common.ExtractFilter,
 			timefilter.Extract,
 			graph.Extract,

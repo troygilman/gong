@@ -8,11 +8,12 @@ import (
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/components"
 	"stagebase/internal/api/view/icons"
+	"stagebase/internal/api/view/project/events"
 	"stagebase/internal/core/model"
 )
 
 const (
-	viewTab               = "tab"
+	tabView               = "tab"
 	viewFlowChart         = "flow-chart"
 	viewFlowChartNodeInfo = "flow-chart-node-info"
 )
@@ -29,8 +30,10 @@ func projectProducer(ctx context.Context) templ.Component {
 	projectId := common.MustGetProjectId(ctx)
 
 	switch view {
-	case viewTab:
+	case tabView:
 		return ProjectActorComponent(ctx)
+	case events.EventsView:
+		return events.EventTableComponent(false)
 	default:
 		pid := mustGetActorPid(ctx)
 		props, err := app.ProjectProps(ctx, projectId)
@@ -52,6 +55,13 @@ templ projectComponent(props model.ProjectProps, pid string) {
 				url = url + "?" + params.toString();
 				return next(url);
 			}
+			document.body.addEventListener('htmx:configRequest', function(e) {
+				let path = e.detail.path.split("?");
+				if (path.length > 1) {
+					e.detail.path = path[0];
+				}
+				console.log(e.detail)
+			});
 		</script>
 		<div
 			class="flex flex-row h-screen w-screen max-h-screen max-w-screen font-medium"
@@ -138,7 +148,7 @@ templ projectMenuItem(label string, active bool, icon templ.Component) {
 		class="max-w-full aspect-square"
 		if !active {
 			hx-get={ formatProjectUrl(ctx) }
-			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, viewTab) }
+			hx-headers={ fmt.Sprintf(`{"View": "%s"}`, tabView) }
 			hx-vals={ fmt.Sprintf(`{"tab": "%s"}`, label) }
 			hx-include="[include]"
 			hx-push-url="true"
@@ -181,7 +191,7 @@ templ ProjectActorListItem(actor model.Actor, oob bool) {
 		id={ "actor-list-item-" + formatActorPID(actor.PID) }
 		class="max-w-full"
 		hx-get={ formatProjectUrl(ctx) }
-		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, viewTab) }
+		hx-headers={ fmt.Sprintf(`{"View": "%s"}`, tabView) }
 		hx-vals={ fmt.Sprintf(`{"pid": "%s"}`, actor.PID) }
 		hx-include="[include]"
 		hx-trigger="click"
@@ -245,7 +255,7 @@ templ ActorContent(actor model.Actor) {
 			//@OverviewTabContent(actor)
 		}
 		@tabContent(tabLabelEvents) {
-			@EventContentComponent(ctx)
+			@events.EventContentComponent(ctx)
 		}
 		@tabContent(tabLabelFlow) {
 			//@FlowTabContent()

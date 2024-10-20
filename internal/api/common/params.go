@@ -13,14 +13,15 @@ import (
 )
 
 const (
-	ParamRequestId    = "request_id"
-	ParamApp          = "app"
-	ParamProjectId    = "project_id"
-	ParamFilter       = "filter"
-	ParamFilterPid    = "filter_pid"
-	ParamFilterType   = "filter_type"
-	ParamFilterSender = "filter_sender"
-	ParamFilterLevel  = "filter_level"
+	ParamRequestId      = "request_id"
+	ParamApp            = "app"
+	ParamProjectId      = "project_id"
+	ParamFilter         = "filter"
+	ParamFilterPid      = "filter_pid"
+	ParamFilterType     = "filter_type"
+	ParamFilterSender   = "filter_sender"
+	ParamFilterReceiver = "filter_receiver"
+	ParamFilterLevel    = "filter_level"
 )
 
 func GetHelper[T any](ctx context.Context, key any) (T, bool) {
@@ -68,6 +69,11 @@ func ExtractFilter(ctx echo.Context) (any, any) {
 	filterSender := ctx.QueryParam(ParamFilterSender)
 	if filterSender != "" {
 		filter.Sender = &filterSender
+	}
+
+	filterReceiver := ctx.QueryParam(ParamFilterReceiver)
+	if filterReceiver != "" {
+		filter.Receiver = &filterReceiver
 	}
 
 	if level, err := strconv.Atoi(ctx.QueryParam(ParamFilterLevel)); err != nil {

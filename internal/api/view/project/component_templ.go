@@ -16,11 +16,12 @@ import (
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/components"
 	"stagebase/internal/api/view/icons"
+	"stagebase/internal/api/view/project/events"
 	"stagebase/internal/core/model"
 )
 
 const (
-	viewTab               = "tab"
+	tabView               = "tab"
 	viewFlowChart         = "flow-chart"
 	viewFlowChartNodeInfo = "flow-chart-node-info"
 )
@@ -37,8 +38,10 @@ func projectProducer(ctx context.Context) templ.Component {
 	projectId := common.MustGetProjectId(ctx)
 
 	switch view {
-	case viewTab:
+	case tabView:
 		return ProjectActorComponent(ctx)
+	case events.EventsView:
+		return events.EventTableComponent(false)
 	default:
 		pid := mustGetActorPid(ctx)
 		props, err := app.ProjectProps(ctx, projectId)
@@ -82,14 +85,14 @@ func projectComponent(props model.ProjectProps, pid string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"includes\" hx-include=\"[include]\"></div><script>\n\t\t\tconst next = htmx.createEventSource;\n\t\t\thtmx.createEventSource = function(url) {\n\t\t\t\tconst elem = htmx.find(\"#includes\");\n\t\t\t\tconst params = new URLSearchParams(htmx.values(elem).entries());\n\t\t\t\turl = url + \"?\" + params.toString();\n\t\t\t\treturn next(url);\n\t\t\t}\n\t\t</script> <div class=\"flex flex-row h-screen w-screen max-h-screen max-w-screen font-medium\" hx-ext=\"sse\" sse-connect=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"includes\" hx-include=\"[include]\"></div><script>\n\t\t\tconst next = htmx.createEventSource;\n\t\t\thtmx.createEventSource = function(url) {\n\t\t\t\tconst elem = htmx.find(\"#includes\");\n\t\t\t\tconst params = new URLSearchParams(htmx.values(elem).entries());\n\t\t\t\turl = url + \"?\" + params.toString();\n\t\t\t\treturn next(url);\n\t\t\t}\n\t\t\tdocument.body.addEventListener('htmx:configRequest', function(e) {\n\t\t\t\tlet path = e.detail.path.split(\"?\");\n\t\t\t\tif (path.length > 1) {\n\t\t\t\t\te.detail.path = path[0];\n\t\t\t\t}\n\t\t\t\tconsole.log(e.detail)\n\t\t\t});\n\t\t</script> <div class=\"flex flex-row h-screen w-screen max-h-screen max-w-screen font-medium\" hx-ext=\"sse\" sse-connect=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("/project/" + props.ID.String() + "/sse")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 59, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 69, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -176,7 +179,7 @@ func StatePID(pid string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(paramPid)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 94, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 104, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -189,7 +192,7 @@ func StatePID(pid string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(pid)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 95, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 105, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -296,7 +299,7 @@ func projectMenuItem(label string, active bool, icon templ.Component) templ.Comp
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(formatProjectUrl(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 140, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 150, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -307,9 +310,9 @@ func projectMenuItem(label string, active bool, icon templ.Component) templ.Comp
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewTab))
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, tabView))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 141, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 151, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -322,7 +325,7 @@ func projectMenuItem(label string, active bool, icon templ.Component) templ.Comp
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"tab": "%s"}`, label))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 142, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 152, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -399,7 +402,7 @@ func ProjectActorList(props model.ProjectProps) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(sseTypeNewActor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 162, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 172, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -457,7 +460,7 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("actor-list-item-" + formatActorPID(actor.PID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 181, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 191, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -470,7 +473,7 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(formatProjectUrl(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 183, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 193, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -481,9 +484,9 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, viewTab))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, tabView))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 184, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 194, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -496,7 +499,7 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"pid": "%s"}`, actor.PID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 185, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 195, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -519,7 +522,7 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("{ 'active': pid == '%s' }", actor.PID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 195, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 205, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -532,7 +535,7 @@ func ProjectActorListItem(actor model.Actor, oob bool) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(actor.PID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 197, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 207, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -600,7 +603,7 @@ func ProjectActorBadge(actor model.Actor) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(sseTypeUpdateActorNumEvents + actor.PID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 206, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 216, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -614,7 +617,7 @@ func ProjectActorBadge(actor model.Actor) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("999+")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 211, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 221, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -624,7 +627,7 @@ func ProjectActorBadge(actor model.Actor) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", actor.NumEvents))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 213, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 223, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -719,7 +722,7 @@ func ActorContent(actor model.Actor) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(paramTab)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 242, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 252, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -732,7 +735,7 @@ func ActorContent(actor model.Actor) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(ctx.Value(paramTab).(string))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 242, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/component.templ`, Line: 252, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -772,7 +775,7 @@ func ActorContent(actor model.Actor) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = EventContentComponent(ctx).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = events.EventContentComponent(ctx).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

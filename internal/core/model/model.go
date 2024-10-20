@@ -36,10 +36,11 @@ type Actor struct {
 }
 
 type Filter struct {
-	PID    *string
-	Type   *string
-	Sender *string
-	Level  slog.Level
+	PID      *string
+	Type     *string
+	Sender   *string
+	Receiver *string
+	Level    slog.Level
 }
 
 func (filter Filter) ValidEvent(event Event) bool {

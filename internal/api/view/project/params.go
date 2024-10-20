@@ -3,7 +3,6 @@ package project
 import (
 	"context"
 	"stagebase/internal/api/common"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -52,18 +51,6 @@ func extractFlowNode(e echo.Context) (any, any) {
 		return nil, nil
 	}
 	return paramFlowNode, flowNode
-}
-
-func extractPage(e echo.Context) (any, any) {
-	page, err := strconv.Atoi(e.QueryParam(paramPage))
-	if err != nil {
-		return paramPage, 0
-	}
-	return paramPage, page
-}
-
-func mustGetPage(ctx context.Context) int {
-	return common.MustGetHelper[int](ctx, paramPage)
 }
 
 func extractView(e echo.Context) (any, any) {

@@ -1,36 +1,29 @@
-package project
+package events
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/view/icons"
 	"stagebase/internal/api/view/timefilter"
 	"stagebase/internal/core/model"
+	"stagebase/internal/persistance"
 	"stagebase/pkg/gong"
 	"strconv"
 	"time"
 )
 
 func EventContentComponent(ctx context.Context) templ.Component {
-	app := common.MustGetApp(ctx)
-	projectID := common.MustGetProjectId(ctx)
-	actorPID := mustGetActorPid(ctx)
 	filter := common.MustGetFilter(ctx)
-	page := mustGetPage(ctx)
+	page := MustGetPage(ctx)
 	timeFilter, ok := timefilter.FromCtx(ctx)
 
 	var from time.Time
 	if ok {
 		from = timeFilter.Time()
 	} else {
-		actor, err := app.Actor(ctx, projectID, actorPID)
-		if err != nil {
-			return nil
-		}
-		from = actor.LastEventTime
+		from = time.Now()
 	}
 	return eventContentComponent(filter, from, page)
 }
@@ -45,9 +38,9 @@ templ eventContentComponent(filter model.Filter, timeStart time.Time, pageIdx in
 		class="relative flex flex-col grow min-h-0 max-w-full overflow-x-auto"
 		hx-ext="sse"
 	>
-		<input id="project-url" type="hidden" value={ formatProjectUrl(ctx) }/>
+		//<input id="project-url" type="hidden" value={ formatProjectUrl(ctx) }/>
 		//<input include id="time-start" type="hidden" name={ time.ParamTimeStart } value={ strconv.FormatInt(timeStart.UnixNano(), 10) }/>
-		<input include id="page-index" type="hidden" name={ paramPage } value={ strconv.Itoa(pageIdx) }/>
+		<input include id="page-index" type="hidden" name={ ParamPage } value={ strconv.Itoa(pageIdx) }/>
 		@EventTableComponent(true)
 		<div id="events-spinner" class="htmx-indicator absolute flex w-full h-full items-center justify-center">
 			<span class="loading loading-spinner w-16"></span>
@@ -78,10 +71,10 @@ templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int) {
 	<button
 		class="join-item button-sm fill-base-content disabled:fill-base-content/50"
-		hx-get={ formatProjectUrl(ctx) }
+		hx-get
 		hx-include="[include]"
-		hx-headers={ `{"View": "page"}` }
-		hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, paramPage, nextPage) }
+		hx-headers={ `{"View": "tab"}` }
+		hx-vals={ fmt.Sprintf(`{"%s": "%d"}`, ParamPage, nextPage) }
 		hx-trigger="click"
 		hx-swap="none"
 		hx-push-url="true"
@@ -97,8 +90,9 @@ templ eventsFilter(filter model.Filter) {
 	<form
 		id="events-filter"
 		class="join w-fit mb-0"
-		hx-get={ formatProjectUrl(ctx) }
+		hx-get
 		hx-include="[include]"
+		hx-params={ "not " + ParamPage }
 		hx-headers={ `{"View": "tab"}` }
 		hx-trigger="submit"
 		hx-swap="none"
@@ -138,6 +132,17 @@ templ eventsFilter(filter model.Filter) {
 				}
 			/>
 		}
+		@eventsFilterItem("Receiver", common.ParamFilterReceiver, filter.Receiver != nil, 0) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterReceiver }
+				type="text"
+				placeholder="local/client/primary"
+				if filter.Receiver != nil {
+					value={ *filter.Receiver }
+				}
+			/>
+		}
 		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
 			<div class="px-2 py-1">
 				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
@@ -171,10 +176,10 @@ templ eventsFilterItem(label string, name string, active bool, placement int) {
 		if active {
 			<span
 				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
-				hx-get={ formatProjectUrl(ctx) }
+				hx-get
 				hx-include="[include]"
-				hx-params={ "not " + name }
-				hx-headers={ `{"View": "actor"}` }
+				hx-params={ "not page, " + name }
+				hx-headers={ `{"View": "tab"}` }
 				hx-trigger="click"
 				hx-swap="none"
 				hx-push-url="true"
@@ -206,7 +211,7 @@ templ EventTableComponent(lazy bool) {
 	@eventTableComponent(ctx, lazy)
 }
 
-func eventTableProducer(lazy bool) gong.ComponentProducer {
+func EventTableProducer(lazy bool) gong.ComponentProducer {
 	return func(ctx context.Context) templ.Component {
 		return eventTableComponent(ctx, lazy)
 	}
@@ -215,9 +220,8 @@ func eventTableProducer(lazy bool) gong.ComponentProducer {
 func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 	app := common.MustGetApp(ctx)
 	projectID := common.MustGetProjectId(ctx)
-	actorPID := mustGetActorPid(ctx)
 	filter := common.MustGetFilter(ctx)
-	page := mustGetPage(ctx)
+	page := MustGetPage(ctx)
 	timeFilter, _ := timefilter.FromCtx(ctx)
 
 	events := []model.Event{}
@@ -225,10 +229,14 @@ func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 
 	if !lazy {
 		var err error
-		log.Printf("%+v", filter)
-		events, maxPageIdx, err = app.Events(ctx, projectID, actorPID, timeFilter.Time(), filter, page)
+		events, maxPageIdx, err = app.Database().QueryEvents(ctx, persistance.EventsQuery{
+			ProjectID: projectID,
+			Timestamp: timeFilter.Time(),
+			PageIndex: page,
+			Filter:    filter,
+		})
 		if err != nil {
-			events = []model.Event{}
+			panic(err)
 		}
 	}
 
@@ -239,9 +247,10 @@ templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {
 	<table
 		class="table table-pin-rows table-sm"
 		if lazy {
-			hx-get={ formatProjectUrl(ctx) + "/events" }
-			hx-trigger="load"
+			hx-get
 			hx-include="[include]"
+			hx-headers={ `{"View": "events"}` }
+			hx-trigger="load"
 			hx-indicator="#events-spinner"
 			hx-swap="outerHTML"
 		}
@@ -251,6 +260,7 @@ templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {
 				<th>Timestamp</th>
 				<th>Type</th>
 				<th>Sender</th>
+				<th>Receiver</th>
 				<th>Level</th>
 				<th>Message</th>
 			</tr>
@@ -269,9 +279,10 @@ templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {
 						<td>
 							if event.Sender != "" {
 								{ event.Sender }
-							} else {
-								N/A
 							}
+						</td>
+						<td>
+							{ event.PID }
 						</td>
 						<td>
 							{ event.SlogLevel().String() }

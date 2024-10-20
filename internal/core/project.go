@@ -142,7 +142,6 @@ func (p *project) Receive(aCtx *actor.Context) {
 			if ok {
 				query := persistance.EventsQuery{
 					ProjectID: p.id,
-					ActorPID:  msg.actorPID,
 					Timestamp: msg.timestamp,
 					PageIndex: msg.pageIndex,
 					Filter:    msg.filter,
