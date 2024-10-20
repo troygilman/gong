@@ -1,0 +1,130 @@
+package events
+
+import (
+	"stagebase/internal/core/model"
+	"stagebase/internal/api/common"
+	"stagebase/internal/api/view/icons"
+	"log/slog"
+	"strconv"
+)
+
+templ eventsFilter(filter model.Filter) {
+	<form
+		id="events-filter"
+		class="join w-fit mb-0"
+		hx-get
+		hx-include="[include]"
+		hx-params={ "not " + ParamPage }
+		hx-headers={ `{"View": "tab"}` }
+		hx-trigger="submit"
+		hx-swap="none"
+		hx-push-url="true"
+		include
+	>
+		<script>
+			function updateFilter() {
+				console.log("updateFilter()");
+				const inputs = document.getElementById('events-filter').querySelectorAll("input");
+				for (const input of inputs) {
+					if (input.value !== input.defaultValue || input.checked !== input.defaultChecked) {
+						htmx.trigger('#events-filter', 'submit', {});
+					}
+				}
+			}
+		</script>
+		@eventsFilterItem("Type", common.ParamFilterType, filter.Type != nil, -1) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterType }
+				type="text"
+				placeholder="actor.Started"
+				if filter.Type != nil {
+					value={ *filter.Type }
+				}
+			/>
+		}
+		@eventsFilterItem("Sender", common.ParamFilterSender, filter.Sender != nil, 0) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterSender }
+				type="text"
+				placeholder="local/server/primary"
+				if filter.Sender != nil {
+					value={ *filter.Sender }
+				}
+			/>
+		}
+		@eventsFilterItem("Receiver", common.ParamFilterReceiver, filter.Receiver != nil, 0) {
+			<input
+				class="event-filter-input"
+				name={ common.ParamFilterReceiver }
+				type="text"
+				placeholder="local/client/primary"
+				if filter.Receiver != nil {
+					value={ *filter.Receiver }
+				}
+			/>
+		}
+		@eventsFilterItem("Level", common.ParamFilterLevel, filter.Level > slog.LevelDebug, 1) {
+			<div class="px-2 py-1">
+				@eventsFilterLevelOption("DEBUG", slog.LevelDebug, filter.Level)
+				@eventsFilterLevelOption("INFO", slog.LevelInfo, filter.Level)
+				@eventsFilterLevelOption("WARN", slog.LevelWarn, filter.Level)
+				@eventsFilterLevelOption("ERROR", slog.LevelError, filter.Level)
+			</div>
+		}
+	</form>
+}
+
+templ eventsFilterLevelOption(label string, level slog.Level, selected slog.Level) {
+	<div class="form-control">
+		<label class="label cursor-pointer py-1">
+			<span class="label-text">{ label }</span>
+			<input
+				type="radio"
+				name={ common.ParamFilterLevel }
+				class="radio"
+				value={ strconv.Itoa(int(level)) }
+				if selected == level {
+					checked
+				}
+			/>
+		</label>
+	</div>
+}
+
+templ eventsFilterItem(label string, name string, active bool, placement int) {
+	<div class="join-item indicator">
+		if active {
+			<span
+				class="indicator-item badge badge-info badge-sm cursor-pointer pl-0 pr-0"
+				hx-get
+				hx-include="[include]"
+				hx-params={ "not page, " + name }
+				hx-headers={ `{"View": "tab"}` }
+				hx-trigger="click"
+				hx-swap="none"
+				hx-push-url="true"
+			>
+				@icons.CloseIcon("inline-block w-4 h-4 stroke-current")
+			</span>
+		}
+		<div class="dropdown group/filter">
+			<div
+				tabindex="0"
+				role="button"
+				class={ "event-filter-button-container", templ.KV("rounded-l", placement < 0), templ.KV("rounded-r", placement > 0) }
+			>
+				<div class={ "event-filter-button", templ.KV("bg-neutral text-neutral-content", active) }>{ label }</div>
+			</div>
+			<div
+				tabindex="0"
+				class="dropdown-content z-50 shadow bg-base-200 rounded-lg rounded-tl-none w-64 border border-color"
+				@focusout="if (!$el.contains($event.relatedTarget)) { updateFilter() }"
+				@keydown.enter="updateFilter()"
+			>
+				{ children... }
+			</div>
+		</div>
+	</div>
+}
