@@ -36,7 +36,7 @@ func EventContentComponent(ctx context.Context) templ.Component {
 }
 
 templ eventContentComponent(filter model.Filter, timeStart time.Time, pageIdx int) {
-	<div class="flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between">
+	<div class="flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between">
 		@eventsFilter(filter)
 		@eventTablePaginationControl(pageIdx, 0)
 	</div>

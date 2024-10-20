@@ -64,7 +64,7 @@ func eventContentComponent(filter model.Filter, timeStart time.Time, pageIdx int
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex flex-row w-full h-fit px-4 py-2 border-b border-color items-center justify-between\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

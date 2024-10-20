@@ -73,13 +73,6 @@ templ projectComponent(props model.ProjectProps, pid string) {
 				</div>
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
-				<input include id="drawer-state" type="checkbox" class="drawer-state"/>
-				@StatePID(pid)
-				<div class="drawer-content w-56 max-w-56">
-					<div class="grid grid-rows-2 border-r border-color p-2 gap-2 w-full max-w-full min-w-full h-full">
-						@ProjectActorList(props)
-					</div>
-				</div>
 				<div class="flex grow min-w-0 h-full">
 					if pid != "" {
 						@ActorContent(props.Actors[pid])
@@ -117,11 +110,11 @@ templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
 	<div class="w-full max-w-full min-w-0">
 		<div class="dropdown mb-4 w-full aspect-square">
 			<div tabindex="0" role="button" class="button !btn-circle">
-				<div class="truncate">
+				<div class="truncate text-lg">
 					PT
 				</div>
 			</div>
-			<ul tabindex="0" class="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-full border border-color">
+			<ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box border border-color">
 				<li><a>Item 1</a></li>
 				<li><a>Item 2</a></li>
 			</ul>
@@ -247,7 +240,7 @@ templ ActorContent(actor model.Actor) {
 		hx-swap-oob="true"
 	>
 		<input include id="tab" type="hidden" name={ paramTab } value={ ctx.Value(paramTab).(string) }/>
-		<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
+		//<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			//@OverviewTabContent(actor)
 		}
