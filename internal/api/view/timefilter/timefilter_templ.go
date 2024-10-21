@@ -27,7 +27,7 @@ const (
 	timeFilter30min = "now-30min"
 	timeFilter1hr   = "now-1hr"
 	timeFilter3hr   = "now-3hr"
-	timeFilter24hr  = "now-24hr"
+	timeFilter1day  = "now-1day"
 )
 
 var timeMapping = map[string]time.Duration{
@@ -35,7 +35,7 @@ var timeMapping = map[string]time.Duration{
 	timeFilter30min: 30 * time.Minute,
 	timeFilter1hr:   time.Hour,
 	timeFilter3hr:   3 * time.Hour,
-	timeFilter24hr:  24 * time.Hour,
+	timeFilter1day:  24 * time.Hour,
 }
 
 type TimeFilter struct {
@@ -51,7 +51,7 @@ func Extract(e echo.Context) (any, any) {
 	if _, ok := timeMapping[fromStr]; ok {
 		filter.fromStr = fromStr
 	} else {
-		filter.fromStr = timeFilter15min
+		filter.fromStr = timeFilter1day
 	}
 	filter.From = time.Now().Add(-timeMapping[filter.fromStr])
 
@@ -143,7 +143,7 @@ func (filter TimeFilter) Component(view string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = filter.option("24 hrs", timeFilter24hr).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = filter.option("1 day", timeFilter1day).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

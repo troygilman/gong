@@ -49,7 +49,7 @@ func eventContentComponent(filter model.Filter, timeFilter timefilter.TimeFilter
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between\"><div class=\"flex items-center gap-2\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between\"><div class=\"flex items-center gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -206,7 +206,7 @@ func eventTablePaginationControl(pageIndex int, maxPageIndex int) templ.Componen
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"join-item button-sm w-fit min-w-8 !text-base-content\" disabled><input id=\"page-index\" type=\"hidden\" name=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"join-item button-sm w-fit min-w-8 p-2 !text-base-content\" disabled><input id=\"page-index\" type=\"hidden\" name=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

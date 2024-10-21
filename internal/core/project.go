@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"stagebase/internal/core/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
@@ -67,7 +66,6 @@ func (p *project) Receive(aCtx *actor.Context) {
 			for pid, data := range p.actors {
 				props.Actors[pid] = data
 			}
-			log.Println(props)
 			aCtx.Respond(rspGetProjectProps{
 				props: props,
 			})

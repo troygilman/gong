@@ -22,7 +22,7 @@ func EventContentComponent(ctx context.Context) templ.Component {
 
 templ eventContentComponent(filter model.Filter, timeFilter timefilter.TimeFilter, pageIdx int) {
 	<div class="flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between">
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-4">
 			@eventsFilter(filter)
 			@timefilter.MustGetTimeFilter(ctx).Component("")
 		</div>
@@ -52,7 +52,7 @@ templ eventTablePaginationControl(pageIndex int, maxPageIndex int) {
 		@eventTablePaginationControlItem(pageIndex, pageIndex-1, 0) {
 			@icons.ArrowIcon("")
 		}
-		<div class="join-item button-sm w-fit min-w-8 !text-base-content" disabled>
+		<div class="join-item button-sm w-fit min-w-8 p-2 !text-base-content" disabled>
 			<input id="page-index" type="hidden" name={ ParamPage } value={ strconv.Itoa(pageIndex) }/>
 			{ strconv.Itoa(pageIndex) }
 		</div>
