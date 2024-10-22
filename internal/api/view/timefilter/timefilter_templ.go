@@ -23,19 +23,56 @@ const (
 	ToParam         = "to"
 	FromNanosParam  = "from_nanos"
 	ToNanosParam    = "to_nanos"
-	timeFilter15min = "now-15min"
-	timeFilter30min = "now-30min"
-	timeFilter1hr   = "now-1hr"
-	timeFilter3hr   = "now-3hr"
-	timeFilter1day  = "now-1day"
 )
 
-var timeMapping = map[string]time.Duration{
-	timeFilter15min: 15 * time.Minute,
-	timeFilter30min: 30 * time.Minute,
-	timeFilter1hr:   time.Hour,
-	timeFilter3hr:   3 * time.Hour,
-	timeFilter1day:  24 * time.Hour,
+var (
+	timeFilterOptions = []timeFilterOption{
+		{
+			label:    "15 minutes",
+			value:    "now-15min",
+			duration: 15 * time.Minute,
+		},
+		{
+			label:    "30 minutes",
+			value:    "now-30min",
+			duration: 30 * time.Minute,
+		},
+		{
+			label:    "1 hour",
+			value:    "now-1hr",
+			duration: time.Hour,
+		},
+		{
+			label:    "3 hours",
+			value:    "now-3hr",
+			duration: 3 * time.Hour,
+		},
+		{
+			label:    "1 day",
+			value:    "now-1day",
+			duration: 24 * time.Hour,
+		},
+		{
+			label:    "7 days",
+			value:    "now-7day",
+			duration: 7 * 24 * time.Hour,
+		},
+	}
+	timeFilterOptionMapping = buildTimeFilterOptionMap(timeFilterOptions)
+)
+
+type timeFilterOption struct {
+	label    string
+	value    string
+	duration time.Duration
+}
+
+func buildTimeFilterOptionMap(options []timeFilterOption) map[string]timeFilterOption {
+	m := make(map[string]timeFilterOption)
+	for _, opt := range options {
+		m[opt.value] = opt
+	}
+	return m
 }
 
 type TimeFilter struct {
@@ -48,12 +85,12 @@ func Extract(e echo.Context) (any, any) {
 	filter := TimeFilter{}
 
 	fromStr := e.QueryParam(FromParam)
-	if _, ok := timeMapping[fromStr]; ok {
+	if _, ok := timeFilterOptionMapping[fromStr]; ok {
 		filter.fromStr = fromStr
 	} else {
-		filter.fromStr = timeFilter1day
+		filter.fromStr = timeFilterOptions[0].value
 	}
-	filter.From = time.Now().Add(-timeMapping[filter.fromStr])
+	filter.From = time.Now().Add(-timeFilterOptionMapping[filter.fromStr].duration)
 
 	filter.To = time.Now()
 
@@ -104,7 +141,7 @@ func (filter TimeFilter) Component(view string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"View": "%s"}`, view))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 79, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 116, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -117,7 +154,7 @@ func (filter TimeFilter) Component(view string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(FromParam)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 90, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 127, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -127,25 +164,11 @@ func (filter TimeFilter) Component(view string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = filter.option("15 mins", timeFilter15min).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = filter.option("30 mins", timeFilter30min).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = filter.option("1 hr", timeFilter1hr).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = filter.option("3 hrs", timeFilter3hr).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = filter.option("1 day", timeFilter1day).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		for _, opt := range timeFilterOptions {
+			templ_7745c5c3_Err = filter.option(opt.label, opt.value).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"flex flex-row justify-end pt-4\"><div class=\"btn btn-sm border border-color\" @click=\"$dispatch(&#39;flow-chart-filter-range-submit&#39;)\">Ok</div></div></div></div></dialog>")
 		if templ_7745c5c3_Err != nil {
@@ -183,7 +206,7 @@ func (filter TimeFilter) option(text string, value string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 114, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 149, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -206,7 +229,7 @@ func (filter TimeFilter) option(text string, value string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 119, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/timefilter/timefilter.templ`, Line: 154, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {

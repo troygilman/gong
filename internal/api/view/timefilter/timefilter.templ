@@ -15,19 +15,56 @@ const (
 	ToParam         = "to"
 	FromNanosParam  = "from_nanos"
 	ToNanosParam    = "to_nanos"
-	timeFilter15min = "now-15min"
-	timeFilter30min = "now-30min"
-	timeFilter1hr   = "now-1hr"
-	timeFilter3hr   = "now-3hr"
-	timeFilter1day  = "now-1day"
 )
 
-var timeMapping = map[string]time.Duration{
-	timeFilter15min: 15 * time.Minute,
-	timeFilter30min: 30 * time.Minute,
-	timeFilter1hr:   time.Hour,
-	timeFilter3hr:   3 * time.Hour,
-	timeFilter1day:  24 * time.Hour,
+var (
+	timeFilterOptions = []timeFilterOption{
+		{
+			label:    "15 minutes",
+			value:    "now-15min",
+			duration: 15 * time.Minute,
+		},
+		{
+			label:    "30 minutes",
+			value:    "now-30min",
+			duration: 30 * time.Minute,
+		},
+		{
+			label:    "1 hour",
+			value:    "now-1hr",
+			duration: time.Hour,
+		},
+		{
+			label:    "3 hours",
+			value:    "now-3hr",
+			duration: 3 * time.Hour,
+		},
+		{
+			label:    "1 day",
+			value:    "now-1day",
+			duration: 24 * time.Hour,
+		},
+		{
+			label:    "7 days",
+			value:    "now-7day",
+			duration: 7 * 24 * time.Hour,
+		},
+	}
+	timeFilterOptionMapping = buildTimeFilterOptionMap(timeFilterOptions)
+)
+
+type timeFilterOption struct {
+	label    string
+	value    string
+	duration time.Duration
+}
+
+func buildTimeFilterOptionMap(options []timeFilterOption) map[string]timeFilterOption {
+	m := make(map[string]timeFilterOption)
+	for _, opt := range options {
+		m[opt.value] = opt
+	}
+	return m
 }
 
 type TimeFilter struct {
@@ -40,12 +77,12 @@ func Extract(e echo.Context) (any, any) {
 	filter := TimeFilter{}
 
 	fromStr := e.QueryParam(FromParam)
-	if _, ok := timeMapping[fromStr]; ok {
+	if _, ok := timeFilterOptionMapping[fromStr]; ok {
 		filter.fromStr = fromStr
 	} else {
-		filter.fromStr = timeFilter1day
+		filter.fromStr = timeFilterOptions[0].value
 	}
-	filter.From = time.Now().Add(-timeMapping[filter.fromStr])
+	filter.From = time.Now().Add(-timeFilterOptionMapping[filter.fromStr].duration)
 
 	filter.To = time.Now()
 
@@ -90,11 +127,9 @@ templ (filter TimeFilter) Component(view string) {
 							name={ FromParam }
 							class="select select-sm select-bordered focus:outline-none"
 						>
-							@filter.option("15 mins", timeFilter15min)
-							@filter.option("30 mins", timeFilter30min)
-							@filter.option("1 hr", timeFilter1hr)
-							@filter.option("3 hrs", timeFilter3hr)
-							@filter.option("1 day", timeFilter1day)
+							for _, opt := range timeFilterOptions {
+								@filter.option(opt.label, opt.value)
+							}
 						</select>
 					</div>
 				</div>
