@@ -5,6 +5,7 @@ import (
 	"stagebase/internal/api/common"
 	"stagebase/internal/core"
 	"stagebase/internal/model"
+	"stagebase/pkg/dolly"
 
 	"github.com/labstack/echo/v4"
 )
@@ -20,7 +21,7 @@ func defaultActorMiddleware() echo.MiddlewareFunc {
 				if err != nil {
 					return err
 				}
-				props, err := core.Request[model.ProjectProps](app, pid, core.GetProjectPropsMsg{})
+				props, err := dolly.Result[model.ProjectProps](app.Request(pid, core.GetProjectPropsMsg{}))
 				if err != nil {
 					return err
 				}

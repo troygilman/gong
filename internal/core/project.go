@@ -42,7 +42,7 @@ func NewProjectProducerWithApp(app App) actor.Producer {
 
 func (p *project) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case msgUpdateProjectInternal, msgUpdateProject:
+	case msgUpdateProjectInternal, updateProjectMsg:
 	default:
 		dolly.LogActorMsg(aCtx)
 	}
@@ -76,7 +76,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 				return errors.New("actor pid does not exist")
 			}
 
-		case msgUpdateProject:
+		case updateProjectMsg:
 			for _, actorData := range msg.actors {
 				p.actorUpdates[actorData.PID] = actorData
 			}
@@ -118,7 +118,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			// push data to every listener concurrently
 			for pid, data := range listenerData {
 				if len(data) > 0 {
-					aCtx.Send(pid, msgListenData{
+					aCtx.Send(pid, listenDataMsg{
 						data: data,
 					})
 				}
@@ -131,7 +131,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			}
 			p.eventUpdates = []model.Event{}
 
-		case msgGetProjectEvents:
+		case getProjectEventsMsg:
 			_, ok := p.actors[msg.actorPID]
 			if ok {
 				query := persistance.EventsQuery{
@@ -144,7 +144,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			} else {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
-		case msgGetActorSourcesSinks:
+		case getActorSourcesSinksMsg:
 			_, ok := p.actors[msg.actorPID]
 			if ok {
 				duration, err := msg.rng.Duration()
@@ -164,7 +164,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
 
-		case msgGetSourcesSinksNodeInfo:
+		case getSourcesSinksNodeInfoMsg:
 			if _, ok := p.actors[msg.actorPID]; ok {
 				duration, err := msg.rng.Duration()
 				if err != nil {
@@ -184,14 +184,14 @@ func (p *project) Receive(aCtx *actor.Context) {
 				aCtx.Respond(fmt.Errorf("actor does not exist"))
 			}
 
-		case msgListenStart:
+		case listenStartMsg:
 			listeners, ok := p.listeners[msg.lType]
 			if !ok {
 				listeners = make(map[*actor.PID]struct{})
 			}
 			listeners[aCtx.Sender()] = struct{}{}
 			p.listeners[msg.lType] = listeners
-		case msgListenStop:
+		case listenStopMsg:
 			listeners, ok := p.listeners[msg.lType]
 			if ok {
 				delete(listeners, aCtx.Sender())
@@ -239,7 +239,7 @@ func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Databas
 		return
 	}
 
-	engine.Send(sender, rspGetProjectEvents{
+	engine.Send(sender, getProjectEventsRsp{
 		events:       events,
 		maxPageIndex: maxPageIdx,
 	})
@@ -255,7 +255,7 @@ func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.D
 		return
 	}
 
-	engine.Send(sender, rspGetActorSourcesSinks{
+	engine.Send(sender, getActorSourcesSinksRsp{
 		sourcesSinks: pids,
 	})
 }
@@ -270,7 +270,7 @@ func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persi
 		return
 	}
 
-	engine.Send(sender, rspGetSourcesSinksNodeInfo{
+	engine.Send(sender, getSourcesSinksNodeInfoRsp{
 		info: info,
 	})
 }

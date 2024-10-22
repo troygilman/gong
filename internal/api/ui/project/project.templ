@@ -11,6 +11,7 @@ import (
 	"stagebase/internal/api/ui/project/events"
 	"stagebase/internal/core"
 	"stagebase/internal/model"
+	"stagebase/pkg/dolly"
 )
 
 const (
@@ -41,7 +42,7 @@ func projectProducer(ctx context.Context) templ.Component {
 		return events.EventTableComponent(false)
 	default:
 		actorPid := mustGetActorPid(ctx)
-		props, err := core.Request[model.ProjectProps](app, pid, core.GetProjectPropsMsg{})
+		props, err := dolly.Result[model.ProjectProps](app.Request(pid, core.GetProjectPropsMsg{}))
 		if err != nil {
 			panic(err)
 		}
@@ -238,7 +239,7 @@ func ProjectActorComponent(ctx context.Context) templ.Component {
 	if err != nil {
 		panic(err.Error())
 	}
-	actor, err := core.Request[model.Actor](app, pid, core.GetActorMsg{Pid: actorPID})
+	actor, err := dolly.Result[model.Actor](app.Request(pid, core.GetActorMsg{Pid: actorPID}))
 	if err != nil {
 		panic(err.Error())
 	}

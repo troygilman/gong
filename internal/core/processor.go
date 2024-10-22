@@ -36,7 +36,7 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case ProcessEventsMsg, msgProcessorUpdateState:
+	case ProcessEventsMsg, processorUpdateStateMsg:
 	default:
 		dolly.LogActorMsg(aCtx)
 	}
@@ -51,7 +51,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 			p.updates = make(map[string]bool)
 			p.events = make([]sdk.Event, 0)
 		case actor.Started:
-			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgProcessorUpdateState{}, sendUpdatesInterval)
+			p.repeater = aCtx.SendRepeat(aCtx.PID(), processorUpdateStateMsg{}, sendUpdatesInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
 			return p.processUpdates(ctx, aCtx)
@@ -60,7 +60,7 @@ func (p *processor) Receive(aCtx *actor.Context) {
 				return a.Timestamp.Compare(b.Timestamp)
 			})
 			p.events = append(p.events, msg.Events...)
-		case msgProcessorUpdateState:
+		case processorUpdateStateMsg:
 			return p.processUpdates(ctx, aCtx)
 		}
 		return nil
@@ -159,7 +159,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 	}
 
 	projectPID := aCtx.Engine().Registry.GetPID(KindProject, p.id.String())
-	aCtx.Send(projectPID, msgUpdateProject{
+	aCtx.Send(projectPID, updateProjectMsg{
 		actors: actors,
 		events: eventBatch,
 		metric: metric,

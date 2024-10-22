@@ -17,7 +17,7 @@ func RespondWithError(ctx *actor.Context, err error) error {
 	return err
 }
 
-func HandleResponse[T any](response *actor.Response) (T, error) {
+func Result[T any](response *actor.Response) (T, error) {
 	var none T
 	result, err := response.Result()
 	if err != nil {

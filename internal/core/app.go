@@ -103,16 +103,16 @@ func (app *stagebaseApp) Send(pid *actor.PID, msg any) {
 	app.engine.Send(pid, msg)
 }
 
-func (app *stagebaseApp) Request(pid *actor.PID, msg any) (any, error) {
-	response := app.engine.Request(pid, msg, 10*time.Second)
-	result, err := response.Result()
-	if err != nil {
-		return nil, err
-	}
-	if err, ok := result.(error); ok {
-		return nil, err
-	}
-	return result, nil
+func (app *stagebaseApp) Request(pid *actor.PID, msg any) *actor.Response {
+	return app.engine.Request(pid, msg, 10*time.Second)
+	// result, err := response.Result()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if err, ok := result.(error); ok {
+	// 	return nil, err
+	// }
+	// return result, nil
 }
 
 func (app *stagebaseApp) Database() persistance.Database {
@@ -148,14 +148,13 @@ func (app *stagebaseApp) SourcesSinks(
 		return pids, err
 	}
 
-	msg := msgGetActorSourcesSinks{
+	msg := getActorSourcesSinksMsg{
 		actorPID: actorPID,
 		sources:  sources,
 		rng:      rng,
 	}
 
-	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := dolly.HandleResponse[rspGetActorSourcesSinks](r)
+	response, err := dolly.Result[getActorSourcesSinksRsp](app.engine.Request(projectPID, msg, defaultTimeout))
 	if err != nil {
 		return pids, err
 	}
@@ -176,15 +175,14 @@ func (app *stagebaseApp) SourcesSinksNodeInfo(
 		return info, err
 	}
 
-	msg := msgGetSourcesSinksNodeInfo{
+	msg := getSourcesSinksNodeInfoMsg{
 		actorPID: actorPID,
 		nodePID:  nodePID,
 		source:   source,
 		rng:      rng,
 	}
 
-	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := dolly.HandleResponse[rspGetSourcesSinksNodeInfo](r)
+	response, err := dolly.Result[getSourcesSinksNodeInfoRsp](app.engine.Request(projectPID, msg, defaultTimeout))
 	if err != nil {
 		return info, err
 	}

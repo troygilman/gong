@@ -19,7 +19,7 @@ type GetActorMsg struct {
 	Pid string
 }
 
-type msgGetProjectEvents struct {
+type getProjectEventsMsg struct {
 	actorPID  string
 	eventID   ulid.ULID
 	timestamp time.Time
@@ -27,50 +27,50 @@ type msgGetProjectEvents struct {
 	filter    model.Filter
 }
 
-type rspGetProjectEvents struct {
+type getProjectEventsRsp struct {
 	events       []model.Event
 	maxPageIndex int
 	actor        model.Actor
 }
 
-type msgProcessorUpdateState struct{}
+type processorUpdateStateMsg struct{}
 
-type msgUpdateProject struct {
+type updateProjectMsg struct {
 	actors []model.Actor
 	events []model.Event
 	metric Metric
 }
 
-type msgGetActorSourcesSinks struct {
+type getActorSourcesSinksMsg struct {
 	actorPID string
 	sources  bool
 	rng      common.Range
 }
 
-type rspGetActorSourcesSinks struct {
+type getActorSourcesSinksRsp struct {
 	sourcesSinks []string
 }
 
-type msgGetSourcesSinksNodeInfo struct {
+type getSourcesSinksNodeInfoMsg struct {
 	actorPID string
 	nodePID  string
 	source   bool
 	rng      common.Range
 }
 
-type rspGetSourcesSinksNodeInfo struct {
+type getSourcesSinksNodeInfoRsp struct {
 	info model.SourcesSinksNodeInfo
 }
 
-type msgListenStart struct {
+type listenStartMsg struct {
 	lType ListenerType
 }
 
-type msgListenStop struct {
+type listenStopMsg struct {
 	lType ListenerType
 }
 
-type msgListenData struct {
+type listenDataMsg struct {
 	data []any
 }
 

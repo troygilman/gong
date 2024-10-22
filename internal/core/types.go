@@ -39,7 +39,7 @@ type App interface {
 	Shutdown()
 	PID(kind string, id string) (*actor.PID, error)
 	Send(pid *actor.PID, msg any)
-	Request(pid *actor.PID, msg any) (any, error)
+	Request(pid *actor.PID, msg any) *actor.Response
 	Database() persistance.Database
 	JWT(tokenString string) (jwt.RegisteredClaims, error)
 	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter common.Filter) (<-chan []any, error)

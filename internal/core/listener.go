@@ -44,7 +44,7 @@ func (l *listener) Receive(aCtx *actor.Context) {
 			if err != nil {
 				return err
 			}
-			aCtx.Send(projectPID, msgListenStart{lType: l.lType})
+			aCtx.Send(projectPID, listenStartMsg{lType: l.lType})
 
 		case actor.Stopped:
 			projectPID, err := l.app.PID(KindProject, l.projectID.String())
@@ -52,10 +52,10 @@ func (l *listener) Receive(aCtx *actor.Context) {
 				return err
 			}
 
-			aCtx.Send(projectPID, msgListenStop{lType: l.lType})
+			aCtx.Send(projectPID, listenStopMsg{lType: l.lType})
 			close(l.c)
 
-		case msgListenData:
+		case listenDataMsg:
 			filteredData := make([]any, 0, len(msg.data))
 
 			for _, data := range msg.data {
