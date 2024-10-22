@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"time"
 
 	"github.com/google/uuid"

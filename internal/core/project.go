@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"time"

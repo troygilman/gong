@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"log/slog"
 	"stagebase/internal/api/common"
-	"stagebase/internal/api/view/icons"
-	"stagebase/internal/core/model"
+	"stagebase/internal/api/ui/icons"
+	"stagebase/internal/model"
 	"strconv"
 )
 
@@ -44,7 +44,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("not " + ParamPage)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 17, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 17, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -57,7 +57,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(`{"View": "tab"}`)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 18, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 18, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -86,7 +86,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(common.ParamFilterType)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 38, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 38, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -104,7 +104,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(*filter.Type)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 42, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 42, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(common.ParamFilterSender)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 49, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 49, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -162,7 +162,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(*filter.Sender)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 53, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 53, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(common.ParamFilterReceiver)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 60, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 60, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -220,7 +220,7 @@ func eventsFilter(filter model.Filter) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(*filter.Receiver)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 64, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 64, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -319,7 +319,7 @@ func eventsFilterLevelOption(label string, level slog.Level, selected slog.Level
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 82, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 82, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -332,7 +332,7 @@ func eventsFilterLevelOption(label string, level slog.Level, selected slog.Level
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(common.ParamFilterLevel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 85, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 85, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func eventsFilterLevelOption(label string, level slog.Level, selected slog.Level
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(int(level)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 87, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 87, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -402,7 +402,7 @@ func eventsFilterItem(label string, name string, active bool, placement int) tem
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("not page, " + name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 103, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 103, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -415,7 +415,7 @@ func eventsFilterItem(label string, name string, active bool, placement int) tem
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(`{"View": "tab"}`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 104, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 104, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -450,7 +450,7 @@ func eventsFilterItem(label string, name string, active bool, placement int) tem
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var21).String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 1, Col: 0}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -472,7 +472,7 @@ func eventsFilterItem(label string, name string, active bool, placement int) tem
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var23).String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 1, Col: 0}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -485,7 +485,7 @@ func eventsFilterItem(label string, name string, active bool, placement int) tem
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/project/events/filter.templ`, Line: 118, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/project/events/filter.templ`, Line: 118, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {

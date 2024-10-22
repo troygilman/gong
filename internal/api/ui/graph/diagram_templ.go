@@ -58,7 +58,7 @@ func diagramComponent(isLazy bool, lazyUrl string, data graphData, node string) 
 				var templ_7745c5c3_Var2 string
 				templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(lazyUrl)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/graph/diagram.templ`, Line: 27, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/graph/diagram.templ`, Line: 27, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 				if templ_7745c5c3_Err != nil {
@@ -81,7 +81,7 @@ func diagramComponent(isLazy bool, lazyUrl string, data graphData, node string) 
 					var templ_7745c5c3_Var3 string
 					templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(string(graph.graphType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/view/graph/diagram.templ`, Line: 44, Col: 32}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/api/ui/graph/diagram.templ`, Line: 44, Col: 32}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 					if templ_7745c5c3_Err != nil {

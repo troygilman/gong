@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 	"hash/fnv"
 	"stagebase/internal/api/common"
-	"stagebase/internal/api/view/components"
-	"stagebase/internal/api/view/icons"
-	"stagebase/internal/api/view/project/events"
-	"stagebase/internal/core/model"
+	"stagebase/internal/api/ui/icons"
+	"stagebase/internal/api/ui/index"
+	"stagebase/internal/api/ui/project/events"
+	"stagebase/internal/model"
 )
 
 const (
@@ -45,7 +45,7 @@ func projectProducer(ctx context.Context) templ.Component {
 }
 
 templ projectComponent(props model.ProjectProps, pid string) {
-	@components.Index() {
+	@index.Index() {
 		<div id="includes" hx-include="[include]"></div>
 		<script>
 			const next = htmx.createEventSource;

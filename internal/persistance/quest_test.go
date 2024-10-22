@@ -2,7 +2,7 @@ package persistance
 
 import (
 	"context"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"testing"
 
 	"github.com/google/uuid"

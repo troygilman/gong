@@ -12,7 +12,7 @@ package common
 import (
 	context "context"
 	reflect "reflect"
-	model "stagebase/internal/core/model"
+	model "stagebase/internal/model"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"

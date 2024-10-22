@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"slices"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"stagebase/pkg/dolly"
 	"stagebase/sdk"
 	"time"

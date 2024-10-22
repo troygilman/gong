@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/pprof"
-	"stagebase/internal/api/view/project"
+	"stagebase/internal/api/ui/project"
 	"stagebase/internal/common"
 	"stagebase/pkg/gong"
 	"strconv"

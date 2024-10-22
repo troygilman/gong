@@ -2,7 +2,7 @@ package core
 
 import (
 	"stagebase/internal/common"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"stagebase/sdk"
 	"time"
 

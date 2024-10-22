@@ -2,9 +2,9 @@ package project
 
 import (
 	"stagebase/internal/api/common"
-	"stagebase/internal/api/view/graph"
-	"stagebase/internal/api/view/project/events"
-	"stagebase/internal/api/view/timefilter"
+	"stagebase/internal/api/ui/graph"
+	"stagebase/internal/api/ui/project/events"
+	"stagebase/internal/api/ui/timefilter"
 	"stagebase/internal/core"
 	"stagebase/pkg/gong"
 

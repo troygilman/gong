@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"stagebase/internal/core"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"strconv"
 
 	"github.com/google/uuid"

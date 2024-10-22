@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"stagebase/internal/common"
-	"stagebase/internal/core/model"
+	"stagebase/internal/model"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
