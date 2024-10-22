@@ -58,7 +58,7 @@ func (p *project) Receive(aCtx *actor.Context) {
 			p.repeater = aCtx.SendRepeat(aCtx.PID(), msgUpdateProjectInternal{}, projectUpdatePropsInterval)
 		case actor.Stopped:
 			p.repeater.Stop()
-		case msgGetProjectProps:
+		case GetProjectPropsMsg:
 			props := model.ProjectProps{
 				ID:     p.id,
 				Actors: make(map[string]model.Actor, 0),
@@ -66,16 +66,12 @@ func (p *project) Receive(aCtx *actor.Context) {
 			for pid, data := range p.actors {
 				props.Actors[pid] = data
 			}
-			aCtx.Respond(rspGetProjectProps{
-				props: props,
-			})
+			aCtx.Respond(props)
 
-		case msgGetProjectActorProps:
-			actorData, ok := p.actors[msg.actorPID]
+		case GetActorMsg:
+			actorData, ok := p.actors[msg.Pid]
 			if ok {
-				aCtx.Respond(rspGetProjectActor{
-					actor: actorData,
-				})
+				aCtx.Respond(actorData)
 			} else {
 				return errors.New("actor pid does not exist")
 			}

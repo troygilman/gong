@@ -9,6 +9,7 @@ import (
 	"stagebase/internal/api/ui/icons"
 	"stagebase/internal/api/ui/index"
 	"stagebase/internal/api/ui/project/events"
+	"stagebase/internal/core"
 	"stagebase/internal/model"
 )
 
@@ -28,6 +29,10 @@ func projectProducer(ctx context.Context) templ.Component {
 	view := ctx.Value(paramView).(string)
 	app := common.MustGetApp(ctx)
 	projectId := common.MustGetProjectId(ctx)
+	pid, err := app.PID(core.KindProject, projectId.String())
+	if err != nil {
+		panic(err.Error())
+	}
 
 	switch view {
 	case tabView:
@@ -35,12 +40,12 @@ func projectProducer(ctx context.Context) templ.Component {
 	case events.EventsView:
 		return events.EventTableComponent(false)
 	default:
-		pid := mustGetActorPid(ctx)
-		props, err := app.ProjectProps(ctx, projectId)
+		actorPid := mustGetActorPid(ctx)
+		props, err := core.Request[model.ProjectProps](app, pid, core.GetProjectPropsMsg{})
 		if err != nil {
 			panic(err)
 		}
-		return projectComponent(props, pid)
+		return projectComponent(props, actorPid)
 	}
 }
 
@@ -229,7 +234,11 @@ func ProjectActorComponent(ctx context.Context) templ.Component {
 	app := common.MustGetApp(ctx)
 	projectID := common.MustGetProjectId(ctx)
 	actorPID := mustGetActorPid(ctx)
-	actor, err := app.Actor(ctx, projectID, actorPID)
+	pid, err := app.PID(core.KindProject, projectID.String())
+	if err != nil {
+		panic(err.Error())
+	}
+	actor, err := core.Request[model.Actor](app, pid, core.GetActorMsg{Pid: actorPID})
 	if err != nil {
 		panic(err.Error())
 	}

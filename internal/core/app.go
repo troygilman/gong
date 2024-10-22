@@ -9,7 +9,6 @@ import (
 	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
-	"stagebase/sdk"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -53,8 +52,8 @@ func NewApp(db persistance.Database) (App, error) {
 	app.pids = make(map[string]*actor.PID)
 	app.producerFuncs = make(map[string]producerFunc)
 
-	app.producerFuncs[kindProject] = NewProjectProducerWithApp
-	app.producerFuncs[kindProcessor] = NewProcessorProducerWithApp
+	app.producerFuncs[KindProject] = NewProjectProducerWithApp
+	app.producerFuncs[KindProcessor] = NewProcessorProducerWithApp
 
 	engine.SpawnFunc(func(ctx *actor.Context) {
 		switch msg := ctx.Message().(type) {
@@ -100,6 +99,22 @@ func (app *stagebaseApp) PID(kind string, id string) (*actor.PID, error) {
 	return pid, nil
 }
 
+func (app *stagebaseApp) Send(pid *actor.PID, msg any) {
+	app.engine.Send(pid, msg)
+}
+
+func (app *stagebaseApp) Request(pid *actor.PID, msg any) (any, error) {
+	response := app.engine.Request(pid, msg, 10*time.Second)
+	result, err := response.Result()
+	if err != nil {
+		return nil, err
+	}
+	if err, ok := result.(error); ok {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (app *stagebaseApp) Database() persistance.Database {
 	return app.db
 }
@@ -121,92 +136,6 @@ func (app *stagebaseApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 	return claims, nil
 }
 
-func (app *stagebaseApp) Actor(
-	ctx context.Context,
-	projectID uuid.UUID,
-	actorPID string,
-) (actor model.Actor, err error) {
-	projectPID, err := app.PID(kindProject, projectID.String())
-	if err != nil {
-		return actor, err
-	}
-
-	msg := msgGetProjectActorProps{
-		actorPID: actorPID,
-	}
-
-	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := dolly.HandleResponse[rspGetProjectActor](r)
-	if err != nil {
-		return actor, err
-	}
-
-	return response.actor, nil
-}
-
-func (app *stagebaseApp) ProjectProps(
-	ctx context.Context,
-	projectID uuid.UUID,
-) (project model.ProjectProps, err error) {
-	projectPID, err := app.PID(kindProject, projectID.String())
-	if err != nil {
-		return project, err
-	}
-
-	r := app.engine.Request(projectPID, msgGetProjectProps{}, defaultTimeout)
-	response, err := dolly.HandleResponse[rspGetProjectProps](r)
-	if err != nil {
-		return project, err
-	}
-
-	return response.props, nil
-}
-
-func (app *stagebaseApp) Events(
-	ctx context.Context,
-	projectID uuid.UUID,
-	actorPID string,
-	timestamp time.Time,
-	filter model.Filter,
-	pageIndex int,
-) (events []model.Event, maxPageIndex int, err error) {
-	projectPID, err := app.PID(kindProject, projectID.String())
-	if err != nil {
-		return events, 0, err
-	}
-
-	msg := msgGetProjectEvents{
-		actorPID:  actorPID,
-		timestamp: timestamp,
-		pageIndex: pageIndex,
-		filter:    filter,
-	}
-
-	r := app.engine.Request(projectPID, msg, defaultTimeout)
-	response, err := dolly.HandleResponse[rspGetProjectEvents](r)
-	if err != nil {
-		return events, 0, err
-	}
-
-	return response.events, response.maxPageIndex, nil
-}
-
-func (app *stagebaseApp) ProcessEvents(
-	ctx context.Context,
-	projectID uuid.UUID,
-	events []sdk.Event,
-) error {
-	processorPID, err := app.PID(kindProcessor, projectID.String())
-	if err != nil {
-		return err
-	}
-
-	app.engine.Send(processorPID, msgSdkEvents{
-		events: events,
-	})
-	return nil
-}
-
 func (app *stagebaseApp) SourcesSinks(
 	ctx context.Context,
 	projectID uuid.UUID,
@@ -214,7 +143,7 @@ func (app *stagebaseApp) SourcesSinks(
 	sources bool,
 	rng common.Range,
 ) (pids []string, err error) {
-	projectPID, err := app.PID(kindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return pids, err
 	}
@@ -242,7 +171,7 @@ func (app *stagebaseApp) SourcesSinksNodeInfo(
 	source bool,
 	rng common.Range,
 ) (info model.SourcesSinksNodeInfo, err error) {
-	projectPID, err := app.PID(kindProject, projectID.String())
+	projectPID, err := app.PID(KindProject, projectID.String())
 	if err != nil {
 		return info, err
 	}

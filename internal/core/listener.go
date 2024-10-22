@@ -40,14 +40,14 @@ func (l *listener) Receive(aCtx *actor.Context) {
 	if err := func() error {
 		switch msg := aCtx.Message().(type) {
 		case actor.Started:
-			projectPID, err := l.app.PID(kindProject, l.projectID.String())
+			projectPID, err := l.app.PID(KindProject, l.projectID.String())
 			if err != nil {
 				return err
 			}
 			aCtx.Send(projectPID, msgListenStart{lType: l.lType})
 
 		case actor.Stopped:
-			projectPID, err := l.app.PID(kindProject, l.projectID.String())
+			projectPID, err := l.app.PID(KindProject, l.projectID.String())
 			if err != nil {
 				return err
 			}

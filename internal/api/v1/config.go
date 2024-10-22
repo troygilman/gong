@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"stagebase/internal/api/common"
+	"stagebase/internal/core"
 	"stagebase/pkg/gong"
 	"stagebase/sdk"
 
@@ -48,8 +49,13 @@ func handleConnectProject(e echo.Context) error {
 			return fmt.Errorf("decode: %s", err)
 		}
 
-		if err := app.ProcessEvents(ctx, projectID, events); err != nil {
+		processorPID, err := app.PID(core.KindProcessor, projectID.String())
+		if err != nil {
 			return err
 		}
+
+		app.Send(processorPID, core.ProcessEventsMsg{
+			Events: events,
+		})
 	}
 }

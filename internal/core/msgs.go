@@ -9,22 +9,14 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-type msgSdkEvents struct {
-	events []sdk.Event
+type ProcessEventsMsg struct {
+	Events []sdk.Event
 }
 
-type msgGetProjectProps struct{}
+type GetProjectPropsMsg struct{}
 
-type rspGetProjectProps struct {
-	props model.ProjectProps
-}
-
-type msgGetProjectActorProps struct {
-	actorPID string
-}
-
-type rspGetProjectActor struct {
-	actor model.Actor
+type GetActorMsg struct {
+	Pid string
 }
 
 type msgGetProjectEvents struct {

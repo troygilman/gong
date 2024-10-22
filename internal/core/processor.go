@@ -36,7 +36,7 @@ func NewProcessorProducerWithApp(app App) actor.Producer {
 
 func (p *processor) Receive(aCtx *actor.Context) {
 	switch aCtx.Message().(type) {
-	case msgSdkEvents, msgProcessorUpdateState:
+	case ProcessEventsMsg, msgProcessorUpdateState:
 	default:
 		dolly.LogActorMsg(aCtx)
 	}
@@ -55,11 +55,11 @@ func (p *processor) Receive(aCtx *actor.Context) {
 		case actor.Stopped:
 			p.repeater.Stop()
 			return p.processUpdates(ctx, aCtx)
-		case msgSdkEvents:
-			slices.SortFunc(msg.events, func(a, b sdk.Event) int {
+		case ProcessEventsMsg:
+			slices.SortFunc(msg.Events, func(a, b sdk.Event) int {
 				return a.Timestamp.Compare(b.Timestamp)
 			})
-			p.events = append(p.events, msg.events...)
+			p.events = append(p.events, msg.Events...)
 		case msgProcessorUpdateState:
 			return p.processUpdates(ctx, aCtx)
 		}
@@ -158,7 +158,7 @@ func (p *processor) processUpdates(ctx context.Context, aCtx *actor.Context) err
 		Throughput: throughput,
 	}
 
-	projectPID := aCtx.Engine().Registry.GetPID(kindProject, p.id.String())
+	projectPID := aCtx.Engine().Registry.GetPID(KindProject, p.id.String())
 	aCtx.Send(projectPID, msgUpdateProject{
 		actors: actors,
 		events: eventBatch,
