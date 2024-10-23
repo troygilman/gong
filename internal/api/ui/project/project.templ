@@ -9,9 +9,7 @@ import (
 	"stagebase/internal/api/ui/icons"
 	"stagebase/internal/api/ui/index"
 	"stagebase/internal/api/ui/project/events"
-	"stagebase/internal/core"
 	"stagebase/internal/model"
-	"stagebase/pkg/dolly"
 )
 
 const (
@@ -28,29 +26,19 @@ const (
 
 func projectProducer(ctx context.Context) templ.Component {
 	view := ctx.Value(paramView).(string)
-	app := common.MustGetApp(ctx)
 	projectId := common.MustGetProjectId(ctx)
-	pid, err := app.PID(core.KindProject, projectId.String())
-	if err != nil {
-		panic(err.Error())
-	}
 
 	switch view {
 	case tabView:
-		return ProjectActorComponent(ctx)
+		return tabViewComponent()
 	case events.EventsView:
 		return events.EventTableComponent(false)
 	default:
-		actorPid := mustGetActorPid(ctx)
-		props, err := dolly.Result[model.ProjectProps](app.Request(pid, core.GetProjectPropsMsg{}))
-		if err != nil {
-			panic(err)
-		}
-		return projectComponent(props, actorPid)
+		return ProjectComponent(projectId)
 	}
 }
 
-templ projectComponent(props model.ProjectProps, pid string) {
+templ ProjectComponent(projectId uuid.UUID) {
 	@index.Index() {
 		<div id="includes" hx-include="[include]"></div>
 		<script>
@@ -72,7 +60,7 @@ templ projectComponent(props model.ProjectProps, pid string) {
 		<div
 			class="flex flex-row h-screen w-screen max-h-screen max-w-screen overflow-hidden font-medium"
 			hx-ext="sse"
-			sse-connect={ "/project/" + props.ID.String() + "/sse" }
+			sse-connect={ "/project/" + projectId.String() + "/sse" }
 			x-data="{ pid: '' }"
 		>
 			<div class="flex flex-col w-16 min-w-16 border-r border-color p-2 gap-4 items-center justify-between z-50 bg-base-100">
@@ -90,27 +78,11 @@ templ projectComponent(props model.ProjectProps, pid string) {
 			</div>
 			<div class="flex flex-row h-full grow min-w-0">
 				<div class="flex grow min-w-0 h-full">
-					if pid != "" {
-						@ActorContent(props.Actors[pid])
-					} else {
-						@ActorContent(model.Actor{})
-					}
+					@ActorContent()
 				</div>
 			</div>
 		</div>
 	}
-}
-
-templ StatePID(pid string) {
-	<input
-		include
-		type="hidden"
-		hx-swap-oob="true"
-		id="pid"
-		name={ paramPid }
-		value={ pid }
-		x-init="pid = $el.value"
-	/>
 }
 
 func ProjectMenu(ctx context.Context) templ.Component {
@@ -136,9 +108,9 @@ templ projectMenuComponent(projectID uuid.UUID, activeTab string) {
 			</ul>
 		</div>
 		<ul id="project-menu" hx-swap-oob="true" class="menu menu-md p-0 gap-2">
-			@projectMenuItem(tabLabelOverview, activeTab == tabLabelOverview, icons.StatsIcon("size-6", activeTab == tabLabelOverview))
-			@projectMenuItem(tabLabelEvents, activeTab == tabLabelEvents, icons.TableIcon("size-6", activeTab == tabLabelEvents))
-			@projectMenuItem(tabLabelFlow, activeTab == tabLabelFlow, icons.FlowIcon("size-6", activeTab == tabLabelFlow))
+			@tab(tabLabelOverview, activeTab == tabLabelOverview, icons.StatsIcon("size-6", activeTab == tabLabelOverview))
+			@tab(tabLabelEvents, activeTab == tabLabelEvents, icons.TableIcon("size-6", activeTab == tabLabelEvents))
+			@tab(tabLabelFlow, activeTab == tabLabelFlow, icons.FlowIcon("size-6", activeTab == tabLabelFlow))
 		</ul>
 	</div>
 }
@@ -149,7 +121,7 @@ const (
 	tabLabelFlow     = "Flow"
 )
 
-templ projectMenuItem(label string, active bool, icon templ.Component) {
+templ tab(label string, active bool, icon templ.Component) {
 	<li
 		class="max-w-full aspect-square"
 		if !active {
@@ -231,36 +203,20 @@ templ ProjectActorBadge(actor model.Actor) {
 	</div>
 }
 
-func ProjectActorComponent(ctx context.Context) templ.Component {
-	app := common.MustGetApp(ctx)
-	projectID := common.MustGetProjectId(ctx)
-	actorPID := mustGetActorPid(ctx)
-	pid, err := app.PID(core.KindProject, projectID.String())
-	if err != nil {
-		panic(err.Error())
-	}
-	actor, err := dolly.Result[model.Actor](app.Request(pid, core.GetActorMsg{Pid: actorPID}))
-	if err != nil {
-		panic(err.Error())
-	}
-	return projectActor(actor)
-}
-
-templ projectActor(actor model.Actor) {
-	@ActorContent(actor)
-	@ProjectActorListItem(actor, true)
+templ tabViewComponent() {
+	@ActorContent()
+	//@ProjectActorListItem(actor, true)
 	@ProjectMenu(ctx)
-	@StatePID(actor.PID)
+	//@StatePID(actor.PID)
 }
 
-templ ActorContent(actor model.Actor) {
+templ ActorContent() {
 	<div
 		id="actor-content"
 		class="flex flex-col grow max-h-full min-h-full min-w-0"
 		hx-swap-oob="true"
 	>
 		<input include id="tab" type="hidden" name={ paramTab } value={ ctx.Value(paramTab).(string) }/>
-		//<div class="flex flex-row items-center h-12 min-h-12 px-4 py-2 text-xl font-bold border-b border-color">{ actor.PID }</div>
 		@tabContent(tabLabelOverview) {
 			//@OverviewTabContent(actor)
 		}

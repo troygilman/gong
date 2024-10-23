@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"stagebase/internal/api/common"
+	"stagebase/internal/api/ui/admin"
 	"stagebase/internal/api/ui/project"
 	v1 "stagebase/internal/api/v1"
 	"stagebase/internal/core"
@@ -42,6 +43,7 @@ func RunServer(app core.App, static fs.FS, port int) (*echo.Echo, <-chan error) 
 
 	v1.Configure(e)
 	project.Configure(e)
+	admin.Configure(e)
 
 	errChan := make(chan error)
 	go func() {

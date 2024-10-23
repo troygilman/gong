@@ -1,0 +1,41 @@
+package admin
+
+import (
+	"context"
+	"fmt"
+	"github.com/google/uuid"
+	"stagebase/internal/api/common"
+	"stagebase/internal/api/ui/index"
+)
+
+const (
+	sseTypeUpdateMetricLatency    = "update-metric-latency"
+	sseTypeUpdateMetricThroughput = "update-metric-throughput"
+)
+
+func AdminProducer(ctx context.Context) templ.Component {
+	projectId := common.MustGetProjectId(ctx)
+	return adminComponent(projectId)
+}
+
+templ adminComponent(projectId uuid.UUID) {
+	@index.Index() {
+		<div hx-ext="sse" sse-connect={ "/admin/" + projectId.String() + "/sse" }>
+			<div>
+				Metrics
+				<div class="flex flex-row">
+					<div class="pr-2">Latency (ms):</div>
+					@metric(0, sseTypeUpdateMetricLatency)
+				</div>
+				<div class="flex flex-row">
+					<div class="pr-2">Throughput (events/sec):</div>
+					@metric(0, sseTypeUpdateMetricThroughput)
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ metric(val int64, sseSwap string) {
+	<div sse-swap={ sseSwap }>{ fmt.Sprintf("%d", val) }</div>
+}

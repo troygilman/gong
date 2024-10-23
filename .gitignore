@@ -1,4 +1,4 @@
-internal/view/**/*_templ.go
+internal/**/*_templ.go
 static/css
 .env
 tmp
