@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"stagebase/internal/common"
-	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"time"
@@ -105,14 +104,6 @@ func (app *stagebaseApp) Send(pid *actor.PID, msg any) {
 
 func (app *stagebaseApp) Request(pid *actor.PID, msg any) *actor.Response {
 	return app.engine.Request(pid, msg, 10*time.Second)
-	// result, err := response.Result()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if err, ok := result.(error); ok {
-	// 	return nil, err
-	// }
-	// return result, nil
 }
 
 func (app *stagebaseApp) Database() persistance.Database {
@@ -134,60 +125,6 @@ func (app *stagebaseApp) JWT(tokenString string) (jwt.RegisteredClaims, error) {
 		return claims, errors.New("invalid jwt")
 	}
 	return claims, nil
-}
-
-func (app *stagebaseApp) SourcesSinks(
-	ctx context.Context,
-	projectID uuid.UUID,
-	actorPID string,
-	sources bool,
-	rng common.Range,
-) (pids []string, err error) {
-	projectPID, err := app.PID(KindProject, projectID.String())
-	if err != nil {
-		return pids, err
-	}
-
-	msg := getActorSourcesSinksMsg{
-		actorPID: actorPID,
-		sources:  sources,
-		rng:      rng,
-	}
-
-	response, err := dolly.Result[getActorSourcesSinksRsp](app.engine.Request(projectPID, msg, defaultTimeout))
-	if err != nil {
-		return pids, err
-	}
-
-	return response.sourcesSinks, nil
-}
-
-func (app *stagebaseApp) SourcesSinksNodeInfo(
-	ctx context.Context,
-	projectID uuid.UUID,
-	actorPID string,
-	nodePID string,
-	source bool,
-	rng common.Range,
-) (info model.SourcesSinksNodeInfo, err error) {
-	projectPID, err := app.PID(KindProject, projectID.String())
-	if err != nil {
-		return info, err
-	}
-
-	msg := getSourcesSinksNodeInfoMsg{
-		actorPID: actorPID,
-		nodePID:  nodePID,
-		source:   source,
-		rng:      rng,
-	}
-
-	response, err := dolly.Result[getSourcesSinksNodeInfoRsp](app.engine.Request(projectPID, msg, defaultTimeout))
-	if err != nil {
-		return info, err
-	}
-
-	return response.info, nil
 }
 
 func (app *stagebaseApp) ListenStart(

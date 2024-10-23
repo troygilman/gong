@@ -3,9 +3,7 @@ package core
 import (
 	"context"
 	"errors"
-	"fmt"
 	"stagebase/internal/model"
-	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"time"
 
@@ -131,59 +129,6 @@ func (p *project) Receive(aCtx *actor.Context) {
 			}
 			p.eventUpdates = []model.Event{}
 
-		case getProjectEventsMsg:
-			_, ok := p.actors[msg.actorPID]
-			if ok {
-				query := persistance.EventsQuery{
-					ProjectID: p.id,
-					// Timestamp: msg.timestamp,
-					PageIndex: msg.pageIndex,
-					Filter:    msg.filter,
-				}
-				go queryEvents(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
-			} else {
-				aCtx.Respond(fmt.Errorf("actor does not exist"))
-			}
-		case getActorSourcesSinksMsg:
-			_, ok := p.actors[msg.actorPID]
-			if ok {
-				duration, err := msg.rng.Duration()
-				if err != nil {
-					return err
-				}
-
-				query := persistance.ActorSourcesSinksQuery{
-					Sources:   msg.sources,
-					ProjectID: p.id,
-					ActorPID:  msg.actorPID,
-					MinTime:   time.Now().Add(-duration),
-					MaxTime:   time.Now(),
-				}
-				go querySourcesSinks(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
-			} else {
-				aCtx.Respond(fmt.Errorf("actor does not exist"))
-			}
-
-		case getSourcesSinksNodeInfoMsg:
-			if _, ok := p.actors[msg.actorPID]; ok {
-				duration, err := msg.rng.Duration()
-				if err != nil {
-					return err
-				}
-
-				query := persistance.SourcesSinksNodeInfoQuery{
-					Source:    msg.source,
-					ProjectID: p.id,
-					ActorPID:  msg.actorPID,
-					NodePID:   msg.nodePID,
-					MinTime:   time.Now().Add(-duration),
-					MaxTime:   time.Now(),
-				}
-				go querySourcesSinksNodeInfo(aCtx.Engine(), aCtx.Sender(), p.app.Database(), query)
-			} else {
-				aCtx.Respond(fmt.Errorf("actor does not exist"))
-			}
-
 		case listenStartMsg:
 			listeners, ok := p.listeners[msg.lType]
 			if !ok {
@@ -227,50 +172,4 @@ func (p *project) Load(ctx context.Context, id uuid.UUID) error {
 func (p *project) Create(ctx context.Context, id uuid.UUID) error {
 	p.id = id
 	return nil
-}
-
-func queryEvents(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.EventsQuery) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	events, maxPageIdx, err := db.QueryEvents(ctx, query)
-	if err != nil {
-		engine.Send(sender, err)
-		return
-	}
-
-	engine.Send(sender, getProjectEventsRsp{
-		events:       events,
-		maxPageIndex: maxPageIdx,
-	})
-}
-
-func querySourcesSinks(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.ActorSourcesSinksQuery) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	pids, err := db.QueryActorSourcesSinks(ctx, query)
-	if err != nil {
-		engine.Send(sender, err)
-		return
-	}
-
-	engine.Send(sender, getActorSourcesSinksRsp{
-		sourcesSinks: pids,
-	})
-}
-
-func querySourcesSinksNodeInfo(engine *actor.Engine, sender *actor.PID, db persistance.Database, query persistance.SourcesSinksNodeInfoQuery) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	info, err := db.QuerySourcesSinksNodeInfo(ctx, query)
-	if err != nil {
-		engine.Send(sender, err)
-		return
-	}
-
-	engine.Send(sender, getSourcesSinksNodeInfoRsp{
-		info: info,
-	})
 }
