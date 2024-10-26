@@ -15,10 +15,7 @@ func Configure(g gong.Group) {
 			e.GET("/sse", handleConnectSseProjectAdmin)
 		},
 		gong.ContextExtractors(
-			common.ExtractProjectId,
-		),
-		gong.ContextLogHandler(
-			common.ParamProjectId,
+			gong.NewExtractor(common.ExtractProjectId, gong.WithLogging()),
 		),
 		common.LogRequestMiddleware(),
 	)

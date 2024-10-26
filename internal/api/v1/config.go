@@ -19,7 +19,7 @@ func Configure(g gong.Group) {
 			e.GET("/connect", handleConnectProject)
 		},
 		gong.ContextExtractors(
-			common.ExtractProjectId,
+			gong.NewExtractor(common.ExtractProjectId),
 		),
 		// projectMiddleware(),
 		// logRequest(),

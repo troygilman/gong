@@ -15,24 +15,6 @@ func NewGroup(g Group, path string, f func(e *echo.Group), middlewares ...echo.M
 	f(g.Group(path, middlewares...))
 }
 
-type Extractor func(echo.Context) (any, any)
-
-func ContextExtractors(extractors ...Extractor) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(e echo.Context) error {
-			ctx := e.Request().Context()
-			for _, extractor := range extractors {
-				key, value := extractor(e)
-				if value != nil {
-					ctx = context.WithValue(ctx, key, value)
-				}
-			}
-			e.SetRequest(e.Request().WithContext(ctx))
-			return next(e)
-		}
-	}
-}
-
 var LogHandlerKey = "log_handler"
 
 type ctxKey interface {
@@ -47,36 +29,15 @@ func Logger(ctx context.Context) *slog.Logger {
 	return slog.New(handler)
 }
 
-func ContextLogHandler(keys ...string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(e echo.Context) error {
-			ctx := e.Request().Context()
-			handler, ok := ctx.Value(LogHandlerKey).(slog.Handler)
-			if !ok {
-				handler = slog.Default().Handler()
-			}
-			handler = contextLogHandler{
-				Handler: handler,
-				keys:    keys,
-			}
-			ctx = context.WithValue(ctx, LogHandlerKey, handler)
-			e.SetRequest(e.Request().WithContext(ctx))
-			return next(e)
-		}
-	}
-}
-
 type contextLogHandler struct {
 	slog.Handler
-	keys []string
+	key any
 }
 
 func (h contextLogHandler) Handle(ctx context.Context, r slog.Record) error {
 	attrs := []any{}
-	for _, key := range h.keys {
-		if val := ctx.Value(key); val != nil {
-			attrs = append(attrs, key, val)
-		}
+	if val := ctx.Value(h.key); val != nil {
+		attrs = append(attrs, h.key, val)
 	}
 	r.Add(attrs...)
 	return h.Handler.Handle(ctx, r)

@@ -33,9 +33,6 @@ func RunServer(app core.App, static fs.FS, port int) (*echo.Echo, <-chan error) 
 		common.WithHeadersMiddleware(),
 		middleware.RequestID(),
 		common.WithRequestIdMiddleware(),
-		gong.ContextLogHandler(
-			common.ParamRequestId,
-		),
 		common.WithApp(app),
 	)
 
