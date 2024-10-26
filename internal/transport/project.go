@@ -35,7 +35,7 @@ func bindProjectHandlers(g gong.Group) {
 		// 	common.CtxKeyFilter,
 		// 	common.CtxKeyPID,
 		// ),
-		gong.ContextExtractors(
+		gong.Extractors(
 			gong.NewExtractor(extractProjectID),
 			gong.NewExtractor(extractActorPID),
 			gong.NewExtractor(extractTab),

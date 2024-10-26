@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"stagebase/internal/api/ui/graph"
-	"stagebase/internal/api/ui/timefilter"
 	"stagebase/internal/common"
 	commonView "stagebase/internal/view/common"
 	"time"
@@ -15,7 +14,6 @@ templ FlowTabContent() {
 	<div id="actor-flow-chart-widget" class="flex flex-col grow max-w-full min-h-0">
 		<div class="flex flex-row items-center border-b border-color py-2 px-4 gap-2 w-full">
 			@flowChartFilterType(ctx)
-			@timefilter.MustGetTimeFilter(ctx).Component(common.ProjectViewFlowChart)
 		</div>
 		<div class="grid grid-cols-3 grow w-full min-h-0">
 			@graph.Component(true, commonView.FormatProjectUrl(ctx))
@@ -81,14 +79,11 @@ func FlowChartNodeInfoComponent(ctx context.Context, lazy bool) templ.Component 
 		panic(err.Error())
 	}
 
-	timeFilter := timefilter.MustGetTimeFilter(ctx)
-
 	nodeInfo, err := app.Database().QuerySourcesSinksNodeInfo(ctx, common.SourcesSinksNodeInfoQuery{
 		Source:    source,
 		ProjectID: projectID,
 		ActorPID:  actorPID,
 		NodePID:   nodePID,
-		MinTime:   timeFilter.From,
 		MaxTime:   time.Now(),
 	})
 	if err != nil {

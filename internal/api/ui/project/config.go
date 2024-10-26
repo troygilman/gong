@@ -18,7 +18,7 @@ func Configure(g gong.Group) {
 			e.GET("/events", gong.NewTemplHandler(events.EventTableProducer(false)))
 			e.GET("/sse", handleConnectSseProject)
 		},
-		gong.ContextExtractors(
+		gong.Extractors(
 			gong.NewExtractor(common.ExtractProjectId, gong.WithLogging()),
 			gong.NewExtractor(extractView, gong.WithLogging()),
 			gong.NewExtractor(extractActorPID),

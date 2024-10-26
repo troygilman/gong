@@ -1,10 +1,7 @@
 package common
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
-	"stagebase/internal/core"
 	"stagebase/internal/model"
 	"strconv"
 
@@ -24,36 +21,12 @@ const (
 	ParamFilterLevel    = "filter_level"
 )
 
-func GetHelper[T any](ctx context.Context, key any) (T, error) {
-	if val, ok := ctx.Value(key).(T); ok {
-		return val, nil
-	} else {
-		return val, fmt.Errorf("value %s of type %T does not exist in context", key, val)
-	}
-}
-
-func MustGetHelper[T any](ctx context.Context, key any) (val T) {
-	if val, err := GetHelper[T](ctx, key); err == nil {
-		return val
-	} else {
-		panic(err)
-	}
-}
-
-func MustGetApp(ctx context.Context) core.App {
-	return MustGetHelper[core.App](ctx, ParamApp)
-}
-
 func ExtractProjectId(e echo.Context) (any, any) {
 	projectID, err := uuid.Parse(e.Param(ParamProjectId))
 	if err != nil {
 		return nil, nil
 	}
 	return ParamProjectId, projectID
-}
-
-func MustGetProjectId(ctx context.Context) uuid.UUID {
-	return MustGetHelper[uuid.UUID](ctx, ParamProjectId)
 }
 
 func ExtractFilter(ctx echo.Context) (any, any) {
@@ -86,8 +59,4 @@ func ExtractFilter(ctx echo.Context) (any, any) {
 	}
 
 	return ParamFilter, filter
-}
-
-func MustGetFilter(ctx context.Context) model.Filter {
-	return MustGetHelper[model.Filter](ctx, ParamFilter)
 }

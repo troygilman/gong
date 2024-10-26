@@ -14,7 +14,7 @@ func Configure(g gong.Group) {
 			e.GET("", gong.NewTemplHandler(AdminProducer))
 			e.GET("/sse", handleConnectSseProjectAdmin)
 		},
-		gong.ContextExtractors(
+		gong.Extractors(
 			gong.NewExtractor(common.ExtractProjectId, gong.WithLogging()),
 		),
 		common.LogRequestMiddleware(),

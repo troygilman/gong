@@ -1,8 +1,6 @@
 package events
 
 import (
-	"context"
-	"stagebase/internal/api/common"
 	"strconv"
 	"time"
 
@@ -22,10 +20,6 @@ func ExtractPage(e echo.Context) (any, any) {
 		return ParamPage, 0
 	}
 	return ParamPage, page
-}
-
-func MustGetPage(ctx context.Context) int {
-	return common.MustGetHelper[int](ctx, ParamPage)
 }
 
 func ExtractFromFixed(e echo.Context) (any, any) {

@@ -1,9 +1,6 @@
 package project
 
 import (
-	"context"
-	"stagebase/internal/api/common"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,10 +20,6 @@ func extractActorPID(e echo.Context) (any, any) {
 		return nil, nil
 	}
 	return paramPid, actorPID
-}
-
-func mustGetActorPid(ctx context.Context) string {
-	return common.MustGetHelper[string](ctx, paramPid)
 }
 
 func extractTab(e echo.Context) (any, any) {

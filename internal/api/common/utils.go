@@ -10,15 +10,33 @@ import (
 	"net/http"
 	"stagebase/internal/common"
 	"stagebase/internal/core"
+	"stagebase/pkg/gong"
 	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 func HandleServerSentEvents(e echo.Context, listenerType core.ListenerType, f func(sses []any) error) error {
 	ctx := e.Request().Context()
-	app := MustGetApp(ctx)
+
+	var (
+		app       core.App
+		projectId uuid.UUID
+		requestId string
+		filter    common.Filter
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(ParamApp, &app),
+		gong.NewBinding(ParamProjectId, &projectId),
+		gong.NewBinding(ParamRequestId, &requestId),
+		gong.NewBinding(ParamFilter, &filter),
+	); err != nil {
+		return err
+	}
 
 	flusher, ok := e.Response().Writer.(http.Flusher)
 	if !ok {
@@ -27,19 +45,13 @@ func HandleServerSentEvents(e echo.Context, listenerType core.ListenerType, f fu
 
 	e.Response().Header().Set("Content-Type", "text/event-stream")
 
-	requestID := ctx.Value(ParamRequestId).(string)
-
-	projectID := MustGetProjectId(ctx)
-
-	filter, ok := e.Request().Context().Value(common.CtxKeyFilter).(common.Filter)
-
-	sseChan, err := app.ListenStart(ctx, projectID, requestID, listenerType, filter)
+	sseChan, err := app.ListenStart(ctx, projectId, requestId, listenerType, filter)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		if err := app.ListenStop(ctx, requestID); err != nil {
+		if err := app.ListenStop(ctx, requestId); err != nil {
 			log.Println(err)
 		}
 		// flush the channel until closed

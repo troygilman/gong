@@ -9,6 +9,7 @@ import (
 	"stagebase/pkg/gong"
 	"stagebase/sdk"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
@@ -18,7 +19,7 @@ func Configure(g gong.Group) {
 		func(e *echo.Group) {
 			e.GET("/connect", handleConnectProject)
 		},
-		gong.ContextExtractors(
+		gong.Extractors(
 			gong.NewExtractor(common.ExtractProjectId),
 		),
 		// projectMiddleware(),
@@ -28,8 +29,19 @@ func Configure(g gong.Group) {
 
 func handleConnectProject(e echo.Context) error {
 	ctx := e.Request().Context()
-	app := common.MustGetApp(ctx)
-	projectID := common.MustGetProjectId(ctx)
+
+	var (
+		app       core.App
+		projectId uuid.UUID
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(common.ParamApp, &app),
+		gong.NewBinding(common.ParamProjectId, &projectId),
+	); err != nil {
+		return err
+	}
 
 	upgrader := websocket.Upgrader{}
 	c, err := upgrader.Upgrade(e.Response().Writer, e.Request(), nil)
@@ -49,7 +61,7 @@ func handleConnectProject(e echo.Context) error {
 			return fmt.Errorf("decode: %s", err)
 		}
 
-		processorPID, err := app.PID(core.KindProcessor, projectID.String())
+		processorPID, err := app.PID(core.KindProcessor, projectId.String())
 		if err != nil {
 			return err
 		}

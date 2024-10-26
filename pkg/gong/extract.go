@@ -39,7 +39,7 @@ func newExtractContext(ctx context.Context) extractContext {
 	}
 }
 
-func ContextExtractors(extractors ...Extractor) echo.MiddlewareFunc {
+func Extractors(extractors ...Extractor) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(e echo.Context) error {
 			ctx := e.Request().Context()
