@@ -2,7 +2,7 @@ package core
 
 import (
 	"log"
-	"stagebase/internal/common"
+	"stagebase/internal/model"
 	"stagebase/pkg/dolly"
 
 	"github.com/anthdm/hollywood/actor"
@@ -14,7 +14,7 @@ func NewListenerProducer(
 	projectID uuid.UUID,
 	lType ListenerType,
 	c chan<- []any,
-	filter common.Filter,
+	filter model.Filter,
 ) actor.Producer {
 	return func() actor.Receiver {
 		return &listener{
@@ -32,7 +32,7 @@ type listener struct {
 	projectID uuid.UUID
 	lType     ListenerType
 	c         chan<- []any
-	filter    common.Filter
+	filter    model.Filter
 }
 
 func (l *listener) Receive(aCtx *actor.Context) {
@@ -63,7 +63,7 @@ func (l *listener) Receive(aCtx *actor.Context) {
 				case ListenerTypeProject:
 					filteredData = msg.data
 				case ListenerTypeEvents:
-					if event, ok := data.(common.Event); ok {
+					if event, ok := data.(model.Event); ok {
 						if l.filter.ValidEvent(event) {
 							filteredData = append(filteredData, event)
 						}

@@ -187,7 +187,8 @@ func handleGetActorChart(e echo.Context) error {
 	}
 	_ = nodes
 
-	return graph.Component(false, "").Render(ctx, e.Response())
+	// return graph.Component(false, "").Render(ctx, e.Response())
+	return nil
 }
 
 func isSources(flowType string) (bool, error) {

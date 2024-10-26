@@ -7,6 +7,7 @@ import (
 	"stagebase/internal/api/ui/graph"
 	"stagebase/internal/common"
 	commonView "stagebase/internal/view/common"
+	"stagebase/pkg/gong"
 	"time"
 )
 
@@ -16,7 +17,7 @@ templ FlowTabContent() {
 			@flowChartFilterType(ctx)
 		</div>
 		<div class="grid grid-cols-3 grow w-full min-h-0">
-			@graph.Component(true, commonView.FormatProjectUrl(ctx))
+			@gong.NewComponent(graph.Producer(true, commonView.FormatProjectUrl(ctx)))
 			@FlowChartNodeInfoComponent(ctx, true)
 		</div>
 	</div>

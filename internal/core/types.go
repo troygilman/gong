@@ -2,7 +2,7 @@ package core
 
 import (
 	"context"
-	"stagebase/internal/common"
+	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 
@@ -42,7 +42,7 @@ type App interface {
 	Request(pid *actor.PID, msg any) *actor.Response
 	Database() persistance.Database
 	JWT(tokenString string) (jwt.RegisteredClaims, error)
-	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter common.Filter) (<-chan []any, error)
+	ListenStart(ctx context.Context, projectID uuid.UUID, id string, lType ListenerType, filter model.Filter) (<-chan []any, error)
 	ListenStop(ctx context.Context, id string) error
 }
 

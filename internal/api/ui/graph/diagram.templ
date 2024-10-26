@@ -1,72 +1,78 @@
 package graph
 
-import "stagebase/internal/common"
+import (
+	"context"
+	"github.com/google/uuid"
+	"stagebase/internal/api/common"
+	"stagebase/pkg/gong"
+)
 
-func Component(isLazy bool, url string) templ.Component {
-	lazyUrl := "/project/" + "/graph/diagram"
+func Producer(isLazy bool, url string) gong.ComponentProducer {
+	return func(ctx context.Context) (templ.Component, error) {
+		var (
+			projectId uuid.UUID
+		)
 
-	data := graphData{
-		nodes: []graphNodeData{
-			{id: "node1"},
-			{id: "node2"},
-		},
-		links: []graphLinkData{
-			{
-				source: "node1",
-				target: "node2",
-			},
-		},
-	}
-	return diagramComponent(isLazy, lazyUrl, data, "")
-}
-
-templ diagramComponent(isLazy bool, lazyUrl string, data graphData, node string) {
-	if graph, ok := FromCtx(ctx); ok {
-		if isLazy {
-			<div
-				hx-get={ lazyUrl }
-				hx-trigger="load"
-				hx-include="[include]"
-				class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
-			>
-				<span class="loading loading-spinner w-16"></span>
-			</div>
-		} else {
-			<div class="flex relative h-full w-full items-center justify-center">
-				if graph.graphType != common.GraphTypeAll {
-					<div class="flex flex-col absolute top-4 left-4 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
-						<div class="flex items-center justify-start">
-							<div class="badge badge-primary badge-sm mr-2"></div>
-							Actor
-						</div>
-						<div class="flex items-center justify-start">
-							<div class="badge badge-accent badge-sm mr-2"></div>
-							{ string(graph.graphType) }
-						</div>
-					</div>
-				}
-				<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
-				@initGraph(data, node)
-			</div>
+		if err := gong.Bind(
+			ctx,
+			gong.NewBinding(common.ParamProjectId, &projectId),
+		); err != nil {
+			return nil, err
 		}
+
+		lazyUrl := "/project/" + projectId.String() + "/graph/diagram"
+
+		graph := Graph{
+			Nodes: []GraphNodeData{
+				{Id: "node1"},
+				{Id: "node2"},
+			},
+			Links: []GraphLinkData{
+				{
+					Source: "node1",
+					Target: "node2",
+				},
+				{
+					Source: "node2",
+					Target: "node1",
+				},
+			},
+		}
+		return diagramComponent(graph, isLazy, lazyUrl), nil
 	}
 }
 
-type graphData struct {
-	nodes []graphNodeData
-	links []graphLinkData
+templ diagramComponent(graph Graph, isLazy bool, lazyUrl string) {
+	if isLazy {
+		<div
+			hx-get={ lazyUrl }
+			hx-trigger="load"
+			hx-include="[include]"
+			class="flex w-full h-full max-h-full items-center justify-center bg-base-200 overflow-hidden col-span-2 border-r border-color"
+		>
+			<span class="loading loading-spinner w-16"></span>
+		</div>
+	} else {
+		<div class="flex relative h-full w-full items-center justify-center">
+			if graph.graphType != GraphTypeAll {
+				<div class="flex flex-col absolute top-4 left-4 px-2 py-1 bg-base-300 border border-color rounded shadow text-sm cursor-default">
+					<div class="flex items-center justify-start">
+						<div class="badge badge-primary badge-sm mr-2"></div>
+						Actor
+					</div>
+					<div class="flex items-center justify-start">
+						<div class="badge badge-accent badge-sm mr-2"></div>
+						{ string(graph.graphType) }
+					</div>
+				</div>
+			}
+			<svg id="chart" class="w-full h-full" preserveAspectRatio="xMidYMid slice"></svg>
+			@initGraph(graph)
+		</div>
+	}
 }
 
-type graphNodeData struct {
-	id string
-}
-
-type graphLinkData struct {
-	source string
-	target string
-}
-
-script initGraph(data graphData, node string) {
+script initGraph(graph Graph) {
 	const width = 1000;
 	const height =  1000;
 	const circleRadius = 12;
@@ -77,13 +83,14 @@ script initGraph(data graphData, node string) {
 
 	// The force simulation mutates links and nodes, so create a copy
 	// so that re-evaluating this cell produces the same result.
-	const links = data.links.map(d => ({...d}));
-	const nodes = data.nodes.map(d => ({...d}));
+	console.log(graph)
+	const links = graph.links.map(d => ({...d}));
+	const nodes = graph.nodes.map(d => ({...d}));
 
 	// Create a simulation with several forces.
 	const simulation = d3.forceSimulation(nodes)
 		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
-	    .force("charge", d3.forceManyBody().strength(-10000))
+	    .force("charge", d3.forceManyBody().strength(-100))
 	    .force("center", d3.forceCenter(width / 2, height / 2))
 		.velocityDecay(0.2)
 	    .on("tick", ticked);
@@ -152,22 +159,22 @@ script initGraph(data graphData, node string) {
 
 	node.append("circle")
 		.attr("class", d => {
-			if (d.id != node) {
+			if (d.id != graph.node) {
 				return "cursor-pointer";
 			}
 		})
         .attr("r", circleRadius)
         .attr("fill", d => {
-        	if (d.id != node) {
+        	if (d.id != graph.node) {
          		return "oklch(var(--p))";
          	} else {
           		return "oklch(var(--a))";
           	}
         })
 		.style("filter", "url(#glow)")
-        .on("mouseover", (e, d) => { if (d.id != node) { d3.select(e.target).attr("r", circleRadiusHover) }})
-        .on("mouseleave", (e, d) => { if (d.id != node) { d3.select(e.target).attr("r", circleRadius) }})
-        .on("click", (e, d) => { if (d.id != node) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
+        .on("mouseover", (e, d) => { if (d.id != graph.node) { d3.select(e.target).attr("r", circleRadiusHover) }})
+        .on("mouseleave", (e, d) => { if (d.id != graph.node) { d3.select(e.target).attr("r", circleRadius) }})
+        .on("click", (e, d) => { if (d.id != graph.node) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
 
 	node.append("text")
       	.attr("x", 16)
@@ -182,24 +189,19 @@ script initGraph(data graphData, node string) {
       	.attr("stroke-width", 4);
 
 function linkArc(d) {
-    var node1 = d.source;
-    var node2 = d.target;
-
-    if (!isSources) {
-        node1 = d.target;
-        node2 = d.source;
-    }
+    var source = d.source;
+    var target = d.target;
 
     // Calculate distances and midpoints
-    const dx = node2.x - node1.x;
-    const dy = node2.y - node1.y;
+    const dx = target.x - source.x;
+    const dy = target.y - source.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     const curvature = 0.4; // Adjust this factor to control the curve
 
     // Midpoint
-    const midX = (node1.x + node2.x) / 2;
-    const midY = (node1.y + node2.y) / 2;
+    const midX = (source.x + target.x) / 2;
+    const midY = (source.y + target.y) / 2;
 
     // Control point calculation for smooth curve
     const controlX = midX + curvature * distance * (dy / distance);
@@ -207,8 +209,8 @@ function linkArc(d) {
 
     // Create a smooth curve using a quadratic Bézier curve
     return `
-        M${node1.x},${node1.y}
-        Q${controlX},${controlY} ${node2.x},${node2.y}
+        M${source.x},${source.y}
+        Q${controlX},${controlY} ${target.x},${target.y}
     `;
 }
 

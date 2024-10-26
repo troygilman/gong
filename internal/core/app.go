@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"stagebase/internal/common"
+	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/dolly"
 	"time"
@@ -132,7 +132,7 @@ func (app *stagebaseApp) ListenStart(
 	projectID uuid.UUID,
 	id string,
 	lType ListenerType,
-	filter common.Filter,
+	filter model.Filter,
 ) (<-chan []any, error) {
 	c := make(chan []any, 100)
 	app.engine.Spawn(NewListenerProducer(app, projectID, lType, c, filter), kindListener, actor.WithID(id))

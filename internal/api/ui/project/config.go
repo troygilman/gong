@@ -16,6 +16,7 @@ func Configure(g gong.Group) {
 		func(e *echo.Group) {
 			e.GET("", gong.NewTemplHandler(projectProducer))
 			e.GET("/events", gong.NewTemplHandler(events.EventTableProducer(false)))
+			e.GET("/graph/diagram", gong.NewTemplHandler(graph.Producer(false, "")))
 			e.GET("/sse", handleConnectSseProject)
 		},
 		gong.Extractors(

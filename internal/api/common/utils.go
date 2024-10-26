@@ -8,8 +8,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"stagebase/internal/common"
 	"stagebase/internal/core"
+	"stagebase/internal/model"
 	"stagebase/pkg/gong"
 	"strings"
 
@@ -25,7 +25,7 @@ func HandleServerSentEvents(e echo.Context, listenerType core.ListenerType, f fu
 		app       core.App
 		projectId uuid.UUID
 		requestId string
-		filter    common.Filter
+		filter    model.Filter
 	)
 
 	if err := gong.Bind(

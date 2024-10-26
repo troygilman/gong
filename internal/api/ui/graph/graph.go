@@ -1,9 +1,7 @@
 package graph
 
 import (
-	"context"
 	"github.com/labstack/echo/v4"
-	"stagebase/internal/common"
 )
 
 const (
@@ -12,26 +10,40 @@ const (
 	paramNameNode = "graph_node"
 )
 
+type GraphType string
+
+const (
+	GraphTypeAll     = "All"
+	GraphTypeSources = "Sources"
+	GraphTypeSinks   = "Sinks"
+)
+
 type Graph struct {
-	graphType common.GraphType
-	node      string
+	graphType GraphType
+	Node      string          `json:"node"`
+	Nodes     []GraphNodeData `json:"nodes"`
+	Links     []GraphLinkData `json:"links"`
+}
+
+type GraphNodeData struct {
+	Id string `json:"id"`
+}
+
+type GraphLinkData struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
 }
 
 func Extract(e echo.Context) (any, any) {
-	graphType := common.GraphType(e.QueryParam(paramNameType))
+	graphType := GraphType(e.QueryParam(paramNameType))
 	if graphType == "" {
-		graphType = common.GraphTypeAll
+		graphType = GraphTypeAll
 	}
 
 	node := e.QueryParam(paramNameNode)
 
 	return ctxKey, Graph{
 		graphType: graphType,
-		node:      node,
+		Node:      node,
 	}
-}
-
-func FromCtx(ctx context.Context) (Graph, bool) {
-	g, ok := ctx.Value(ctxKey).(Graph)
-	return g, ok
 }
