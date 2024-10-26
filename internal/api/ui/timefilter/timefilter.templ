@@ -1,11 +1,10 @@
 package timefilter
 
 import (
-	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"stagebase/internal/api/common"
 	"stagebase/internal/api/ui/icons"
+	"stagebase/pkg/gong"
 	"time"
 )
 
@@ -89,8 +88,8 @@ func Extract(e echo.Context) (any, any) {
 	return TimeFilterParam, filter
 }
 
-func MustGetTimeFilter(ctx context.Context) TimeFilter {
-	return common.MustGetHelper[TimeFilter](ctx, TimeFilterParam)
+func Binding(ref *TimeFilter) gong.BindFunc {
+	return gong.NewBinding(TimeFilterParam, ref)
 }
 
 func (f TimeFilter) Filter() {

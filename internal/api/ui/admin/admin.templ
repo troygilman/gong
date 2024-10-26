@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/ui/index"
+	"stagebase/pkg/gong"
 )
 
 const (
@@ -13,9 +14,19 @@ const (
 	sseTypeUpdateMetricThroughput = "update-metric-throughput"
 )
 
-func AdminProducer(ctx context.Context) templ.Component {
-	projectId := common.MustGetProjectId(ctx)
-	return adminComponent(projectId)
+func AdminProducer(ctx context.Context) (templ.Component, error) {
+	var (
+		projectId uuid.UUID
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(common.ParamProjectId, &projectId),
+	); err != nil {
+		return nil, err
+	}
+
+	return adminComponent(projectId), nil
 }
 
 templ adminComponent(projectId uuid.UUID) {

@@ -3,9 +3,11 @@ package events
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"stagebase/internal/api/common"
 	"stagebase/internal/api/ui/icons"
 	"stagebase/internal/api/ui/timefilter"
+	"stagebase/internal/core"
 	"stagebase/internal/model"
 	"stagebase/internal/persistance"
 	"stagebase/pkg/gong"
@@ -13,18 +15,30 @@ import (
 	"time"
 )
 
-func EventContentComponent(ctx context.Context) templ.Component {
-	filter := common.MustGetFilter(ctx)
-	page := MustGetPage(ctx)
-	timeFilter := timefilter.MustGetTimeFilter(ctx)
-	return eventContentComponent(filter, timeFilter, page)
+func EventContentComponent(ctx context.Context) (templ.Component, error) {
+	var (
+		filter     model.Filter
+		page       int
+		timeFilter timefilter.TimeFilter
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(common.ParamFilter, &filter),
+		gong.NewBinding(ParamPage, &page),
+		timefilter.Binding(&timeFilter),
+	); err != nil {
+		return nil, err
+	}
+
+	return eventContentComponent(filter, timeFilter, page), nil
 }
 
 templ eventContentComponent(filter model.Filter, timeFilter timefilter.TimeFilter, pageIdx int) {
 	<div class="flex flex-row w-full h-16 min-h-16 px-4 py-2 border-b border-color items-center justify-between">
 		<div class="flex items-center gap-4">
 			@eventsFilter(filter)
-			@timefilter.MustGetTimeFilter(ctx).Component("")
+			@timeFilter.Component("")
 		</div>
 		@eventTablePaginationControl(pageIdx, 0)
 	</div>
@@ -85,20 +99,32 @@ templ eventTablePaginationControlItem(page int, nextPage int, disableOnPage int)
 }
 
 templ EventTableComponent(lazy bool) {
-	@eventTableComponent(ctx, lazy)
+	@gong.NewComponent(EventTableProducer(lazy))
 }
 
 func EventTableProducer(lazy bool) gong.ComponentProducer {
-	return func(ctx context.Context) templ.Component {
+	return func(ctx context.Context) (templ.Component, error) {
 		return eventTableComponent(ctx, lazy)
 	}
 }
 
-func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
-	app := common.MustGetApp(ctx)
-	projectID := common.MustGetProjectId(ctx)
-	filter := common.MustGetFilter(ctx)
-	page := MustGetPage(ctx)
+func eventTableComponent(ctx context.Context, lazy bool) (templ.Component, error) {
+	var (
+		app       core.App
+		projectId uuid.UUID
+		filter    model.Filter
+		page      int
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(common.ParamApp, &app),
+		gong.NewBinding(common.ParamProjectId, &projectId),
+		gong.NewBinding(common.ParamFilter, &filter),
+		gong.NewBinding(ParamPage, &page),
+	); err != nil {
+		return nil, err
+	}
 
 	events := []model.Event{}
 	maxPageIdx := 0
@@ -108,7 +134,7 @@ func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 		from := ctx.Value(FromFixedParam).(time.Time)
 		to := ctx.Value(ToFixedParam).(time.Time)
 		events, maxPageIdx, err = app.Database().QueryEvents(ctx, persistance.EventsQuery{
-			ProjectID: projectID,
+			ProjectID: projectId,
 			From:      from,
 			To:        to,
 			PageIndex: page,
@@ -119,7 +145,7 @@ func eventTableComponent(ctx context.Context, lazy bool) templ.Component {
 		}
 	}
 
-	return eventTable(events, lazy, page, maxPageIdx)
+	return eventTable(events, lazy, page, maxPageIdx), nil
 }
 
 templ eventTable(events []model.Event, lazy bool, pageIdx int, maxPageIdx int) {

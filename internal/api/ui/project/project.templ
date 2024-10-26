@@ -10,6 +10,7 @@ import (
 	"stagebase/internal/api/ui/index"
 	"stagebase/internal/api/ui/project/events"
 	"stagebase/internal/model"
+	"stagebase/pkg/gong"
 )
 
 const (
@@ -24,17 +25,31 @@ const (
 	sseTypeNewEvents            = "new-events"
 )
 
-func projectProducer(ctx context.Context) templ.Component {
-	view := ctx.Value(paramView).(string)
-	projectId := common.MustGetProjectId(ctx)
+type projectInput struct {
+	projectId uuid.UUID `gong:"sse"`
+}
+
+func projectProducer(ctx context.Context) (templ.Component, error) {
+	var (
+		projectId uuid.UUID
+		view      string
+	)
+
+	if err := gong.Bind(
+		ctx,
+		gong.NewBinding(common.ParamProjectId, &projectId),
+		gong.NewBinding(paramView, &view),
+	); err != nil {
+		return nil, err
+	}
 
 	switch view {
 	case tabView:
-		return tabViewComponent()
+		return tabViewComponent(), nil
 	case events.EventsView:
-		return events.EventTableComponent(false)
+		return events.EventTableComponent(false), nil
 	default:
-		return ProjectComponent(projectId)
+		return ProjectComponent(projectId), nil
 	}
 }
 
@@ -221,7 +236,7 @@ templ ActorContent() {
 			//@OverviewTabContent(actor)
 		}
 		@tabContent(tabLabelEvents) {
-			@events.EventContentComponent(ctx)
+			@gong.NewComponent(events.EventContentComponent)
 		}
 		@tabContent(tabLabelFlow) {
 			//@FlowTabContent()

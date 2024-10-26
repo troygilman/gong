@@ -170,8 +170,6 @@ func handleGetActorChart(e echo.Context) error {
 		return errors.New("flow is missing")
 	}
 
-	timeFilter := timefilter.MustGetTimeFilter(ctx)
-
 	sources, err := isSources(flowType)
 	if err != nil {
 		return err
@@ -181,8 +179,8 @@ func handleGetActorChart(e echo.Context) error {
 		Sources:   sources,
 		ProjectID: projectID,
 		ActorPID:  actorPID,
-		MinTime:   timeFilter.From,
-		MaxTime:   time.Now(),
+		// MinTime:   timeFilter.From,
+		MaxTime: time.Now(),
 	})
 	if err != nil {
 		return err

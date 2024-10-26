@@ -24,16 +24,19 @@ const (
 	ParamFilterLevel    = "filter_level"
 )
 
-func GetHelper[T any](ctx context.Context, key any) (T, bool) {
-	val, ok := ctx.Value(key).(T)
-	return val, ok
+func GetHelper[T any](ctx context.Context, key any) (T, error) {
+	if val, ok := ctx.Value(key).(T); ok {
+		return val, nil
+	} else {
+		return val, fmt.Errorf("value %s of type %T does not exist in context", key, val)
+	}
 }
 
 func MustGetHelper[T any](ctx context.Context, key any) (val T) {
-	if val, ok := GetHelper[T](ctx, key); ok {
+	if val, err := GetHelper[T](ctx, key); err == nil {
 		return val
 	} else {
-		panic(fmt.Sprintf("value %s of type %T does not exist in context", key, val))
+		panic(err)
 	}
 }
 
