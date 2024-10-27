@@ -221,46 +221,43 @@ func (db *questDatabase) UpdateActor(
 	return err
 }
 
-func (db *questDatabase) QueryActorSourcesSinks(
+func (db *questDatabase) QueryGraphLinks(
 	ctx context.Context,
-	query ActorSourcesSinksQuery,
-) ([]string, error) {
-	var actors []struct {
+	query GraphLinksQuery,
+) ([]model.GraphLink, error) {
+	var events []struct {
 		bun.BaseModel `bun:"table:events"`
 		PID           string
 		Sender        string
 	}
 
 	stmt := db.bunDB.NewSelect().
-		Model(&actors).
+		Model(&events).
 		Distinct().
 		Where("project_id = ?", query.ProjectID.String()).
 		Where("timestamp BETWEEN ? AND ?", query.MinTime, query.MaxTime)
 
-	if query.Sources {
-		stmt = stmt.Where("pid = ?", query.ActorPID).Order("sender").ExcludeColumn("pid")
-	} else {
-		stmt = stmt.Where("sender = ?", query.ActorPID).Order("pid").ExcludeColumn("sender")
-	}
+	// if query.Sources {
+	// 	stmt = stmt.Where("pid = ?", query.ActorPID).Order("sender").ExcludeColumn("pid")
+	// } else {
+	// 	stmt = stmt.Where("sender = ?", query.ActorPID).Order("pid").ExcludeColumn("sender")
+	// }
 
 	if err := stmt.Scan(ctx); err != nil {
 		return nil, err
 	}
 
-	pids := make([]string, 0, len(actors))
-	for _, actor := range actors {
-		if query.Sources {
-			if actor.Sender != "" {
-				pids = append(pids, actor.Sender)
-			}
-		} else {
-			if actor.PID != "" {
-				pids = append(pids, actor.PID)
-			}
+	links := make([]model.GraphLink, 0, len(events))
+	for _, event := range events {
+		if event.Sender != "" {
+			links = append(links, model.GraphLink{
+				Source: event.Sender,
+				Target: event.PID,
+			})
 		}
 	}
 
-	return pids, nil
+	return links, nil
 }
 
 func (db *questDatabase) QuerySourcesSinksNodeInfo(

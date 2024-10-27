@@ -69,21 +69,6 @@ func (mr *MockDatabaseMockRecorder) CreateEvents(ctx, events any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEvents", reflect.TypeOf((*MockDatabase)(nil).CreateEvents), ctx, events)
 }
 
-// QueryActorSourcesSinks mocks base method.
-func (m *MockDatabase) QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryActorSourcesSinks", ctx, query)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QueryActorSourcesSinks indicates an expected call of QueryActorSourcesSinks.
-func (mr *MockDatabaseMockRecorder) QueryActorSourcesSinks(ctx, query any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryActorSourcesSinks", reflect.TypeOf((*MockDatabase)(nil).QueryActorSourcesSinks), ctx, query)
-}
-
 // QueryActors mocks base method.
 func (m *MockDatabase) QueryActors(ctx context.Context, projectID uuid.UUID) ([]model.Actor, error) {
 	m.ctrl.T.Helper()
@@ -113,6 +98,21 @@ func (m *MockDatabase) QueryEvents(ctx context.Context, query EventsQuery) ([]mo
 func (mr *MockDatabaseMockRecorder) QueryEvents(ctx, query any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryEvents", reflect.TypeOf((*MockDatabase)(nil).QueryEvents), ctx, query)
+}
+
+// QueryGraphLinks mocks base method.
+func (m *MockDatabase) QueryGraphLinks(ctx context.Context, query GraphLinksQuery) ([]model.GraphLink, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryGraphLinks", ctx, query)
+	ret0, _ := ret[0].([]model.GraphLink)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryGraphLinks indicates an expected call of QueryGraphLinks.
+func (mr *MockDatabaseMockRecorder) QueryGraphLinks(ctx, query any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryGraphLinks", reflect.TypeOf((*MockDatabase)(nil).QueryGraphLinks), ctx, query)
 }
 
 // QuerySourcesSinksNodeInfo mocks base method.

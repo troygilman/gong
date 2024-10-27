@@ -16,7 +16,7 @@ type Database interface {
 	QueryActors(ctx context.Context, projectID uuid.UUID) ([]model.Actor, error)
 	CreateActor(ctx context.Context, actor model.Actor) error
 	UpdateActor(ctx context.Context, actor model.Actor) error
-	QueryActorSourcesSinks(ctx context.Context, query ActorSourcesSinksQuery) ([]string, error)
+	QueryGraphLinks(ctx context.Context, query GraphLinksQuery) ([]model.GraphLink, error)
 	QuerySourcesSinksNodeInfo(context.Context, SourcesSinksNodeInfoQuery) (model.SourcesSinksNodeInfo, error)
 }
 
@@ -28,10 +28,8 @@ type EventsQuery struct {
 	Filter    model.Filter
 }
 
-type ActorSourcesSinksQuery struct {
-	Sources   bool
+type GraphLinksQuery struct {
 	ProjectID uuid.UUID
-	ActorPID  string
 	MinTime   time.Time
 	MaxTime   time.Time
 }

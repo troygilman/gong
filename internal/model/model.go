@@ -67,3 +67,12 @@ type SourcesSinksNodeInfo struct {
 	PID      string
 	MsgCount int64
 }
+
+type GraphNode struct {
+	Id string
+}
+
+type GraphLink struct {
+	Source string
+	Target string
+}

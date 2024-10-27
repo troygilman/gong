@@ -4,17 +4,22 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"stagebase/internal/api/common"
+	"stagebase/internal/core"
+	"stagebase/internal/persistance"
 	"stagebase/pkg/gong"
+	"time"
 )
 
 func Producer(isLazy bool, url string) gong.ComponentProducer {
 	return func(ctx context.Context) (templ.Component, error) {
 		var (
+			app       core.App
 			projectId uuid.UUID
 		)
 
 		if err := gong.Bind(
 			ctx,
+			gong.NewBinding(common.ParamApp, &app),
 			gong.NewBinding(common.ParamProjectId, &projectId),
 		); err != nil {
 			return nil, err
@@ -22,22 +27,40 @@ func Producer(isLazy bool, url string) gong.ComponentProducer {
 
 		lazyUrl := "/project/" + projectId.String() + "/graph/diagram"
 
-		graph := Graph{
-			Nodes: []GraphNodeData{
-				{Id: "node1"},
-				{Id: "node2"},
-			},
-			Links: []GraphLinkData{
-				{
-					Source: "node1",
-					Target: "node2",
-				},
-				{
-					Source: "node2",
-					Target: "node1",
-				},
-			},
+		links, err := app.Database().QueryGraphLinks(ctx, persistance.GraphLinksQuery{
+			ProjectID: projectId,
+			MinTime:   time.Now(),
+			MaxTime:   time.Now().Add(-24 * time.Hour),
+		})
+		if err != nil {
+			return nil, err
 		}
+
+		graph := Graph{
+			Nodes: []GraphNodeData{},
+			Links: []GraphLinkData{},
+		}
+
+		vistitedNodes := make(map[string]struct{})
+		for _, link := range links {
+			graph.Links = append(graph.Links, GraphLinkData{
+				Source: link.Source,
+				Target: link.Target,
+			})
+			if _, ok := vistitedNodes[link.Source]; !ok {
+				vistitedNodes[link.Source] = struct{}{}
+				graph.Nodes = append(graph.Nodes, GraphNodeData{
+					Id: link.Source,
+				})
+			}
+			if _, ok := vistitedNodes[link.Target]; !ok {
+				vistitedNodes[link.Target] = struct{}{}
+				graph.Nodes = append(graph.Nodes, GraphNodeData{
+					Id: link.Target,
+				})
+			}
+		}
+
 		return diagramComponent(graph, isLazy, lazyUrl), nil
 	}
 }
