@@ -2,8 +2,8 @@ package example
 
 import (
 	"fmt"
-	"stagebase/sdk"
 	"log/slog"
+	"stagebase/sdk"
 	"sync"
 	"time"
 
@@ -24,22 +24,28 @@ func ExampleClient() error {
 	stagebasePID := engine.Spawn(sdk.NewStagebase(config), "stagebase", actor.WithID("primary"))
 
 	start := time.Now()
+
+	pids := []*actor.PID{}
+	for range 10 {
+		pid := engine.Spawn(newServer(), "server", actor.WithMiddleware(sdk.StagebaseMiddleware()))
+		pids = append(pids, pid)
+	}
+
+	time.Sleep(10 * time.Second)
+
 	wg := &sync.WaitGroup{}
-	pid1 := engine.Spawn(newClient(wg), "client", actor.WithID("1"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
-	pid2 := engine.Spawn(newClient(wg), "client", actor.WithID("2"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
-	engine.Spawn(newServer(pid1, pid2), "server", actor.WithID("1"), actor.WithMiddleware(sdk.StagebaseMiddleware()))
-
+	for _, pid := range pids {
+		engine.Poison(pid, wg)
+	}
 	wg.Wait()
-	fmt.Println("Clients stopped")
 
-	engine.Poison(stagebasePID, wg).Wait()
+	engine.Poison(stagebasePID).Wait()
 
 	fmt.Printf("Finished in %fs\n", -time.Until(start).Seconds())
 	return nil
 }
 
 type testMsg struct {
-	id string
 }
 
 func (m testMsg) Log() (slog.Level, string, []any) {
@@ -50,54 +56,19 @@ type server struct {
 	pids []*actor.PID
 }
 
-func newServer(pid1 *actor.PID, pid2 *actor.PID) actor.Producer {
+func newServer() actor.Producer {
 	return func() actor.Receiver {
-		return server{
-			pids: []*actor.PID{pid1, pid2},
-		}
+		return server{}
 	}
 }
 
-func (s server) Receive(ctx *actor.Context) {
-	switch ctx.Message().(type) {
+func (s server) Receive(act *actor.Context) {
+	switch msg := act.Message().(type) {
 	case actor.Started:
-		for range 1000000 {
-			ctx.Send(s.pids[0], testMsg{})
-			ctx.Send(s.pids[1], testMsg{})
-			//time.Sleep(10 * time.Millisecond)
-		}
-		fmt.Println("Finished sending msgs")
-		time.Sleep(time.Second)
-		ctx.Engine().Poison(ctx.PID())
-		ctx.Engine().Poison(s.pids[0])
-		ctx.Engine().Poison(s.pids[1])
-		// nums := []int{}
-		// num := nums[0]
-		// _ = num
-	}
-}
-
-type client struct {
-	wg    *sync.WaitGroup
-	count int
-}
-
-func newClient(wg *sync.WaitGroup) actor.Producer {
-	return func() actor.Receiver {
-		return &client{
-			wg: wg,
-		}
-	}
-}
-
-func (c *client) Receive(ctx *actor.Context) {
-	switch ctx.Message().(type) {
-	case actor.Started:
-		c.wg.Add(1)
-	case actor.Stopped:
-		fmt.Printf("Stopping client - count: %d\n", c.count)
-		c.wg.Done()
+		act.Engine().Subscribe(act.PID())
+	case actor.ActorStartedEvent:
+		act.Send(msg.PID, testMsg{})
 	case testMsg:
-		c.count++
+		act.Send(act.Sender(), testMsg{})
 	}
 }

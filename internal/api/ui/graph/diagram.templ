@@ -98,8 +98,8 @@ templ diagramComponent(graph Graph, isLazy bool, lazyUrl string) {
 script initGraph(graph Graph) {
 	const width = 1000;
 	const height =  1000;
-	const circleRadius = 12;
-	const circleRadiusHover = 14;
+	const circleRadius = 4;
+	const circleRadiusHover = 5;
 
 	// Specify the color scale.
 	const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -112,10 +112,12 @@ script initGraph(graph Graph) {
 
 	// Create a simulation with several forces.
 	const simulation = d3.forceSimulation(nodes)
-		.force("link", d3.forceLink(links).id(d => d.id).distance(300))
-	    .force("charge", d3.forceManyBody().strength(-100))
+		.force("link", d3.forceLink(links).id(d => d.id))
+	    .force("charge", d3.forceManyBody().strength(-400))
+		.force("x", d3.forceX())
+      	.force("y", d3.forceY())
 	    .force("center", d3.forceCenter(width / 2, height / 2))
-		.velocityDecay(0.2)
+		// .velocityDecay(1)
 	    .on("tick", ticked);
 
 
@@ -131,8 +133,8 @@ script initGraph(graph Graph) {
 	const arrow = defs.append("marker")
       	.attr("id", "arrow")
        	.attr("viewBox", "0 -5 10 10")
-        .attr("refX", 16)
-        .attr("refY", -0.5)
+        .attr("refX", 14)
+        .attr("refY", -1.5)
         .attr("markerWidth", 5)
         .attr("markerHeight", 5)
         .attr("orient", "auto")
@@ -161,7 +163,7 @@ script initGraph(graph Graph) {
 	const link = svg.append("g")
 		.attr("id", "links")
     	.attr("fill", "none")
-     	.attr("stroke-width", 4)
+     	.attr("stroke-width", 1.5)
 		.attr("opacity", 0.2)
       	.selectAll("path")
        	.data(links)
@@ -176,7 +178,7 @@ script initGraph(graph Graph) {
         .join("g");
 
 	node.append("circle")
-		.attr("stroke-width", 10)
+		.attr("stroke-width", 1.5)
 		.attr("stroke", "oklch(var(--b2))")
 		.attr("r", circleRadius);
 
@@ -200,40 +202,22 @@ script initGraph(graph Graph) {
         .on("click", (e, d) => { if (d.id != graph.node) { htmx.trigger("#node-info-container", "fetch-content", { node: d.id }) }});
 
 	node.append("text")
-      	.attr("x", 16)
+      	.attr("x", 6)
       	.attr("y", "0.31em")
 	  	.attr("stroke-width", 0)
-	  	.attr("class", "text-lg font-medium cursor-default")
+	  	.attr("class", "text-xs cursor-default")
 		.attr("fill", "oklch(var(--bc))")
       	.text(d => d.id)
     	.clone(true).lower()
       	.attr("fill", "none")
       	.attr("stroke", "oklch(var(--b2))")
-      	.attr("stroke-width", 4);
+      	.attr("stroke-width", 1);
 
 function linkArc(d) {
-    var source = d.source;
-    var target = d.target;
-
-    // Calculate distances and midpoints
-    const dx = target.x - source.x;
-    const dy = target.y - source.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    const curvature = 0.4; // Adjust this factor to control the curve
-
-    // Midpoint
-    const midX = (source.x + target.x) / 2;
-    const midY = (source.y + target.y) / 2;
-
-    // Control point calculation for smooth curve
-    const controlX = midX + curvature * distance * (dy / distance);
-    const controlY = midY - curvature * distance * (dx / distance);
-
-    // Create a smooth curve using a quadratic Bézier curve
+    const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
     return `
-        M${source.x},${source.y}
-        Q${controlX},${controlY} ${target.x},${target.y}
+    	M${d.source.x},${d.source.y}
+     	A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
     `;
 }
 
