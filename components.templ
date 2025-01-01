@@ -1,0 +1,41 @@
+package gong
+
+import (
+	"context"
+	"fmt"
+	"strings"
+)
+
+templ Index() {
+	<html>
+		<head>
+			<meta charset="utf-8"/>
+			<title>TEST</title>
+			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}
+
+templ Form() {
+	<form
+		hx-post={ getContext(ctx).path }
+		hx-target={ "#" + buildComponentID(ctx) }
+		hx-swap="outerHTML"
+		hx-headers={ fmt.Sprintf(`{"%s": "true"}`, GongActionHeader) }
+	>
+		{ children... }
+	</form>
+}
+
+func buildComponentID(ctx context.Context) string {
+	return "gong" + strings.ReplaceAll(getContext(ctx).path, "/", "-")
+}
+
+templ componentWrapper(component templ.Component) {
+	<div id={ buildComponentID(ctx) }>
+		@component
+	</div>
+}

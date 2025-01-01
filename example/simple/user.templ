@@ -1,0 +1,32 @@
+package main
+
+import (
+	"context"
+	"github.com/troygilman0/gong"
+)
+
+type userHandler struct {
+	Name string `json:"name"`
+}
+
+func (h userHandler) Loader(ctx context.Context) gong.Handler {
+	h.Name = gong.Param(ctx, "name")
+	return h
+}
+
+func (h userHandler) Action(ctx context.Context) gong.Handler {
+	return h
+}
+
+templ (h userHandler) Component() {
+	@gong.Index() {
+		<div>
+			<div>USER</div>
+			{ h.Name }
+			@gong.Form() {
+				<input name="name" type="text"/>
+				<button type="submit">Submit</button>
+			}
+		</div>
+	}
+}

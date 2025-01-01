@@ -1,0 +1,34 @@
+package main
+
+import (
+	"context"
+	"github.com/troygilman0/gong"
+)
+
+type homeHandler struct {
+	UserHandler userHandler `path:"/user"`
+	message     string
+}
+
+func (h homeHandler) Loader(ctx context.Context) gong.Handler {
+	h.message = gong.Param(ctx, "message")
+	return h
+}
+
+func (h homeHandler) Action(ctx context.Context) gong.Handler {
+	return h
+}
+
+templ (h homeHandler) Component() {
+	@gong.Index() {
+		<div>
+			<div>HOME</div>
+			{ h.message }
+			@gong.Form() {
+				<input name="message" type="text"/>
+				<button type="submit">Submit</button>
+			}
+			@gong.Component(h.UserHandler, "/user")
+		</div>
+	}
+}
