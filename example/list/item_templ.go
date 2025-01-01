@@ -8,7 +8,14 @@ package main
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "context"
+
 type itemHandler struct {
+	data listItemData
+}
+
+func (handler itemHandler) Loader(ctx context.Context) any {
+	return nil
 }
 
 func (handler itemHandler) Component() templ.Component {
@@ -38,6 +45,9 @@ func (handler itemHandler) Component() templ.Component {
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+type listItemData struct {
 }
 
 var _ = templruntime.GeneratedTemplate

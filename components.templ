@@ -9,18 +9,8 @@ type Index struct {
 	Handler
 }
 
-func (index Index) Loader(ctx context.Context) Handler {
-	if handler, ok := index.Handler.(LoaderHandler); ok {
-		index.Handler = handler.Loader(ctx)
-	}
-	return index
-}
-
-func (index Index) Action(ctx context.Context) Handler {
-	if handler, ok := index.Handler.(ActionHandler); ok {
-		index.Handler = handler.Action(ctx)
-	}
-	return index
+templ (index Index) Action() {
+	@index.Handler.Action()
 }
 
 templ (index Index) Component() {
@@ -50,12 +40,38 @@ templ Form() {
 	</form>
 }
 
+templ List() {
+	<list>
+		{ children... }
+	</list>
+}
+
 func buildComponentID(ctx context.Context) string {
 	return "gong" + strings.ReplaceAll(getContext(ctx).path, "/", "-")
 }
 
-templ componentWrapper(component templ.Component) {
-	<div id={ buildComponentID(ctx) }>
-		@component
+templ Target() {
+	<div
+		id={ buildComponentID(ctx) }
+		hx-get={ getContext(ctx).path }
+		hx-swap="outerHTML"
+		hx-trigger={ targetTrigger(ctx) }
+		hx-target="this"
+	>
+		{ children... }
 	</div>
+}
+
+func targetTrigger(ctx context.Context) string {
+	if getContext(ctx).action {
+		return ""
+	} else {
+		return "load"
+	}
+}
+
+templ target(child templ.Component) {
+	@Target() {
+		@child
+	}
 }

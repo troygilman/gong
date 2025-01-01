@@ -15,6 +15,10 @@ type contextKeyType int
 
 const contextKey = contextKeyType(0)
 
+const (
+	HXRequestHeader = "HX-Request"
+)
+
 type Gong struct {
 	mux Mux
 }
@@ -41,12 +45,15 @@ func (g *Gong) route(path string, route Route) {
 	g.handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			request: r,
+			action:  r.Header.Get(HXRequestHeader) == "true",
 		}
 		ctx := context.WithValue(r.Context(), contextKey, gCtx)
+
 		component := Component(
 			route,
-			withAction(r.Header.Get("HX-Request") == "true"),
+			withAction(r.Header.Get(HXRequestHeader) == "true"),
 		)
+
 		if err := component.Render(ctx, w); err != nil {
 			panic(err)
 		}
@@ -79,6 +86,7 @@ func (g *Gong) decomposeHandler(path string, handler Handler) {
 
 type gongContext struct {
 	request *http.Request
+	handler Handler
 	path    string
 	action  bool
 }
@@ -106,15 +114,8 @@ type Mux interface {
 }
 
 type Handler interface {
+	Action() templ.Component
 	Component() templ.Component
-}
-
-type LoaderHandler interface {
-	Loader(ctx context.Context) Handler
-}
-
-type ActionHandler interface {
-	Action(ctx context.Context) Handler
 }
 
 type Route interface {
@@ -151,9 +152,17 @@ func withAction(action bool) ComponentOption {
 	}
 }
 
+func WithMessages(msgs ...any) ComponentOption {
+	return func(c component) component {
+		c.messages = append(c.messages, msgs...)
+		return c
+	}
+}
+
 type component struct {
-	route  Route
-	action bool
+	route    Route
+	action   bool
+	messages []any
 }
 
 func Component(route Route, opts ...ComponentOption) templ.Component {
@@ -169,6 +178,7 @@ func Component(route Route, opts ...ComponentOption) templ.Component {
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
+	gCtx.handler = c.route.Handler()
 
 	if c.action {
 		gCtx.path = gCtx.request.RequestURI
@@ -178,32 +188,16 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
-	handler := c.route.Handler()
-	handler = loaderMiddleware(ctx, handler)
-	handler = actionMiddleware(ctx, handler)
+	if gCtx.action {
+		if err := target(c.route.Handler().Action()).Render(ctx, w); err != nil {
+			return err
+		}
+		return nil
+	}
 
-	return componentWrapper(handler.Component()).Render(ctx, w)
+	return c.route.Handler().Component().Render(ctx, w)
 }
 
-func loaderMiddleware(ctx context.Context, handler Handler) Handler {
-	loaderHandler, ok := handler.(LoaderHandler)
-	if !ok {
-		return handler
-	}
-	return loaderHandler.Loader(ctx)
-}
-
-func actionMiddleware(ctx context.Context, handler Handler) Handler {
-	gCtx := getContext(ctx)
-
-	if !gCtx.action {
-		return handler
-	}
-
-	actionHandler, ok := handler.(ActionHandler)
-	if !ok {
-		return handler
-	}
-
-	return actionHandler.Action(ctx)
+func Method(ctx context.Context) string {
+	return getContext(ctx).request.Method
 }

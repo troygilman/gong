@@ -1,14 +1,32 @@
 package main
 
-import "github.com/troygilman0/gong"
+import (
+	"github.com/troygilman0/gong"
+	"net/http"
+)
 
 type listHandler struct {
 	ItemRoute gong.Route
 }
 
+templ (handler listHandler) Action() {
+	switch gong.Method(ctx) {
+		case http.MethodGet:
+			<div>Hello World</div>
+		case http.MethodPost:
+			{{ msg := gong.Param(ctx, "msg") }}
+			<div>{ msg }</div>
+	}
+}
+
 templ (handler listHandler) Component() {
 	<div>
-		LIST
-		@gong.Component(handler.ItemRoute)
+		@gong.Target() {
+			Placeholder
+		}
+		@gong.Form() {
+			<input name="msg" type="text"/>
+			<button type="submit">Submit</button>
+		}
 	</div>
 }
