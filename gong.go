@@ -30,18 +30,15 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gong) Route(route Route) {
-	route = NewRoute(route.Path(), Index{
+	g.route("", NewRoute(route.Path(), Index{
 		Handler: route.Handler(),
-	})
-	g.route("", route)
+	}))
 }
 
 func (g *Gong) route(path string, route Route) {
 	path += route.Path()
-	log.Printf("registering handler %T on path %s\n", route.Handler(), path)
-	g.handler(path, route.Handler())
 
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	g.handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			request: r,
 		}
@@ -53,11 +50,17 @@ func (g *Gong) route(path string, route Route) {
 		if err := component.Render(ctx, w); err != nil {
 			panic(err)
 		}
-	})
-	g.mux.Handle(path, h)
+	}))
+
+	g.decomposeHandler(path, route.Handler())
 }
 
-func (g *Gong) handler(path string, handler Handler) {
+func (g *Gong) handle(path string, handler http.Handler) {
+	log.Printf("registering handler %T on path %s\n", handler, path)
+	g.mux.Handle(path, handler)
+}
+
+func (g *Gong) decomposeHandler(path string, handler Handler) {
 	v := reflect.ValueOf(handler)
 	if v.Kind() == reflect.Struct {
 		for i := range v.NumField() {
@@ -67,7 +70,7 @@ func (g *Gong) handler(path string, handler Handler) {
 				case Route:
 					g.route(path, field)
 				case Handler:
-					g.handler(path, field)
+					g.decomposeHandler(path, field)
 				}
 			}
 		}

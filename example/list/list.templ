@@ -1,0 +1,14 @@
+package main
+
+import "github.com/troygilman0/gong"
+
+type listHandler struct {
+	ItemRoute gong.Route
+}
+
+templ (handler listHandler) Component() {
+	<div>
+		LIST
+		@gong.Component(handler.ItemRoute)
+	</div>
+}
