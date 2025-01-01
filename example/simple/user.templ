@@ -3,25 +3,27 @@ package main
 import (
 	"context"
 	"github.com/troygilman0/gong"
+	"log"
 )
 
 type userHandler struct {
-	Name string `json:"name"`
+	name string
 }
 
 func (h userHandler) Loader(ctx context.Context) gong.Handler {
-	h.Name = gong.Param(ctx, "name")
+	h.name = gong.Param(ctx, "name")
 	return h
 }
 
-func (h userHandler) Action(ctx context.Context) gong.Handler {
-	return h
+func (h userHandler) Action(ctx context.Context) error {
+	log.Println("userHandler Action")
+	return nil
 }
 
 templ (h userHandler) Component() {
 	<div>
 		<div>USER</div>
-		{ h.Name }
+		{ h.name }
 		@gong.Form() {
 			<input name="name" type="text"/>
 			<button type="submit">Submit</button>

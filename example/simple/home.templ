@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/troygilman0/gong"
+	"log"
 )
 
 type homeHandler struct {
@@ -15,8 +16,9 @@ func (h homeHandler) Loader(ctx context.Context) gong.Handler {
 	return h
 }
 
-func (h homeHandler) Action(ctx context.Context) gong.Handler {
-	return h
+func (h homeHandler) Action(ctx context.Context) error {
+	log.Println("homeHandler Action")
+	return nil
 }
 
 templ (h homeHandler) Component() {

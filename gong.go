@@ -44,13 +44,13 @@ func (g *Gong) route(path string, route Route) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			request: r,
-			action:  r.Header.Get("HX-Request") == "true",
 		}
 		ctx := context.WithValue(r.Context(), contextKey, gCtx)
-		if gCtx.action {
-			route = NewRoute(route.Path(), route.Handler().Action(ctx))
-		}
-		if err := Component(route).Render(ctx, w); err != nil {
+		component := Component(
+			route,
+			withAction(r.Header.Get("HX-Request") == "true"),
+		)
+		if err := component.Render(ctx, w); err != nil {
 			panic(err)
 		}
 	})
@@ -76,8 +76,8 @@ func (g *Gong) handler(path string, handler Handler) {
 
 type gongContext struct {
 	request *http.Request
-	action  bool
 	path    string
+	action  bool
 }
 
 func getContext(ctx context.Context) gongContext {
@@ -104,8 +104,11 @@ type Mux interface {
 
 type Handler interface {
 	Loader(ctx context.Context) Handler
-	Action(ctx context.Context) Handler
 	Component() templ.Component
+}
+
+type ActionHandler interface {
+	Action(ctx context.Context) error
 }
 
 type Route interface {
@@ -133,25 +136,51 @@ func (r route) Handler() Handler {
 	return r.handler
 }
 
-type component struct {
-	route Route
+type ComponentOption func(c component) component
+
+func withAction(action bool) ComponentOption {
+	return func(c component) component {
+		c.action = action
+		return c
+	}
 }
 
-func Component(route Route) templ.Component {
-	return component{
+type component struct {
+	route  Route
+	action bool
+}
+
+func Component(route Route, opts ...ComponentOption) templ.Component {
+	c := component{
 		route: route,
 	}
+	for _, opt := range opts {
+		c = opt(c)
+	}
+	return c
 }
 
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
-	if gCtx.action {
+	gCtx.action = c.action
+
+	if c.action {
 		gCtx.path = gCtx.request.RequestURI
-		gCtx.action = false
 	} else {
 		gCtx.path += c.route.Path()
 	}
+
 	ctx = context.WithValue(ctx, contextKey, gCtx)
+
 	handler := c.route.Handler().Loader(ctx)
+
+	if c.action {
+		if actionHandler, ok := handler.(ActionHandler); ok {
+			actionHandler.Action(ctx)
+		} else {
+			log.Println("not an ActionHandler")
+		}
+	}
+
 	return componentWrapper(handler.Component()).Render(ctx, w)
 }

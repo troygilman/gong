@@ -6,7 +6,7 @@ import (
 )
 
 type Index struct {
-	Handler Handler
+	Handler
 }
 
 func (index Index) Loader(ctx context.Context) Handler {
@@ -14,9 +14,11 @@ func (index Index) Loader(ctx context.Context) Handler {
 	return index
 }
 
-func (index Index) Action(ctx context.Context) Handler {
-	index.Handler = index.Handler.Action(ctx)
-	return index
+func (index Index) Action(ctx context.Context) error {
+	if actionHandler, ok := index.Handler.(ActionHandler); ok {
+		return actionHandler.Action(ctx)
+	}
+	return nil
 }
 
 templ (index Index) Component() {

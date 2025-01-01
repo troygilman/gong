@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"context"
 	"github.com/troygilman0/gong"
+	"log"
 )
 
 type homeHandler struct {
@@ -23,8 +24,9 @@ func (h homeHandler) Loader(ctx context.Context) gong.Handler {
 	return h
 }
 
-func (h homeHandler) Action(ctx context.Context) gong.Handler {
-	return h
+func (h homeHandler) Action(ctx context.Context) error {
+	log.Println("homeHandler Action")
+	return nil
 }
 
 func (h homeHandler) Component() templ.Component {
@@ -55,7 +57,7 @@ func (h homeHandler) Component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(h.message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/simple/home.templ`, Line: 25, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/simple/home.templ`, Line: 27, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {

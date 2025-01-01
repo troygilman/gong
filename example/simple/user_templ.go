@@ -11,19 +11,21 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"context"
 	"github.com/troygilman0/gong"
+	"log"
 )
 
 type userHandler struct {
-	Name string `json:"name"`
+	name string
 }
 
 func (h userHandler) Loader(ctx context.Context) gong.Handler {
-	h.Name = gong.Param(ctx, "name")
+	h.name = gong.Param(ctx, "name")
 	return h
 }
 
-func (h userHandler) Action(ctx context.Context) gong.Handler {
-	return h
+func (h userHandler) Action(ctx context.Context) error {
+	log.Println("userHandler Action")
+	return nil
 }
 
 func (h userHandler) Component() templ.Component {
@@ -52,9 +54,9 @@ func (h userHandler) Component() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(h.name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/simple/user.templ`, Line: 24, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/simple/user.templ`, Line: 26, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
