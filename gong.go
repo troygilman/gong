@@ -15,10 +15,6 @@ type contextKeyType int
 
 const contextKey = contextKeyType(0)
 
-const (
-	GongActionHeader = "Gong-Action"
-)
-
 type Gong struct {
 	mux Mux
 }
@@ -33,44 +29,55 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.mux.ServeHTTP(w, r)
 }
 
-func (g *Gong) Handle(path string, handler Handler) {
-	log.Printf("registering handler %T on path %s\n", handler, path)
+func (g *Gong) Route(route Route) {
+	route = NewRoute(route.Path(), Index{
+		Handler: route.Handler(),
+	})
+	g.route("", route)
+}
 
-	v := reflect.ValueOf(handler)
-	t := v.Type()
-	if t.Kind() == reflect.Struct {
-		for i := range t.NumField() {
-			field := t.Field(i)
-			subPath, ok := field.Tag.Lookup("path")
-			if ok {
-				if handler, ok := v.Field(i).Interface().(Handler); ok {
-					g.Handle(path+subPath, handler)
-				}
-			}
-		}
-	}
+func (g *Gong) route(path string, route Route) {
+	path += route.Path()
+	log.Printf("registering handler %T on path %s\n", route.Handler(), path)
+	g.handler(path, route.Handler())
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		action := r.Header.Get(GongActionHeader)
-		ctx := context.WithValue(r.Context(), contextKey, gongContext{
+		gCtx := gongContext{
 			request: r,
-		})
-		if action != "" {
-			handler = handler.Action(ctx)
+			action:  r.Header.Get("HX-Request") == "true",
 		}
-		if err := Component(handler, path).Render(ctx, w); err != nil {
+		ctx := context.WithValue(r.Context(), contextKey, gCtx)
+		if gCtx.action {
+			route = NewRoute(route.Path(), route.Handler().Action(ctx))
+		}
+		if err := Component(route).Render(ctx, w); err != nil {
 			panic(err)
 		}
 	})
 	g.mux.Handle(path, h)
 }
 
+func (g *Gong) handler(path string, handler Handler) {
+	v := reflect.ValueOf(handler)
+	if v.Kind() == reflect.Struct {
+		for i := range v.NumField() {
+			field := v.Field(i)
+			if field.CanInterface() {
+				switch field := field.Interface().(type) {
+				case Route:
+					g.route(path, field)
+				case Handler:
+					g.handler(path, field)
+				}
+			}
+		}
+	}
+}
+
 type gongContext struct {
-	gong            *Gong
-	request         *http.Request
-	path            string
-	action          string
-	lastComponentID string
+	request *http.Request
+	action  bool
+	path    string
 }
 
 func getContext(ctx context.Context) gongContext {
@@ -95,30 +102,56 @@ type Mux interface {
 	Handle(path string, handler http.Handler)
 }
 
-type Producer func(ctx context.Context) Handler
-
 type Handler interface {
 	Loader(ctx context.Context) Handler
 	Action(ctx context.Context) Handler
 	Component() templ.Component
 }
 
-type component struct {
-	handler Handler
-	path    string
+type Route interface {
+	Path() string
+	Handler() Handler
 }
 
-func Component(handler Handler, path string) templ.Component {
-	return component{
-		handler: handler,
+type route struct {
+	path    string
+	handler Handler
+}
+
+func NewRoute(path string, handler Handler) Route {
+	return route{
 		path:    path,
+		handler: handler,
+	}
+}
+
+func (r route) Path() string {
+	return r.path
+}
+
+func (r route) Handler() Handler {
+	return r.handler
+}
+
+type component struct {
+	route Route
+}
+
+func Component(route Route) templ.Component {
+	return component{
+		route: route,
 	}
 }
 
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
-	gCtx.path = gCtx.path + c.path
+	if gCtx.action {
+		gCtx.path = gCtx.request.RequestURI
+		gCtx.action = false
+	} else {
+		gCtx.path += c.route.Path()
+	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
-	handler := c.handler.Loader(ctx)
+	handler := c.route.Handler().Loader(ctx)
 	return componentWrapper(handler.Component()).Render(ctx, w)
 }

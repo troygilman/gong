@@ -6,8 +6,8 @@ import (
 )
 
 type homeHandler struct {
-	UserHandler userHandler `path:"/user"`
-	message     string
+	UserRoute gong.Route
+	message   string
 }
 
 func (h homeHandler) Loader(ctx context.Context) gong.Handler {
@@ -20,15 +20,13 @@ func (h homeHandler) Action(ctx context.Context) gong.Handler {
 }
 
 templ (h homeHandler) Component() {
-	@gong.Index() {
-		<div>
-			<div>HOME</div>
-			{ h.message }
-			@gong.Form() {
-				<input name="message" type="text"/>
-				<button type="submit">Submit</button>
-			}
-			@gong.Component(h.UserHandler, "/user")
-		</div>
-	}
+	<div>
+		<div>HOME</div>
+		{ h.message }
+		@gong.Form() {
+			<input name="message" type="text"/>
+			<button type="submit">Submit</button>
+		}
+		@gong.Component(h.UserRoute)
+	</div>
 }

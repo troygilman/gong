@@ -19,14 +19,12 @@ func (h userHandler) Action(ctx context.Context) gong.Handler {
 }
 
 templ (h userHandler) Component() {
-	@gong.Index() {
-		<div>
-			<div>USER</div>
-			{ h.Name }
-			@gong.Form() {
-				<input name="name" type="text"/>
-				<button type="submit">Submit</button>
-			}
-		</div>
-	}
+	<div>
+		<div>USER</div>
+		{ h.Name }
+		@gong.Form() {
+			<input name="name" type="text"/>
+			<button type="submit">Submit</button>
+		}
+	</div>
 }

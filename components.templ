@@ -2,21 +2,38 @@ package gong
 
 import (
 	"context"
-	"fmt"
 	"strings"
 )
 
-templ Index() {
-	<html>
-		<head>
-			<meta charset="utf-8"/>
-			<title>TEST</title>
-			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-		</head>
-		<body>
-			{ children... }
-		</body>
-	</html>
+type Index struct {
+	Handler Handler
+}
+
+func (index Index) Loader(ctx context.Context) Handler {
+	index.Handler = index.Handler.Loader(ctx)
+	return index
+}
+
+func (index Index) Action(ctx context.Context) Handler {
+	index.Handler = index.Handler.Action(ctx)
+	return index
+}
+
+templ (index Index) Component() {
+	if getContext(ctx).action {
+		@index.Handler.Component()
+	} else {
+		<html>
+			<head>
+				<meta charset="utf-8"/>
+				<title>TEST</title>
+				<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+			</head>
+			<body>
+				@index.Handler.Component()
+			</body>
+		</html>
+	}
 }
 
 templ Form() {
@@ -24,7 +41,6 @@ templ Form() {
 		hx-post={ getContext(ctx).path }
 		hx-target={ "#" + buildComponentID(ctx) }
 		hx-swap="outerHTML"
-		hx-headers={ fmt.Sprintf(`{"%s": "true"}`, GongActionHeader) }
 	>
 		{ children... }
 	</form>
