@@ -10,15 +10,17 @@ type Index struct {
 }
 
 func (index Index) Loader(ctx context.Context) Handler {
-	index.Handler = index.Handler.Loader(ctx)
+	if handler, ok := index.Handler.(LoaderHandler); ok {
+		index.Handler = handler.Loader(ctx)
+	}
 	return index
 }
 
-func (index Index) Action(ctx context.Context) error {
-	if actionHandler, ok := index.Handler.(ActionHandler); ok {
-		return actionHandler.Action(ctx)
+func (index Index) Action(ctx context.Context) Handler {
+	if handler, ok := index.Handler.(ActionHandler); ok {
+		index.Handler = handler.Action(ctx)
 	}
-	return nil
+	return index
 }
 
 templ (index Index) Component() {

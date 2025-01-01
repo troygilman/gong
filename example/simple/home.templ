@@ -16,13 +16,13 @@ func (h homeHandler) Loader(ctx context.Context) gong.Handler {
 	return h
 }
 
-func (h homeHandler) Action(ctx context.Context) error {
+func (h homeHandler) Action(ctx context.Context) gong.Handler {
 	log.Println("homeHandler Action")
-	return nil
+	return h
 }
 
 templ (h homeHandler) Component() {
-	<div>
+	<div class={ className() }>
 		<div>HOME</div>
 		{ h.message }
 		@gong.Form() {
@@ -31,4 +31,9 @@ templ (h homeHandler) Component() {
 		}
 		@gong.Component(h.UserRoute)
 	</div>
+}
+
+css className() {
+	border: 1px solid black;
+	padding: 4px;
 }

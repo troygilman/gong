@@ -103,12 +103,15 @@ type Mux interface {
 }
 
 type Handler interface {
-	Loader(ctx context.Context) Handler
 	Component() templ.Component
 }
 
+type LoaderHandler interface {
+	Loader(ctx context.Context) Handler
+}
+
 type ActionHandler interface {
-	Action(ctx context.Context) error
+	Action(ctx context.Context) Handler
 }
 
 type Route interface {
@@ -172,15 +175,32 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
-	handler := c.route.Handler().Loader(ctx)
-
-	if c.action {
-		if actionHandler, ok := handler.(ActionHandler); ok {
-			actionHandler.Action(ctx)
-		} else {
-			log.Println("not an ActionHandler")
-		}
-	}
+	handler := c.route.Handler()
+	handler = loaderMiddleware(ctx, handler)
+	handler = actionMiddleware(ctx, handler)
 
 	return componentWrapper(handler.Component()).Render(ctx, w)
+}
+
+func loaderMiddleware(ctx context.Context, handler Handler) Handler {
+	loaderHandler, ok := handler.(LoaderHandler)
+	if !ok {
+		return handler
+	}
+	return loaderHandler.Loader(ctx)
+}
+
+func actionMiddleware(ctx context.Context, handler Handler) Handler {
+	gCtx := getContext(ctx)
+
+	if !gCtx.action {
+		return handler
+	}
+
+	actionHandler, ok := handler.(ActionHandler)
+	if !ok {
+		return handler
+	}
+
+	return actionHandler.Action(ctx)
 }
