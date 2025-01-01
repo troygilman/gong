@@ -30,16 +30,6 @@ templ (index Index) Component() {
 	}
 }
 
-templ Form() {
-	<form
-		hx-post={ getContext(ctx).path }
-		hx-target={ "#" + buildComponentID(ctx) }
-		hx-swap="outerHTML"
-	>
-		{ children... }
-	</form>
-}
-
 templ List() {
 	<list>
 		{ children... }

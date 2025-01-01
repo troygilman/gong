@@ -9,7 +9,9 @@ import (
 func main() {
 	g := gong.New(http.NewServeMux())
 
-	g.Route(gong.NewRoute("/", listHandler{}))
+	g.Route(gong.NewRoute("/", listHandler{
+		db: newUserDatabase(),
+	}))
 
 	if err := http.ListenAndServe(":8080", g); err != nil {
 		panic(err)
