@@ -49,10 +49,10 @@ func (g *Gong) route(path string, route Route) {
 		}
 		ctx := context.WithValue(r.Context(), contextKey, gCtx)
 
-		component := Component(
-			route,
-			withAction(r.Header.Get(HXRequestHeader) == "true"),
-		)
+		component := component{
+			route:  route,
+			action: r.Header.Get(HXRequestHeader) == "true",
+		}
 
 		if err := component.Render(ctx, w); err != nil {
 			panic(err)
@@ -143,36 +143,16 @@ func (r route) Handler() Handler {
 	return r.handler
 }
 
-type ComponentOption func(c component) component
-
-func withAction(action bool) ComponentOption {
-	return func(c component) component {
-		c.action = action
-		return c
-	}
-}
-
-func WithMessages(msgs ...any) ComponentOption {
-	return func(c component) component {
-		c.messages = append(c.messages, msgs...)
-		return c
-	}
-}
-
 type component struct {
 	route    Route
 	action   bool
 	messages []any
 }
 
-func Component(route Route, opts ...ComponentOption) templ.Component {
-	c := component{
+func Component(route Route) templ.Component {
+	return component{
 		route: route,
 	}
-	for _, opt := range opts {
-		c = opt(c)
-	}
-	return c
 }
 
 func (c component) Render(ctx context.Context, w io.Writer) error {

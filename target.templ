@@ -1,0 +1,27 @@
+package gong
+
+templ Target(opts ...ComponentOption) {
+	{{
+	config := componentConfig{
+		trigger: "load",
+	}
+	for _, opt := range opts {
+		config = opt(config)
+	}
+	}}
+	<div
+		id={ buildComponentID(ctx) }
+		hx-get={ getContext(ctx).path }
+		hx-swap="outerHTML"
+		hx-trigger={ config.trigger }
+		hx-target="this"
+	>
+		{ children... }
+	</div>
+}
+
+templ target(child templ.Component) {
+	@Target(WithTrigger("")) {
+		@child
+	}
+}

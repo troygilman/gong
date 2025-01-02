@@ -1,21 +1,8 @@
 package gong
 
-type formConfig struct {
-	swap string
-}
-
-type FormOption func(formConfig) formConfig
-
-func WithSwap(swap string) FormOption {
-	return func(fc formConfig) formConfig {
-		fc.swap = swap
-		return fc
-	}
-}
-
-templ Form(opts ...FormOption) {
+templ Form(opts ...ComponentOption) {
 	{{
-	config := formConfig{
+	config := componentConfig{
 		swap: "outerHTML",
 	}
 	for _, opt := range opts {

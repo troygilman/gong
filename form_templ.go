@@ -8,20 +8,7 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-type formConfig struct {
-	swap string
-}
-
-type FormOption func(formConfig) formConfig
-
-func WithSwap(swap string) FormOption {
-	return func(fc formConfig) formConfig {
-		fc.swap = swap
-		return fc
-	}
-}
-
-func Form(opts ...FormOption) templ.Component {
+func Form(opts ...ComponentOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -43,7 +30,7 @@ func Form(opts ...FormOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := formConfig{
+		config := componentConfig{
 			swap: "outerHTML",
 		}
 		for _, opt := range opts {
@@ -56,7 +43,7 @@ func Form(opts ...FormOption) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(getContext(ctx).path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 26, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 13, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -69,7 +56,7 @@ func Form(opts ...FormOption) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 27, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 14, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -82,7 +69,7 @@ func Form(opts ...FormOption) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(config.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 28, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 15, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
