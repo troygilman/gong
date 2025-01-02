@@ -1,19 +1,67 @@
 package gong
 
-templ Form(opts ...ComponentOption) {
+import (
+	"context"
+	"net/http"
+)
+
+templ Form(opts ...FormOption) {
 	{{
-	config := componentConfig{
-		swap: "outerHTML",
+	config := formConfig{
+		method: http.MethodPost,
+		swap:   "outerHTML",
 	}
 	for _, opt := range opts {
 		config = opt(config)
 	}
 	}}
 	<form
-		hx-post={ getContext(ctx).path }
-		hx-target={ "#" + buildComponentID(ctx) }
+		if config.method == http.MethodPost {
+			hx-post={ getContext(ctx).path }
+		}
+		if config.method == http.MethodDelete {
+			hx-delete={ getContext(ctx).path }
+		}
+		hx-target={ formTarget(ctx, config) }
 		hx-swap={ config.swap }
 	>
 		{ children... }
 	</form>
+}
+
+func formTarget(ctx context.Context, config formConfig) string {
+	target := "#" + buildComponentID(ctx)
+	if config.id != "" {
+		target += "_" + config.id
+	}
+	return target
+}
+
+type formConfig struct {
+	id     string
+	method string
+	swap   string
+}
+
+type FormOption func(c formConfig) formConfig
+
+func WithFormMethod(method string) FormOption {
+	return func(c formConfig) formConfig {
+		c.method = method
+		return c
+	}
+}
+
+func WithFormSwap(swap string) FormOption {
+	return func(c formConfig) formConfig {
+		c.swap = swap
+		return c
+	}
+}
+
+func WithFormID(id string) FormOption {
+	return func(c formConfig) formConfig {
+		c.id = id
+		return c
+	}
 }

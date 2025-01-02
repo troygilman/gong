@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"reflect"
 
 	"github.com/a-h/templ"
 )
@@ -33,19 +32,22 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.mux.ServeHTTP(w, r)
 }
 
-func (g *Gong) Route(route Route) {
-	g.route("", NewRoute(route.Path(), Index{
-		Handler: route.Handler(),
-	}))
+func (g *Gong) Route(path string, handler Handler, f func(Route)) {
+	route := Route{
+		gong: g,
+		path: path,
+		handler: Index{
+			Handler: handler,
+		},
+	}
+	g.handleRoute(route)
+	f(route)
 }
 
-func (g *Gong) route(path string, route Route) {
-	path += route.Path()
-
-	g.handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (g *Gong) handleRoute(route Route) {
+	g.handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			request: r,
-			action:  r.Header.Get(HXRequestHeader) == "true",
 		}
 		ctx := context.WithValue(r.Context(), contextKey, gCtx)
 
@@ -59,7 +61,6 @@ func (g *Gong) route(path string, route Route) {
 		}
 	}))
 
-	g.decomposeHandler(path, route.Handler())
 }
 
 func (g *Gong) handle(path string, handler http.Handler) {
@@ -67,22 +68,22 @@ func (g *Gong) handle(path string, handler http.Handler) {
 	g.mux.Handle(path, handler)
 }
 
-func (g *Gong) decomposeHandler(path string, handler Handler) {
-	v := reflect.ValueOf(handler)
-	if v.Kind() == reflect.Struct {
-		for i := range v.NumField() {
-			field := v.Field(i)
-			if field.CanInterface() {
-				switch field := field.Interface().(type) {
-				case Route:
-					g.route(path, field)
-				case Handler:
-					g.decomposeHandler(path, field)
-				}
-			}
-		}
-	}
-}
+// func (g *Gong) decomposeHandler(path string, handler Handler) {
+// 	v := reflect.ValueOf(handler)
+// 	if v.Kind() == reflect.Struct {
+// 		for i := range v.NumField() {
+// 			field := v.Field(i)
+// 			if field.CanInterface() {
+// 				switch field := field.Interface().(type) {
+// 				case Route:
+// 					g.route(path, field)
+// 				case Handler:
+// 					g.decomposeHandler(path, field)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 type gongContext struct {
 	request *http.Request
@@ -118,28 +119,24 @@ type Handler interface {
 	Component() templ.Component
 }
 
-type Route interface {
-	Path() string
-	Handler() Handler
-}
-
-type route struct {
+type Route struct {
+	gong    *Gong
 	path    string
 	handler Handler
 }
 
-func NewRoute(path string, handler Handler) Route {
-	return route{
-		path:    path,
-		handler: handler,
-	}
+func (r Route) Route(path string, handler Handler, f func(r Route)) {
+	r.path += path
+	r.handler = handler
+	r.gong.handleRoute(r)
+	f(r)
 }
 
-func (r route) Path() string {
+func (r Route) Path() string {
 	return r.path
 }
 
-func (r route) Handler() Handler {
+func (r Route) Handler() Handler {
 	return r.handler
 }
 

@@ -1,8 +1,8 @@
 package gong
 
-templ Target(opts ...ComponentOption) {
+templ Target(opts ...TargetOption) {
 	{{
-	config := componentConfig{
+	config := targetConfig{
 		trigger: "load",
 	}
 	for _, opt := range opts {
@@ -21,7 +21,28 @@ templ Target(opts ...ComponentOption) {
 }
 
 templ target(child templ.Component) {
-	@Target(WithTrigger("none")) {
+	@Target(WithTargetTrigger("none")) {
 		@child
+	}
+}
+
+type targetConfig struct {
+	id      string
+	trigger string
+}
+
+type TargetOption func(c targetConfig) targetConfig
+
+func WithTargetTrigger(trigger string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func WithTargetID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
+		return c
 	}
 }

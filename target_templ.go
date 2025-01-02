@@ -8,7 +8,7 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Target(opts ...ComponentOption) templ.Component {
+func Target(opts ...TargetOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -30,7 +30,7 @@ func Target(opts ...ComponentOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := componentConfig{
+		config := targetConfig{
 			trigger: "load",
 		}
 		for _, opt := range opts {
@@ -130,12 +130,33 @@ func target(child templ.Component) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = Target(WithTrigger("none")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Target(WithTargetTrigger("none")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+type targetConfig struct {
+	id      string
+	trigger string
+}
+
+type TargetOption func(c targetConfig) targetConfig
+
+func WithTargetTrigger(trigger string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func WithTargetID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
+		return c
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

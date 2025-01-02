@@ -17,25 +17,45 @@ templ (handler listHandler) Action() {
 			users := handler.db.ReadAll()
 			}}
 			for _, user := range users {
-				<div>{ user.name }</div>
+				@item(user)
 			}
 		case http.MethodPost:
 			{{
 			name := gong.Param(ctx, "name")
-			if err := handler.db.Create(userData{name: name}); err != nil {
+			user := userData{
+				name: name,
+			}
+			if err := handler.db.Create(user); err != nil {
 				return nil
 			}
 			}}
-			<div>{ name }</div>
+			@item(user)
+		case http.MethodDelete:
+			{{
+			name := gong.Param(ctx, "name")
+			handler.db.Delete(name)
+			}}
 	}
 }
 
 templ (handler listHandler) Component() {
 	<div>
 		@gong.Target()
-		@gong.Form(gong.WithSwap("beforeend")) {
+		@gong.Form(gong.WithFormSwap("beforeend")) {
 			<input name="name" type="text"/>
 			<button type="submit">Submit</button>
 		}
 	</div>
+}
+
+templ item(user userData) {
+	@gong.Target(gong.WithTargetID(user.name)) {
+		{ user.name }
+		@gong.Form(
+			gong.WithFormMethod(http.MethodDelete),
+			gong.WithFormID(user.name),
+		) {
+			<button type="submit">Delete</button>
+		}
+	}
 }
