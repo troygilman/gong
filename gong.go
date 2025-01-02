@@ -144,9 +144,8 @@ func (r route) Handler() Handler {
 }
 
 type component struct {
-	route    Route
-	action   bool
-	messages []any
+	route  Route
+	action bool
 }
 
 func Component(route Route) templ.Component {
@@ -176,8 +175,4 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 	}
 
 	return c.route.Handler().Component().Render(ctx, w)
-}
-
-func Method(ctx context.Context) string {
-	return getContext(ctx).request.Method
 }

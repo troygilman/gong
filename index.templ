@@ -1,10 +1,5 @@
 package gong
 
-import (
-	"context"
-	"strings"
-)
-
 type Index struct {
 	Handler
 }
@@ -28,14 +23,4 @@ templ (index Index) Component() {
 			</body>
 		</html>
 	}
-}
-
-templ List() {
-	<list>
-		{ children... }
-	</list>
-}
-
-func buildComponentID(ctx context.Context) string {
-	return "gong" + strings.ReplaceAll(getContext(ctx).path, "/", "-")
 }
