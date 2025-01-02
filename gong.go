@@ -37,7 +37,7 @@ func (g *Gong) Route(path string, handler Handler, f func(Route)) {
 		gong: g,
 		path: path,
 		handler: Index{
-			Handler: handler,
+			handler: handler,
 		},
 	}
 	g.handleRoute(route)
@@ -47,11 +47,17 @@ func (g *Gong) Route(path string, handler Handler, f func(Route)) {
 func (g *Gong) handleRoute(route Route) {
 	g.handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
+			route:   route,
 			request: r,
 		}
+
+		if loader, ok := route.Handler().(Loader); ok {
+			gCtx.loader = loader
+		}
+
 		ctx := context.WithValue(r.Context(), contextKey, gCtx)
 
-		component := component{
+		component := routeComponent{
 			route:  route,
 			action: r.Header.Get(HXRequestHeader) == "true",
 		}
@@ -68,28 +74,12 @@ func (g *Gong) handle(path string, handler http.Handler) {
 	g.mux.Handle(path, handler)
 }
 
-// func (g *Gong) decomposeHandler(path string, handler Handler) {
-// 	v := reflect.ValueOf(handler)
-// 	if v.Kind() == reflect.Struct {
-// 		for i := range v.NumField() {
-// 			field := v.Field(i)
-// 			if field.CanInterface() {
-// 				switch field := field.Interface().(type) {
-// 				case Route:
-// 					g.route(path, field)
-// 				case Handler:
-// 					g.decomposeHandler(path, field)
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
 type gongContext struct {
+	route   Route
 	request *http.Request
-	handler Handler
 	path    string
 	action  bool
+	loader  Loader
 }
 
 func getContext(ctx context.Context) gongContext {
@@ -115,21 +105,32 @@ type Mux interface {
 }
 
 type Handler interface {
-	Action() templ.Component
 	Component() templ.Component
 }
 
+type Loader interface {
+	Loader(ctx context.Context) any
+}
+
+type Action interface {
+	Action() templ.Component
+}
+
 type Route struct {
-	gong    *Gong
-	path    string
-	handler Handler
+	gong              *Gong
+	path              string
+	handler           Handler
+	componentHandlers map[string]Handler
 }
 
 func (r Route) Route(path string, handler Handler, f func(r Route)) {
 	r.path += path
 	r.handler = handler
 	r.gong.handleRoute(r)
-	f(r)
+	f(Route{
+		gong: r.gong,
+		path: r.path,
+	})
 }
 
 func (r Route) Path() string {
@@ -140,36 +141,97 @@ func (r Route) Handler() Handler {
 	return r.handler
 }
 
-type component struct {
-	route  Route
-	action bool
+type LoaderFunc func(ctx context.Context) any
+
+func (f LoaderFunc) Loader(ctx context.Context) any {
+	return f(ctx)
 }
 
-func Component(route Route) templ.Component {
-	return component{
-		route: route,
+type ComponentOption func(component) component
+
+func WithComponentLoader(loader Loader) ComponentOption {
+	return func(c component) component {
+		c.loader = loader
+		return c
 	}
+}
+
+func WithComponentData(data any) ComponentOption {
+	return func(c component) component {
+		c.loader = LoaderFunc(func(ctx context.Context) any {
+			return data
+		})
+		return c
+	}
+}
+
+type component struct {
+	kind    string
+	handler Handler
+	loader  Loader
+	action  bool
+}
+
+func Component(kind string, handler Handler, opts ...ComponentOption) templ.Component {
+	c := component{
+		kind:    kind,
+		handler: handler,
+	}
+	if loader, ok := handler.(Loader); ok {
+		c.loader = loader
+	}
+	for _, opt := range opts {
+		c = opt(c)
+	}
+	return c
 }
 
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
-	gCtx.handler = c.route.Handler()
+	gCtx.path += "_" + c.kind
+	gCtx.loader = c.loader
 
-	if c.action {
+	ctx = context.WithValue(ctx, contextKey, gCtx)
+
+	return render(ctx, w, c.handler)
+}
+
+type routeComponent struct {
+	route  Route
+	action bool
+}
+
+func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
+	gCtx := getContext(ctx)
+	gCtx.action = rc.action
+
+	if rc.action {
 		gCtx.path = gCtx.request.RequestURI
 	} else {
-		gCtx.path += c.route.Path()
+		gCtx.path += rc.route.Path()
 	}
 
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
+	return render(ctx, w, rc.route.Handler())
+}
+
+func render(
+	ctx context.Context,
+	w io.Writer,
+	handler Handler,
+) error {
+	gCtx := getContext(ctx)
+
 	if gCtx.action {
-		if err := target(c.route.Handler().Action()).Render(ctx, w); err != nil {
-			return err
+		if action, ok := handler.(Action); ok {
+			if err := target(action.Action()).Render(ctx, w); err != nil {
+				return err
+			}
+			return nil
 		}
-		return nil
 	}
 
-	return c.route.Handler().Component().Render(ctx, w)
+	return handler.Component().Render(ctx, w)
 }

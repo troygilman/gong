@@ -1,16 +1,27 @@
 package gong
 
+import "context"
+
 type Index struct {
-	Handler
+	handler Handler
+}
+
+func (index Index) Loader(ctx context.Context) (data any) {
+	if loader, ok := index.handler.(Loader); ok {
+		data = loader.Loader(ctx)
+	}
+	return data
 }
 
 templ (index Index) Action() {
-	@index.Handler.Action()
+	if action, ok := index.handler.(Action); ok {
+		@action.Action()
+	}
 }
 
 templ (index Index) Component() {
 	if getContext(ctx).action {
-		@index.Handler.Component()
+		@index.handler.Component()
 	} else {
 		<html>
 			<head>
@@ -19,7 +30,7 @@ templ (index Index) Component() {
 				<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 			</head>
 			<body>
-				@index.Handler.Component()
+				@index.handler.Component()
 			</body>
 		</html>
 	}

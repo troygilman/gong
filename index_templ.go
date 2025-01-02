@@ -8,8 +8,17 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "context"
+
 type Index struct {
-	Handler
+	handler Handler
+}
+
+func (index Index) Loader(ctx context.Context) (data any) {
+	if loader, ok := index.handler.(Loader); ok {
+		data = loader.Loader(ctx)
+	}
+	return data
 }
 
 func (index Index) Action() templ.Component {
@@ -33,9 +42,11 @@ func (index Index) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = index.Handler.Action().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if action, ok := index.handler.(Action); ok {
+			templ_7745c5c3_Err = action.Action().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		return templ_7745c5c3_Err
 	})
@@ -63,7 +74,7 @@ func (index Index) Component() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if getContext(ctx).action {
-			templ_7745c5c3_Err = index.Handler.Component().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = index.handler.Component().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -72,7 +83,7 @@ func (index Index) Component() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = index.Handler.Component().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = index.handler.Component().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -6,8 +6,7 @@ import (
 )
 
 type listHandler struct {
-	ItemRoute gong.Route
-	db        *userDatabase
+	db *userDatabase
 }
 
 templ (handler listHandler) Action() {
@@ -17,7 +16,10 @@ templ (handler listHandler) Action() {
 			users := handler.db.ReadAll()
 			}}
 			for _, user := range users {
-				@item(user)
+				@gong.Component("user", itemHandler{
+					db: handler.db,
+				}, gong.WithComponentData(user))
+				)
 			}
 		case http.MethodPost:
 			{{
@@ -29,12 +31,9 @@ templ (handler listHandler) Action() {
 				return nil
 			}
 			}}
-			@item(user)
-		case http.MethodDelete:
-			{{
-			name := gong.Param(ctx, "name")
-			handler.db.Delete(name)
-			}}
+			@gong.Component("user", itemHandler{
+				db: handler.db,
+			}, gong.WithComponentData(user))
 	}
 }
 
@@ -46,16 +45,4 @@ templ (handler listHandler) Component() {
 			<button type="submit">Submit</button>
 		}
 	</div>
-}
-
-templ item(user userData) {
-	@gong.Target(gong.WithTargetID(user.name)) {
-		{ user.name }
-		@gong.Form(
-			gong.WithFormMethod(http.MethodDelete),
-			gong.WithFormID(user.name),
-		) {
-			<button type="submit">Delete</button>
-		}
-	}
 }

@@ -1,13 +1,39 @@
 package main
 
+import (
+	"github.com/troygilman0/gong"
+	"net/http"
+)
+
 type itemHandler struct {
+	db *userDatabase
 }
 
 templ (handler itemHandler) Action() {
+	switch gong.Method(ctx) {
+		case http.MethodDelete:
+			{{
+			name := gong.Param(ctx, "name")
+			handler.db.Delete(name)
+			}}
+	}
 }
 
 templ (handler itemHandler) Component() {
-	<div>
-		ITEM
-	</div>
+	{{
+	user := gong.UseLoaderData[userData](ctx)
+	}}
+	@item(user)
+}
+
+templ item(user userData) {
+	@gong.Target(gong.WithTargetID(user.name), gong.WithTargetTrigger("none")) {
+		{ user.name }
+		@gong.Form(
+			gong.WithFormMethod(http.MethodDelete),
+			gong.WithFormID(user.name),
+		) {
+			<button type="submit">Delete</button>
+		}
+	}
 }
