@@ -6,16 +6,16 @@ import (
 	"strings"
 )
 
-func buildComponentID(ctx context.Context) string {
+func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	id := "gong" + strings.ReplaceAll(gCtx.path, "/", "-")
+	prefix := "gong" + strings.ReplaceAll(gCtx.path, "/", "-")
 	if gCtx.kind != "" {
-		id += "_" + gCtx.kind
+		prefix += "_" + gCtx.kind
 	}
-	if gCtx.id != "" {
-		id += "_" + gCtx.id
+	if id != "" {
+		prefix += "_" + id
 	}
-	return id
+	return prefix
 }
 
 func buildHeaders(ctx context.Context) string {

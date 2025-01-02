@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/troygilman0/gong"
-	"log"
 	"net/http"
 )
 
@@ -15,7 +14,6 @@ templ (handler itemHandler) Action() {
 		case http.MethodDelete:
 			{{
 			name := gong.Param(ctx, "name")
-			log.Println(name)
 			handler.db.Delete(name)
 			}}
 	}
@@ -25,11 +23,15 @@ templ (handler itemHandler) Component() {
 	{{
 	user := gong.UseLoaderData[userData](ctx)
 	}}
-	@gong.Target(gong.WithTargetTrigger("none")) {
+	@gong.Target(
+		gong.WithTargetID(user.name),
+	) {
 		{ user.name }
 		@gong.Form(
+			gong.WithFormID(user.name),
 			gong.WithFormMethod(http.MethodDelete),
 		) {
+			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
 	}

@@ -35,7 +35,7 @@ templ (handler listHandler) Action() {
 
 templ (handler listHandler) Component() {
 	<div>
-		@gong.Target()
+		@gong.Target(gong.WithTargetTrigger("load"))
 		@gong.Form(gong.WithFormSwap("beforeend")) {
 			<input name="name" type="text"/>
 			<button type="submit">Submit</button>

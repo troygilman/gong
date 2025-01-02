@@ -105,7 +105,6 @@ type gongContext struct {
 	action  bool
 	loader  Loader
 	kind    string
-	id      string
 }
 
 func getContext(ctx context.Context) gongContext {
@@ -191,15 +190,7 @@ func WithComponentData(data any) ComponentOption {
 	}
 }
 
-func WithComponentID(id string) ComponentOption {
-	return func(c component) component {
-		c.id = id
-		return c
-	}
-}
-
 type component struct {
-	id      string
 	kind    string
 	handler Handler
 	loader  Loader
@@ -225,7 +216,6 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx.action = c.action
 	gCtx.loader = c.loader
 	gCtx.kind = c.kind
-	gCtx.id = c.id
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
 	return c.handler.Component().Render(ctx, w)
@@ -239,6 +229,7 @@ type routeComponent struct {
 func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = rc.action
+	gCtx.path = rc.route.Path()
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
 	if gCtx.action {

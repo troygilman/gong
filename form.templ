@@ -19,7 +19,7 @@ templ Form(opts ...FormOption) {
 		if config.method == http.MethodDelete {
 			hx-delete={ getContext(ctx).path }
 		}
-		hx-target={ "#" + buildComponentID(ctx) }
+		hx-target={ "#" + buildComponentID(ctx, config.id) }
 		hx-swap={ config.swap }
 		hx-headers={ buildHeaders(ctx) }
 	>
@@ -28,6 +28,7 @@ templ Form(opts ...FormOption) {
 }
 
 type formConfig struct {
+	id     string
 	method string
 	swap   string
 }
@@ -44,6 +45,13 @@ func WithFormMethod(method string) FormOption {
 func WithFormSwap(swap string) FormOption {
 	return func(c formConfig) formConfig {
 		c.swap = swap
+		return c
+	}
+}
+
+func WithFormID(id string) FormOption {
+	return func(c formConfig) formConfig {
+		c.id = id
 		return c
 	}
 }

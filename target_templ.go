@@ -31,7 +31,7 @@ func Target(opts ...TargetOption) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 
 		config := targetConfig{
-			trigger: "load",
+			trigger: "none",
 		}
 		for _, opt := range opts {
 			config = opt(config)
@@ -41,9 +41,9 @@ func Target(opts ...TargetOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(buildComponentID(ctx))
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(buildComponentID(ctx, config.id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 13, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 13, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -143,7 +143,7 @@ func target(child templ.Component) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = Target(WithTargetTrigger("none")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Target().Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -152,6 +152,7 @@ func target(child templ.Component) templ.Component {
 }
 
 type targetConfig struct {
+	id      string
 	trigger string
 }
 
@@ -160,6 +161,13 @@ type TargetOption func(c targetConfig) targetConfig
 func WithTargetTrigger(trigger string) TargetOption {
 	return func(c targetConfig) targetConfig {
 		c.trigger = trigger
+		return c
+	}
+}
+
+func WithTargetID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
 		return c
 	}
 }

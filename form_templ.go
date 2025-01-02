@@ -86,9 +86,9 @@ func Form(opts ...FormOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx, config.id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 22, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 22, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -137,6 +137,7 @@ func Form(opts ...FormOption) templ.Component {
 }
 
 type formConfig struct {
+	id     string
 	method string
 	swap   string
 }
@@ -153,6 +154,13 @@ func WithFormMethod(method string) FormOption {
 func WithFormSwap(swap string) FormOption {
 	return func(c formConfig) formConfig {
 		c.swap = swap
+		return c
+	}
+}
+
+func WithFormID(id string) FormOption {
+	return func(c formConfig) formConfig {
+		c.id = id
 		return c
 	}
 }

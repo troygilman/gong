@@ -3,14 +3,14 @@ package gong
 templ Target(opts ...TargetOption) {
 	{{
 	config := targetConfig{
-		trigger: "load",
+		trigger: "none",
 	}
 	for _, opt := range opts {
 		config = opt(config)
 	}
 	}}
 	<div
-		id={ buildComponentID(ctx) }
+		id={ buildComponentID(ctx, config.id) }
 		hx-get={ getContext(ctx).path }
 		hx-swap="innerHTML"
 		hx-trigger={ config.trigger }
@@ -22,12 +22,13 @@ templ Target(opts ...TargetOption) {
 }
 
 templ target(child templ.Component) {
-	@Target(WithTargetTrigger("none")) {
+	@Target() {
 		@child
 	}
 }
 
 type targetConfig struct {
+	id      string
 	trigger string
 }
 
@@ -36,6 +37,13 @@ type TargetOption func(c targetConfig) targetConfig
 func WithTargetTrigger(trigger string) TargetOption {
 	return func(c targetConfig) targetConfig {
 		c.trigger = trigger
+		return c
+	}
+}
+
+func WithTargetID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
 		return c
 	}
 }
