@@ -19,7 +19,6 @@ templ (handler listHandler) Action() {
 				@gong.Component("user", itemHandler{
 					db: handler.db,
 				}, gong.WithComponentData(user))
-				)
 			}
 		case http.MethodPost:
 			{{

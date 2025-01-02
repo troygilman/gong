@@ -226,7 +226,7 @@ func render(
 
 	if gCtx.action {
 		if action, ok := handler.(Action); ok {
-			if err := target(action.Action()).Render(ctx, w); err != nil {
+			if err := action.Action().Render(ctx, w); err != nil {
 				return err
 			}
 			return nil

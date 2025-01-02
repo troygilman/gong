@@ -12,7 +12,7 @@ templ Target(opts ...TargetOption) {
 	<div
 		id={ buildComponentID(ctx) }
 		hx-get={ getContext(ctx).path }
-		hx-swap="outerHTML"
+		hx-swap="innerHTML"
 		hx-trigger={ config.trigger }
 		hx-target="this"
 	>
