@@ -80,6 +80,8 @@ type gongContext struct {
 	path    string
 	action  bool
 	loader  Loader
+	kind    string
+	id      string
 }
 
 func getContext(ctx context.Context) gongContext {
@@ -165,7 +167,15 @@ func WithComponentData(data any) ComponentOption {
 	}
 }
 
+func WithComponentID(id string) ComponentOption {
+	return func(c component) component {
+		c.id = id
+		return c
+	}
+}
+
 type component struct {
+	id      string
 	kind    string
 	handler Handler
 	loader  Loader
@@ -189,8 +199,9 @@ func Component(kind string, handler Handler, opts ...ComponentOption) templ.Comp
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
-	gCtx.path += "_" + c.kind
 	gCtx.loader = c.loader
+	gCtx.kind = c.kind
+	gCtx.id = c.id
 
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 

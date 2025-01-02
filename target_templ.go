@@ -139,7 +139,6 @@ func target(child templ.Component) templ.Component {
 }
 
 type targetConfig struct {
-	id      string
 	trigger string
 }
 
@@ -148,13 +147,6 @@ type TargetOption func(c targetConfig) targetConfig
 func WithTargetTrigger(trigger string) TargetOption {
 	return func(c targetConfig) targetConfig {
 		c.trigger = trigger
-		return c
-	}
-}
-
-func WithTargetID(id string) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.id = id
 		return c
 	}
 }

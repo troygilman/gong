@@ -14,7 +14,8 @@ import (
 )
 
 type listHandler struct {
-	db *userDatabase
+	itemHandler itemHandler
+	db          *userDatabase
 }
 
 func (handler listHandler) Action() templ.Component {
@@ -42,9 +43,7 @@ func (handler listHandler) Action() templ.Component {
 		case http.MethodGet:
 			users := handler.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.Component("user", itemHandler{
-					db: handler.db,
-				}, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gong.Component("user", handler.itemHandler, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -57,9 +56,7 @@ func (handler listHandler) Action() templ.Component {
 			if err := handler.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.Component("user", itemHandler{
-				db: handler.db,
-			}, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.Component("user", handler.itemHandler, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

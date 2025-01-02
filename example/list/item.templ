@@ -27,11 +27,10 @@ templ (handler itemHandler) Component() {
 }
 
 templ item(user userData) {
-	@gong.Target(gong.WithTargetID(user.name), gong.WithTargetTrigger("none")) {
+	@gong.Target(gong.WithTargetTrigger("none")) {
 		{ user.name }
 		@gong.Form(
 			gong.WithFormMethod(http.MethodDelete),
-			gong.WithFormID(user.name),
 		) {
 			<button type="submit">Delete</button>
 		}

@@ -1,9 +1,6 @@
 package gong
 
-import (
-	"context"
-	"net/http"
-)
+import "net/http"
 
 templ Form(opts ...FormOption) {
 	{{
@@ -22,23 +19,14 @@ templ Form(opts ...FormOption) {
 		if config.method == http.MethodDelete {
 			hx-delete={ getContext(ctx).path }
 		}
-		hx-target={ formTarget(ctx, config) }
+		hx-target={ "#" + buildComponentID(ctx) }
 		hx-swap={ config.swap }
 	>
 		{ children... }
 	</form>
 }
 
-func formTarget(ctx context.Context, config formConfig) string {
-	target := "#" + buildComponentID(ctx)
-	if config.id != "" {
-		target += "_" + config.id
-	}
-	return target
-}
-
 type formConfig struct {
-	id     string
 	method string
 	swap   string
 }
@@ -55,13 +43,6 @@ func WithFormMethod(method string) FormOption {
 func WithFormSwap(swap string) FormOption {
 	return func(c formConfig) formConfig {
 		c.swap = swap
-		return c
-	}
-}
-
-func WithFormID(id string) FormOption {
-	return func(c formConfig) formConfig {
-		c.id = id
 		return c
 	}
 }

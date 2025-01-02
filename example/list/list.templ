@@ -6,7 +6,8 @@ import (
 )
 
 type listHandler struct {
-	db *userDatabase
+	itemHandler itemHandler
+	db          *userDatabase
 }
 
 templ (handler listHandler) Action() {
@@ -16,9 +17,7 @@ templ (handler listHandler) Action() {
 			users := handler.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.Component("user", itemHandler{
-					db: handler.db,
-				}, gong.WithComponentData(user))
+				@gong.Component("user", handler.itemHandler, gong.WithComponentData(user))
 			}
 		case http.MethodPost:
 			{{
@@ -30,9 +29,7 @@ templ (handler listHandler) Action() {
 				return nil
 			}
 			}}
-			@gong.Component("user", itemHandler{
-				db: handler.db,
-			}, gong.WithComponentData(user))
+			@gong.Component("user", handler.itemHandler, gong.WithComponentData(user))
 	}
 }
 
