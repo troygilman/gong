@@ -22,7 +22,9 @@ templ (handler listHandler) Action() {
 		case http.MethodPost:
 			{{
 			name := gong.Param(ctx, "name")
-			handler.db.Create(userData{name: name})
+			if err := handler.db.Create(userData{name: name}); err != nil {
+				return nil
+			}
 			}}
 			<div>{ name }</div>
 	}
@@ -30,9 +32,7 @@ templ (handler listHandler) Action() {
 
 templ (handler listHandler) Component() {
 	<div>
-		@gong.Target() {
-			Placeholder
-		}
+		@gong.Target()
 		@gong.Form(gong.WithSwap("beforeend")) {
 			<input name="name" type="text"/>
 			<button type="submit">Submit</button>

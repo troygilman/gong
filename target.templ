@@ -21,7 +21,7 @@ templ Target(opts ...ComponentOption) {
 }
 
 templ target(child templ.Component) {
-	@Target(WithTrigger("")) {
+	@Target(WithTrigger("none")) {
 		@child
 	}
 }

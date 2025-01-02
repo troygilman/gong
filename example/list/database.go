@@ -1,5 +1,7 @@
 package main
 
+import "errors"
+
 type userData struct {
 	name string
 }
@@ -14,8 +16,12 @@ func newUserDatabase() *userDatabase {
 	}
 }
 
-func (db *userDatabase) Create(data userData) {
+func (db *userDatabase) Create(data userData) error {
+	if _, ok := db.users[data.name]; ok {
+		return errors.New("user already exists")
+	}
 	db.users[data.name] = data
+	return nil
 }
 
 func (db *userDatabase) Read(name string) (userData, bool) {
