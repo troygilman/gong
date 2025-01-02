@@ -21,6 +21,7 @@ templ Form(opts ...FormOption) {
 		}
 		hx-target={ "#" + buildComponentID(ctx) }
 		hx-swap={ config.swap }
+		hx-headers={ buildHeaders(ctx) }
 	>
 		{ children... }
 	</form>

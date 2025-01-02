@@ -2,6 +2,7 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -15,6 +16,11 @@ func buildComponentID(ctx context.Context) string {
 		id += "_" + gCtx.id
 	}
 	return id
+}
+
+func buildHeaders(ctx context.Context) string {
+	gCtx := getContext(ctx)
+	return fmt.Sprintf(`{"%s": "true", "%s": "%s"}`, GongActionHeader, GongKindHeader, gCtx.kind)
 }
 
 func Method(ctx context.Context) string {

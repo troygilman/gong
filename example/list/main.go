@@ -13,7 +13,7 @@ func main() {
 
 	g.Route("/", listHandler{
 		db: db,
-		itemHandler: itemHandler{
+		ItemHandler: itemHandler{
 			db: db,
 		},
 	}, func(r gong.Route) {})

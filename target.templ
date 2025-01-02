@@ -15,6 +15,7 @@ templ Target(opts ...TargetOption) {
 		hx-swap="innerHTML"
 		hx-trigger={ config.trigger }
 		hx-target="this"
+		hx-headers={ buildHeaders(ctx) }
 	>
 		{ children... }
 	</div>

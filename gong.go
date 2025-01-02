@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"reflect"
 
 	"github.com/a-h/templ"
 )
@@ -15,7 +16,8 @@ type contextKeyType int
 const contextKey = contextKeyType(0)
 
 const (
-	HXRequestHeader = "HX-Request"
+	GongActionHeader = "Gong-Action"
+	GongKindHeader   = "Gong-Kind"
 )
 
 type Gong struct {
@@ -39,7 +41,29 @@ func (g *Gong) Route(path string, handler Handler, f func(Route)) {
 		handler: Index{
 			handler: handler,
 		},
+		componentActions: make(map[string]Action),
 	}
+
+	v := reflect.ValueOf(handler)
+	t := v.Type()
+	if t.Kind() == reflect.Struct {
+		for i := range t.NumField() {
+			kind, ok := t.Field(i).Tag.Lookup("kind")
+			if !ok {
+				continue
+			}
+			field := v.Field(i)
+			if !field.CanInterface() {
+				continue
+			}
+			action, ok := field.Interface().(Action)
+			if !ok {
+				continue
+			}
+			route.componentActions[kind] = action
+		}
+	}
+
 	g.handleRoute(route)
 	f(route)
 }
@@ -49,6 +73,7 @@ func (g *Gong) handleRoute(route Route) {
 		gCtx := gongContext{
 			route:   route,
 			request: r,
+			kind:    r.Header.Get(GongKindHeader),
 		}
 
 		if loader, ok := route.Handler().(Loader); ok {
@@ -59,14 +84,13 @@ func (g *Gong) handleRoute(route Route) {
 
 		component := routeComponent{
 			route:  route,
-			action: r.Header.Get(HXRequestHeader) == "true",
+			action: r.Header.Get(GongActionHeader) == "true",
 		}
 
 		if err := component.Render(ctx, w); err != nil {
 			panic(err)
 		}
 	}))
-
 }
 
 func (g *Gong) handle(path string, handler http.Handler) {
@@ -119,10 +143,10 @@ type Action interface {
 }
 
 type Route struct {
-	gong              *Gong
-	path              string
-	handler           Handler
-	componentHandlers map[string]Handler
+	gong             *Gong
+	path             string
+	handler          Handler
+	componentActions map[string]Action
 }
 
 func (r Route) Route(path string, handler Handler, f func(r Route)) {
@@ -202,10 +226,9 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx.loader = c.loader
 	gCtx.kind = c.kind
 	gCtx.id = c.id
-
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
-	return render(ctx, w, c.handler)
+	return c.handler.Component().Render(ctx, w)
 }
 
 type routeComponent struct {
@@ -216,33 +239,17 @@ type routeComponent struct {
 func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = rc.action
-
-	if rc.action {
-		gCtx.path = gCtx.request.RequestURI
-	} else {
-		gCtx.path += rc.route.Path()
-	}
-
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
-	return render(ctx, w, rc.route.Handler())
-}
-
-func render(
-	ctx context.Context,
-	w io.Writer,
-	handler Handler,
-) error {
-	gCtx := getContext(ctx)
-
 	if gCtx.action {
-		if action, ok := handler.(Action); ok {
-			if err := action.Action().Render(ctx, w); err != nil {
-				return err
-			}
-			return nil
+		if action, ok := rc.route.componentActions[gCtx.kind]; ok {
+			return action.Action().Render(ctx, w)
 		}
+		if action, ok := rc.route.Handler().(Action); ok {
+			return action.Action().Render(ctx, w)
+		}
+		return nil
 	}
 
-	return handler.Component().Render(ctx, w)
+	return rc.route.Handler().Component().Render(ctx, w)
 }
