@@ -230,17 +230,25 @@ func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = rc.action
 	gCtx.path = rc.route.Path()
-	ctx = context.WithValue(ctx, contextKey, gCtx)
 
 	if gCtx.action {
 		if action, ok := rc.route.componentActions[gCtx.kind]; ok {
-			return action.Action().Render(ctx, w)
+			gCtx.loader = nil
+			if loader, ok := action.(Loader); ok {
+				gCtx.loader = loader
+			}
+			return render(ctx, gCtx, w, action.Action())
 		}
 		if action, ok := rc.route.Handler().(Action); ok {
-			return action.Action().Render(ctx, w)
+			return render(ctx, gCtx, w, action.Action())
 		}
 		return nil
 	}
 
-	return rc.route.Handler().Component().Render(ctx, w)
+	return render(ctx, gCtx, w, rc.route.Handler().Component())
+}
+
+func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
+	ctx = context.WithValue(ctx, contextKey, gCtx)
+	return component.Render(ctx, w)
 }

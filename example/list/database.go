@@ -3,7 +3,8 @@ package main
 import "errors"
 
 type userData struct {
-	name string
+	name    string
+	balance int
 }
 
 type userDatabase struct {

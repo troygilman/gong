@@ -1,12 +1,24 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/troygilman0/gong"
 	"net/http"
+	"strconv"
 )
 
 type itemHandler struct {
 	db *userDatabase
+}
+
+func (handler itemHandler) Loader(ctx context.Context) any {
+	name := gong.Param(ctx, "name")
+	user, ok := handler.db.Read(name)
+	if !ok {
+		return nil
+	}
+	return user
 }
 
 templ (handler itemHandler) Action() {
@@ -15,6 +27,18 @@ templ (handler itemHandler) Action() {
 			{{
 			name := gong.Param(ctx, "name")
 			handler.db.Delete(name)
+			}}
+		case http.MethodPatch:
+			{{
+				name := gong.Param(ctx, "name")
+				balance, err := strconv.Atoi(gong.Param(ctx, "balance"))
+				if err != nil {
+					panic(err)
+				}
+				handler.db.Update(userData{
+					name:    name,
+					balance: balance,
+				})
 			}}
 	}
 }
@@ -28,8 +52,16 @@ templ (handler itemHandler) Component() {
 	) {
 		{ user.name }
 		@gong.Form(
-			gong.WithFormID(user.name),
+			gong.WithFormMethod(http.MethodPatch),
+			gong.WithFormSwap("none"),
+		) {
+			<input type="hidden" name="name" value={ user.name }/>
+			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
+			<button type="submit">Update</button>
+		}
+		@gong.Form(
 			gong.WithFormMethod(http.MethodDelete),
+			gong.WithFormID(user.name),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>

@@ -29,5 +29,8 @@ func Method(ctx context.Context) string {
 
 func UseLoaderData[Data any](ctx context.Context) (data Data) {
 	gCtx := getContext(ctx)
+	if gCtx.loader == nil {
+		return data
+	}
 	return gCtx.loader.Loader(ctx).(Data)
 }

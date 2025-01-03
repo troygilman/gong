@@ -9,12 +9,24 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
+	"fmt"
 	"github.com/troygilman0/gong"
 	"net/http"
+	"strconv"
 )
 
 type itemHandler struct {
 	db *userDatabase
+}
+
+func (handler itemHandler) Loader(ctx context.Context) any {
+	name := gong.Param(ctx, "name")
+	user, ok := handler.db.Read(name)
+	if !ok {
+		return nil
+	}
+	return user
 }
 
 func (handler itemHandler) Action() templ.Component {
@@ -42,6 +54,16 @@ func (handler itemHandler) Action() templ.Component {
 		case http.MethodDelete:
 			name := gong.Param(ctx, "name")
 			handler.db.Delete(name)
+		case http.MethodPatch:
+			name := gong.Param(ctx, "name")
+			balance, err := strconv.Atoi(gong.Param(ctx, "balance"))
+			if err != nil {
+				panic(err)
+			}
+			handler.db.Update(userData{
+				name:    name,
+				balance: balance,
+			})
 		}
 		return templ_7745c5c3_Err
 	})
@@ -85,7 +107,7 @@ func (handler itemHandler) Component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 29, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 53, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -110,9 +132,64 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 34, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 58, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> <input type=\"text\" name=\"balance\" value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.balance))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 59, Col: 76}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> <button type=\"submit\">Update</button>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return templ_7745c5c3_Err
+			})
+			templ_7745c5c3_Err = gong.Form(
+				gong.WithFormMethod(http.MethodPatch),
+				gong.WithFormSwap("none"),
+			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input type=\"hidden\" name=\"name\" value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var9 string
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 66, Col: 53}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -123,9 +200,9 @@ func (handler itemHandler) Component() templ.Component {
 				return templ_7745c5c3_Err
 			})
 			templ_7745c5c3_Err = gong.Form(
-				gong.WithFormID(user.name),
 				gong.WithFormMethod(http.MethodDelete),
-			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+				gong.WithFormID(user.name),
+			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -16,11 +16,16 @@ templ Form(opts ...FormOption) {
 		if config.method == http.MethodPost {
 			hx-post={ getContext(ctx).path }
 		}
+		if config.method == http.MethodPatch {
+			hx-patch={ getContext(ctx).path }
+		}
 		if config.method == http.MethodDelete {
 			hx-delete={ getContext(ctx).path }
 		}
-		hx-target={ "#" + buildComponentID(ctx, config.id) }
 		hx-swap={ config.swap }
+		if config.swap != "none" {
+			hx-target={ "#" + buildComponentID(ctx, config.id) }
+		}
 		hx-headers={ buildHeaders(ctx) }
 	>
 		{ children... }
