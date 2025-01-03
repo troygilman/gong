@@ -8,10 +8,7 @@ package main
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/troygilman0/gong"
-	"log"
-)
+import "github.com/troygilman0/gong"
 
 type testView struct{}
 
@@ -36,7 +33,6 @@ func (view testView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		log.Println("ACTION")
 		return templ_7745c5c3_Err
 	})
 }

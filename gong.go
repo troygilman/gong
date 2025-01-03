@@ -72,7 +72,6 @@ func scanViewForActions(actions map[string]Action, view View, kindPrefix string)
 			if !field.CanInterface() {
 				continue
 			}
-			log.Println(kind)
 			if action, ok := field.Interface().(Action); ok {
 				actions[kindPrefix+kind] = action
 			}
