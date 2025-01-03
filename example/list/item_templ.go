@@ -111,7 +111,7 @@ func (handler itemHandler) Component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 54, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 55, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +136,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 59, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 60, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -149,7 +149,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.balance))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 60, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 61, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 67, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 68, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -214,12 +214,27 @@ func (handler itemHandler) Component() templ.Component {
 		})
 		templ_7745c5c3_Err = gong.Target(
 			gong.WithTargetID(user.name),
+			gong.WithTargetCSSClass(boxClassName()),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+func boxClassName() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border:2px solid #4CAF50;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:10px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background-color:#f9f9f9;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:0 4px 8px rgba(0, 0, 0, 0.2);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:20px;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`boxClassName`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

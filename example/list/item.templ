@@ -50,6 +50,7 @@ templ (handler itemHandler) Component() {
 	}}
 	@gong.Target(
 		gong.WithTargetID(user.name),
+		gong.WithTargetCSSClass(boxClassName()),
 	) {
 		{ user.name }
 		@gong.Form(
@@ -68,4 +69,12 @@ templ (handler itemHandler) Component() {
 			<button type="submit">Delete</button>
 		}
 	}
+}
+
+css boxClassName() {
+	border: 2px solid #4CAF50;
+	border-radius: 10px;
+	background-color: #f9f9f9;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	padding: 20px;
 }
