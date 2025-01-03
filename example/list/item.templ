@@ -40,6 +40,7 @@ templ (handler itemHandler) Action() {
 					balance: balance,
 				})
 			}}
+			@handler.Component()
 	}
 }
 
@@ -53,7 +54,7 @@ templ (handler itemHandler) Component() {
 		{ user.name }
 		@gong.Form(
 			gong.WithFormMethod(http.MethodPatch),
-			gong.WithFormSwap("none"),
+			gong.WithFormID(user.name),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>

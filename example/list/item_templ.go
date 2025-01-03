@@ -64,6 +64,10 @@ func (handler itemHandler) Action() templ.Component {
 				name:    name,
 				balance: balance,
 			})
+			templ_7745c5c3_Err = handler.Component().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		return templ_7745c5c3_Err
 	})
@@ -107,7 +111,7 @@ func (handler itemHandler) Component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 53, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 54, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -132,7 +136,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 58, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 59, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -145,7 +149,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.balance))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 59, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 60, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -159,7 +163,7 @@ func (handler itemHandler) Component() templ.Component {
 			})
 			templ_7745c5c3_Err = gong.Form(
 				gong.WithFormMethod(http.MethodPatch),
-				gong.WithFormSwap("none"),
+				gong.WithFormID(user.name),
 			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -187,7 +191,7 @@ func (handler itemHandler) Component() templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 66, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/item.templ`, Line: 67, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
