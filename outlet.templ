@@ -1,5 +1,16 @@
 package gong
 
+import (
+	"context"
+	"io"
+)
+
 templ Outlet() {
-	<div></div>
+	<div>
+		@RenderFunc(func(ctx context.Context, w io.Writer) error {
+			gCtx := getContext(ctx)
+			gCtx.kind = ""
+			return render(ctx, gCtx, w, gCtx.route.children[0])
+		})
+	</div>
 }

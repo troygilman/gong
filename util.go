@@ -68,3 +68,9 @@ func hash(s string) string {
 	h.Write([]byte(s))
 	return strconv.Itoa(int(h.Sum32()))
 }
+
+type RenderFunc func(ctx context.Context, w io.Writer) error
+
+func (r RenderFunc) Render(ctx context.Context, w io.Writer) error {
+	return r(ctx, w)
+}
