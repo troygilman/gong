@@ -5,39 +5,45 @@ import (
 	"io"
 )
 
-type Route struct {
+type Route interface {
+	Route(path string, view View, f func(r Route))
+}
+
+type route struct {
 	gong    *Gong
 	path    string
 	view    View
 	actions map[string]Action
 }
 
-func (r Route) Route(path string, view View, f func(r Route)) {
-	r.path += path
-	r.view = view
-	r.gong.handleRoute(r)
-	f(Route{
-		gong: r.gong,
-		path: r.path,
-	})
+func (r *route) Route(path string, view View, f func(r Route)) {
+	newRoute := &route{
+		gong:    r.gong,
+		view:    Index{view: view},
+		path:    r.path + path,
+		actions: make(map[string]Action),
+	}
+	scanViewForActions(newRoute.actions, view, "")
+	r.gong.handleRoute(newRoute)
+	f(newRoute)
 }
 
-func (route Route) Render(ctx context.Context, w io.Writer) error {
+func (r *route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 
 	if gCtx.action {
-		if action, ok := route.actions[gCtx.kind]; ok {
+		if action, ok := r.actions[gCtx.kind]; ok {
 			gCtx.loader = nil
 			if loader, ok := action.(Loader); ok {
 				gCtx.loader = loader
 			}
 			return render(ctx, gCtx, w, action.Action())
 		}
-		if action, ok := route.view.(Action); ok {
+		if action, ok := r.view.(Action); ok {
 			return render(ctx, gCtx, w, action.Action())
 		}
 		return nil
 	}
 
-	return render(ctx, gCtx, w, route.view.View())
+	return render(ctx, gCtx, w, r.view.View())
 }

@@ -11,12 +11,22 @@ func main() {
 
 	g := gong.New(http.NewServeMux())
 
-	g.Route("/", listView{
-		db: db,
-		UserView: userView{
+	g.Route("/", homeView{}, func(r gong.Route) {
+		r.Route("users", listView{
 			db: db,
-		},
-	}, func(r gong.Route) {})
+			UserView: userView{
+				db: db,
+			},
+		}, func(r gong.Route) {})
+	})
+
+	// g.Route("/", listView{
+	// 	db: db,
+	// 	UserView: userView{
+	// 		db: db,
+	// 	},
+	// }, func(r gong.Route) {
+	// })
 
 	if err := http.ListenAndServe(":8080", g); err != nil {
 		panic(err)

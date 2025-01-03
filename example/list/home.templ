@@ -1,0 +1,12 @@
+package main
+
+import "github.com/troygilman0/gong"
+
+type homeView struct{}
+
+templ (view homeView) View() {
+	<div>
+		HOME
+		@gong.Outlet()
+	</div>
+}

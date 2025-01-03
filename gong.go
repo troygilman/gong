@@ -45,7 +45,7 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gong) Route(path string, view View, f func(Route)) {
-	route := Route{
+	route := &route{
 		gong: g,
 		path: path,
 		view: Index{
@@ -82,7 +82,7 @@ func scanViewForActions(actions map[string]Action, view View, kindPrefix string)
 	}
 }
 
-func (g *Gong) handleRoute(route Route) {
+func (g *Gong) handleRoute(route *route) {
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,7 @@ func (g *Gong) handle(path string, handler http.Handler) {
 }
 
 type gongContext struct {
-	route   Route
+	route   *route
 	request *http.Request
 	path    string
 	action  bool
