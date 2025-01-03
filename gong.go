@@ -49,40 +49,16 @@ func (g *Gong) Route(path string, view View, f func(Route)) {
 		gong: g,
 		path: path,
 		view: Index{
-			view: view,
+			IndexView: view,
 		},
 		actions: make(map[string]Action),
 	}
-
-	scanViewForActions(route.actions, view, "")
 	g.handleRoute(route)
 	f(route)
 }
 
-func scanViewForActions(actions map[string]Action, view View, kindPrefix string) {
-	v := reflect.ValueOf(view)
-	t := v.Type()
-	if t.Kind() == reflect.Struct {
-		for i := range t.NumField() {
-			kind, ok := t.Field(i).Tag.Lookup("kind")
-			if !ok {
-				continue
-			}
-			field := v.Field(i)
-			if !field.CanInterface() {
-				continue
-			}
-			if action, ok := field.Interface().(Action); ok {
-				actions[kindPrefix+kind] = action
-			}
-			if view, ok := field.Interface().(View); ok {
-				scanViewForActions(actions, view, kind+"_")
-			}
-		}
-	}
-}
-
 func (g *Gong) handleRoute(route *route) {
+	scanViewForActions(route.actions, route.view, "")
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,6 +78,30 @@ func (g *Gong) handleRoute(route *route) {
 			panic(err)
 		}
 	}))
+}
+
+func scanViewForActions(actions map[string]Action, view View, kindPrefix string) {
+	v := reflect.ValueOf(view)
+	t := v.Type()
+	if t.Kind() == reflect.Struct {
+		for i := range t.NumField() {
+			kind, ok := t.Field(i).Tag.Lookup("kind")
+			if !ok {
+				continue
+			}
+			kind = kindPrefix + kind
+			field := v.Field(i)
+			if !field.CanInterface() {
+				continue
+			}
+			if action, ok := field.Interface().(Action); ok {
+				actions[kind] = action
+			}
+			if view, ok := field.Interface().(View); ok {
+				scanViewForActions(actions, view, kind+"_")
+			}
+		}
+	}
 }
 
 func (g *Gong) handle(path string, handler http.Handler) {

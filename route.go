@@ -19,11 +19,10 @@ type route struct {
 func (r *route) Route(path string, view View, f func(r Route)) {
 	newRoute := &route{
 		gong:    r.gong,
-		view:    Index{view: view},
+		view:    Index{IndexView: view},
 		path:    r.path + path,
 		actions: make(map[string]Action),
 	}
-	scanViewForActions(newRoute.actions, view, "")
 	r.gong.handleRoute(newRoute)
 	f(newRoute)
 }
