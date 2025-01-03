@@ -6,7 +6,7 @@ import (
 )
 
 type listView struct {
-	ItemView itemView `kind:"user"`
+	UserView userView `kind:"user"`
 	db       *userDatabase
 }
 
@@ -17,7 +17,7 @@ templ (view listView) Action() {
 			users := view.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.Component("user", view.ItemView, gong.WithLoaderData(user))
+				@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
 			}
 		case http.MethodPost:
 			{{
@@ -29,7 +29,7 @@ templ (view listView) Action() {
 				return nil
 			}
 			}}
-			@gong.Component("user", view.ItemView, gong.WithLoaderData(user))
+			@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
 	}
 }
 

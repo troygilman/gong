@@ -22,14 +22,6 @@ func (r Route) Route(path string, view View, f func(r Route)) {
 	})
 }
 
-func (r Route) Path() string {
-	return r.path
-}
-
-func (r Route) View() View {
-	return r.view
-}
-
 func (route Route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 
@@ -41,11 +33,11 @@ func (route Route) Render(ctx context.Context, w io.Writer) error {
 			}
 			return render(ctx, gCtx, w, action.Action())
 		}
-		if action, ok := route.View().(Action); ok {
+		if action, ok := route.view.(Action); ok {
 			return render(ctx, gCtx, w, action.Action())
 		}
 		return nil
 	}
 
-	return render(ctx, gCtx, w, route.View().View())
+	return render(ctx, gCtx, w, route.view.View())
 }

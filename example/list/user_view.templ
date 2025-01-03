@@ -8,11 +8,11 @@ import (
 	"strconv"
 )
 
-type itemView struct {
+type userView struct {
 	db *userDatabase
 }
 
-func (view itemView) Loader(ctx context.Context) any {
+func (view userView) Loader(ctx context.Context) any {
 	name := gong.Param(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
@@ -21,7 +21,7 @@ func (view itemView) Loader(ctx context.Context) any {
 	return user
 }
 
-templ (view itemView) Action() {
+templ (view userView) Action() {
 	switch gong.Method(ctx) {
 		case http.MethodDelete:
 			{{
@@ -44,7 +44,7 @@ templ (view itemView) Action() {
 	}
 }
 
-templ (view itemView) View() {
+templ (view userView) View() {
 	{{
 	user := gong.UseLoaderData[userData](ctx)
 	}}

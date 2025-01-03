@@ -14,7 +14,7 @@ import (
 )
 
 type listView struct {
-	ItemView itemView `kind:"user"`
+	UserView userView `kind:"user"`
 	db       *userDatabase
 }
 
@@ -43,7 +43,7 @@ func (view listView) Action() templ.Component {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.Component("user", view.ItemView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -56,7 +56,7 @@ func (view listView) Action() templ.Component {
 			if err := view.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.Component("user", view.ItemView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

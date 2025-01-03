@@ -13,7 +13,7 @@ func main() {
 
 	g.Route("/", listView{
 		db: db,
-		ItemView: itemView{
+		UserView: userView{
 			db: db,
 		},
 	}, func(r gong.Route) {})
