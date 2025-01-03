@@ -11,7 +11,7 @@ type listView struct {
 }
 
 templ (view listView) Action() {
-	switch gong.Method(ctx) {
+	switch gong.GetRequest(ctx).Method {
 		case http.MethodGet:
 			{{
 			users := view.db.ReadAll()
@@ -21,7 +21,7 @@ templ (view listView) Action() {
 			}
 		case http.MethodPost:
 			{{
-			name := gong.Param(ctx, "name")
+			name := gong.GetParam(ctx, "name")
 			user := userData{
 				name: name,
 			}

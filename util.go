@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -22,7 +23,7 @@ func Bind(ctx context.Context, dest any) error {
 	return nil
 }
 
-func Param(ctx context.Context, key string) string {
+func GetParam(ctx context.Context, key string) string {
 	gCtx := getContext(ctx)
 	return gCtx.request.FormValue(key)
 }
@@ -44,11 +45,11 @@ func buildHeaders(ctx context.Context) string {
 	return fmt.Sprintf(`{"%s": "true", "%s": "%s"}`, GongActionHeader, GongKindHeader, gCtx.kind)
 }
 
-func Method(ctx context.Context) string {
-	return getContext(ctx).request.Method
+func GetRequest(ctx context.Context) *http.Request {
+	return getContext(ctx).request
 }
 
-func UseLoaderData[Data any](ctx context.Context) (data Data) {
+func GetLoaderData[Data any](ctx context.Context) (data Data) {
 	gCtx := getContext(ctx)
 	if gCtx.loader == nil {
 		return data

@@ -21,7 +21,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := gong.Param(ctx, "name")
+	name := gong.GetParam(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -50,13 +50,13 @@ func (view userView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch gong.Method(ctx) {
+		switch gong.GetRequest(ctx).Method {
 		case http.MethodDelete:
-			name := gong.Param(ctx, "name")
+			name := gong.GetParam(ctx, "name")
 			view.db.Delete(name)
 		case http.MethodPatch:
-			name := gong.Param(ctx, "name")
-			balance, err := strconv.Atoi(gong.Param(ctx, "balance"))
+			name := gong.GetParam(ctx, "name")
+			balance, err := strconv.Atoi(gong.GetParam(ctx, "balance"))
 			if err != nil {
 				panic(err)
 			}
@@ -95,7 +95,7 @@ func (view userView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		user := gong.UseLoaderData[userData](ctx)
+		user := gong.GetLoaderData[userData](ctx)
 		templ_7745c5c3_Var3 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
