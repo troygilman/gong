@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"net/http"
-	"strings"
+	"strconv"
 
 	"github.com/a-h/templ"
 )
@@ -30,7 +31,7 @@ func GetParam(ctx context.Context, key string) string {
 
 func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	prefix := "gong" + strings.ReplaceAll(gCtx.path, "/", "-")
+	prefix := "gong" + "_" + hash(gCtx.path)
 	if gCtx.kind != "" {
 		prefix += "_" + gCtx.kind
 	}
@@ -60,4 +61,10 @@ func GetLoaderData[Data any](ctx context.Context) (data Data) {
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 	return component.Render(ctx, w)
+}
+
+func hash(s string) string {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return strconv.Itoa(int(h.Sum32()))
 }
