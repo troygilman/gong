@@ -32,7 +32,11 @@ func (c viewComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
 	gCtx.loader = c.config.loader
-	gCtx.kind = c.kind
+	if gCtx.kind == "" {
+		gCtx.kind = c.kind
+	} else {
+		gCtx.kind += "_" + c.kind
+	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
 	return c.view.View().Render(ctx, w)

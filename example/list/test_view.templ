@@ -1,0 +1,15 @@
+package main
+
+import "github.com/troygilman0/gong"
+
+type testView struct{}
+
+templ (view testView) Action() {
+}
+
+templ (view testView) View() {
+	@gong.Form() {
+		<input name="x" type="text"/>
+		<button>Submit</button>
+	}
+}

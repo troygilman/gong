@@ -72,6 +72,7 @@ func scanViewForActions(actions map[string]Action, view View, kindPrefix string)
 			if !field.CanInterface() {
 				continue
 			}
+			log.Println(kind)
 			if action, ok := field.Interface().(Action); ok {
 				actions[kindPrefix+kind] = action
 			}
@@ -83,6 +84,8 @@ func scanViewForActions(actions map[string]Action, view View, kindPrefix string)
 }
 
 func (g *Gong) handleRoute(route Route) {
+	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
+
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			route:   route,
@@ -103,7 +106,6 @@ func (g *Gong) handleRoute(route Route) {
 }
 
 func (g *Gong) handle(path string, handler http.Handler) {
-	log.Printf("registering handler %T on path %s\n", handler, path)
 	g.mux.Handle(path, handler)
 }
 

@@ -34,7 +34,7 @@ func Form(opts ...ComponentOption) templ.Component {
 
 		config := componentConfig{
 			method: http.MethodPost,
-			swap:   SwapOuterHTML,
+			swap:   SwapNone,
 		}
 		for _, opt := range opts {
 			config = opt(config)

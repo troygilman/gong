@@ -9,7 +9,8 @@ import (
 )
 
 type userView struct {
-	db *userDatabase
+	TestView testView `kind:"test"`
+	db       *userDatabase
 }
 
 func (view userView) Loader(ctx context.Context) any {
@@ -56,6 +57,7 @@ templ (view userView) View() {
 		@gong.Form(
 			gong.WithMethod(http.MethodPatch),
 			gong.WithID(user.name),
+			gong.WithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
@@ -64,10 +66,12 @@ templ (view userView) View() {
 		@gong.Form(
 			gong.WithMethod(http.MethodDelete),
 			gong.WithID(user.name),
+			gong.WithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
+		@gong.ViewComponent("test", view.TestView)
 	}
 }
 

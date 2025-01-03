@@ -6,7 +6,7 @@ templ Form(opts ...ComponentOption) {
 	{{
 	config := componentConfig{
 		method: http.MethodPost,
-		swap:   SwapOuterHTML,
+		swap:   SwapNone,
 	}
 	for _, opt := range opts {
 		config = opt(config)

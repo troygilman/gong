@@ -21,9 +21,3 @@ templ Target(opts ...ComponentOption) {
 		{ children... }
 	</div>
 }
-
-templ target(child templ.Component) {
-	@Target() {
-		@child
-	}
-}
