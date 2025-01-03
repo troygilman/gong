@@ -54,12 +54,12 @@ func (g *Gong) Route(path string, view View, f func(Route)) {
 		actions: make(map[string]Action),
 	}
 
-	scanViewForActions(route.actions, view)
+	scanViewForActions(route.actions, view, "")
 	g.handleRoute(route)
 	f(route)
 }
 
-func scanViewForActions(actions map[string]Action, view View) {
+func scanViewForActions(actions map[string]Action, view View, kindPrefix string) {
 	v := reflect.ValueOf(view)
 	t := v.Type()
 	if t.Kind() == reflect.Struct {
@@ -73,10 +73,10 @@ func scanViewForActions(actions map[string]Action, view View) {
 				continue
 			}
 			if action, ok := field.Interface().(Action); ok {
-				actions[kind] = action
+				actions[kindPrefix+kind] = action
 			}
 			if view, ok := field.Interface().(View); ok {
-				scanViewForActions(actions, view)
+				scanViewForActions(actions, view, kind+"_")
 			}
 		}
 	}
