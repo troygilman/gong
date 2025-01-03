@@ -20,6 +20,18 @@ const (
 	GongKindHeader   = "Gong-Kind"
 )
 
+const (
+	TriggerNone = "none"
+	TriggerLoad = "load"
+)
+
+const (
+	SwapNone      = "none"
+	SwapOuterHTML = "outerHTML"
+	SwapInnerHTML = "innerHTML"
+	SwapBeforeEnd = "beforeend"
+)
+
 type Gong struct {
 	mux Mux
 }

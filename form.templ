@@ -6,7 +6,7 @@ templ Form(opts ...FormOption) {
 	{{
 	config := formConfig{
 		method: http.MethodPost,
-		swap:   "outerHTML",
+		swap:   SwapOuterHTML,
 	}
 	for _, opt := range opts {
 		config = opt(config)
@@ -23,7 +23,7 @@ templ Form(opts ...FormOption) {
 			hx-delete={ getContext(ctx).path }
 		}
 		hx-swap={ config.swap }
-		if config.swap != "none" {
+		if config.swap != SwapNone {
 			hx-target={ "#" + buildComponentID(ctx, config.id) }
 		}
 		hx-headers={ buildHeaders(ctx) }

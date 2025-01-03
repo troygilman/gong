@@ -34,7 +34,7 @@ func Form(opts ...FormOption) templ.Component {
 
 		config := formConfig{
 			method: http.MethodPost,
-			swap:   "outerHTML",
+			swap:   SwapOuterHTML,
 		}
 		for _, opt := range opts {
 			config = opt(config)
@@ -117,7 +117,7 @@ func Form(opts ...FormOption) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if config.swap != "none" {
+		if config.swap != SwapNone {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-target=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

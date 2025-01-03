@@ -3,7 +3,7 @@ package gong
 templ Target(opts ...TargetOption) {
 	{{
 	config := targetConfig{
-		trigger: "none",
+		trigger: TriggerNone,
 	}
 	for _, opt := range opts {
 		config = opt(config)
@@ -12,7 +12,7 @@ templ Target(opts ...TargetOption) {
 	<div
 		id={ buildComponentID(ctx, config.id) }
 		hx-get={ getContext(ctx).path }
-		hx-swap="innerHTML"
+		hx-swap={ SwapInnerHTML }
 		hx-trigger={ config.trigger }
 		hx-target="this"
 		hx-headers={ buildHeaders(ctx) }
