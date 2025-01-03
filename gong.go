@@ -88,7 +88,9 @@ func (g *Gong) handleRoute(route Route) {
 	g.handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gCtx := gongContext{
 			route:   route,
+			path:    route.Path(),
 			request: r,
+			action:  r.Header.Get(GongActionHeader) == "true",
 			kind:    r.Header.Get(GongKindHeader),
 		}
 
@@ -96,14 +98,7 @@ func (g *Gong) handleRoute(route Route) {
 			gCtx.loader = loader
 		}
 
-		ctx := context.WithValue(r.Context(), contextKey, gCtx)
-
-		component := routeComponent{
-			route:  route,
-			action: r.Header.Get(GongActionHeader) == "true",
-		}
-
-		if err := component.Render(ctx, w); err != nil {
+		if err := render(r.Context(), gCtx, w, route); err != nil {
 			panic(err)
 		}
 	}))
@@ -219,31 +214,24 @@ func (c component) Render(ctx context.Context, w io.Writer) error {
 	return c.handler.Component().Render(ctx, w)
 }
 
-type routeComponent struct {
-	route  Route
-	action bool
-}
-
-func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
+func (route Route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
-	gCtx.action = rc.action
-	gCtx.path = rc.route.Path()
 
 	if gCtx.action {
-		if action, ok := rc.route.actions[gCtx.kind]; ok {
+		if action, ok := route.actions[gCtx.kind]; ok {
 			gCtx.loader = nil
 			if loader, ok := action.(Loader); ok {
 				gCtx.loader = loader
 			}
 			return render(ctx, gCtx, w, action.Action())
 		}
-		if action, ok := rc.route.Handler().(Action); ok {
+		if action, ok := route.Handler().(Action); ok {
 			return render(ctx, gCtx, w, action.Action())
 		}
 		return nil
 	}
 
-	return render(ctx, gCtx, w, rc.route.Handler().Component())
+	return render(ctx, gCtx, w, route.Handler().Component())
 }
 
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
