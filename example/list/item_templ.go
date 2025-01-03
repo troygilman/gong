@@ -16,20 +16,20 @@ import (
 	"strconv"
 )
 
-type itemHandler struct {
+type itemView struct {
 	db *userDatabase
 }
 
-func (handler itemHandler) Loader(ctx context.Context) any {
+func (view itemView) Loader(ctx context.Context) any {
 	name := gong.Param(ctx, "name")
-	user, ok := handler.db.Read(name)
+	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
 	}
 	return user
 }
 
-func (handler itemHandler) Action() templ.Component {
+func (view itemView) Action() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -53,18 +53,18 @@ func (handler itemHandler) Action() templ.Component {
 		switch gong.Method(ctx) {
 		case http.MethodDelete:
 			name := gong.Param(ctx, "name")
-			handler.db.Delete(name)
+			view.db.Delete(name)
 		case http.MethodPatch:
 			name := gong.Param(ctx, "name")
 			balance, err := strconv.Atoi(gong.Param(ctx, "balance"))
 			if err != nil {
 				panic(err)
 			}
-			handler.db.Update(userData{
+			view.db.Update(userData{
 				name:    name,
 				balance: balance,
 			})
-			templ_7745c5c3_Err = handler.Component().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = view.View().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -73,7 +73,7 @@ func (handler itemHandler) Action() templ.Component {
 	})
 }
 
-func (handler itemHandler) Component() templ.Component {
+func (view itemView) View() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

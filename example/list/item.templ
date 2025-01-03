@@ -8,25 +8,25 @@ import (
 	"strconv"
 )
 
-type itemHandler struct {
+type itemView struct {
 	db *userDatabase
 }
 
-func (handler itemHandler) Loader(ctx context.Context) any {
+func (view itemView) Loader(ctx context.Context) any {
 	name := gong.Param(ctx, "name")
-	user, ok := handler.db.Read(name)
+	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
 	}
 	return user
 }
 
-templ (handler itemHandler) Action() {
+templ (view itemView) Action() {
 	switch gong.Method(ctx) {
 		case http.MethodDelete:
 			{{
 			name := gong.Param(ctx, "name")
-			handler.db.Delete(name)
+			view.db.Delete(name)
 			}}
 		case http.MethodPatch:
 			{{
@@ -35,16 +35,16 @@ templ (handler itemHandler) Action() {
 				if err != nil {
 					panic(err)
 				}
-				handler.db.Update(userData{
+				view.db.Update(userData{
 					name:    name,
 					balance: balance,
 				})
 			}}
-			@handler.Component()
+			@view.View()
 	}
 }
 
-templ (handler itemHandler) Component() {
+templ (view itemView) View() {
 	{{
 	user := gong.UseLoaderData[userData](ctx)
 	}}

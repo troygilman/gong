@@ -5,19 +5,19 @@ import (
 	"net/http"
 )
 
-type listHandler struct {
-	ItemHandler itemHandler `kind:"user"`
-	db          *userDatabase
+type listView struct {
+	ItemView itemView `kind:"user"`
+	db       *userDatabase
 }
 
-templ (handler listHandler) Action() {
+templ (view listView) Action() {
 	switch gong.Method(ctx) {
 		case http.MethodGet:
 			{{
-			users := handler.db.ReadAll()
+			users := view.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user))
+				@gong.Component("user", view.ItemView, gong.WithLoaderData(user))
 			}
 		case http.MethodPost:
 			{{
@@ -25,15 +25,15 @@ templ (handler listHandler) Action() {
 			user := userData{
 				name: name,
 			}
-			if err := handler.db.Create(user); err != nil {
+			if err := view.db.Create(user); err != nil {
 				return nil
 			}
 			}}
-			@gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user))
+			@gong.Component("user", view.ItemView, gong.WithLoaderData(user))
 	}
 }
 
-templ (handler listHandler) Component() {
+templ (view listView) View() {
 	<div>
 		@gong.Form(gong.WithSwap(gong.SwapBeforeEnd)) {
 			<input name="name" type="text"/>

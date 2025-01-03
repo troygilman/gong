@@ -11,9 +11,9 @@ func main() {
 
 	g := gong.New(http.NewServeMux())
 
-	g.Route("/", listHandler{
+	g.Route("/", listView{
 		db: db,
-		ItemHandler: itemHandler{
+		ItemView: itemView{
 			db: db,
 		},
 	}, func(r gong.Route) {})

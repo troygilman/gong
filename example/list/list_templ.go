@@ -13,12 +13,12 @@ import (
 	"net/http"
 )
 
-type listHandler struct {
-	ItemHandler itemHandler `kind:"user"`
-	db          *userDatabase
+type listView struct {
+	ItemView itemView `kind:"user"`
+	db       *userDatabase
 }
 
-func (handler listHandler) Action() templ.Component {
+func (view listView) Action() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,9 +41,9 @@ func (handler listHandler) Action() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch gong.Method(ctx) {
 		case http.MethodGet:
-			users := handler.db.ReadAll()
+			users := view.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gong.Component("user", view.ItemView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -53,10 +53,10 @@ func (handler listHandler) Action() templ.Component {
 			user := userData{
 				name: name,
 			}
-			if err := handler.db.Create(user); err != nil {
+			if err := view.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.Component("user", view.ItemView, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -65,7 +65,7 @@ func (handler listHandler) Action() templ.Component {
 	})
 }
 
-func (handler listHandler) Component() templ.Component {
+func (view listView) View() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
