@@ -184,29 +184,11 @@ func (f LoaderFunc) Loader(ctx context.Context) any {
 	return f(ctx)
 }
 
-type ComponentOption func(component) component
-
-func WithComponentLoader(loader Loader) ComponentOption {
-	return func(c component) component {
-		c.loader = loader
-		return c
-	}
-}
-
-func WithComponentData(data any) ComponentOption {
-	return func(c component) component {
-		c.loader = LoaderFunc(func(ctx context.Context) any {
-			return data
-		})
-		return c
-	}
-}
-
 type component struct {
 	kind    string
 	handler Handler
-	loader  Loader
 	action  bool
+	config  componentConfig
 }
 
 func Component(kind string, handler Handler, opts ...ComponentOption) templ.Component {
@@ -215,10 +197,10 @@ func Component(kind string, handler Handler, opts ...ComponentOption) templ.Comp
 		handler: handler,
 	}
 	if loader, ok := handler.(Loader); ok {
-		c.loader = loader
+		c.config.loader = loader
 	}
 	for _, opt := range opts {
-		c = opt(c)
+		c.config = opt(c.config)
 	}
 	return c
 }
@@ -226,7 +208,7 @@ func Component(kind string, handler Handler, opts ...ComponentOption) templ.Comp
 func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
-	gCtx.loader = c.loader
+	gCtx.loader = c.config.loader
 	gCtx.kind = c.kind
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 

@@ -162,8 +162,8 @@ func (handler itemHandler) Component() templ.Component {
 				return templ_7745c5c3_Err
 			})
 			templ_7745c5c3_Err = gong.Form(
-				gong.WithFormMethod(http.MethodPatch),
-				gong.WithFormID(user.name),
+				gong.WithMethod(http.MethodPatch),
+				gong.WithID(user.name),
 			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -204,8 +204,8 @@ func (handler itemHandler) Component() templ.Component {
 				return templ_7745c5c3_Err
 			})
 			templ_7745c5c3_Err = gong.Form(
-				gong.WithFormMethod(http.MethodDelete),
-				gong.WithFormID(user.name),
+				gong.WithMethod(http.MethodDelete),
+				gong.WithID(user.name),
 			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -213,8 +213,8 @@ func (handler itemHandler) Component() templ.Component {
 			return templ_7745c5c3_Err
 		})
 		templ_7745c5c3_Err = gong.Target(
-			gong.WithTargetID(user.name),
-			gong.WithTargetCSSClass(boxClassName()),
+			gong.WithID(user.name),
+			gong.WithCSSClass(boxClassName()),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

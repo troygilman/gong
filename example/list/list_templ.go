@@ -43,7 +43,7 @@ func (handler listHandler) Action() templ.Component {
 		case http.MethodGet:
 			users := handler.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -56,7 +56,7 @@ func (handler listHandler) Action() templ.Component {
 			if err := handler.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithComponentData(user)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -90,7 +90,7 @@ func (handler listHandler) Component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.Target(gong.WithTargetTrigger(gong.TriggerLoad)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Target(gong.WithTrigger(gong.TriggerLoad)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -112,7 +112,7 @@ func (handler listHandler) Component() templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = gong.Form(gong.WithFormSwap(gong.SwapBeforeEnd)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Form(gong.WithSwap(gong.SwapBeforeEnd)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

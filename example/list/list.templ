@@ -17,7 +17,7 @@ templ (handler listHandler) Action() {
 			users := handler.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.Component("user", handler.ItemHandler, gong.WithComponentData(user))
+				@gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user))
 			}
 		case http.MethodPost:
 			{{
@@ -29,14 +29,14 @@ templ (handler listHandler) Action() {
 				return nil
 			}
 			}}
-			@gong.Component("user", handler.ItemHandler, gong.WithComponentData(user))
+			@gong.Component("user", handler.ItemHandler, gong.WithLoaderData(user))
 	}
 }
 
 templ (handler listHandler) Component() {
 	<div>
-		@gong.Target(gong.WithTargetTrigger(gong.TriggerLoad))
-		@gong.Form(gong.WithFormSwap(gong.SwapBeforeEnd)) {
+		@gong.Target(gong.WithTrigger(gong.TriggerLoad))
+		@gong.Form(gong.WithSwap(gong.SwapBeforeEnd)) {
 			<input name="name" type="text"/>
 			<button type="submit">Submit</button>
 		}

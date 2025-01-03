@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "net/http"
 
-func Form(opts ...FormOption) templ.Component {
+func Form(opts ...ComponentOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -32,7 +32,7 @@ func Form(opts ...FormOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := formConfig{
+		config := componentConfig{
 			method: http.MethodPost,
 			swap:   SwapOuterHTML,
 		}
@@ -163,35 +163,6 @@ func Form(opts ...FormOption) templ.Component {
 		}
 		return templ_7745c5c3_Err
 	})
-}
-
-type formConfig struct {
-	id     string
-	method string
-	swap   string
-}
-
-type FormOption func(c formConfig) formConfig
-
-func WithFormMethod(method string) FormOption {
-	return func(c formConfig) formConfig {
-		c.method = method
-		return c
-	}
-}
-
-func WithFormSwap(swap string) FormOption {
-	return func(c formConfig) formConfig {
-		c.swap = swap
-		return c
-	}
-}
-
-func WithFormID(id string) FormOption {
-	return func(c formConfig) formConfig {
-		c.id = id
-		return c
-	}
 }
 
 var _ = templruntime.GeneratedTemplate

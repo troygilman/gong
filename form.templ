@@ -2,9 +2,9 @@ package gong
 
 import "net/http"
 
-templ Form(opts ...FormOption) {
+templ Form(opts ...ComponentOption) {
 	{{
-	config := formConfig{
+	config := componentConfig{
 		method: http.MethodPost,
 		swap:   SwapOuterHTML,
 	}
@@ -30,33 +30,4 @@ templ Form(opts ...FormOption) {
 	>
 		{ children... }
 	</form>
-}
-
-type formConfig struct {
-	id     string
-	method string
-	swap   string
-}
-
-type FormOption func(c formConfig) formConfig
-
-func WithFormMethod(method string) FormOption {
-	return func(c formConfig) formConfig {
-		c.method = method
-		return c
-	}
-}
-
-func WithFormSwap(swap string) FormOption {
-	return func(c formConfig) formConfig {
-		c.swap = swap
-		return c
-	}
-}
-
-func WithFormID(id string) FormOption {
-	return func(c formConfig) formConfig {
-		c.id = id
-		return c
-	}
 }

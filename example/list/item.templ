@@ -49,21 +49,21 @@ templ (handler itemHandler) Component() {
 	user := gong.UseLoaderData[userData](ctx)
 	}}
 	@gong.Target(
-		gong.WithTargetID(user.name),
-		gong.WithTargetCSSClass(boxClassName()),
+		gong.WithID(user.name),
+		gong.WithCSSClass(boxClassName()),
 	) {
 		{ user.name }
 		@gong.Form(
-			gong.WithFormMethod(http.MethodPatch),
-			gong.WithFormID(user.name),
+			gong.WithMethod(http.MethodPatch),
+			gong.WithID(user.name),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
 		@gong.Form(
-			gong.WithFormMethod(http.MethodDelete),
-			gong.WithFormID(user.name),
+			gong.WithMethod(http.MethodDelete),
+			gong.WithID(user.name),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
