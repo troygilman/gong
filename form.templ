@@ -27,6 +27,7 @@ templ Form(opts ...ComponentOption) {
 			hx-target={ "#" + buildComponentID(ctx, config.id) }
 		}
 		hx-headers={ buildHeaders(ctx) }
+		class={ config.cssClass }
 	>
 		{ children... }
 	</form>

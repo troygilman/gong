@@ -106,7 +106,7 @@ func (handler listHandler) Component() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input name=\"name\" type=\"text\"> <button type=\"submit\">Submit</button>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input name=\"name\" type=\"text\"> <button type=\"submit\">Add</button>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
