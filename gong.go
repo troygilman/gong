@@ -53,9 +53,15 @@ func (g *Gong) Route(path string, handler Handler, f func(Route)) {
 		handler: Index{
 			handler: handler,
 		},
-		componentActions: make(map[string]Action),
+		actions: make(map[string]Action),
 	}
 
+	scanHandlerForActions(route.actions, handler)
+	g.handleRoute(route)
+	f(route)
+}
+
+func scanHandlerForActions(actions map[string]Action, handler Handler) {
 	v := reflect.ValueOf(handler)
 	t := v.Type()
 	if t.Kind() == reflect.Struct {
@@ -68,16 +74,14 @@ func (g *Gong) Route(path string, handler Handler, f func(Route)) {
 			if !field.CanInterface() {
 				continue
 			}
-			action, ok := field.Interface().(Action)
-			if !ok {
-				continue
+			if action, ok := field.Interface().(Action); ok {
+				actions[kind] = action
 			}
-			route.componentActions[kind] = action
+			if handler, ok := field.Interface().(Handler); ok {
+				scanHandlerForActions(actions, handler)
+			}
 		}
 	}
-
-	g.handleRoute(route)
-	f(route)
 }
 
 func (g *Gong) handleRoute(route Route) {
@@ -154,10 +158,10 @@ type Action interface {
 }
 
 type Route struct {
-	gong             *Gong
-	path             string
-	handler          Handler
-	componentActions map[string]Action
+	gong    *Gong
+	path    string
+	handler Handler
+	actions map[string]Action
 }
 
 func (r Route) Route(path string, handler Handler, f func(r Route)) {
@@ -226,7 +230,7 @@ func (rc routeComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx.path = rc.route.Path()
 
 	if gCtx.action {
-		if action, ok := rc.route.componentActions[gCtx.kind]; ok {
+		if action, ok := rc.route.actions[gCtx.kind]; ok {
 			gCtx.loader = nil
 			if loader, ok := action.(Loader); ok {
 				gCtx.loader = loader
