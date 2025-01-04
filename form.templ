@@ -14,13 +14,13 @@ templ Form(opts ...ComponentOption) {
 	}}
 	<form
 		if config.method == http.MethodPost {
-			hx-post={ getContext(ctx).path }
+			hx-post={ getContext(ctx).route.path }
 		}
 		if config.method == http.MethodPatch {
-			hx-patch={ getContext(ctx).path }
+			hx-patch={ getContext(ctx).route.path }
 		}
 		if config.method == http.MethodDelete {
-			hx-delete={ getContext(ctx).path }
+			hx-delete={ getContext(ctx).route.path }
 		}
 		hx-swap={ config.swap }
 		if config.swap != SwapNone {

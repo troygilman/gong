@@ -31,7 +31,7 @@ func GetParam(ctx context.Context, key string) string {
 
 func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	prefix := "gong" + "_" + hash(gCtx.path)
+	prefix := "gong" + "_" + hash(gCtx.route.path)
 	if gCtx.kind != "" {
 		prefix += "_" + gCtx.kind
 	}

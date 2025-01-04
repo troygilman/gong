@@ -9,8 +9,7 @@ import (
 )
 
 type userView struct {
-	TestView testView `kind:"test"`
-	db       *userDatabase
+	db *userDatabase
 }
 
 func (view userView) Loader(ctx context.Context) any {
@@ -71,7 +70,6 @@ templ (view userView) View() {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
-		@gong.ViewComponent("test", view.TestView)
 	}
 }
 

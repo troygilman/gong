@@ -51,10 +51,13 @@ func (g *Gong) Route(path string, view View, f func(Route)) {
 		view: Index{
 			IndexView: view,
 		},
-		actions: make(map[string]Action),
+		actions:  make(map[string]Action),
+		children: make(map[string]*route),
 	}
 	g.handleRoute(route)
-	f(route)
+	if f != nil {
+		f(route)
+	}
 }
 
 func (g *Gong) handleRoute(route *route) {
@@ -63,6 +66,7 @@ func (g *Gong) handleRoute(route *route) {
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := route
+		path := route.path
 		action := r.Header.Get(GongActionHeader) == "true"
 		kind := r.Header.Get(GongKindHeader)
 
@@ -74,7 +78,7 @@ func (g *Gong) handleRoute(route *route) {
 
 		gCtx := gongContext{
 			route:   route,
-			path:    route.path,
+			path:    path,
 			request: r,
 			action:  action,
 			kind:    kind,

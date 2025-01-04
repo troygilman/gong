@@ -17,16 +17,9 @@ func main() {
 			UserView: userView{
 				db: db,
 			},
-		}, func(r gong.Route) {})
+		}, nil)
+		r.Route("test", testView{}, nil)
 	})
-
-	// g.Route("/", listView{
-	// 	db: db,
-	// 	UserView: userView{
-	// 		db: db,
-	// 	},
-	// }, func(r gong.Route) {
-	// })
 
 	if err := http.ListenAndServe(":8080", g); err != nil {
 		panic(err)

@@ -10,30 +10,37 @@ type Route interface {
 }
 
 type route struct {
-	gong     *Gong
-	path     string
-	view     View
-	actions  map[string]Action
-	children []*route
-	parent   *route
+	gong         *Gong
+	path         string
+	view         View
+	actions      map[string]Action
+	children     map[string]*route
+	defaultChild *route
+	parent       *route
 }
 
 func (r *route) Route(path string, view View, f func(r Route)) {
 	newRoute := &route{
-		gong:    r.gong,
-		view:    Index{IndexView: view},
-		path:    r.path + path,
-		actions: make(map[string]Action),
-		parent:  r,
+		gong:     r.gong,
+		view:     view,
+		path:     r.path + path,
+		actions:  make(map[string]Action),
+		children: make(map[string]*route),
+		parent:   r,
 	}
-	r.children = append(r.children, newRoute)
+	if r.defaultChild == nil {
+		r.defaultChild = newRoute
+	}
+	r.children[newRoute.path] = newRoute
 	r.gong.handleRoute(newRoute)
-	f(newRoute)
+	if f != nil {
+		f(newRoute)
+	}
 }
 
 func (r *route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
-	gCtx.path = r.path
+	gCtx.route = r
 
 	if gCtx.action {
 		if action, ok := r.actions[gCtx.kind]; ok {

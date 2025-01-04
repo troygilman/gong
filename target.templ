@@ -11,7 +11,7 @@ templ Target(opts ...ComponentOption) {
 	}}
 	<div
 		id={ buildComponentID(ctx, config.id) }
-		hx-get={ getContext(ctx).path }
+		hx-get={ getContext(ctx).route.path }
 		hx-swap={ SwapInnerHTML }
 		hx-trigger={ config.trigger }
 		hx-target="this"
