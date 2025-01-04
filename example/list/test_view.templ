@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/troygilman0/gong"
 	"log"
-	"strconv"
 )
 
 type testView struct {
-	db *userDatabase
+	UserView userView `kind:"user"`
+	db       *userDatabase
 }
 
 templ (view testView) Action() {
@@ -22,13 +22,6 @@ templ (view testView) View() {
 	user, ok := view.db.Read(name)
 	}}
 	if ok {
-		<div>
-			{ user.name }
-			{ strconv.Itoa(user.balance) }
-		</div>\
-	}
-	@gong.Form() {
-		<input name="x" type="text"/>
-		<button>Submit</button>
+		@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
 	}
 }

@@ -18,7 +18,12 @@ func main() {
 				db: db,
 			},
 		}, nil)
-		r.Route("test/{name}", testView{db: db}, nil)
+		r.Route("user/{name}", testView{
+			db: db,
+			UserView: userView{
+				db: db,
+			},
+		}, nil)
 	})
 
 	if err := http.ListenAndServe(":8080", g); err != nil {
