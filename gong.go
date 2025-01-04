@@ -155,6 +155,10 @@ type Action interface {
 	Action() templ.Component
 }
 
+type Head interface {
+	Head() templ.Component
+}
+
 type LoaderFunc func(ctx context.Context) any
 
 func (f LoaderFunc) Loader(ctx context.Context) any {
