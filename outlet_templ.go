@@ -41,6 +41,9 @@ func Outlet() templ.Component {
 		templ_7745c5c3_Err = RenderFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
 			gCtx.kind = ""
+			if len(gCtx.route.children) == 0 {
+				return nil
+			}
 			return render(ctx, gCtx, w, gCtx.route.children[0])
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

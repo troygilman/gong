@@ -62,12 +62,22 @@ func (g *Gong) handleRoute(route *route) {
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		route := route
+		action := r.Header.Get(GongActionHeader) == "true"
+		kind := r.Header.Get(GongKindHeader)
+
+		if !action {
+			for route.parent != nil {
+				route = route.parent
+			}
+		}
+
 		gCtx := gongContext{
 			route:   route,
 			path:    route.path,
 			request: r,
-			action:  r.Header.Get(GongActionHeader) == "true",
-			kind:    r.Header.Get(GongKindHeader),
+			action:  action,
+			kind:    kind,
 		}
 
 		if loader, ok := route.view.(Loader); ok {
