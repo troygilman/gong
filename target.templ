@@ -15,7 +15,7 @@ templ Target(opts ...ComponentOption) {
 		hx-swap={ SwapInnerHTML }
 		hx-trigger={ config.trigger }
 		hx-target="this"
-		hx-headers={ buildHeaders(ctx) }
+		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
 		class={ config.cssClass }
 	>
 		{ children... }

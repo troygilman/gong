@@ -1,0 +1,13 @@
+package gong
+
+templ Link(path string) {
+	<div
+		hx-get={ path }
+		hx-target={ "#" + buildComponentID(ctx, "outlet") }
+		hx-swap={ SwapInnerHTML }
+		hx-headers={ buildHeaders(ctx, GongRequestTypeRoute) }
+		hx-push-url="true"
+	>
+		{ children... }
+	</div>
+}

@@ -11,18 +11,18 @@ func main() {
 
 	g := gong.New(http.NewServeMux())
 
+	userView := userView{
+		db: db,
+	}
+
 	g.Route("/", homeView{}, func(r gong.Route) {
 		r.Route("users", listView{
-			db: db,
-			UserView: userView{
-				db: db,
-			},
+			db:       db,
+			UserView: userView,
 		}, nil)
 		r.Route("user/{name}", testView{
-			db: db,
-			UserView: userView{
-				db: db,
-			},
+			db:       db,
+			UserView: userView,
 		}, nil)
 	})
 

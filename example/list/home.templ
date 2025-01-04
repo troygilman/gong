@@ -7,6 +7,11 @@ type homeView struct{}
 templ (view homeView) View() {
 	<div>
 		HOME
+		<div>
+			@gong.Link("/users") {
+				Users
+			}
+		</div>
 		@gong.Outlet()
 	</div>
 }

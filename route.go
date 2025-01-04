@@ -39,6 +39,10 @@ func (r *route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = r
 
+	if loader, ok := r.view.(Loader); ok {
+		gCtx.loader = loader
+	}
+
 	if gCtx.action {
 		if action, ok := r.actions[gCtx.kind]; ok {
 			gCtx.loader = nil

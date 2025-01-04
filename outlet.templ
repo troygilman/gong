@@ -6,7 +6,7 @@ import (
 )
 
 templ Outlet() {
-	<div>
+	<div id={ buildComponentID(ctx, "outlet") }>
 		@RenderFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
 			gCtx.kind = ""

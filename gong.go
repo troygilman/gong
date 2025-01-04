@@ -14,9 +14,14 @@ type contextKeyType int
 const contextKey = contextKeyType(0)
 
 const (
-	GongActionHeader = "Gong-Action"
-	GongKindHeader   = "Gong-Kind"
-	GongRouteHeader  = "Gong-Route"
+	GongRequestHeader = "Gong-Request"
+	GongKindHeader    = "Gong-Kind"
+	GongRouteHeader   = "Gong-Route"
+)
+
+const (
+	GongRequestTypeAction = "action"
+	GongRequestTypeRoute  = "route"
 )
 
 const (
@@ -47,11 +52,9 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gong) Route(path string, view View, f func(Route)) {
 	route := &route{
-		gong: g,
-		path: path,
-		view: Index{
-			IndexView: view,
-		},
+		gong:     g,
+		path:     path,
+		view:     view,
 		actions:  make(map[string]Action),
 		children: make(map[string]*route),
 	}
@@ -66,31 +69,31 @@ func (g *Gong) handleRoute(route *route) {
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		route := route
-		action := r.Header.Get(GongActionHeader) == "true"
-		path := r.Header.Get(GongRouteHeader)
-		kind := r.Header.Get(GongKindHeader)
-
-		if action {
-			route = route.getRoute(path)
-		} else {
-			path = route.path
-			route = route.getRoot()
-		}
+		requestType := r.Header.Get(GongRequestHeader)
 
 		gCtx := gongContext{
-			route:   route,
-			path:    path,
-			request: r,
-			action:  action,
-			kind:    kind,
+			requestType: requestType,
+			route:       route,
+			path:        r.Header.Get(GongRouteHeader),
+			request:     r,
+			action:      requestType == GongRequestTypeAction,
+			kind:        r.Header.Get(GongKindHeader),
 		}
 
-		if loader, ok := route.view.(Loader); ok {
-			gCtx.loader = loader
+		var component templ.Component
+		switch requestType {
+		case GongRequestTypeAction:
+			gCtx.route = route.getRoute(gCtx.path)
+			component = gCtx.route
+		case GongRequestTypeRoute:
+			component = gCtx.route
+		default:
+			gCtx.path = route.path
+			gCtx.route = route.getRoot()
+			component = index(gCtx.route)
 		}
 
-		if err := render(r.Context(), gCtx, w, route); err != nil {
+		if err := render(r.Context(), gCtx, w, component); err != nil {
 			panic(err)
 		}
 	}))
@@ -125,12 +128,13 @@ func (g *Gong) handle(path string, handler http.Handler) {
 }
 
 type gongContext struct {
-	route   *route
-	request *http.Request
-	path    string
-	action  bool
-	loader  Loader
-	kind    string
+	requestType string
+	route       *route
+	request     *http.Request
+	path        string
+	action      bool
+	loader      Loader
+	kind        string
 }
 
 type Mux interface {
