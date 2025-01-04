@@ -7,15 +7,15 @@ import (
 	"github.com/a-h/templ"
 )
 
-type viewComponent struct {
+type component struct {
 	kind   string
 	view   View
 	action bool
 	config componentConfig
 }
 
-func ViewComponent(kind string, view View, opts ...ComponentOption) templ.Component {
-	c := viewComponent{
+func Component(kind string, view View, opts ...ComponentOption) templ.Component {
+	c := component{
 		kind: kind,
 		view: view,
 	}
@@ -28,7 +28,7 @@ func ViewComponent(kind string, view View, opts ...ComponentOption) templ.Compon
 	return c
 }
 
-func (c viewComponent) Render(ctx context.Context, w io.Writer) error {
+func (c component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.action = c.action
 	gCtx.loader = c.config.loader
@@ -40,4 +40,19 @@ func (c viewComponent) Render(ctx context.Context, w io.Writer) error {
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
 	return c.view.View().Render(ctx, w)
+}
+
+type componentConfig struct {
+	loader Loader
+}
+
+type ComponentOption func(c componentConfig) componentConfig
+
+func ComponentWithLoaderData(data any) ComponentOption {
+	return func(c componentConfig) componentConfig {
+		c.loader = LoaderFunc(func(ctx context.Context) any {
+			return data
+		})
+		return c
+	}
 }

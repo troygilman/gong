@@ -22,6 +22,6 @@ templ (view testView) View() {
 	user, ok := view.db.Read(name)
 	}}
 	if ok {
-		@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
+		@gong.Component("user", view.UserView, gong.ComponentWithLoaderData(user))
 	}
 }

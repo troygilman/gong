@@ -17,7 +17,7 @@ templ (view listView) Action() {
 			users := view.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
+				@gong.Component("user", view.UserView, gong.ComponentWithLoaderData(user))
 			}
 		case http.MethodPost:
 			{{
@@ -29,7 +29,7 @@ templ (view listView) Action() {
 				return nil
 			}
 			}}
-			@gong.ViewComponent("user", view.UserView, gong.WithLoaderData(user))
+			@gong.Component("user", view.UserView, gong.ComponentWithLoaderData(user))
 	}
 }
 
