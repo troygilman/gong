@@ -86,6 +86,7 @@ func (g *Gong) handleRoute(route *route) {
 			gCtx.route = route.getRoute(gCtx.path)
 			component = gCtx.route
 		case GongRequestTypeRoute:
+			gCtx.kind = ""
 			component = gCtx.route
 		default:
 			gCtx.path = route.path
