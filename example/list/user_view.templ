@@ -49,28 +49,28 @@ templ (view userView) View() {
 	user := gong.GetLoaderData[userData](ctx)
 	}}
 	@gong.Target(
-		gong.WithID(user.name),
-		gong.WithCSSClass(boxClassName()),
+		gong.TargetWithID(user.name),
+		gong.TargetWithCSSClass(boxClassName()),
 	) {
 		{ user.name }
 		@gong.Form(
-			gong.WithMethod(http.MethodPatch),
-			gong.WithID(user.name),
-			gong.WithSwap(gong.SwapOuterHTML),
+			gong.FormWithMethod(http.MethodPatch),
+			gong.FormWithID(user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
 		@gong.Form(
-			gong.WithMethod(http.MethodDelete),
-			gong.WithID(user.name),
-			gong.WithSwap(gong.SwapOuterHTML),
+			gong.FormWithMethod(http.MethodDelete),
+			gong.FormWithID(user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
-		@gong.Link("/user/"+user.name, gong.WithClosest()) {
+		@gong.Link("/user/"+user.name, gong.LinkWithClosest()) {
 			LINK
 		}
 	}

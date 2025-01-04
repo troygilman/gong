@@ -8,7 +8,7 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Target(opts ...ComponentOption) templ.Component {
+func Target(opts ...TargetOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -30,7 +30,7 @@ func Target(opts ...ComponentOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := componentConfig{
+		config := targetConfig{
 			trigger: TriggerNone,
 		}
 		for _, opt := range opts {
@@ -133,6 +133,35 @@ func Target(opts ...ComponentOption) templ.Component {
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+type targetConfig struct {
+	id       string
+	trigger  string
+	cssClass templ.CSSClass
+}
+
+type TargetOption func(c targetConfig) targetConfig
+
+func TargetWithID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
+		return c
+	}
+}
+
+func TargetWithTrigger(trigger string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func TargetWithCSSClass(cssClass templ.CSSClass) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.cssClass = cssClass
+		return c
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

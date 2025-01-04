@@ -1,8 +1,8 @@
 package gong
 
-templ Link(path string, opts ...ComponentOption) {
+templ Link(path string, opts ...LinkOption) {
 	{{
-	config := componentConfig{
+	config := linkConfig{
 		target: "#" + buildOutletID(ctx),
 	}
 	for _, opt := range opts {
@@ -18,4 +18,17 @@ templ Link(path string, opts ...ComponentOption) {
 	>
 		{ children... }
 	</div>
+}
+
+type linkConfig struct {
+	target string
+}
+
+type LinkOption func(c linkConfig) linkConfig
+
+func LinkWithClosest() LinkOption {
+	return func(c linkConfig) linkConfig {
+		c.target = "closest .gong-outlet"
+		return c
+	}
 }

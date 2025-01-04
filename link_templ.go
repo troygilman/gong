@@ -8,7 +8,7 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Link(path string, opts ...ComponentOption) templ.Component {
+func Link(path string, opts ...LinkOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -30,7 +30,7 @@ func Link(path string, opts ...ComponentOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := componentConfig{
+		config := linkConfig{
 			target: "#" + buildOutletID(ctx),
 		}
 		for _, opt := range opts {
@@ -102,6 +102,19 @@ func Link(path string, opts ...ComponentOption) templ.Component {
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+type linkConfig struct {
+	target string
+}
+
+type LinkOption func(c linkConfig) linkConfig
+
+func LinkWithClosest() LinkOption {
+	return func(c linkConfig) linkConfig {
+		c.target = "closest .gong-outlet"
+		return c
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

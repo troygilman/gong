@@ -1,8 +1,8 @@
 package gong
 
-templ Target(opts ...ComponentOption) {
+templ Target(opts ...TargetOption) {
 	{{
-	config := componentConfig{
+	config := targetConfig{
 		trigger: TriggerNone,
 	}
 	for _, opt := range opts {
@@ -20,4 +20,33 @@ templ Target(opts ...ComponentOption) {
 	>
 		{ children... }
 	</div>
+}
+
+type targetConfig struct {
+	id       string
+	trigger  string
+	cssClass templ.CSSClass
+}
+
+type TargetOption func(c targetConfig) targetConfig
+
+func TargetWithID(id string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.id = id
+		return c
+	}
+}
+
+func TargetWithTrigger(trigger string) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func TargetWithCSSClass(cssClass templ.CSSClass) TargetOption {
+	return func(c targetConfig) targetConfig {
+		c.cssClass = cssClass
+		return c
+	}
 }
