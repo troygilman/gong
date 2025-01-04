@@ -28,10 +28,7 @@ func (r *route) Route(path string, view View, f func(r Route)) {
 		children: make(map[string]*route),
 		parent:   r,
 	}
-	if r.defaultChild == nil {
-		r.defaultChild = newRoute
-	}
-	r.children[newRoute.path] = newRoute
+	r.addChild(newRoute.path, newRoute)
 	r.gong.handleRoute(newRoute)
 	if f != nil {
 		f(newRoute)
@@ -57,4 +54,28 @@ func (r *route) Render(ctx context.Context, w io.Writer) error {
 	}
 
 	return render(ctx, gCtx, w, r.view.View())
+}
+
+func (r *route) addChild(path string, child *route) {
+	r.children[path] = child
+	if r.defaultChild == nil {
+		r.defaultChild = child
+	}
+	if r.parent != nil {
+		r.parent.addChild(path, r)
+	}
+}
+
+func (r *route) getRoute(path string) *route {
+	if r.path == path {
+		return r
+	}
+	return r.children[path].getRoute(path)
+}
+
+func (r *route) getRoot() *route {
+	if r.parent == nil {
+		return r
+	}
+	return r.parent
 }

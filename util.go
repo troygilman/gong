@@ -43,7 +43,7 @@ func buildComponentID(ctx context.Context, id string) string {
 
 func buildHeaders(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	return fmt.Sprintf(`{"%s": "true", "%s": "%s"}`, GongActionHeader, GongKindHeader, gCtx.kind)
+	return fmt.Sprintf(`{"%s": "true", "%s": "%s", "%s": "%s"}`, GongActionHeader, GongRouteHeader, gCtx.route.path, GongKindHeader, gCtx.kind)
 }
 
 func GetRequest(ctx context.Context) *http.Request {

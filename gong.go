@@ -16,6 +16,7 @@ const contextKey = contextKeyType(0)
 const (
 	GongActionHeader = "Gong-Action"
 	GongKindHeader   = "Gong-Kind"
+	GongRouteHeader  = "Gong-Route"
 )
 
 const (
@@ -66,14 +67,15 @@ func (g *Gong) handleRoute(route *route) {
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := route
-		path := route.path
 		action := r.Header.Get(GongActionHeader) == "true"
+		path := r.Header.Get(GongRouteHeader)
 		kind := r.Header.Get(GongKindHeader)
 
-		if !action {
-			for route.parent != nil {
-				route = route.parent
-			}
+		if action {
+			route = route.getRoute(path)
+		} else {
+			path = route.path
+			route = route.getRoot()
 		}
 
 		gCtx := gongContext{

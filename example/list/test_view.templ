@@ -1,13 +1,32 @@
 package main
 
-import "github.com/troygilman0/gong"
+import (
+	"github.com/troygilman0/gong"
+	"log"
+	"strconv"
+)
 
-type testView struct{}
+type testView struct {
+	db *userDatabase
+}
 
 templ (view testView) Action() {
+	{{
+	log.Println("TEST", gong.GetRequest(ctx).PathValue("name"))
+	}}
 }
 
 templ (view testView) View() {
+	{{
+	name := gong.GetRequest(ctx).PathValue("name")
+	user, ok := view.db.Read(name)
+	}}
+	if ok {
+		<div>
+			{ user.name }
+			{ strconv.Itoa(user.balance) }
+		</div>\
+	}
 	@gong.Form() {
 		<input name="x" type="text"/>
 		<button>Submit</button>

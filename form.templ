@@ -11,16 +11,17 @@ templ Form(opts ...ComponentOption) {
 	for _, opt := range opts {
 		config = opt(config)
 	}
+	path := getContext(ctx).request.RequestURI
 	}}
 	<form
 		if config.method == http.MethodPost {
-			hx-post={ getContext(ctx).route.path }
+			hx-post={ path }
 		}
 		if config.method == http.MethodPatch {
-			hx-patch={ getContext(ctx).route.path }
+			hx-patch={ path }
 		}
 		if config.method == http.MethodDelete {
-			hx-delete={ getContext(ctx).route.path }
+			hx-delete={ path }
 		}
 		hx-swap={ config.swap }
 		if config.swap != SwapNone {
