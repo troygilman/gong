@@ -41,6 +41,11 @@ func buildComponentID(ctx context.Context, id string) string {
 	return prefix
 }
 
+func buildOutletID(ctx context.Context) string {
+	gCtx := getContext(ctx)
+	return "gong" + "_" + hash(gCtx.route.path) + "_outlet"
+}
+
 func buildHeaders(ctx context.Context, requestType string) string {
 	gCtx := getContext(ctx)
 	return fmt.Sprintf(`{"%s": "%s", "%s": "%s", "%s": "%s"}`, GongRequestHeader, requestType, GongRouteHeader, gCtx.route.path, GongKindHeader, gCtx.kind)

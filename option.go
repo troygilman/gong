@@ -13,6 +13,7 @@ type componentConfig struct {
 	trigger  string
 	swap     string
 	cssClass templ.CSSClass
+	target   string
 }
 
 type ComponentOption func(c componentConfig) componentConfig
@@ -64,6 +65,13 @@ func WithMethod(method string) ComponentOption {
 func WithCSSClass(cssClass templ.CSSClass) ComponentOption {
 	return func(c componentConfig) componentConfig {
 		c.cssClass = cssClass
+		return c
+	}
+}
+
+func WithClosest() ComponentOption {
+	return func(c componentConfig) componentConfig {
+		c.target = "closest .gong-outlet"
 		return c
 	}
 }

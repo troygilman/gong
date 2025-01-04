@@ -1,9 +1,17 @@
 package gong
 
-templ Link(path string) {
+templ Link(path string, opts ...ComponentOption) {
+	{{
+	config := componentConfig{
+		target: "#" + buildOutletID(ctx),
+	}
+	for _, opt := range opts {
+		config = opt(config)
+	}
+	}}
 	<div
 		hx-get={ path }
-		hx-target={ "#" + buildComponentID(ctx, "outlet") }
+		hx-target={ config.target }
 		hx-swap={ SwapInnerHTML }
 		hx-headers={ buildHeaders(ctx, GongRequestTypeRoute) }
 		hx-push-url="true"
