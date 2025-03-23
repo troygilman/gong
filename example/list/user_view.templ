@@ -53,20 +53,18 @@ templ (view userView) View() {
 		gong.TargetWithCSSClass(boxClassName()),
 	) {
 		{ user.name }
-		@gong.Form(
-			gong.FormWithMethod(http.MethodPatch),
-			gong.FormWithID(user.name),
-			gong.FormWithSwap(gong.SwapOuterHTML),
-		) {
+		@gong.Form().
+			WithMethod(http.MethodPatch).
+			WithTargetID(user.name).
+			WithSwap(gong.SwapOuterHTML) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@gong.Form(
-			gong.FormWithMethod(http.MethodDelete),
-			gong.FormWithID(user.name),
-			gong.FormWithSwap(gong.SwapOuterHTML),
-		) {
+		@gong.Form().
+			WithMethod(http.MethodDelete).
+			WithTargetID(user.name).
+			WithSwap(gong.SwapOuterHTML) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}

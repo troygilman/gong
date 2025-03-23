@@ -35,7 +35,7 @@ templ (view listView) Action() {
 
 templ (view listView) View() {
 	<div>
-		@gong.Form(gong.FormWithSwap(gong.SwapBeforeEnd)) {
+		@gong.Form().WithSwap(gong.SwapBeforeEnd) {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
 		}

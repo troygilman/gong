@@ -1,8 +1,75 @@
 package gong
 
-import "net/http"
+import (
+	"context"
+	"io"
+	"net/http"
+)
 
-templ Form(opts ...FormOption) {
+type FormComponent struct {
+	method   string
+	targetID string
+	cssClass templ.CSSClass
+	swap     string
+}
+
+func Form() FormComponent {
+	return FormComponent{
+		method: http.MethodPost,
+		swap:   SwapNone,
+	}
+}
+
+func (form FormComponent) WithMethod(method string) FormComponent {
+	form.method = method
+	return form
+}
+
+func (form FormComponent) WithCSSClass(cssClass templ.CSSClass) FormComponent {
+	form.cssClass = cssClass
+	return form
+}
+
+func (form FormComponent) WithTargetID(targetID string) FormComponent {
+	form.targetID = targetID
+	return form
+}
+
+func (form FormComponent) WithSwap(swap string) FormComponent {
+	form.swap = swap
+	return form
+}
+
+func (form FormComponent) Render(ctx context.Context, w io.Writer) error {
+	return form.component().Render(ctx, w)
+}
+
+templ (form FormComponent) component() {
+	{{
+		path := getContext(ctx).request.RequestURI
+	}}
+	<form
+		if form.method == http.MethodPost {
+			hx-post={ path }
+		}
+		if form.method == http.MethodPatch {
+			hx-patch={ path }
+		}
+		if form.method == http.MethodDelete {
+			hx-delete={ path }
+		}
+		hx-swap={ form.swap }
+		if form.swap != SwapNone {
+			hx-target={ "#" + buildComponentID(ctx, form.targetID) }
+		}
+		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		class={ form.cssClass }
+	>
+		{ children... }
+	</form>
+}
+
+templ (form FormComponent) Form(opts ...FormOption) {
 	{{
 	config := formConfig{
 		method: http.MethodPost,
