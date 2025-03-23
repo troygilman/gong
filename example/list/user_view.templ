@@ -65,7 +65,7 @@ templ (view userView) View() {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
-		@gong.Link("/user/"+user.name, gong.LinkWithClosest()) {
+		@gong.Link("/user/" + user.name).WithClosestOutlet() {
 			LINK
 		}
 	}

@@ -1,34 +1,41 @@
 package gong
 
-templ Link(path string, opts ...LinkOption) {
+import "context"
+import "io"
+
+type LinkComponent struct {
+	path   string
+	target string
+}
+
+func Link(path string) LinkComponent {
+	return LinkComponent{
+		path: path,
+	}
+}
+
+func (link LinkComponent) WithClosestOutlet() LinkComponent {
+	link.target = "closest .gong-outlet"
+	return link
+}
+
+func (link LinkComponent) Render(ctx context.Context, w io.Writer) error {
+	return link.component().Render(ctx, w)
+}
+
+templ (link LinkComponent) component() {
 	{{
-	config := linkConfig{
-		target: "#" + buildOutletID(ctx),
-	}
-	for _, opt := range opts {
-		config = opt(config)
-	}
+		if link.target == "" {
+			link.target = "#" + buildOutletID(ctx)
+		}
 	}}
 	<div
-		hx-get={ path }
-		hx-target={ config.target }
+		hx-get={ link.path }
+		hx-target={ link.target }
 		hx-swap={ SwapInnerHTML }
 		hx-headers={ buildHeaders(ctx, GongRequestTypeRoute) }
 		hx-push-url="true"
 	>
 		{ children... }
 	</div>
-}
-
-type linkConfig struct {
-	target string
-}
-
-type LinkOption func(c linkConfig) linkConfig
-
-func LinkWithClosest() LinkOption {
-	return func(c linkConfig) linkConfig {
-		c.target = "closest .gong-outlet"
-		return c
-	}
 }

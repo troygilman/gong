@@ -8,7 +8,30 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Link(path string, opts ...LinkOption) templ.Component {
+import "context"
+import "io"
+
+type LinkComponent struct {
+	path   string
+	target string
+}
+
+func Link(path string) LinkComponent {
+	return LinkComponent{
+		path: path,
+	}
+}
+
+func (link LinkComponent) WithClosestOutlet() LinkComponent {
+	link.target = "closest .gong-outlet"
+	return link
+}
+
+func (link LinkComponent) Render(ctx context.Context, w io.Writer) error {
+	return link.component().Render(ctx, w)
+}
+
+func (link LinkComponent) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -30,20 +53,17 @@ func Link(path string, opts ...LinkOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		config := linkConfig{
-			target: "#" + buildOutletID(ctx),
-		}
-		for _, opt := range opts {
-			config = opt(config)
+		if link.target == "" {
+			link.target = "#" + buildOutletID(ctx)
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(path)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(link.path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 13, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 33, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -54,9 +74,9 @@ func Link(path string, opts ...LinkOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(config.target)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(link.target)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 14, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 34, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -69,7 +89,7 @@ func Link(path string, opts ...LinkOption) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(SwapInnerHTML)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 15, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 35, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -82,7 +102,7 @@ func Link(path string, opts ...LinkOption) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeRoute))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 16, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 36, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -102,19 +122,6 @@ func Link(path string, opts ...LinkOption) templ.Component {
 		}
 		return nil
 	})
-}
-
-type linkConfig struct {
-	target string
-}
-
-type LinkOption func(c linkConfig) linkConfig
-
-func LinkWithClosest() LinkOption {
-	return func(c linkConfig) linkConfig {
-		c.target = "closest .gong-outlet"
-		return c
-	}
 }
 
 var _ = templruntime.GeneratedTemplate
