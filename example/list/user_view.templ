@@ -48,10 +48,7 @@ templ (view userView) View() {
 	{{
 	user := gong.GetLoaderData[userData](ctx)
 	}}
-	@gong.Target(
-		gong.TargetWithID(user.name),
-		gong.TargetWithCSSClass(boxClassName()),
-	) {
+	@gong.Target().WithID(user.name).WithCSSClass(boxClassName()) {
 		{ user.name }
 		@gong.Form().
 			WithMethod(http.MethodPatch).

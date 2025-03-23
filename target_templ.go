@@ -8,7 +8,41 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Target(opts ...TargetOption) templ.Component {
+import "context"
+import "io"
+
+type TargetComponent struct {
+	id       string
+	trigger  string
+	cssClass templ.CSSClass
+}
+
+func Target() TargetComponent {
+	return TargetComponent{
+		trigger: TriggerNone,
+	}
+}
+
+func (target TargetComponent) WithID(id string) TargetComponent {
+	target.id = id
+	return target
+}
+
+func (target TargetComponent) WithTrigger(trigger string) TargetComponent {
+	target.trigger = trigger
+	return target
+}
+
+func (target TargetComponent) WithCSSClass(cssClass templ.CSSClass) TargetComponent {
+	target.cssClass = cssClass
+	return target
+}
+
+func (target TargetComponent) Render(ctx context.Context, w io.Writer) error {
+	return target.component().Render(ctx, w)
+}
+
+func (target TargetComponent) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -29,14 +63,7 @@ func Target(opts ...TargetOption) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-
-		config := targetConfig{
-			trigger: TriggerNone,
-		}
-		for _, opt := range opts {
-			config = opt(config)
-		}
-		var templ_7745c5c3_Var2 = []any{config.cssClass}
+		var templ_7745c5c3_Var2 = []any{target.cssClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -46,9 +73,9 @@ func Target(opts ...TargetOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(buildComponentID(ctx, config.id))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(buildComponentID(ctx, target.id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 13, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 39, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -61,7 +88,7 @@ func Target(opts ...TargetOption) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(getContext(ctx).route.path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 14, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 40, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -74,7 +101,7 @@ func Target(opts ...TargetOption) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(SwapInnerHTML)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 15, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 41, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -85,9 +112,9 @@ func Target(opts ...TargetOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(config.trigger)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(target.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 16, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 42, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -100,7 +127,7 @@ func Target(opts ...TargetOption) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeAction))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 18, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 44, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -133,35 +160,6 @@ func Target(opts ...TargetOption) templ.Component {
 		}
 		return nil
 	})
-}
-
-type targetConfig struct {
-	id       string
-	trigger  string
-	cssClass templ.CSSClass
-}
-
-type TargetOption func(c targetConfig) targetConfig
-
-func TargetWithID(id string) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.id = id
-		return c
-	}
-}
-
-func TargetWithTrigger(trigger string) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.trigger = trigger
-		return c
-	}
-}
-
-func TargetWithCSSClass(cssClass templ.CSSClass) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.cssClass = cssClass
-		return c
-	}
 }
 
 var _ = templruntime.GeneratedTemplate

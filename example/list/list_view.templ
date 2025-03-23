@@ -39,6 +39,6 @@ templ (view listView) View() {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
 		}
-		@gong.Target(gong.TargetWithTrigger(gong.TriggerLoad))
+		@gong.Target().WithTrigger(gong.TriggerLoad)
 	</div>
 }

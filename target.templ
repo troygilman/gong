@@ -1,52 +1,49 @@
 package gong
 
-templ Target(opts ...TargetOption) {
-	{{
-	config := targetConfig{
-		trigger: TriggerNone,
-	}
-	for _, opt := range opts {
-		config = opt(config)
-	}
-	}}
-	<div
-		id={ buildComponentID(ctx, config.id) }
-		hx-get={ getContext(ctx).route.path }
-		hx-swap={ SwapInnerHTML }
-		hx-trigger={ config.trigger }
-		hx-target="this"
-		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
-		class={ config.cssClass }
-	>
-		{ children... }
-	</div>
-}
+import "context"
+import "io"
 
-type targetConfig struct {
+type TargetComponent struct {
 	id       string
 	trigger  string
 	cssClass templ.CSSClass
 }
 
-type TargetOption func(c targetConfig) targetConfig
-
-func TargetWithID(id string) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.id = id
-		return c
+func Target() TargetComponent {
+	return TargetComponent{
+		trigger: TriggerNone,
 	}
 }
 
-func TargetWithTrigger(trigger string) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.trigger = trigger
-		return c
-	}
+func (target TargetComponent) WithID(id string) TargetComponent {
+	target.id = id
+	return target
 }
 
-func TargetWithCSSClass(cssClass templ.CSSClass) TargetOption {
-	return func(c targetConfig) targetConfig {
-		c.cssClass = cssClass
-		return c
-	}
+func (target TargetComponent) WithTrigger(trigger string) TargetComponent {
+	target.trigger = trigger
+	return target
+}
+
+func (target TargetComponent) WithCSSClass(cssClass templ.CSSClass) TargetComponent {
+	target.cssClass = cssClass
+	return target
+}
+
+func (target TargetComponent) Render(ctx context.Context, w io.Writer) error {
+	return target.component().Render(ctx, w)
+}
+
+templ (target TargetComponent) component() {
+	<div
+		id={ buildComponentID(ctx, target.id) }
+		hx-get={ getContext(ctx).route.path }
+		hx-swap={ SwapInnerHTML }
+		hx-trigger={ target.trigger }
+		hx-target="this"
+		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		class={ target.cssClass }
+	>
+		{ children... }
+	</div>
 }
