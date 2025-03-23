@@ -8,7 +8,7 @@ package main
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/troygilman0/gong"
+import "github.com/troygilman/gong"
 
 type homeView struct{}
 

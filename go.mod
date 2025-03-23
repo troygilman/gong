@@ -1,4 +1,4 @@
-module github.com/troygilman0/gong
+module github.com/troygilman/gong
 
 go 1.24.0
 

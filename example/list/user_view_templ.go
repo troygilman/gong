@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"context"
 	"fmt"
-	"github.com/troygilman0/gong"
+	"github.com/troygilman/gong"
 	"net/http"
 	"strconv"
 )
