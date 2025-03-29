@@ -5,8 +5,25 @@ import (
 	"io"
 )
 
-templ Outlet() {
-	<div id={ buildOutletID(ctx) } class="gong-outlet">
+type OutletComponent struct {
+	class string
+}
+
+func Outlet() OutletComponent {
+	return OutletComponent{}
+}
+
+func (outlet OutletComponent) WithClass(class string) OutletComponent {
+	outlet.class = class
+	return outlet
+}
+
+func (outlet OutletComponent) Render(ctx context.Context, w io.Writer) error {
+	return outlet.component().Render(ctx, w)
+}
+
+templ (outlet OutletComponent) component() {
+	<div id={ buildOutletID(ctx) } class={ "gong-outlet", outlet.class }>
 		@RenderFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
 			gCtx.kind = ""
