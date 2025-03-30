@@ -43,7 +43,7 @@ func (view listView) Action() templ.Component {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.Component("user", view.UserView, gong.ComponentWithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gong.NewComponent("user", view.UserView).WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -56,7 +56,7 @@ func (view listView) Action() templ.Component {
 			if err := view.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.Component("user", view.UserView, gong.ComponentWithLoaderData(user)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.NewComponent("user", view.UserView).WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

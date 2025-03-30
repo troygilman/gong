@@ -3,56 +3,47 @@ package gong
 import (
 	"context"
 	"io"
-
-	"github.com/a-h/templ"
 )
 
-type component struct {
+type Component struct {
 	kind   string
 	view   View
-	action bool
-	config componentConfig
+	loader Loader
 }
 
-func Component(kind string, view View, opts ...ComponentOption) templ.Component {
-	c := component{
+func NewComponent(kind string, view View) Component {
+	component := Component{
 		kind: kind,
 		view: view,
 	}
 	if loader, ok := view.(Loader); ok {
-		c.config.loader = loader
+		component.loader = loader
 	}
-	for _, opt := range opts {
-		c.config = opt(c.config)
-	}
-	return c
+	return component
 }
 
-func (c component) Render(ctx context.Context, w io.Writer) error {
+func (component Component) WithLoaderFunc(loader LoaderFunc) Component {
+	component.loader = loader
+	return component
+}
+
+func (component Component) WithLoaderData(data any) Component {
+	component.loader = LoaderFunc(func(ctx context.Context) any {
+		return data
+	})
+	return component
+}
+
+func (component Component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
-	gCtx.action = c.action
-	gCtx.loader = c.config.loader
+	gCtx.action = false
+	gCtx.loader = component.loader
 	if gCtx.kind == "" {
-		gCtx.kind = c.kind
+		gCtx.kind = component.kind
 	} else {
-		gCtx.kind += "_" + c.kind
+		gCtx.kind += "_" + component.kind
 	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 
-	return c.view.View().Render(ctx, w)
-}
-
-type componentConfig struct {
-	loader Loader
-}
-
-type ComponentOption func(c componentConfig) componentConfig
-
-func ComponentWithLoaderData(data any) ComponentOption {
-	return func(c componentConfig) componentConfig {
-		c.loader = LoaderFunc(func(ctx context.Context) any {
-			return data
-		})
-		return c
-	}
+	return component.view.View().Render(ctx, w)
 }
