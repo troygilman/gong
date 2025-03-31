@@ -22,6 +22,7 @@ func (route *Route) setupHandler(g *Gong) {
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writer := NewCustomResponseWriter(w)
 		requestType := r.Header.Get(GongRequestHeader)
 
 		gCtx := gongContext{
@@ -29,7 +30,7 @@ func (route *Route) setupHandler(g *Gong) {
 			route:       route,
 			path:        r.Header.Get(GongRouteHeader),
 			request:     r,
-			response:    w,
+			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
 			kind:        r.Header.Get(GongKindHeader),
 		}
@@ -48,7 +49,7 @@ func (route *Route) setupHandler(g *Gong) {
 			component = index(gCtx.route)
 		}
 
-		if err := render(r.Context(), gCtx, w, component); err != nil {
+		if err := render(r.Context(), gCtx, writer, component); err != nil {
 			panic(err)
 		}
 	}))
