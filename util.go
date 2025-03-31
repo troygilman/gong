@@ -24,9 +24,8 @@ func Bind(ctx context.Context, dest any) error {
 	return nil
 }
 
-func Param(ctx context.Context, key string) string {
-	gCtx := getContext(ctx)
-	return gCtx.request.FormValue(key)
+func FormValue(ctx context.Context, key string) string {
+	return Request(ctx).FormValue(key)
 }
 
 func buildComponentID(ctx context.Context, id string) string {

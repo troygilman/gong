@@ -49,7 +49,7 @@ func (view listView) Action() templ.Component {
 				}
 			}
 		case http.MethodPost:
-			name := gong.Param(ctx, "name")
+			name := gong.FormValue(ctx, "name")
 			user := userData{
 				name: name,
 			}

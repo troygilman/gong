@@ -21,7 +21,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := gong.Param(ctx, "name")
+	name := gong.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -52,11 +52,11 @@ func (view userView) Action() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch gong.Request(ctx).Method {
 		case http.MethodDelete:
-			name := gong.Param(ctx, "name")
+			name := gong.FormValue(ctx, "name")
 			view.db.Delete(name)
 		case http.MethodPatch:
-			name := gong.Param(ctx, "name")
-			balance, err := strconv.Atoi(gong.Param(ctx, "balance"))
+			name := gong.FormValue(ctx, "name")
+			balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
 			if err != nil {
 				panic(err)
 			}
