@@ -29,6 +29,7 @@ func (route *Route) setupHandler(g *Gong) {
 			route:       route,
 			path:        r.Header.Get(GongRouteHeader),
 			request:     r,
+			response:    w,
 			action:      requestType == GongRequestTypeAction,
 			kind:        r.Header.Get(GongKindHeader),
 		}

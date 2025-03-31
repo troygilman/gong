@@ -63,6 +63,7 @@ type gongContext struct {
 	requestType string
 	route       *Route
 	request     *http.Request
+	response    http.ResponseWriter
 	path        string
 	action      bool
 	loader      Loader

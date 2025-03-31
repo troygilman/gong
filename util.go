@@ -85,3 +85,9 @@ type RenderFunc func(ctx context.Context, w io.Writer) error
 func (r RenderFunc) Render(ctx context.Context, w io.Writer) error {
 	return r(ctx, w)
 }
+
+func Redirect(ctx context.Context, path string) error {
+	gCtx := getContext(ctx)
+	http.Redirect(gCtx.response, gCtx.request, path, http.StatusSeeOther)
+	return nil
+}
