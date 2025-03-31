@@ -2,9 +2,7 @@ package gong
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"reflect"
 
 	"github.com/a-h/templ"
 )
@@ -46,76 +44,15 @@ func New(mux Mux) *Gong {
 	}
 }
 
+func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
+	for _, builder := range builders {
+		builder.build(g, nil)
+	}
+	return g
+}
+
 func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.mux.ServeHTTP(w, r)
-}
-
-func (g *Gong) Route(path string, component Component, f func(Route)) {
-	route := &route{
-		gong:      g,
-		path:      path,
-		component: component,
-		actions:   make(map[string]Action),
-		children:  make(map[string]*route),
-	}
-	g.handleRoute(route)
-	if f != nil {
-		f(route)
-	}
-}
-
-func (g *Gong) handleRoute(route *route) {
-	scanViewForActions(route.actions, route.component.view, "")
-	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
-
-	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestType := r.Header.Get(GongRequestHeader)
-
-		gCtx := gongContext{
-			requestType: requestType,
-			route:       route,
-			path:        r.Header.Get(GongRouteHeader),
-			request:     r,
-			action:      requestType == GongRequestTypeAction,
-			kind:        r.Header.Get(GongKindHeader),
-		}
-
-		var component templ.Component
-		switch requestType {
-		case GongRequestTypeAction:
-			gCtx.route = route.getRoute(gCtx.path)
-			component = gCtx.route
-		case GongRequestTypeRoute:
-			gCtx.kind = ""
-			component = gCtx.route
-		default:
-			gCtx.path = route.path
-			gCtx.route = route.getRoot()
-			component = index(gCtx.route)
-		}
-
-		if err := render(r.Context(), gCtx, w, component); err != nil {
-			panic(err)
-		}
-	}))
-}
-
-func scanViewForActions(actions map[string]Action, view View, kindPrefix string) {
-	v := reflect.ValueOf(view)
-	t := v.Type()
-	if t.Kind() == reflect.Struct {
-		for i := range t.NumField() {
-			field := v.Field(i)
-			if !field.CanInterface() {
-				continue
-			}
-			if component, ok := field.Interface().(Component); ok {
-				kind := kindPrefix + component.kind
-				actions[kind] = component.action
-				scanViewForActions(actions, component.view, kind+"_")
-			}
-		}
-	}
 }
 
 func (g *Gong) handle(path string, handler http.Handler) {
@@ -124,7 +61,7 @@ func (g *Gong) handle(path string, handler http.Handler) {
 
 type gongContext struct {
 	requestType string
-	route       *route
+	route       *Route
 	request     *http.Request
 	path        string
 	action      bool

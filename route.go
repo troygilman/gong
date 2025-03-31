@@ -3,39 +3,57 @@ package gong
 import (
 	"context"
 	"io"
+	"log"
+	"net/http"
+
+	"github.com/a-h/templ"
 )
 
-type Route interface {
-	Route(path string, component Component, f func(r Route))
-}
-
-type route struct {
-	gong         *Gong
+type Route struct {
 	path         string
 	component    Component
 	actions      map[string]Action
-	children     map[string]*route
-	defaultChild *route
-	parent       *route
+	children     map[string]*Route
+	defaultChild *Route
+	parent       *Route
 }
 
-func (r *route) Route(path string, component Component, f func(r Route)) {
-	newRoute := &route{
-		gong:      r.gong,
-		component: component,
-		path:      r.path + path,
-		actions:   make(map[string]Action),
-		children:  make(map[string]*route),
-		parent:    r,
-	}
-	r.addChild(newRoute.path, newRoute)
-	r.gong.handleRoute(newRoute)
-	if f != nil {
-		f(newRoute)
-	}
+func (route *Route) setupHandler(g *Gong) {
+	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
+
+	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestType := r.Header.Get(GongRequestHeader)
+
+		gCtx := gongContext{
+			requestType: requestType,
+			route:       route,
+			path:        r.Header.Get(GongRouteHeader),
+			request:     r,
+			action:      requestType == GongRequestTypeAction,
+			kind:        r.Header.Get(GongKindHeader),
+		}
+
+		var component templ.Component
+		switch requestType {
+		case GongRequestTypeAction:
+			gCtx.route = route.getRoute(gCtx.path)
+			component = gCtx.route
+		case GongRequestTypeRoute:
+			gCtx.kind = ""
+			component = gCtx.route
+		default:
+			gCtx.path = route.path
+			gCtx.route = route.getRoot()
+			component = index(gCtx.route)
+		}
+
+		if err := render(r.Context(), gCtx, w, component); err != nil {
+			panic(err)
+		}
+	}))
 }
 
-func (r *route) Render(ctx context.Context, w io.Writer) error {
+func (r *Route) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = r
 	gCtx.loader = r.component.loader
@@ -57,24 +75,14 @@ func (r *route) Render(ctx context.Context, w io.Writer) error {
 	return render(ctx, gCtx, w, r.component.view.View())
 }
 
-func (r *route) addChild(path string, child *route) {
-	r.children[path] = child
-	if r.defaultChild == nil {
-		r.defaultChild = child
-	}
-	if r.parent != nil {
-		r.parent.addChild(path, r)
-	}
-}
-
-func (r *route) getRoute(path string) *route {
+func (r *Route) getRoute(path string) *Route {
 	if r.path == path {
 		return r
 	}
 	return r.children[path].getRoute(path)
 }
 
-func (r *route) getRoot() *route {
+func (r *Route) getRoot() *Route {
 	if r.parent == nil {
 		return r
 	}
