@@ -13,24 +13,24 @@ import (
 	"io"
 )
 
-type OutletComponent struct {
+type Outlet struct {
 	class string
 }
 
-func Outlet() OutletComponent {
-	return OutletComponent{}
+func NewOutlet() Outlet {
+	return Outlet{}
 }
 
-func (outlet OutletComponent) WithClass(class string) OutletComponent {
+func (outlet Outlet) WithClass(class string) Outlet {
 	outlet.class = class
 	return outlet
 }
 
-func (outlet OutletComponent) Render(ctx context.Context, w io.Writer) error {
+func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	return outlet.component().Render(ctx, w)
 }
 
-func (outlet OutletComponent) component() templ.Component {
+func (outlet Outlet) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

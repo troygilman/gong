@@ -8,10 +8,10 @@ templ (view homeView) View() {
 	<div>
 		HOME
 		<div>
-			@gong.Link("/users") {
+			@gong.NewLink("/users") {
 				Users
 			}
 		</div>
-		@gong.Outlet()
+		@gong.NewOutlet()
 	</div>
 }

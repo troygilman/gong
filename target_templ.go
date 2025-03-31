@@ -11,38 +11,38 @@ import templruntime "github.com/a-h/templ/runtime"
 import "context"
 import "io"
 
-type TargetComponent struct {
+type Target struct {
 	id       string
 	trigger  string
 	cssClass templ.CSSClass
 }
 
-func Target() TargetComponent {
-	return TargetComponent{
+func NewTarget() Target {
+	return Target{
 		trigger: TriggerNone,
 	}
 }
 
-func (target TargetComponent) WithID(id string) TargetComponent {
+func (target Target) WithID(id string) Target {
 	target.id = id
 	return target
 }
 
-func (target TargetComponent) WithTrigger(trigger string) TargetComponent {
+func (target Target) WithTrigger(trigger string) Target {
 	target.trigger = trigger
 	return target
 }
 
-func (target TargetComponent) WithCSSClass(cssClass templ.CSSClass) TargetComponent {
+func (target Target) WithCSSClass(cssClass templ.CSSClass) Target {
 	target.cssClass = cssClass
 	return target
 }
 
-func (target TargetComponent) Render(ctx context.Context, w io.Writer) error {
+func (target Target) Render(ctx context.Context, w io.Writer) error {
 	return target.component().Render(ctx, w)
 }
 
-func (target TargetComponent) component() templ.Component {
+func (target Target) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

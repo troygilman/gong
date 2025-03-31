@@ -6,8 +6,8 @@ import (
 )
 
 type listView struct {
-	UserView userView `kind:"user"`
-	db       *userDatabase
+	UserComponent gong.Component
+	db            *userDatabase
 }
 
 templ (view listView) Action() {
@@ -17,7 +17,7 @@ templ (view listView) Action() {
 			users := view.db.ReadAll()
 			}}
 			for _, user := range users {
-				@gong.NewComponent("user", view.UserView).WithLoaderData(user)
+				@view.UserComponent.WithLoaderData(user)
 			}
 		case http.MethodPost:
 			{{
@@ -29,16 +29,16 @@ templ (view listView) Action() {
 				return nil
 			}
 			}}
-			@gong.NewComponent("user", view.UserView).WithLoaderData(user)
+			@view.UserComponent.WithLoaderData(user)
 	}
 }
 
 templ (view listView) View() {
 	<div>
-		@gong.Form().WithSwap(gong.SwapBeforeEnd) {
+		@gong.NewForm().WithSwap(gong.SwapBeforeEnd) {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
 		}
-		@gong.Target().WithTrigger(gong.TriggerLoad)
+		@gong.NewTarget().WithTrigger(gong.TriggerLoad)
 	</div>
 }

@@ -14,8 +14,8 @@ import (
 )
 
 type listView struct {
-	UserView userView `kind:"user"`
-	db       *userDatabase
+	UserComponent gong.Component
+	db            *userDatabase
 }
 
 func (view listView) Action() templ.Component {
@@ -43,7 +43,7 @@ func (view listView) Action() templ.Component {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
-				templ_7745c5c3_Err = gong.NewComponent("user", view.UserView).WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = view.UserComponent.WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -56,7 +56,7 @@ func (view listView) Action() templ.Component {
 			if err := view.db.Create(user); err != nil {
 				return nil
 			}
-			templ_7745c5c3_Err = gong.NewComponent("user", view.UserView).WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = view.UserComponent.WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -108,11 +108,11 @@ func (view listView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.Form().WithSwap(gong.SwapBeforeEnd).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewForm().WithSwap(gong.SwapBeforeEnd).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.Target().WithTrigger(gong.TriggerLoad).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().WithTrigger(gong.TriggerLoad).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

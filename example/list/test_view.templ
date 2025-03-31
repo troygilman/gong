@@ -6,8 +6,8 @@ import (
 )
 
 type testView struct {
-	UserView userView `kind:"user"`
-	db       *userDatabase
+	UserComponent gong.Component
+	db            *userDatabase
 }
 
 templ (view testView) Action() {
@@ -22,6 +22,6 @@ templ (view testView) View() {
 	user, ok := view.db.Read(name)
 	}}
 	if ok {
-		@gong.NewComponent("user", view.UserView).WithLoaderData(user)
+		@view.UserComponent.WithLoaderData(user)
 	}
 }

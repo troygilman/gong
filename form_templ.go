@@ -14,45 +14,45 @@ import (
 	"net/http"
 )
 
-type FormComponent struct {
+type Form struct {
 	method   string
 	targetID string
 	cssClass templ.CSSClass
 	swap     string
 }
 
-func Form() FormComponent {
-	return FormComponent{
+func NewForm() Form {
+	return Form{
 		method: http.MethodPost,
 		swap:   SwapNone,
 	}
 }
 
-func (form FormComponent) WithMethod(method string) FormComponent {
+func (form Form) WithMethod(method string) Form {
 	form.method = method
 	return form
 }
 
-func (form FormComponent) WithCSSClass(cssClass templ.CSSClass) FormComponent {
+func (form Form) WithCSSClass(cssClass templ.CSSClass) Form {
 	form.cssClass = cssClass
 	return form
 }
 
-func (form FormComponent) WithTargetID(targetID string) FormComponent {
+func (form Form) WithTargetID(targetID string) Form {
 	form.targetID = targetID
 	return form
 }
 
-func (form FormComponent) WithSwap(swap string) FormComponent {
+func (form Form) WithSwap(swap string) Form {
 	form.swap = swap
 	return form
 }
 
-func (form FormComponent) Render(ctx context.Context, w io.Writer) error {
+func (form Form) Render(ctx context.Context, w io.Writer) error {
 	return form.component().Render(ctx, w)
 }
 
-func (form FormComponent) component() templ.Component {
+func (form Form) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

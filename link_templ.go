@@ -11,27 +11,27 @@ import templruntime "github.com/a-h/templ/runtime"
 import "context"
 import "io"
 
-type LinkComponent struct {
+type Link struct {
 	path   string
 	target string
 }
 
-func Link(path string) LinkComponent {
-	return LinkComponent{
+func NewLink(path string) Link {
+	return Link{
 		path: path,
 	}
 }
 
-func (link LinkComponent) WithClosestOutlet() LinkComponent {
+func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
 	return link
 }
 
-func (link LinkComponent) Render(ctx context.Context, w io.Writer) error {
+func (link Link) Render(ctx context.Context, w io.Writer) error {
 	return link.component().Render(ctx, w)
 }
 
-func (link LinkComponent) component() templ.Component {
+func (link Link) component() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

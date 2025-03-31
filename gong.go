@@ -105,20 +105,14 @@ func scanViewForActions(actions map[string]Action, view View, kindPrefix string)
 	t := v.Type()
 	if t.Kind() == reflect.Struct {
 		for i := range t.NumField() {
-			kind, ok := t.Field(i).Tag.Lookup("kind")
-			if !ok {
-				continue
-			}
-			kind = kindPrefix + kind
 			field := v.Field(i)
 			if !field.CanInterface() {
 				continue
 			}
-			if action, ok := field.Interface().(Action); ok {
-				actions[kind] = action
-			}
-			if view, ok := field.Interface().(View); ok {
-				scanViewForActions(actions, view, kind+"_")
+			if component, ok := field.Interface().(Component); ok {
+				kind := kindPrefix + component.kind
+				actions[kind] = component.action
+				scanViewForActions(actions, component.view, kind+"_")
 			}
 		}
 	}

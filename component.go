@@ -9,6 +9,7 @@ type Component struct {
 	kind   string
 	view   View
 	loader Loader
+	action Action
 }
 
 func NewComponent(kind string, view View) Component {
@@ -18,6 +19,9 @@ func NewComponent(kind string, view View) Component {
 	}
 	if loader, ok := view.(Loader); ok {
 		component.loader = loader
+	}
+	if action, ok := view.(Action); ok {
+		component.action = action
 	}
 	return component
 }

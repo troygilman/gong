@@ -48,9 +48,9 @@ templ (view userView) View() {
 	{{
 	user := gong.GetLoaderData[userData](ctx)
 	}}
-	@gong.Target().WithID(user.name).WithCSSClass(boxClassName()) {
+	@gong.NewTarget().WithID(user.name).WithCSSClass(boxClassName()) {
 		{ user.name }
-		@gong.Form().
+		@gong.NewForm().
 			WithMethod(http.MethodPatch).
 			WithTargetID(user.name).
 			WithSwap(gong.SwapOuterHTML) {
@@ -58,14 +58,14 @@ templ (view userView) View() {
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@gong.Form().
+		@gong.NewForm().
 			WithMethod(http.MethodDelete).
 			WithTargetID(user.name).
 			WithSwap(gong.SwapOuterHTML) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
-		@gong.Link("/user/" + user.name).WithClosestOutlet() {
+		@gong.NewLink("/user/" + user.name).WithClosestOutlet() {
 			LINK
 		}
 	}

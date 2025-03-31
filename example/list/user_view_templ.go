@@ -161,7 +161,7 @@ func (view userView) View() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = gong.Form().
+			templ_7745c5c3_Err = gong.NewForm().
 				WithMethod(http.MethodPatch).
 				WithTargetID(user.name).
 				WithSwap(gong.SwapOuterHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
@@ -203,7 +203,7 @@ func (view userView) View() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = gong.Form().
+			templ_7745c5c3_Err = gong.NewForm().
 				WithMethod(http.MethodDelete).
 				WithTargetID(user.name).
 				WithSwap(gong.SwapOuterHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
@@ -232,13 +232,13 @@ func (view userView) View() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = gong.Link("/user/"+user.name).WithClosestOutlet().Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.NewLink("/user/"+user.name).WithClosestOutlet().Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.Target().WithID(user.name).WithCSSClass(boxClassName()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().WithID(user.name).WithCSSClass(boxClassName()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

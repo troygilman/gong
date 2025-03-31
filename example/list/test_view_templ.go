@@ -14,8 +14,8 @@ import (
 )
 
 type testView struct {
-	UserView userView `kind:"user"`
-	db       *userDatabase
+	UserComponent gong.Component
+	db            *userDatabase
 }
 
 func (view testView) Action() templ.Component {
@@ -70,7 +70,7 @@ func (view testView) View() templ.Component {
 		name := gong.GetRequest(ctx).PathValue("name")
 		user, ok := view.db.Read(name)
 		if ok {
-			templ_7745c5c3_Err = gong.NewComponent("user", view.UserView).WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = view.UserComponent.WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

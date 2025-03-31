@@ -3,27 +3,27 @@ package gong
 import "context"
 import "io"
 
-type LinkComponent struct {
+type Link struct {
 	path   string
 	target string
 }
 
-func Link(path string) LinkComponent {
-	return LinkComponent{
+func NewLink(path string) Link {
+	return Link{
 		path: path,
 	}
 }
 
-func (link LinkComponent) WithClosestOutlet() LinkComponent {
+func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
 	return link
 }
 
-func (link LinkComponent) Render(ctx context.Context, w io.Writer) error {
+func (link Link) Render(ctx context.Context, w io.Writer) error {
 	return link.component().Render(ctx, w)
 }
 
-templ (link LinkComponent) component() {
+templ (link Link) component() {
 	{{
 		if link.target == "" {
 			link.target = "#" + buildOutletID(ctx)

@@ -3,38 +3,38 @@ package gong
 import "context"
 import "io"
 
-type TargetComponent struct {
+type Target struct {
 	id       string
 	trigger  string
 	cssClass templ.CSSClass
 }
 
-func Target() TargetComponent {
-	return TargetComponent{
+func NewTarget() Target {
+	return Target{
 		trigger: TriggerNone,
 	}
 }
 
-func (target TargetComponent) WithID(id string) TargetComponent {
+func (target Target) WithID(id string) Target {
 	target.id = id
 	return target
 }
 
-func (target TargetComponent) WithTrigger(trigger string) TargetComponent {
+func (target Target) WithTrigger(trigger string) Target {
 	target.trigger = trigger
 	return target
 }
 
-func (target TargetComponent) WithCSSClass(cssClass templ.CSSClass) TargetComponent {
+func (target Target) WithCSSClass(cssClass templ.CSSClass) Target {
 	target.cssClass = cssClass
 	return target
 }
 
-func (target TargetComponent) Render(ctx context.Context, w io.Writer) error {
+func (target Target) Render(ctx context.Context, w io.Writer) error {
 	return target.component().Render(ctx, w)
 }
 
-templ (target TargetComponent) component() {
+templ (target Target) component() {
 	<div
 		id={ buildComponentID(ctx, target.id) }
 		hx-get={ getContext(ctx).route.path }
