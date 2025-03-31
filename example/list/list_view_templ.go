@@ -39,7 +39,7 @@ func (view listView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch gong.GetRequest(ctx).Method {
+		switch gong.Request(ctx).Method {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
@@ -49,7 +49,7 @@ func (view listView) Action() templ.Component {
 				}
 			}
 		case http.MethodPost:
-			name := gong.GetParam(ctx, "name")
+			name := gong.Param(ctx, "name")
 			user := userData{
 				name: name,
 			}

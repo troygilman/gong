@@ -12,13 +12,13 @@ type testView struct {
 
 templ (view testView) Action() {
 	{{
-	log.Println("TEST", gong.GetRequest(ctx).PathValue("name"))
+	log.Println("TEST", gong.Request(ctx).PathValue("name"))
 	}}
 }
 
 templ (view testView) View() {
 	{{
-	name := gong.GetRequest(ctx).PathValue("name")
+	name := gong.Request(ctx).PathValue("name")
 	user, ok := view.db.Read(name)
 	}}
 	if ok {

@@ -24,7 +24,7 @@ func Bind(ctx context.Context, dest any) error {
 	return nil
 }
 
-func GetParam(ctx context.Context, key string) string {
+func Param(ctx context.Context, key string) string {
 	gCtx := getContext(ctx)
 	return gCtx.request.FormValue(key)
 }
@@ -48,14 +48,21 @@ func buildOutletID(ctx context.Context) string {
 
 func buildHeaders(ctx context.Context, requestType string) string {
 	gCtx := getContext(ctx)
-	return fmt.Sprintf(`{"%s": "%s", "%s": "%s", "%s": "%s"}`, GongRequestHeader, requestType, GongRouteHeader, gCtx.route.path, GongKindHeader, gCtx.kind)
+	return fmt.Sprintf(`{"%s": "%s", "%s": "%s", "%s": "%s"}`,
+		GongRequestHeader,
+		requestType,
+		GongRouteHeader,
+		gCtx.route.path,
+		GongKindHeader,
+		gCtx.kind,
+	)
 }
 
-func GetRequest(ctx context.Context) *http.Request {
+func Request(ctx context.Context) *http.Request {
 	return getContext(ctx).request
 }
 
-func GetLoaderData[Data any](ctx context.Context) (data Data) {
+func LoaderData[Data any](ctx context.Context) (data Data) {
 	gCtx := getContext(ctx)
 	if gCtx.loader == nil {
 		return data

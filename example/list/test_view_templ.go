@@ -40,7 +40,7 @@ func (view testView) Action() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		log.Println("TEST", gong.GetRequest(ctx).PathValue("name"))
+		log.Println("TEST", gong.Request(ctx).PathValue("name"))
 		return nil
 	})
 }
@@ -67,7 +67,7 @@ func (view testView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		name := gong.GetRequest(ctx).PathValue("name")
+		name := gong.Request(ctx).PathValue("name")
 		user, ok := view.db.Read(name)
 		if ok {
 			templ_7745c5c3_Err = view.UserComponent.WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)
