@@ -7,9 +7,8 @@ import (
 
 type CustomResponseWriter struct {
 	http.ResponseWriter
-	body          *bytes.Buffer
-	statusCode    int
-	headerWritten bool
+	body       *bytes.Buffer
+	statusCode int
 }
 
 func NewCustomResponseWriter(w http.ResponseWriter) *CustomResponseWriter {
@@ -25,23 +24,20 @@ func (crw *CustomResponseWriter) Header() http.Header {
 }
 
 func (crw *CustomResponseWriter) Write(b []byte) (int, error) {
-	if !crw.headerWritten {
-		crw.WriteHeader(crw.statusCode)
-	}
-	// crw.body.Write(b)
-	return crw.ResponseWriter.Write(b)
+	return crw.body.Write(b)
 }
 
 func (crw *CustomResponseWriter) WriteHeader(statusCode int) {
-	if !crw.headerWritten {
-		crw.statusCode = statusCode
-		crw.ResponseWriter.WriteHeader(statusCode)
-		crw.headerWritten = true
-	}
+	crw.statusCode = statusCode
 }
 
 func (crw *CustomResponseWriter) Reset() {
-	// crw.body.Reset()
+	crw.body.Reset()
 	crw.statusCode = http.StatusOK
-	crw.headerWritten = false
+}
+
+func (crw *CustomResponseWriter) Flush() error {
+	crw.ResponseWriter.WriteHeader(crw.statusCode)
+	_, err := crw.ResponseWriter.Write(crw.body.Bytes())
+	return err
 }

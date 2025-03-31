@@ -67,6 +67,7 @@ func (view testView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
+		return gong.Redirect(ctx, "/users")
 		name := gong.Request(ctx).PathValue("name")
 		user, ok := view.db.Read(name)
 		if ok {

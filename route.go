@@ -52,6 +52,9 @@ func (route *Route) setupHandler(g *Gong) {
 		if err := render(r.Context(), gCtx, writer, component); err != nil {
 			panic(err)
 		}
+		if err := writer.Flush(); err != nil {
+			panic(err)
+		}
 	}))
 }
 
