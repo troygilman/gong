@@ -14,12 +14,12 @@ func main() {
 	})
 
 	g := gong.New(http.NewServeMux()).Routes(
-		gong.NewRouteBuilder("/", homeView{}).WithRoutes(
-			gong.NewRouteBuilder("users", listView{
+		gong.NewRoute("/", homeView{}).WithRoutes(
+			gong.NewRoute("users", listView{
 				db:            db,
 				UserComponent: userComponent,
 			}),
-			gong.NewRouteBuilder("user/{name}", testView{
+			gong.NewRoute("user/{name}", testView{
 				db:            db,
 				UserComponent: userComponent,
 			}),

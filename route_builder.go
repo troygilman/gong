@@ -8,7 +8,7 @@ type RouteBuilder struct {
 	children  []RouteBuilder
 }
 
-func NewRouteBuilder(path string, view View) RouteBuilder {
+func NewRoute(path string, view View) RouteBuilder {
 	return RouteBuilder{
 		path:      path,
 		component: NewComponent("", view),
