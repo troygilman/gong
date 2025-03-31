@@ -2,7 +2,7 @@ package gong
 
 templ index(route *route) {
 	<html>
-		if head, ok := route.view.(Head); ok {
+		if head, ok := route.component.view.(Head); ok {
 			@head.Head()
 		} else {
 			<head>

@@ -33,7 +33,7 @@ func index(route *route) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if head, ok := route.view.(Head); ok {
+		if head, ok := route.component.view.(Head); ok {
 			templ_7745c5c3_Err = head.Head().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

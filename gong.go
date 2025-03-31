@@ -50,13 +50,13 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.mux.ServeHTTP(w, r)
 }
 
-func (g *Gong) Route(path string, view View, f func(Route)) {
+func (g *Gong) Route(path string, component Component, f func(Route)) {
 	route := &route{
-		gong:     g,
-		path:     path,
-		view:     view,
-		actions:  make(map[string]Action),
-		children: make(map[string]*route),
+		gong:      g,
+		path:      path,
+		component: component,
+		actions:   make(map[string]Action),
+		children:  make(map[string]*route),
 	}
 	g.handleRoute(route)
 	if f != nil {
@@ -65,7 +65,7 @@ func (g *Gong) Route(path string, view View, f func(Route)) {
 }
 
 func (g *Gong) handleRoute(route *route) {
-	scanViewForActions(route.actions, route.view, "")
+	scanViewForActions(route.actions, route.component.view, "")
 	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
 
 	g.handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

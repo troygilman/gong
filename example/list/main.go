@@ -15,15 +15,15 @@ func main() {
 		db: db,
 	})
 
-	g.Route("/", homeView{}, func(r gong.Route) {
-		r.Route("users", listView{
+	g.Route("/", gong.NewComponent("home", homeView{}), func(r gong.Route) {
+		r.Route("users", gong.NewComponent("list", listView{
 			db:            db,
 			UserComponent: userComponent,
-		}, nil)
-		r.Route("user/{name}", testView{
+		}), nil)
+		r.Route("user/{name}", gong.NewComponent("test", testView{
 			db:            db,
 			UserComponent: userComponent,
-		}, nil)
+		}), nil)
 	})
 
 	if err := http.ListenAndServe(":8080", g); err != nil {
