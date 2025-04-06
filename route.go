@@ -2,6 +2,7 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"io"
 )
 
@@ -17,7 +18,6 @@ type Route interface {
 type gongRoute struct {
 	path         string
 	component    Component
-	actions      map[string]Action
 	children     map[string]Route
 	defaultChild Route
 	parent       Route
@@ -26,23 +26,16 @@ type gongRoute struct {
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = route
-	gCtx.loader = route.component.loader
 
 	if gCtx.action {
-		if action, ok := route.actions[gCtx.kind]; ok {
-			gCtx.loader = nil
-			if loader, ok := action.(Loader); ok {
-				gCtx.loader = loader
-			}
-			return render(ctx, gCtx, w, action.Action())
+		component, ok := route.component.Find(gCtx.kind)
+		if !ok {
+			panic(fmt.Sprintf("could not find component with kind %s", gCtx.kind))
 		}
-		if route.component.action != nil {
-			return render(ctx, gCtx, w, route.component.action.Action())
-		}
-		return nil
+		return render(ctx, gCtx, w, component)
 	}
 
-	return render(ctx, gCtx, w, route.component.view.View())
+	return render(ctx, gCtx, w, route.component)
 }
 
 func (route *gongRoute) Child(path string) Route {

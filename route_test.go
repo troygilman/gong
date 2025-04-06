@@ -56,9 +56,10 @@ func TestRouteBasic(t *testing.T) {
 	assert.Equals(t, []Route{}, route.Children())
 	assert.Equals(t, route, route.Root())
 	assert.Equals(t, Component{
-		view:   comp,
-		action: comp,
-		loader: comp,
+		view:     comp,
+		action:   comp,
+		loader:   comp,
+		children: make(map[string]Component),
 	}, route.Component())
 
 	testRouteRender(t, route, gongContext{}, "view")
