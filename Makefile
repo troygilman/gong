@@ -8,3 +8,6 @@ list:
 
 gen:
 	templ generate
+
+test: gen
+	go test .

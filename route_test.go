@@ -11,8 +11,9 @@ import (
 )
 
 type MockComponent struct {
-	view   templ.Component
-	action templ.Component
+	view       templ.Component
+	action     templ.Component
+	loaderData any
 }
 
 func (mc MockComponent) View() templ.Component {
@@ -21,6 +22,10 @@ func (mc MockComponent) View() templ.Component {
 
 func (mc MockComponent) Action() templ.Component {
 	return mc.action
+}
+
+func (mc MockComponent) Loader(ctx context.Context) any {
+	return mc.loaderData
 }
 
 type textTemplComponent struct {
@@ -32,9 +37,17 @@ func (c textTemplComponent) Render(ctx context.Context, w io.Writer) error {
 	return err
 }
 
+type loaderTemplComponent struct{}
+
+func (c loaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, LoaderData[string](ctx))
+	return err
+}
+
 func TestRouteBasic(t *testing.T) {
-	comp := MockComponent{}
-	comp.view = textTemplComponent{"Hello World"}
+	comp := MockComponent{
+		view: textTemplComponent{"view"},
+	}
 
 	route := NewRoute("/", comp).build(nil)
 
@@ -45,9 +58,31 @@ func TestRouteBasic(t *testing.T) {
 	assert.Equals(t, Component{
 		view:   comp,
 		action: comp,
+		loader: comp,
 	}, route.Component())
 
-	testRouteRender(t, route, gongContext{}, "Hello World")
+	testRouteRender(t, route, gongContext{}, "view")
+}
+
+func TestRouteAction(t *testing.T) {
+	comp := MockComponent{
+		action: textTemplComponent{"action"},
+	}
+
+	route := NewRoute("/", comp).build(nil)
+
+	testRouteRender(t, route, gongContext{action: true}, "action")
+}
+
+func TestRouteAction_withLoader(t *testing.T) {
+	comp := MockComponent{
+		action:     loaderTemplComponent{},
+		loaderData: "action",
+	}
+
+	route := NewRoute("/", comp).build(nil)
+
+	testRouteRender(t, route, gongContext{action: true}, "action")
 }
 
 func testRouteRender(t *testing.T, route Route, gCtx gongContext, expected string) {
