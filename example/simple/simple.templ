@@ -1,0 +1,26 @@
+package main
+
+import (
+	"fmt"
+	"github.com/troygilman/gong"
+)
+
+type SimpleComponent struct{}
+
+templ (component SimpleComponent) View() {
+	@gong.NewTarget() {
+		Hello World
+	}
+	@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
+		<button>
+			Submit
+		</button>
+	}
+}
+
+templ (component SimpleComponent) Action() {
+	{{
+		fmt.Println("Hello Universe")
+	}}
+	Hello Universe
+}
