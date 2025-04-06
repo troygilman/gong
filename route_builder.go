@@ -20,7 +20,7 @@ func (builder RouteBuilder) WithRoutes(routes ...RouteBuilder) RouteBuilder {
 	return builder
 }
 
-func (builder RouteBuilder) build(mux Mux, parent Route) Route {
+func (builder RouteBuilder) build(parent Route) Route {
 	path := builder.path
 	if parent != nil {
 		path = parent.Path() + builder.path
@@ -37,14 +37,13 @@ func (builder RouteBuilder) build(mux Mux, parent Route) Route {
 	scanViewForActions(route.actions, route.component.view, "")
 
 	for i, childBuilder := range builder.children {
-		childRoute := childBuilder.build(mux, route)
+		childRoute := childBuilder.build(route)
 		route.children[childRoute.Path()] = childRoute
 		if i == 0 {
 			route.defaultChild = childRoute
 		}
 	}
 
-	route.setupHandler(mux)
 	return route
 }
 

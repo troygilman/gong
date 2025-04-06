@@ -3,10 +3,6 @@ package gong
 import (
 	"context"
 	"io"
-	"log"
-	"net/http"
-
-	"github.com/a-h/templ"
 )
 
 type Route interface {
@@ -25,52 +21,6 @@ type gongRoute struct {
 	children     map[string]Route
 	defaultChild Route
 	parent       Route
-}
-
-func (route *gongRoute) setupHandler(mux Mux) {
-	log.Printf("Route=%s Actions=%#v\n", route.path, route.actions)
-
-	mux.Handle(route.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writer := NewCustomResponseWriter(w)
-		requestType := r.Header.Get(GongRequestHeader)
-
-		gCtx := gongContext{
-			requestType: requestType,
-			route:       route,
-			path:        r.Header.Get(GongRouteHeader),
-			request:     r,
-			writer:      writer,
-			action:      requestType == GongRequestTypeAction,
-			kind:        r.Header.Get(GongKindHeader),
-		}
-
-		var templComponent templ.Component
-		switch requestType {
-		case GongRequestTypeAction:
-			if route.Path() != gCtx.path {
-				gCtx.route = route.Child(gCtx.path)
-			}
-			templComponent = gCtx.route
-		case GongRequestTypeRoute:
-			gCtx.kind = ""
-			templComponent = gCtx.route
-		default:
-			gCtx.path = route.path
-			gCtx.route = route.Root()
-			templComponent = index(gCtx.route)
-		}
-
-		if gCtx.route == nil {
-			panic("route is nil")
-		}
-
-		if err := render(r.Context(), gCtx, writer, templComponent); err != nil {
-			panic(err)
-		}
-		if err := writer.Flush(); err != nil {
-			panic(err)
-		}
-	}))
 }
 
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {

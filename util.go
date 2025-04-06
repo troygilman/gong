@@ -70,6 +70,9 @@ func LoaderData[Data any](ctx context.Context) (data Data) {
 }
 
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
+	if component == nil {
+		panic("cannot render nil templ.Component")
+	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 	return component.Render(ctx, w)
 }
