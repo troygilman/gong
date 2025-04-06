@@ -20,31 +20,31 @@ func (builder RouteBuilder) WithRoutes(routes ...RouteBuilder) RouteBuilder {
 	return builder
 }
 
-func (builder RouteBuilder) build(g *Gong, parent *Route) *Route {
+func (builder RouteBuilder) build(mux Mux, parent Route) Route {
 	path := builder.path
 	if parent != nil {
-		path = parent.path + builder.path
+		path = parent.Path() + builder.path
 	}
 
-	route := &Route{
+	route := &gongRoute{
 		component: builder.component,
 		path:      path,
 		actions:   make(map[string]Action),
-		children:  make(map[string]*Route),
+		children:  make(map[string]Route),
 		parent:    parent,
 	}
 
 	scanViewForActions(route.actions, route.component.view, "")
 
 	for i, childBuilder := range builder.children {
-		childRoute := childBuilder.build(g, route)
-		route.children[childRoute.path] = childRoute
+		childRoute := childBuilder.build(mux, route)
+		route.children[childRoute.Path()] = childRoute
 		if i == 0 {
 			route.defaultChild = childRoute
 		}
 	}
 
-	route.setupHandler(g)
+	route.setupHandler(mux)
 	return route
 }
 

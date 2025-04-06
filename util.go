@@ -30,7 +30,7 @@ func FormValue(ctx context.Context, key string) string {
 
 func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	prefix := "gong" + "_" + hash(gCtx.route.path)
+	prefix := "gong" + "_" + hash(gCtx.route.Path())
 	if gCtx.kind != "" {
 		prefix += "_" + gCtx.kind
 	}
@@ -42,7 +42,7 @@ func buildComponentID(ctx context.Context, id string) string {
 
 func buildOutletID(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	return "gong" + "_" + hash(gCtx.route.path) + "_outlet"
+	return "gong" + "_" + hash(gCtx.route.Path()) + "_outlet"
 }
 
 func buildHeaders(ctx context.Context, requestType string) string {
@@ -51,7 +51,7 @@ func buildHeaders(ctx context.Context, requestType string) string {
 		GongRequestHeader,
 		requestType,
 		GongRouteHeader,
-		gCtx.route.path,
+		gCtx.route.Path(),
 		GongKindHeader,
 		gCtx.kind,
 	)

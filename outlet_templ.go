@@ -89,11 +89,8 @@ func (outlet Outlet) component() templ.Component {
 		templ_7745c5c3_Err = RenderFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
 			gCtx.kind = ""
-			if child, ok := gCtx.route.children[gCtx.path]; ok {
+			if child := gCtx.route.Child(gCtx.path); child != nil {
 				return render(ctx, gCtx, w, child)
-			}
-			if gCtx.route.defaultChild != nil {
-				return render(ctx, gCtx, w, gCtx.route.defaultChild)
 			}
 			return nil
 		}).Render(ctx, templ_7745c5c3_Buffer)

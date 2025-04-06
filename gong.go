@@ -46,7 +46,7 @@ func New(mux Mux) *Gong {
 
 func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 	for _, builder := range builders {
-		builder.build(g, nil)
+		builder.build(g.mux, nil)
 	}
 	return g
 }
@@ -61,7 +61,7 @@ func (g *Gong) handle(path string, handler http.Handler) {
 
 type gongContext struct {
 	requestType string
-	route       *Route
+	route       Route
 	request     *http.Request
 	writer      *CustomResponseWriter
 	path        string
