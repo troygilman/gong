@@ -3,14 +3,16 @@ package gong
 import (
 	"context"
 	"io"
-	"log"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
 const (
 	kindDelimeter = "_"
 )
+
+var nextID = 0
 
 type Component struct {
 	kind     string
@@ -20,9 +22,12 @@ type Component struct {
 	children map[string]Component
 }
 
-func NewComponent(kind string, view View) Component {
+func NewComponent(view View) Component {
+	id := strconv.Itoa(nextID)
+	nextID++
+
 	component := Component{
-		kind:     kind,
+		kind:     id,
 		view:     view,
 		children: scanViewForActions(view),
 	}
@@ -43,12 +48,13 @@ func (component Component) Find(kind string) (Component, bool) {
 }
 
 func (component Component) find(kind []string) (Component, bool) {
-	log.Println(component.children, kind)
-	if len(kind) == 0 || len(kind) == 1 && kind[0] == "" {
-		return component, true
-	}
-	if child, ok := component.children[kind[0]]; ok {
-		return child.find(kind[1:])
+	if len(kind) > 0 && kind[0] == component.kind {
+		if len(kind) == 1 {
+			return component, true
+		}
+		if child, ok := component.children[kind[1]]; ok {
+			return child.find(kind[1:])
+		}
 	}
 	return Component{}, false
 }
@@ -62,6 +68,11 @@ func (component Component) WithLoaderData(data any) Component {
 	component.loader = LoaderFunc(func(ctx context.Context) any {
 		return data
 	})
+	return component
+}
+
+func (component Component) WithID(id string) Component {
+	component.kind = id
 	return component
 }
 

@@ -10,4 +10,4 @@ gen:
 	templ generate
 
 test: gen
-	go test .
+	go test . -count=1

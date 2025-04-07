@@ -8,7 +8,7 @@ import (
 
 func main() {
 	g := gong.New(http.NewServeMux()).Routes(
-		gong.NewRoute("/", SimpleComponent{}),
+		gong.NewRoute("/", gong.NewComponent(SimpleComponent{})),
 	)
 
 	if err := http.ListenAndServe(":8080", g); err != nil {

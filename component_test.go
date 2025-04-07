@@ -11,7 +11,7 @@ func TestComponentRenderView(t *testing.T) {
 		view: textTemplComponent{"view"},
 	}
 
-	component := NewComponent("", mock)
+	component := NewComponent(mock)
 
 	testRender(t, component, gongContext{}, "view")
 }
@@ -21,7 +21,7 @@ func TestComponentRenderAction(t *testing.T) {
 		action: textTemplComponent{"action"},
 	}
 
-	component := NewComponent("", mock)
+	component := NewComponent(mock)
 
 	testRender(t, component, gongContext{action: true}, "action")
 }
@@ -32,7 +32,7 @@ func TestComponentRenderAction_withLoader(t *testing.T) {
 		loaderData: "action",
 	}
 
-	component := NewComponent("", mock)
+	component := NewComponent(mock)
 
 	testRender(t, component, gongContext{action: true}, "action")
 }
@@ -40,22 +40,22 @@ func TestComponentRenderAction_withLoader(t *testing.T) {
 func TestComponentFind(t *testing.T) {
 	mock := MockComponent{}
 
-	component := NewComponent("", mock)
+	component := NewComponent(mock).WithID("mock")
 
-	foundComponent, ok := component.Find("")
+	foundComponent, ok := component.Find("mock")
 
 	assert.Equals(t, true, ok)
 	assert.Equals(t, component, foundComponent)
 }
 
 func TestComponentFind_withNestedComponent(t *testing.T) {
-	child := NewComponent("child", MockComponent{})
+	child := NewComponent(MockComponent{}).WithID("mock")
 
-	component := NewComponent("", ParentComponent{
+	component := NewComponent(ParentComponent{
 		Child: child,
-	})
+	}).WithID("parent")
 
-	foundComponent, ok := component.Find("child")
+	foundComponent, ok := component.Find("parent_mock")
 
 	assert.Equals(t, true, ok)
 	assert.Equals(t, child, foundComponent)

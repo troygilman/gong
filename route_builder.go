@@ -6,10 +6,10 @@ type RouteBuilder struct {
 	children  []RouteBuilder
 }
 
-func NewRoute(path string, view View) RouteBuilder {
+func NewRoute(path string, component Component) RouteBuilder {
 	return RouteBuilder{
 		path:      path,
-		component: NewComponent("", view),
+		component: component,
 	}
 }
 
