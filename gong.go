@@ -14,7 +14,7 @@ const contextKey = contextKeyType(0)
 
 const (
 	GongRequestHeader = "Gong-Request"
-	GongKindHeader    = "Gong-Kind"
+	GongIdHeader      = "Gong-ID"
 	GongRouteHeader   = "Gong-Route"
 )
 
@@ -65,7 +65,7 @@ func (g *Gong) setupRoute(route Route) {
 			request:     r,
 			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
-			kind:        r.Header.Get(GongKindHeader),
+			id:          r.Header.Get(GongIdHeader),
 		}
 
 		var templComponent templ.Component
@@ -76,7 +76,7 @@ func (g *Gong) setupRoute(route Route) {
 			}
 			templComponent = gCtx.route
 		case GongRequestTypeRoute:
-			gCtx.kind = ""
+			gCtx.id = ""
 			templComponent = gCtx.route
 		default:
 			gCtx.path = route.Path()
@@ -113,7 +113,7 @@ type gongContext struct {
 	path        string
 	action      bool
 	loader      Loader
-	kind        string
+	id          string
 }
 
 type Mux interface {

@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	kindDelimeter = "_"
+	idDelimeter = "_"
 )
 
 var nextID = 0
 
 type Component struct {
-	kind     string
+	id       string
 	view     View
 	loader   Loader
 	action   Action
@@ -27,7 +27,7 @@ func NewComponent(view View) Component {
 	nextID++
 
 	component := Component{
-		kind:     id,
+		id:       id,
 		view:     view,
 		children: scanViewForActions(view),
 	}
@@ -43,17 +43,17 @@ func NewComponent(view View) Component {
 	return component
 }
 
-func (component Component) Find(kind string) (Component, bool) {
-	return component.find(strings.Split(kind, kindDelimeter))
+func (component Component) Find(id string) (Component, bool) {
+	return component.find(strings.Split(id, idDelimeter))
 }
 
-func (component Component) find(kind []string) (Component, bool) {
-	if len(kind) > 0 && kind[0] == component.kind {
-		if len(kind) == 1 {
+func (component Component) find(id []string) (Component, bool) {
+	if len(id) > 0 && id[0] == component.id {
+		if len(id) == 1 {
 			return component, true
 		}
-		if child, ok := component.children[kind[1]]; ok {
-			return child.find(kind[1:])
+		if child, ok := component.children[id[1]]; ok {
+			return child.find(id[1:])
 		}
 	}
 	return Component{}, false
@@ -72,7 +72,7 @@ func (component Component) WithLoaderData(data any) Component {
 }
 
 func (component Component) WithID(id string) Component {
-	component.kind = id
+	component.id = id
 	return component
 }
 
@@ -85,10 +85,10 @@ func (component Component) Render(ctx context.Context, w io.Writer) error {
 		return render(ctx, gCtx, w, component.action.Action())
 	}
 
-	if gCtx.kind == "" {
-		gCtx.kind = component.kind
+	if gCtx.id == "" {
+		gCtx.id = component.id
 	} else {
-		gCtx.kind += kindDelimeter + component.kind
+		gCtx.id += idDelimeter + component.id
 	}
 
 	return render(ctx, gCtx, w, component.view.View())
@@ -105,7 +105,7 @@ func scanViewForActions(view View) map[string]Component {
 				continue
 			}
 			if child, ok := field.Interface().(Component); ok {
-				children[child.kind] = child
+				children[child.id] = child
 			}
 		}
 	}

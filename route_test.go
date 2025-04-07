@@ -18,7 +18,7 @@ func TestRouteBasic(t *testing.T) {
 	assert.Equals(t, []Route{}, route.Children())
 	assert.Equals(t, route, route.Root())
 	assert.Equals(t, Component{
-		kind:     "mock",
+		id:       "mock",
 		view:     comp,
 		action:   comp,
 		loader:   comp,
@@ -35,7 +35,7 @@ func TestRouteRenderAction(t *testing.T) {
 
 	route := NewRoute("/", NewComponent(comp).WithID("mock")).build(nil)
 
-	testRender(t, route, gongContext{action: true, kind: "mock"}, "action")
+	testRender(t, route, gongContext{action: true, id: "mock"}, "action")
 }
 
 func TestRouteRenderAction_withLoader(t *testing.T) {
@@ -46,5 +46,5 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 
 	route := NewRoute("/", NewComponent(comp).WithID("mock")).build(nil)
 
-	testRender(t, route, gongContext{action: true, kind: "mock"}, "action")
+	testRender(t, route, gongContext{action: true, id: "mock"}, "action")
 }

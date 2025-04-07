@@ -28,9 +28,9 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx.route = route
 
 	if gCtx.action {
-		component, ok := route.component.Find(gCtx.kind)
+		component, ok := route.component.Find(gCtx.id)
 		if !ok {
-			panic(fmt.Sprintf("could not find component with kind %s", gCtx.kind))
+			panic(fmt.Sprintf("could not find component with id %s", gCtx.id))
 		}
 		return render(ctx, gCtx, w, component)
 	}
