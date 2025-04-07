@@ -12,22 +12,19 @@ const (
 	idDelimeter = "_"
 )
 
-var nextID = 0
-
 type Component struct {
 	id       string
 	view     View
 	loader   Loader
 	action   Action
+	head     Head
 	children map[string]Component
 }
 
 func NewComponent(view View) Component {
-	id := strconv.Itoa(nextID)
-	nextID++
 
 	component := Component{
-		id:       id,
+		id:       nextComponentID(),
 		view:     view,
 		children: scanViewForActions(view),
 	}
@@ -38,6 +35,10 @@ func NewComponent(view View) Component {
 
 	if action, ok := view.(Action); ok {
 		component.action = action
+	}
+
+	if head, ok := view.(Head); ok {
+		component.head = head
 	}
 
 	return component
@@ -110,4 +111,12 @@ func scanViewForActions(view View) map[string]Component {
 		}
 	}
 	return children
+}
+
+var _nextComponentID = 0
+
+func nextComponentID() string {
+	id := strconv.Itoa(_nextComponentID)
+	_nextComponentID++
+	return id
 }
