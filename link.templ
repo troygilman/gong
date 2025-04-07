@@ -3,22 +3,33 @@ package gong
 import "context"
 import "io"
 
+// Link represents an HTMX-powered navigation link component.
+// It provides a way to create client-side navigation links that update
+// specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
 	path   string
 	target string
 }
 
+// NewLink creates a new Link instance with the specified path.
+// The path should be a valid route path within the application.
 func NewLink(path string) Link {
 	return Link{
 		path: path,
 	}
 }
 
+// WithClosestOutlet configures the link to target the closest parent outlet element.
+// This is useful for nested navigation where you want to update the nearest outlet.
+// Returns the modified link for method chaining.
 func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
 	return link
 }
 
+// Render writes the link's HTML representation to the provided writer.
+// It handles the rendering of the link with all configured HTMX attributes.
+// Returns an error if rendering fails.
 func (link Link) Render(ctx context.Context, w io.Writer) error {
 	return link.component().Render(ctx, w)
 }

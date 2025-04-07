@@ -6,12 +6,29 @@ import (
 	"io"
 )
 
+// Route represents a route in the application's routing tree.
+// It defines the interface for handling component routing and rendering.
 type Route interface {
+	// Child returns the child route for the given path.
+	// If no exact match is found and a default child exists, returns the default child.
+	// Returns nil if no matching route is found.
 	Child(path string) Route
+
+	// Children returns all direct child routes of this route.
 	Children() []Route
+
+	// Root returns the root route of the routing tree.
 	Root() Route
+
+	// Path returns the path segment that this route represents.
 	Path() string
+
+	// Component returns the component associated with this route.
 	Component() Component
+
+	// Render renders the route's component to the given writer.
+	// If the context indicates an action is being performed, it will render
+	// the specific component identified by the context's ID.
 	Render(ctx context.Context, w io.Writer) error
 }
 

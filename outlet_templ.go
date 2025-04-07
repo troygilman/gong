@@ -13,19 +13,30 @@ import (
 	"io"
 )
 
+// Outlet represents a container component that renders child routes.
+// It serves as a dynamic content area where route components are rendered
+// based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
 	class string
 }
 
+// NewOutlet creates a new Outlet instance.
+// The outlet will automatically render child routes based on the current path.
 func NewOutlet() Outlet {
 	return Outlet{}
 }
 
+// WithClass adds a CSS class to the outlet element.
+// This allows for custom styling of the outlet container.
+// Returns the modified outlet for method chaining.
 func (outlet Outlet) WithClass(class string) Outlet {
 	outlet.class = class
 	return outlet
 }
 
+// Render writes the outlet's HTML representation to the provided writer.
+// It handles the rendering of the outlet and its child route components.
+// Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	return outlet.component().Render(ctx, w)
 }
@@ -63,7 +74,7 @@ func (outlet Outlet) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(buildOutletID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 26, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 37, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {

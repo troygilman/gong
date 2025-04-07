@@ -14,6 +14,9 @@ import (
 	"net/http"
 )
 
+// Form represents an HTML form component with HTMX attributes.
+// It provides a builder pattern for creating forms with various HTTP methods,
+// target elements, CSS classes, and HTMX swap behaviors.
 type Form struct {
 	method   string
 	targetID string
@@ -21,6 +24,8 @@ type Form struct {
 	swap     string
 }
 
+// NewForm creates a new Form instance with default settings.
+// By default, it uses POST method and no swap behavior.
 func NewForm() Form {
 	return Form{
 		method: http.MethodPost,
@@ -28,26 +33,41 @@ func NewForm() Form {
 	}
 }
 
+// WithMethod sets the HTTP method for the form submission.
+// Valid methods include POST, PATCH, and DELETE.
+// Returns the modified form for method chaining.
 func (form Form) WithMethod(method string) Form {
 	form.method = method
 	return form
 }
 
+// WithCSSClass adds CSS classes to the form element.
+// The classes will be applied to the rendered form.
+// Returns the modified form for method chaining.
 func (form Form) WithCSSClass(cssClass templ.CSSClass) Form {
 	form.cssClass = cssClass
 	return form
 }
 
+// WithTargetID sets the ID of the element that will be updated after form submission.
+// This ID is used with HTMX's target attribute to specify where the response should be rendered.
+// Returns the modified form for method chaining.
 func (form Form) WithTargetID(targetID string) Form {
 	form.targetID = targetID
 	return form
 }
 
+// WithSwap sets the HTMX swap behavior for the form submission.
+// This determines how the response content will be inserted into the target element.
+// Returns the modified form for method chaining.
 func (form Form) WithSwap(swap string) Form {
 	form.swap = swap
 	return form
 }
 
+// Render writes the form's HTML representation to the provided writer.
+// It handles the rendering of the form with all configured attributes.
+// Returns an error if rendering fails.
 func (form Form) Render(ctx context.Context, w io.Writer) error {
 	return form.component().Render(ctx, w)
 }
@@ -92,7 +112,7 @@ func (form Form) component() templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 53, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 73, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -111,7 +131,7 @@ func (form Form) component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 56, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 76, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -130,7 +150,7 @@ func (form Form) component() templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 59, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 79, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -148,7 +168,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(form.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 61, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 81, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -166,7 +186,7 @@ func (form Form) component() templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx, form.targetID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 63, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 83, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -184,7 +204,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeAction))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 65, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form.templ`, Line: 85, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {

@@ -12,6 +12,9 @@ const (
 	idDelimeter = "_"
 )
 
+// Component represents a UI component in the Gong framework.
+// It encapsulates a view, optional loader, action, and head elements,
+// along with any child components that may be part of its structure.
 type Component struct {
 	id       string
 	view     View
@@ -21,6 +24,9 @@ type Component struct {
 	children map[string]Component
 }
 
+// NewComponent creates a new Component instance with the specified view.
+// It automatically scans the view for any child components and sets up
+// optional interfaces (Loader, Action, Head) if the view implements them.
 func NewComponent(view View) Component {
 	component := Component{
 		id:       nextComponentID(),
@@ -43,6 +49,9 @@ func NewComponent(view View) Component {
 	return component
 }
 
+// Render writes the component's HTML representation to the provided writer.
+// It handles both normal rendering and action execution based on the context.
+// Returns an error if rendering fails.
 func (component Component) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.loader = component.loader
@@ -61,6 +70,9 @@ func (component Component) Render(ctx context.Context, w io.Writer) error {
 	return render(ctx, gCtx, w, component.view.View())
 }
 
+// Find searches for a child component with the specified ID.
+// The ID can be a simple identifier or a path of IDs separated by the delimiter.
+// Returns the found component and a boolean indicating if it was found.
 func (component Component) Find(id string) (Component, bool) {
 	return component.find(strings.Split(id, idDelimeter))
 }
@@ -77,11 +89,17 @@ func (component Component) find(id []string) (Component, bool) {
 	return Component{}, false
 }
 
+// WithLoaderFunc sets a loader function for the component.
+// The loader function will be called to fetch data before rendering.
+// Returns the modified component for method chaining.
 func (component Component) WithLoaderFunc(loader LoaderFunc) Component {
 	component.loader = loader
 	return component
 }
 
+// WithLoaderData sets static data for the component's loader.
+// This is a convenience method for components that don't need dynamic data loading.
+// Returns the modified component for method chaining.
 func (component Component) WithLoaderData(data any) Component {
 	component.loader = LoaderFunc(func(ctx context.Context) any {
 		return data
@@ -89,6 +107,9 @@ func (component Component) WithLoaderData(data any) Component {
 	return component
 }
 
+// WithID sets a custom ID for the component.
+// This ID is used for component identification and event handling.
+// Returns the modified component for method chaining.
 func (component Component) WithID(id string) Component {
 	component.id = id
 	return component

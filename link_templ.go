@@ -11,22 +11,33 @@ import templruntime "github.com/a-h/templ/runtime"
 import "context"
 import "io"
 
+// Link represents an HTMX-powered navigation link component.
+// It provides a way to create client-side navigation links that update
+// specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
 	path   string
 	target string
 }
 
+// NewLink creates a new Link instance with the specified path.
+// The path should be a valid route path within the application.
 func NewLink(path string) Link {
 	return Link{
 		path: path,
 	}
 }
 
+// WithClosestOutlet configures the link to target the closest parent outlet element.
+// This is useful for nested navigation where you want to update the nearest outlet.
+// Returns the modified link for method chaining.
 func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
 	return link
 }
 
+// Render writes the link's HTML representation to the provided writer.
+// It handles the rendering of the link with all configured HTMX attributes.
+// Returns an error if rendering fails.
 func (link Link) Render(ctx context.Context, w io.Writer) error {
 	return link.component().Render(ctx, w)
 }
@@ -63,7 +74,7 @@ func (link Link) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(link.path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 33, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 44, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -76,7 +87,7 @@ func (link Link) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(link.target)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 34, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 45, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -89,7 +100,7 @@ func (link Link) component() templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(SwapInnerHTML)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 35, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 46, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -102,7 +113,7 @@ func (link Link) component() templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeRoute))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 36, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 47, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {

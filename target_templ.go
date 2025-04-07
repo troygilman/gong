@@ -11,33 +11,50 @@ import templruntime "github.com/a-h/templ/runtime"
 import "context"
 import "io"
 
+// Target represents an HTMX-powered target component that can be updated dynamically.
+// It provides a way to create elements that can be refreshed or modified
+// through HTMX requests, with configurable triggers and styling.
 type Target struct {
 	id       string
 	trigger  string
 	cssClass templ.CSSClass
 }
 
+// NewTarget creates a new Target instance with default settings.
+// By default, it has no trigger and will only update on explicit HTMX requests.
 func NewTarget() Target {
 	return Target{
 		trigger: TriggerNone,
 	}
 }
 
+// WithID sets a custom ID for the target element.
+// This ID is used to identify the element for HTMX targeting and updates.
+// Returns the modified target for method chaining.
 func (target Target) WithID(id string) Target {
 	target.id = id
 	return target
 }
 
+// WithTrigger sets the HTMX trigger for the target element.
+// This determines when the target will automatically refresh its content.
+// Returns the modified target for method chaining.
 func (target Target) WithTrigger(trigger string) Target {
 	target.trigger = trigger
 	return target
 }
 
+// WithCSSClass adds CSS classes to the target element.
+// This allows for custom styling of the target container.
+// Returns the modified target for method chaining.
 func (target Target) WithCSSClass(cssClass templ.CSSClass) Target {
 	target.cssClass = cssClass
 	return target
 }
 
+// Render writes the target's HTML representation to the provided writer.
+// It handles the rendering of the target with all configured HTMX attributes.
+// Returns an error if rendering fails.
 func (target Target) Render(ctx context.Context, w io.Writer) error {
 	return target.component().Render(ctx, w)
 }
@@ -75,7 +92,7 @@ func (target Target) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(buildComponentID(ctx, target.id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 39, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 56, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -88,7 +105,7 @@ func (target Target) component() templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(getContext(ctx).uri)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 40, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 57, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -101,7 +118,7 @@ func (target Target) component() templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(SwapInnerHTML)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 41, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 58, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -114,7 +131,7 @@ func (target Target) component() templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(target.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 42, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 59, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -127,7 +144,7 @@ func (target Target) component() templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeAction))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 44, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 61, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
