@@ -1,8 +1,8 @@
 package gong
 
-templ index(route *Route) {
+templ index(route Route) {
 	<html>
-		if head, ok := route.component.view.(Head); ok {
+		if head, ok := route.Component().view.(Head); ok {
 			@head.Head()
 		} else {
 			<head>

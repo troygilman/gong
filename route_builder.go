@@ -1,17 +1,15 @@
 package gong
 
-import "reflect"
-
 type RouteBuilder struct {
 	path      string
 	component Component
 	children  []RouteBuilder
 }
 
-func NewRoute(path string, view View) RouteBuilder {
+func NewRoute(path string, component Component) RouteBuilder {
 	return RouteBuilder{
 		path:      path,
-		component: NewComponent("", view),
+		component: component,
 	}
 }
 
@@ -20,48 +18,26 @@ func (builder RouteBuilder) WithRoutes(routes ...RouteBuilder) RouteBuilder {
 	return builder
 }
 
-func (builder RouteBuilder) build(g *Gong, parent *Route) *Route {
+func (builder RouteBuilder) build(parent Route) Route {
 	path := builder.path
 	if parent != nil {
-		path = parent.path + builder.path
+		path = parent.Path() + builder.path
 	}
 
-	route := &Route{
+	route := &gongRoute{
 		component: builder.component,
 		path:      path,
-		actions:   make(map[string]Action),
-		children:  make(map[string]*Route),
+		children:  make(map[string]Route),
 		parent:    parent,
 	}
 
-	scanViewForActions(route.actions, route.component.view, "")
-
 	for i, childBuilder := range builder.children {
-		childRoute := childBuilder.build(g, route)
-		route.children[childRoute.path] = childRoute
+		childRoute := childBuilder.build(route)
+		route.children[childRoute.Path()] = childRoute
 		if i == 0 {
 			route.defaultChild = childRoute
 		}
 	}
 
-	route.setupHandler(g)
 	return route
-}
-
-func scanViewForActions(actions map[string]Action, view View, kindPrefix string) {
-	v := reflect.ValueOf(view)
-	t := v.Type()
-	if t.Kind() == reflect.Struct {
-		for i := range t.NumField() {
-			field := v.Field(i)
-			if !field.CanInterface() {
-				continue
-			}
-			if component, ok := field.Interface().(Component); ok {
-				kind := kindPrefix + component.kind
-				actions[kind] = component.action
-				scanViewForActions(actions, component.view, kind+"_")
-			}
-		}
-	}
 }

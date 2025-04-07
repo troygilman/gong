@@ -30,9 +30,9 @@ func FormValue(ctx context.Context, key string) string {
 
 func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	prefix := "gong" + "_" + hash(gCtx.route.path)
-	if gCtx.kind != "" {
-		prefix += "_" + gCtx.kind
+	prefix := "gong" + "_" + hash(gCtx.route.Path())
+	if gCtx.id != "" {
+		prefix += "_" + gCtx.id
 	}
 	if id != "" {
 		prefix += "_" + id
@@ -42,7 +42,7 @@ func buildComponentID(ctx context.Context, id string) string {
 
 func buildOutletID(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	return "gong" + "_" + hash(gCtx.route.path) + "_outlet"
+	return "gong" + "_" + hash(gCtx.route.Path()) + "_outlet"
 }
 
 func buildHeaders(ctx context.Context, requestType string) string {
@@ -51,9 +51,9 @@ func buildHeaders(ctx context.Context, requestType string) string {
 		GongRequestHeader,
 		requestType,
 		GongRouteHeader,
-		gCtx.route.path,
-		GongKindHeader,
-		gCtx.kind,
+		gCtx.route.Path(),
+		GongIdHeader,
+		gCtx.id,
 	)
 }
 
@@ -70,6 +70,9 @@ func LoaderData[Data any](ctx context.Context) (data Data) {
 }
 
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
+	if component == nil {
+		panic("cannot render nil templ.Component")
+	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 	return component.Render(ctx, w)
 }

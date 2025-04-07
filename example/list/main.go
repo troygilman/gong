@@ -9,20 +9,20 @@ import (
 func main() {
 	db := newUserDatabase()
 
-	userComponent := gong.NewComponent("user", userView{
+	userComponent := gong.NewComponent(userView{
 		db: db,
 	})
 
 	g := gong.New(http.NewServeMux()).Routes(
-		gong.NewRoute("/", homeView{}).WithRoutes(
-			gong.NewRoute("users", listView{
+		gong.NewRoute("/", gong.NewComponent(homeView{})).WithRoutes(
+			gong.NewRoute("users", gong.NewComponent(listView{
 				db:            db,
 				UserComponent: userComponent,
-			}),
-			gong.NewRoute("user/{name}", testView{
+			})),
+			gong.NewRoute("user/{name}", gong.NewComponent(testView{
 				db:            db,
 				UserComponent: userComponent,
-			}),
+			})),
 		),
 	)
 
