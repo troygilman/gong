@@ -3,11 +3,11 @@ package gong
 import (
 	"testing"
 
-	"github.com/troygilman/gong/assert"
+	"github.com/troygilman/gong/internal/assert"
 )
 
 func TestComponentRenderView(t *testing.T) {
-	mock := MockComponent{
+	mock := mockComponent{
 		view: textTemplComponent{"view"},
 	}
 
@@ -17,7 +17,7 @@ func TestComponentRenderView(t *testing.T) {
 }
 
 func TestComponentRenderAction(t *testing.T) {
-	mock := MockComponent{
+	mock := mockComponent{
 		action: textTemplComponent{"action"},
 	}
 
@@ -27,7 +27,7 @@ func TestComponentRenderAction(t *testing.T) {
 }
 
 func TestComponentRenderAction_withLoader(t *testing.T) {
-	mock := MockComponent{
+	mock := mockComponent{
 		action:     loaderTemplComponent{},
 		loaderData: "action",
 	}
@@ -38,7 +38,7 @@ func TestComponentRenderAction_withLoader(t *testing.T) {
 }
 
 func TestComponentFind(t *testing.T) {
-	mock := MockComponent{}
+	mock := mockComponent{}
 
 	component := NewComponent(mock).WithID("mock")
 
@@ -49,9 +49,9 @@ func TestComponentFind(t *testing.T) {
 }
 
 func TestComponentFind_withNestedComponent(t *testing.T) {
-	child := NewComponent(MockComponent{}).WithID("mock")
+	child := NewComponent(mockComponent{}).WithID("mock")
 
-	component := NewComponent(ParentComponent{
+	component := NewComponent(parentComponent{
 		Child: child,
 	}).WithID("parent")
 

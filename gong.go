@@ -2,10 +2,12 @@ package gong
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/troygilman/gong/internal/response_writer"
 )
 
 type contextKeyType int
@@ -55,7 +57,7 @@ func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 func (g *Gong) setupRoute(route Route) {
 	log.Printf("Route=%s\n", route.Path())
 	g.mux.Handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writer := NewCustomResponseWriter(w)
+		writer := response_writer.NewResponseWriter(w)
 		requestType := r.Header.Get(HeaderGongRequestType)
 
 		gCtx := gongContext{
@@ -110,7 +112,7 @@ type gongContext struct {
 	requestType string
 	route       Route
 	request     *http.Request
-	writer      *CustomResponseWriter
+	writer      *response_writer.ResponseWriter
 	path        string
 	uri         string
 	action      bool
@@ -143,4 +145,10 @@ type LoaderFunc func(ctx context.Context) any
 
 func (f LoaderFunc) Loader(ctx context.Context) any {
 	return f(ctx)
+}
+
+type RenderFunc func(ctx context.Context, w io.Writer) error
+
+func (r RenderFunc) Render(ctx context.Context, w io.Writer) error {
+	return r(ctx, w)
 }

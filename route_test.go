@@ -3,11 +3,11 @@ package gong
 import (
 	"testing"
 
-	"github.com/troygilman/gong/assert"
+	"github.com/troygilman/gong/internal/assert"
 )
 
 func TestRouteBasic(t *testing.T) {
-	comp := MockComponent{
+	comp := mockComponent{
 		view: textTemplComponent{"view"},
 	}
 
@@ -29,7 +29,7 @@ func TestRouteBasic(t *testing.T) {
 }
 
 func TestRouteRenderAction(t *testing.T) {
-	comp := MockComponent{
+	comp := mockComponent{
 		action: textTemplComponent{"action"},
 	}
 
@@ -39,7 +39,7 @@ func TestRouteRenderAction(t *testing.T) {
 }
 
 func TestRouteRenderAction_withLoader(t *testing.T) {
-	comp := MockComponent{
+	comp := mockComponent{
 		action:     loaderTemplComponent{},
 		loaderData: "action",
 	}

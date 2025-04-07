@@ -7,24 +7,24 @@ import (
 	"testing"
 
 	"github.com/a-h/templ"
-	"github.com/troygilman/gong/assert"
+	"github.com/troygilman/gong/internal/assert"
 )
 
-type MockComponent struct {
+type mockComponent struct {
 	view       templ.Component
 	action     templ.Component
 	loaderData any
 }
 
-func (mc MockComponent) View() templ.Component {
+func (mc mockComponent) View() templ.Component {
 	return mc.view
 }
 
-func (mc MockComponent) Action() templ.Component {
+func (mc mockComponent) Action() templ.Component {
 	return mc.action
 }
 
-func (mc MockComponent) Loader(ctx context.Context) any {
+func (mc mockComponent) Loader(ctx context.Context) any {
 	return mc.loaderData
 }
 
@@ -44,11 +44,11 @@ func (c loaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
 	return err
 }
 
-type ParentComponent struct {
+type parentComponent struct {
 	Child Component
 }
 
-func (pc ParentComponent) View() templ.Component {
+func (pc parentComponent) View() templ.Component {
 	return nil
 }
 
