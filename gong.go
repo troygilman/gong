@@ -13,9 +13,9 @@ type contextKeyType int
 const contextKey = contextKeyType(0)
 
 const (
-	GongRequestHeader = "Gong-Request"
-	GongIdHeader      = "Gong-ID"
-	GongRouteHeader   = "Gong-Route"
+	HeaderGongRequestType = "Gong-Request-Type"
+	HeaderGongComponentID = "Gong-Component-ID"
+	HeaderGongRoutePath   = "Gong-Route-Path"
 )
 
 const (
@@ -56,16 +56,17 @@ func (g *Gong) setupRoute(route Route) {
 	log.Printf("Route=%s\n", route.Path())
 	g.mux.Handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writer := NewCustomResponseWriter(w)
-		requestType := r.Header.Get(GongRequestHeader)
+		requestType := r.Header.Get(HeaderGongRequestType)
 
 		gCtx := gongContext{
 			requestType: requestType,
 			route:       route,
-			path:        r.Header.Get(GongRouteHeader),
+			path:        r.Header.Get(HeaderGongRoutePath),
+			uri:         r.RequestURI,
 			request:     r,
 			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
-			id:          r.Header.Get(GongIdHeader),
+			id:          r.Header.Get(HeaderGongComponentID),
 		}
 
 		var templComponent templ.Component
@@ -111,6 +112,7 @@ type gongContext struct {
 	request     *http.Request
 	writer      *CustomResponseWriter
 	path        string
+	uri         string
 	action      bool
 	loader      Loader
 	id          string

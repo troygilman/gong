@@ -52,6 +52,34 @@ func (pc ParentComponent) View() templ.Component {
 	return nil
 }
 
+type mockRoute struct {
+	path string
+}
+
+func (mock mockRoute) Child(path string) Route {
+	return nil
+}
+
+func (mock mockRoute) Children() []Route {
+	return []Route{}
+}
+
+func (mock mockRoute) Root() Route {
+	return mock
+}
+
+func (mock mockRoute) Path() string {
+	return mock.path
+}
+
+func (mock mockRoute) Component() Component {
+	return Component{}
+}
+
+func (mock mockRoute) Render(ctx context.Context, w io.Writer) error {
+	return nil
+}
+
 func testRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
 	buffer := bytes.NewBuffer([]byte{})
 	err := render(context.Background(), gCtx, buffer, c)

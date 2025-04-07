@@ -46,17 +46,17 @@ func (form Form) Render(ctx context.Context, w io.Writer) error {
 
 templ (form Form) component() {
 	{{
-		path := getContext(ctx).request.RequestURI
+		uri := getContext(ctx).uri
 	}}
 	<form
 		if form.method == http.MethodPost {
-			hx-post={ path }
+			hx-post={ uri }
 		}
 		if form.method == http.MethodPatch {
-			hx-patch={ path }
+			hx-patch={ uri }
 		}
 		if form.method == http.MethodDelete {
-			hx-delete={ path }
+			hx-delete={ uri }
 		}
 		hx-swap={ form.swap }
 		if form.swap != SwapNone {

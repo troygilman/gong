@@ -37,7 +37,7 @@ func (target Target) Render(ctx context.Context, w io.Writer) error {
 templ (target Target) component() {
 	<div
 		id={ buildComponentID(ctx, target.id) }
-		hx-get={ getContext(ctx).route.Path() }
+		hx-get={ getContext(ctx).uri }
 		hx-swap={ SwapInnerHTML }
 		hx-trigger={ target.trigger }
 		hx-target="this"

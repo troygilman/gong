@@ -48,11 +48,11 @@ func buildOutletID(ctx context.Context) string {
 func buildHeaders(ctx context.Context, requestType string) string {
 	gCtx := getContext(ctx)
 	return fmt.Sprintf(`{"%s": "%s", "%s": "%s", "%s": "%s"}`,
-		GongRequestHeader,
+		HeaderGongRequestType,
 		requestType,
-		GongRouteHeader,
+		HeaderGongRoutePath,
 		gCtx.route.Path(),
-		GongIdHeader,
+		HeaderGongComponentID,
 		gCtx.id,
 	)
 }

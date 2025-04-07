@@ -22,7 +22,6 @@ type Component struct {
 }
 
 func NewComponent(view View) Component {
-
 	component := Component{
 		id:       nextComponentID(),
 		view:     view,
@@ -42,6 +41,24 @@ func NewComponent(view View) Component {
 	}
 
 	return component
+}
+
+func (component Component) Render(ctx context.Context, w io.Writer) error {
+	gCtx := getContext(ctx)
+	gCtx.loader = component.loader
+
+	if gCtx.action {
+		gCtx.action = false
+		return render(ctx, gCtx, w, component.action.Action())
+	}
+
+	if gCtx.id == "" {
+		gCtx.id = component.id
+	} else {
+		gCtx.id += idDelimeter + component.id
+	}
+
+	return render(ctx, gCtx, w, component.view.View())
 }
 
 func (component Component) Find(id string) (Component, bool) {
@@ -75,24 +92,6 @@ func (component Component) WithLoaderData(data any) Component {
 func (component Component) WithID(id string) Component {
 	component.id = id
 	return component
-}
-
-func (component Component) Render(ctx context.Context, w io.Writer) error {
-	gCtx := getContext(ctx)
-	gCtx.loader = component.loader
-
-	if gCtx.action {
-		gCtx.action = false
-		return render(ctx, gCtx, w, component.action.Action())
-	}
-
-	if gCtx.id == "" {
-		gCtx.id = component.id
-	} else {
-		gCtx.id += idDelimeter + component.id
-	}
-
-	return render(ctx, gCtx, w, component.view.View())
 }
 
 func scanViewForActions(view View) map[string]Component {
