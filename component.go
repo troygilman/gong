@@ -3,8 +3,13 @@ package gong
 import (
 	"context"
 	"io"
+	"log"
 	"reflect"
 	"strings"
+)
+
+const (
+	kindDelimeter = "_"
 )
 
 type Component struct {
@@ -34,10 +39,11 @@ func NewComponent(kind string, view View) Component {
 }
 
 func (component Component) Find(kind string) (Component, bool) {
-	return component.find(strings.Split(kind, "_"))
+	return component.find(strings.Split(kind, kindDelimeter))
 }
 
 func (component Component) find(kind []string) (Component, bool) {
+	log.Println(component.children, kind)
 	if len(kind) == 0 || len(kind) == 1 && kind[0] == "" {
 		return component, true
 	}
@@ -71,7 +77,7 @@ func (component Component) Render(ctx context.Context, w io.Writer) error {
 	if gCtx.kind == "" {
 		gCtx.kind = component.kind
 	} else {
-		gCtx.kind += "_" + component.kind
+		gCtx.kind += kindDelimeter + component.kind
 	}
 
 	return render(ctx, gCtx, w, component.view.View())
