@@ -1,0 +1,15 @@
+package nested_components
+
+import "github.com/troygilman/gong"
+
+type ChildComponent struct{}
+
+func NewChildComponent() gong.Component {
+	return gong.NewComponent(ChildComponent{})
+}
+
+templ (childComponent ChildComponent) View() {
+	<div class={ BoxClass() }>
+		Child Component
+	</div>
+}

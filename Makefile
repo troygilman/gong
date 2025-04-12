@@ -6,8 +6,8 @@ list:
 	templ generate
 	go run ./example/list
 
-gen:
+build:
 	templ generate
 
-test: gen
+test: build
 	go test . -count=1
