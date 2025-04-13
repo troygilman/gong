@@ -1,0 +1,84 @@
+package click_to_edit
+
+import (
+	"github.com/troygilman/gong"
+	"net/http"
+)
+
+type UserDetailComponent struct {
+}
+
+func NewUserDetailComponent() gong.Component {
+	return gong.NewComponent(UserDetailComponent{})
+}
+
+templ (c UserDetailComponent) View() {
+	@gong.NewTarget() {
+		@c.details(User{
+			FirstName: "Joe",
+			LastName:  "Blow",
+			Email:     "joe@blow.com",
+		})
+	}
+}
+
+templ (c UserDetailComponent) Action() {
+	{{
+		user := User{
+			FirstName: gong.FormValue(ctx, "firstName"),
+			LastName:  gong.FormValue(ctx, "lastName"),
+			Email:     gong.FormValue(ctx, "email"),
+		}
+	}}
+	switch gong.Request(ctx).Method {
+		case http.MethodGet:
+			@c.form(user)
+		case http.MethodPatch:
+			@c.details(user)
+	}
+}
+
+templ (c UserDetailComponent) details(user User) {
+	@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
+		<div>
+			<div><label>First Name: </label>{ user.FirstName }</div>
+			<input type="hidden" name="firstName" value={ user.FirstName }/>
+		</div>
+		<div>
+			<div><label>Last Name: </label>{ user.LastName }</div>
+			<input type="hidden" name="lastName" value={ user.LastName }/>
+		</div>
+		<div>
+			<div><label>Email: </label>{ user.Email }</div>
+			<input type="hidden" name="email" value={ user.Email }/>
+		</div>
+		<button class="btn primary">
+			Click To Edit
+		</button>
+	}
+}
+
+templ (c UserDetailComponent) form(user User) {
+	@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
+		<div>
+			<label>First Name</label>
+			<input type="text" name="firstName" value={ user.FirstName }/>
+		</div>
+		<div class="form-group">
+			<label>Last Name</label>
+			<input type="text" name="lastName" value={ user.LastName }/>
+		</div>
+		<div class="form-group">
+			<label>Email Address</label>
+			<input type="email" name="email" value={ user.Email }/>
+		</div>
+		<button class="btn">Submit</button>
+		<button class="btn">Cancel</button>
+	}
+}
+
+type User struct {
+	FirstName string
+	LastName  string
+	Email     string
+}

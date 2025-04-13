@@ -4,7 +4,7 @@ import (
 	"github.com/troygilman/gong"
 )
 
-func Routes() gong.RouteBuilder {
+func Route() gong.RouteBuilder {
 	childComponent := NewChildComponent()
 	parentComponent := NewParentComponent(childComponent)
 	return gong.NewRoute("/", parentComponent)
