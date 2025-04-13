@@ -5,8 +5,7 @@ import (
 	"net/http"
 )
 
-type UserDetailComponent struct {
-}
+type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
 	return gong.NewComponent(UserDetailComponent{})
@@ -14,27 +13,26 @@ func NewUserDetailComponent() gong.Component {
 
 templ (c UserDetailComponent) View() {
 	@gong.NewTarget() {
-		@c.details(User{
-			FirstName: "Joe",
-			LastName:  "Blow",
-			Email:     "joe@blow.com",
-		})
+		@c.details(defaultUser)
 	}
 }
 
 templ (c UserDetailComponent) Action() {
-	{{
-		user := User{
-			FirstName: gong.FormValue(ctx, "firstName"),
-			LastName:  gong.FormValue(ctx, "lastName"),
-			Email:     gong.FormValue(ctx, "email"),
-		}
-	}}
 	switch gong.Request(ctx).Method {
 		case http.MethodGet:
-			@c.form(user)
+			@c.form(User{
+				FirstName: gong.QueryParam(ctx, "firstName"),
+				LastName:  gong.QueryParam(ctx, "lastName"),
+				Email:     gong.QueryParam(ctx, "email"),
+			})
 		case http.MethodPatch:
-			@c.details(user)
+			@c.details(User{
+				FirstName: gong.FormValue(ctx, "firstName"),
+				LastName:  gong.FormValue(ctx, "lastName"),
+				Email:     gong.FormValue(ctx, "email"),
+			})
+		case http.MethodDelete:
+			@c.details(defaultUser)
 	}
 }
 
@@ -73,7 +71,9 @@ templ (c UserDetailComponent) form(user User) {
 			<input type="email" name="email" value={ user.Email }/>
 		</div>
 		<button class="btn">Submit</button>
-		<button class="btn">Cancel</button>
+		@gong.NewButton().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodDelete) {
+			Cancel
+		}
 	}
 }
 
@@ -81,4 +81,10 @@ type User struct {
 	FirstName string
 	LastName  string
 	Email     string
+}
+
+var defaultUser = User{
+	FirstName: "Joe",
+	LastName:  "Blow",
+	Email:     "joe@blow.com",
 }

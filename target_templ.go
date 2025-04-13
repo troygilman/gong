@@ -103,7 +103,7 @@ func (target Target) component() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(getContext(ctx).uri)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(getContext(ctx).url)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target.templ`, Line: 57, Col: 30}
 		}

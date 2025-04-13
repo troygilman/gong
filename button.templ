@@ -1,0 +1,73 @@
+package gong
+
+import (
+	"context"
+	"io"
+	"net/http"
+)
+
+type Button struct {
+	method   string
+	targetID string
+	cssClass templ.CSSClass
+	swap     string
+}
+
+func NewButton() Button {
+	return Button{
+		method: http.MethodPost,
+		swap:   SwapNone,
+	}
+}
+
+func (button Button) WithMethod(method string) Button {
+	button.method = method
+	return button
+}
+
+func (button Button) WithCSSClass(cssClass templ.CSSClass) Button {
+	button.cssClass = cssClass
+	return button
+}
+
+func (button Button) WithTargetID(targetID string) Button {
+	button.targetID = targetID
+	return button
+}
+
+func (button Button) WithSwap(swap string) Button {
+	button.swap = swap
+	return button
+}
+
+func (button Button) Render(ctx context.Context, w io.Writer) error {
+	return button.component().Render(ctx, w)
+}
+
+templ (button Button) component() {
+	{{
+		uri := getContext(ctx).url
+	}}
+	<button
+		if button.method == http.MethodGet {
+			hx-get={ uri }
+		}
+		if button.method == http.MethodPost {
+			hx-post={ uri }
+		}
+		if button.method == http.MethodPatch {
+			hx-patch={ uri }
+		}
+		if button.method == http.MethodDelete {
+			hx-delete={ uri }
+		}
+		hx-swap={ button.swap }
+		if button.swap != SwapNone {
+			hx-target={ "#" + buildComponentID(ctx, button.targetID) }
+		}
+		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		class={ button.cssClass }
+	>
+		{ children... }
+	</button>
+}

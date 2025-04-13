@@ -66,7 +66,7 @@ func (form Form) Render(ctx context.Context, w io.Writer) error {
 
 templ (form Form) component() {
 	{{
-		uri := getContext(ctx).uri
+		uri := getContext(ctx).url
 	}}
 	<form
 		if form.method == http.MethodGet {

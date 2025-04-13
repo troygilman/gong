@@ -23,6 +23,10 @@ func FormValue(ctx context.Context, key string) string {
 	return Request(ctx).FormValue(key)
 }
 
+func QueryParam(ctx context.Context, key string) string {
+	return Request(ctx).URL.Query().Get(key)
+}
+
 // Request returns the current HTTP request object from the context.
 // This provides access to all request properties and methods.
 func Request(ctx context.Context) *http.Request {

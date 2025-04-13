@@ -81,7 +81,7 @@ func (g *Gong) setupRoute(route Route) {
 			requestType: requestType,
 			route:       route,
 			path:        r.Header.Get(HeaderGongRoutePath),
-			uri:         r.RequestURI,
+			url:         r.URL.EscapedPath(),
 			request:     r,
 			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
@@ -133,7 +133,7 @@ type gongContext struct {
 	request     *http.Request
 	writer      *response_writer.ResponseWriter
 	path        string
-	uri         string
+	url         string
 	action      bool
 	loader      Loader
 	id          string
