@@ -31,8 +31,6 @@ templ (c UserDetailComponent) Action() {
 				LastName:  gong.FormValue(ctx, "lastName"),
 				Email:     gong.FormValue(ctx, "email"),
 			})
-		case http.MethodDelete:
-			@c.details(defaultUser)
 	}
 }
 
@@ -50,7 +48,7 @@ templ (c UserDetailComponent) details(user User) {
 			<div><label>Email: </label>{ user.Email }</div>
 			<input type="hidden" name="email" value={ user.Email }/>
 		</div>
-		<button class="btn primary">
+		<button>
 			Click To Edit
 		</button>
 	}
@@ -62,17 +60,20 @@ templ (c UserDetailComponent) form(user User) {
 			<label>First Name</label>
 			<input type="text" name="firstName" value={ user.FirstName }/>
 		</div>
-		<div class="form-group">
+		<div>
 			<label>Last Name</label>
 			<input type="text" name="lastName" value={ user.LastName }/>
 		</div>
-		<div class="form-group">
+		<div>
 			<label>Email Address</label>
 			<input type="email" name="email" value={ user.Email }/>
 		</div>
-		<button class="btn">Submit</button>
-		@gong.NewButton().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodDelete) {
-			Cancel
+		<button>Submit</button>
+		@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
+			<input type="hidden" name="email" value={ user.Email }/>
+			<input type="hidden" name="lastName" value={ user.LastName }/>
+			<input type="hidden" name="firstName" value={ user.FirstName }/>
+			<button>Cancel</button>
 		}
 	}
 }
