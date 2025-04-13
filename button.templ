@@ -9,7 +9,7 @@ import (
 type Button struct {
 	method   string
 	targetID string
-	cssClass templ.CSSClass
+	cssClass []templ.CSSClass
 	swap     string
 }
 
@@ -25,7 +25,7 @@ func (button Button) WithMethod(method string) Button {
 	return button
 }
 
-func (button Button) WithCSSClass(cssClass templ.CSSClass) Button {
+func (button Button) WithCSSClasses(cssClass ...templ.CSSClass) Button {
 	button.cssClass = cssClass
 	return button
 }
@@ -65,6 +65,7 @@ templ (button Button) component() {
 		if button.swap != SwapNone {
 			hx-target={ "#" + buildComponentID(ctx, button.targetID) }
 		}
+		hx-include="this"
 		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
 		class={ button.cssClass }
 	>

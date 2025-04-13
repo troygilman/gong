@@ -17,7 +17,7 @@ import (
 type Button struct {
 	method   string
 	targetID string
-	cssClass templ.CSSClass
+	cssClass []templ.CSSClass
 	swap     string
 }
 
@@ -33,7 +33,7 @@ func (button Button) WithMethod(method string) Button {
 	return button
 }
 
-func (button Button) WithCSSClass(cssClass templ.CSSClass) Button {
+func (button Button) WithCSSClasses(cssClass ...templ.CSSClass) Button {
 	button.cssClass = cssClass
 	return button
 }
@@ -196,14 +196,14 @@ func (button Button) component() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " hx-headers=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " hx-include=\"this\" hx-headers=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeAction))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 68, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 69, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {

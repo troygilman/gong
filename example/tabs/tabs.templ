@@ -1,0 +1,69 @@
+package tabs
+
+import "github.com/troygilman/gong"
+import "net/http"
+
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/", gong.NewComponent(TabsComponent{}))
+}
+
+type TabsComponent struct{}
+
+templ (c TabsComponent) View() {
+	@gong.NewTarget() {
+		@tabList("Tab 1")
+	}
+	@tabContent("Tab 1 Content")
+}
+
+templ (c TabsComponent) Action() {
+	{{
+		activeTab := gong.QueryParam(ctx, "tab")
+	}}
+	@tabList(activeTab)
+	@tabContent(activeTab + " Content")
+}
+
+templ tabList(activeTab string) {
+	@tab("Tab 1", activeTab)
+	@tab("Tab 2", activeTab)
+	@tab("Tab 3", activeTab)
+}
+
+templ tab(tab string, activeTab string) {
+	{{
+		classes := []templ.CSSClass{buttonClass()}
+		if tab == activeTab {
+			classes = append(classes, selectedButtonClass())
+		}
+	}}
+	@gong.NewButton().
+		WithSwap(gong.SwapInnerHTML).
+		WithCSSClasses(classes...).
+		WithMethod(http.MethodGet) {
+		{ tab }
+		<input type="hidden" name="tab" value={ tab }/>
+	}
+}
+
+templ tabContent(content string) {
+	<div id="tab-content" hx-swap-oob="true">{ content }</div>
+}
+
+css selectedButtonClass() {
+	border-color: blue;
+	border-style: solid;
+}
+
+css buttonClass() {
+	display: inline-block;
+	padding: 6px 12px;
+	font-size: 12px;
+	font-weight: 500;
+	text-align: center;
+	text-decoration: none;
+	box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+}
