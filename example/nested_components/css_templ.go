@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 func BoxClass() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`border-style:solid;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`padding:4px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:8px;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`BoxClass`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,

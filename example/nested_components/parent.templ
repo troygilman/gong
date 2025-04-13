@@ -12,9 +12,16 @@ func NewParentComponent(child gong.Component) gong.Component {
 	})
 }
 
-templ (parentComponent ParentComponent) View() {
+templ (c ParentComponent) View() {
 	<div class={ BoxClass() }>
-		Parent Component
-		@parentComponent.ChildComponent
+		@gong.NewTarget()
+		@gong.NewForm().WithSwap(gong.SwapOuterHTML) {
+			<button>Click</button>
+		}
+		@c.ChildComponent
 	</div>
+}
+
+templ (c ParentComponent) Action() {
+	Parent
 }

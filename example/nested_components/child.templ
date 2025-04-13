@@ -8,8 +8,15 @@ func NewChildComponent() gong.Component {
 	return gong.NewComponent(ChildComponent{})
 }
 
-templ (childComponent ChildComponent) View() {
+templ (c ChildComponent) View() {
 	<div class={ BoxClass() }>
-		Child Component
+		@gong.NewTarget()
+		@gong.NewForm().WithSwap(gong.SwapOuterHTML) {
+			<button>Click</button>
+		}
 	</div>
+}
+
+templ (c ChildComponent) Action() {
+	Child
 }
