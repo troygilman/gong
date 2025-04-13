@@ -11,12 +11,14 @@ type Button struct {
 	targetID string
 	cssClass []templ.CSSClass
 	swap     string
+	pushUrl  string
 }
 
 func NewButton() Button {
 	return Button{
-		method: http.MethodPost,
-		swap:   SwapNone,
+		method:  http.MethodPost,
+		swap:    SwapNone,
+		pushUrl: "false",
 	}
 }
 
@@ -37,6 +39,15 @@ func (button Button) WithTargetID(targetID string) Button {
 
 func (button Button) WithSwap(swap string) Button {
 	button.swap = swap
+	return button
+}
+
+func (button Button) WithPushUrl(pushUrl bool) Button {
+	if pushUrl {
+		button.pushUrl = "true"
+	} else {
+		button.pushUrl = "false"
+	}
 	return button
 }
 
@@ -66,6 +77,7 @@ templ (button Button) component() {
 			hx-target={ "#" + buildComponentID(ctx, button.targetID) }
 		}
 		hx-include="this"
+		hx-push-url={ button.pushUrl }
 		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
 		class={ button.cssClass }
 	>
