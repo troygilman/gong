@@ -10,13 +10,16 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "context"
 import "io"
+import "strings"
 
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
-	path   string
-	target string
+	path    string
+	target  string
+	swap    string
+	headers []string
 }
 
 // NewLink creates a new Link instance with the specified path.
@@ -24,6 +27,7 @@ type Link struct {
 func NewLink(path string) Link {
 	return Link{
 		path: path,
+		swap: SwapNone,
 	}
 }
 
@@ -32,6 +36,16 @@ func NewLink(path string) Link {
 // Returns the modified link for method chaining.
 func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
+	return link
+}
+
+func (link Link) WithSwap(swap string) Link {
+	link.swap = swap
+	return link
+}
+
+func (link Link) WithHeaders(headers ...string) Link {
+	link.headers = headers
 	return link
 }
 
@@ -67,6 +81,7 @@ func (link Link) component() templ.Component {
 		if link.target == "" {
 			link.target = "#" + buildOutletID(ctx)
 		}
+		headers := append(gongHeaders(ctx, GongRequestTypeRoute), link.headers...)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -74,52 +89,62 @@ func (link Link) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(link.path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 44, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 59, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-target=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-swap=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(link.target)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(link.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 45, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 60, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" hx-swap=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(SwapInnerHTML)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 46, Col: 25}
+		if link.swap != SwapNone {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " hx-target=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx, ""))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 62, Col: 46}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" hx-headers=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " hx-headers=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(ctx, GongRequestTypeRoute))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(headers))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 47, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link.templ`, Line: 64, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" hx-push-url=\"true\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" hx-push-url=\"true\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -127,12 +152,31 @@ func (link Link) component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
+}
+
+func buildHeaders(headers []string) string {
+	builder := &strings.Builder{}
+	builder.WriteString("{")
+	i := 0
+	for i+1 < len(headers) {
+		builder.WriteString(`"`)
+		builder.WriteString(headers[i])
+		builder.WriteString(`": "`)
+		builder.WriteString(headers[i+1])
+		builder.WriteString(`"`)
+		if i < len(headers)-2 {
+			builder.WriteString(", ")
+		}
+		i = i + 2
+	}
+	builder.WriteString("}")
+	return builder.String()
 }
 
 var _ = templruntime.GeneratedTemplate

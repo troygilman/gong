@@ -58,7 +58,7 @@ templ (target Target) component() {
 		hx-swap={ SwapInnerHTML }
 		hx-trigger={ target.trigger }
 		hx-target="this"
-		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
 		class={ target.cssClass }
 	>
 		{ children... }

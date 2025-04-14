@@ -64,6 +64,10 @@ func (mock mockRoute) Children() []Route {
 	return []Route{}
 }
 
+func (mock mockRoute) Parent() Route {
+	return nil
+}
+
 func (mock mockRoute) Root() Route {
 	return mock
 }

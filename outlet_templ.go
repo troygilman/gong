@@ -18,6 +18,8 @@ import (
 // based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
 	class string
+	oob   bool
+	route Route
 }
 
 // NewOutlet creates a new Outlet instance.
@@ -34,10 +36,26 @@ func (outlet Outlet) WithClass(class string) Outlet {
 	return outlet
 }
 
+func (outlet Outlet) withOOB(oob bool) Outlet {
+	outlet.oob = oob
+	return outlet
+}
+
+func (outlet Outlet) withRoute(route Route) Outlet {
+	outlet.route = route
+	return outlet
+}
+
 // Render writes the outlet's HTML representation to the provided writer.
 // It handles the rendering of the outlet and its child route components.
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
+	if outlet.route == nil {
+		gCtx := getContext(ctx)
+		if child := getContext(ctx).route.Child(gCtx.path); child != nil {
+			outlet.route = child
+		}
+	}
 	return outlet.component().Render(ctx, w)
 }
 
@@ -74,13 +92,23 @@ func (outlet Outlet) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(buildOutletID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 37, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 56, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if outlet.oob {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " hx-swap-oob=\"true\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -93,22 +121,17 @@ func (outlet Outlet) component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = RenderFunc(func(ctx context.Context, w io.Writer) error {
-			gCtx := getContext(ctx)
-			gCtx.id = ""
-			if child := gCtx.route.Child(gCtx.path); child != nil {
-				return render(ctx, gCtx, w, child)
+		if outlet.route != nil {
+			templ_7745c5c3_Err = outlet.route.Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
-			return nil
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

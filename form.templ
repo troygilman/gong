@@ -85,7 +85,7 @@ templ (form Form) component() {
 		if form.swap != SwapNone {
 			hx-target={ "#" + buildComponentID(ctx, form.targetID) }
 		}
-		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
 		class={ form.cssClass }
 	>
 		{ children... }

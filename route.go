@@ -17,6 +17,8 @@ type Route interface {
 	// Children returns all direct child routes of this route.
 	Children() []Route
 
+	Parent() Route
+
 	// Root returns the root route of the routing tree.
 	Root() Route
 
@@ -42,6 +44,21 @@ type gongRoute struct {
 
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
+
+	if gCtx.link {
+		parent := route.Parent()
+		gCtx.route = parent
+		gCtx.link = false
+		if component, ok := parent.Component().Find(gCtx.id); ok {
+			gCtx.action = true
+			if err := render(ctx, gCtx, w, component); err != nil {
+				return err
+			}
+			gCtx.action = false
+		}
+		return render(ctx, gCtx, w, NewOutlet().withRoute(route).withOOB(true))
+	}
+
 	gCtx.route = route
 
 	if gCtx.action {
@@ -52,6 +69,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 		return render(ctx, gCtx, w, component)
 	}
 
+	gCtx.id = ""
 	return render(ctx, gCtx, w, route.component)
 }
 
@@ -75,6 +93,10 @@ func (route *gongRoute) Children() []Route {
 		children = append(children, route)
 	}
 	return children
+}
+
+func (route *gongRoute) Parent() Route {
+	return route.parent
 }
 
 func (route *gongRoute) Root() Route {

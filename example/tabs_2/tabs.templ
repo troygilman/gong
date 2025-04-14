@@ -1,0 +1,73 @@
+package tabs_2
+
+import "github.com/troygilman/gong"
+
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/tabs/", gong.NewComponent(TabsComponent{})).WithRoutes(
+		gong.NewRoute("1", gong.NewComponent(TabContentComponent{"Tab 1 Content"})),
+		gong.NewRoute("2", gong.NewComponent(TabContentComponent{"Tab 2 Content"})),
+		gong.NewRoute("3", gong.NewComponent(TabContentComponent{"Tab 3 Content"})),
+	)
+}
+
+type TabsComponent struct{}
+
+templ (c TabsComponent) View() {
+	@gong.NewTarget() {
+		@tabList("1")
+	}
+	@gong.NewOutlet()
+}
+
+templ (c TabsComponent) Action() {
+	{{
+		tab := gong.Request(ctx).Header.Get("Tab")
+	}}
+	@tabList(tab)
+}
+
+templ tabList(activeTab string) {
+	<div class={ tabListClass() }>
+		@tab("Tab 1", "1", activeTab)
+		@tab("Tab 2", "2", activeTab)
+		@tab("Tab 3", "3", activeTab)
+	</div>
+}
+
+css tabListClass() {
+	display: flex;
+	flex-direction: row;
+	gap: 12px;
+}
+
+templ tab(title string, path string, activeTab string) {
+	{{
+		classes := []templ.CSSClass{tabClass()}
+		if path == activeTab {
+			classes = append(classes, activeTabClass())
+		}
+	}}
+	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithHeaders("Tab", path) {
+		<div class={ classes }>
+			{ title }
+		</div>
+	}
+}
+
+css tabClass() {
+	border-style: solid;
+	padding: 4px;
+	cursor: pointer;
+}
+
+css activeTabClass() {
+	border-color: blue;
+}
+
+type TabContentComponent struct {
+	content string
+}
+
+templ (c TabContentComponent) View() {
+	{ c.content }
+}

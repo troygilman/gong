@@ -78,7 +78,7 @@ templ (button Button) component() {
 		}
 		hx-include="this"
 		hx-push-url={ button.pushUrl }
-		hx-headers={ buildHeaders(ctx, GongRequestTypeAction) }
+		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
 		class={ button.cssClass }
 	>
 		{ children... }

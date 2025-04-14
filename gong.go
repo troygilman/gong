@@ -96,7 +96,7 @@ func (g *Gong) setupRoute(route Route) {
 			}
 			templComponent = gCtx.route
 		case GongRequestTypeRoute:
-			gCtx.id = ""
+			gCtx.link = true
 			templComponent = gCtx.route
 		default:
 			gCtx.path = route.Path()
@@ -135,6 +135,7 @@ type gongContext struct {
 	path        string
 	url         string
 	action      bool
+	link        bool
 	loader      Loader
 	id          string
 }

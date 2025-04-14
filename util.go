@@ -2,7 +2,6 @@ package gong
 
 import (
 	"context"
-	"fmt"
 	"hash/fnv"
 	"io"
 	"strconv"
@@ -31,16 +30,16 @@ func buildOutletID(ctx context.Context) string {
 	return "gong" + "_" + hash(gCtx.route.Path()) + "_outlet"
 }
 
-func buildHeaders(ctx context.Context, requestType string) string {
+func gongHeaders(ctx context.Context, requestType string) []string {
 	gCtx := getContext(ctx)
-	return fmt.Sprintf(`{"%s": "%s", "%s": "%s", "%s": "%s"}`,
+	return []string{
 		HeaderGongRequestType,
 		requestType,
 		HeaderGongRoutePath,
 		gCtx.route.Path(),
 		HeaderGongComponentID,
 		gCtx.id,
-	)
+	}
 }
 
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {

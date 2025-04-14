@@ -2,13 +2,16 @@ package gong
 
 import "context"
 import "io"
+import "strings"
 
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
-	path   string
-	target string
+	path    string
+	target  string
+	swap    string
+	headers []string
 }
 
 // NewLink creates a new Link instance with the specified path.
@@ -16,6 +19,7 @@ type Link struct {
 func NewLink(path string) Link {
 	return Link{
 		path: path,
+		swap: SwapNone,
 	}
 }
 
@@ -24,6 +28,16 @@ func NewLink(path string) Link {
 // Returns the modified link for method chaining.
 func (link Link) WithClosestOutlet() Link {
 	link.target = "closest .gong-outlet"
+	return link
+}
+
+func (link Link) WithSwap(swap string) Link {
+	link.swap = swap
+	return link
+}
+
+func (link Link) WithHeaders(headers ...string) Link {
+	link.headers = headers
 	return link
 }
 
@@ -39,14 +53,36 @@ templ (link Link) component() {
 		if link.target == "" {
 			link.target = "#" + buildOutletID(ctx)
 		}
+		headers := append(gongHeaders(ctx, GongRequestTypeRoute), link.headers...)
 	}}
 	<div
 		hx-get={ link.path }
-		hx-target={ link.target }
-		hx-swap={ SwapInnerHTML }
-		hx-headers={ buildHeaders(ctx, GongRequestTypeRoute) }
+		hx-swap={ link.swap }
+		if link.swap != SwapNone {
+			hx-target={ "#" + buildComponentID(ctx, "") }
+		}
+		hx-headers={ buildHeaders(headers) }
 		hx-push-url="true"
 	>
 		{ children... }
 	</div>
+}
+
+func buildHeaders(headers []string) string {
+	builder := &strings.Builder{}
+	builder.WriteString("{")
+	i := 0
+	for i+1 < len(headers) {
+		builder.WriteString(`"`)
+		builder.WriteString(headers[i])
+		builder.WriteString(`": "`)
+		builder.WriteString(headers[i+1])
+		builder.WriteString(`"`)
+		if i < len(headers)-2 {
+			builder.WriteString(", ")
+		}
+		i = i + 2
+	}
+	builder.WriteString("}")
+	return builder.String()
 }

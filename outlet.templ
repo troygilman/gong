@@ -10,6 +10,8 @@ import (
 // based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
 	class string
+	oob   bool
+	route Route
 }
 
 // NewOutlet creates a new Outlet instance.
@@ -26,22 +28,39 @@ func (outlet Outlet) WithClass(class string) Outlet {
 	return outlet
 }
 
+func (outlet Outlet) withOOB(oob bool) Outlet {
+	outlet.oob = oob
+	return outlet
+}
+
+func (outlet Outlet) withRoute(route Route) Outlet {
+	outlet.route = route
+	return outlet
+}
+
 // Render writes the outlet's HTML representation to the provided writer.
 // It handles the rendering of the outlet and its child route components.
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
+	if outlet.route == nil {
+		gCtx := getContext(ctx)
+		if child := getContext(ctx).route.Child(gCtx.path); child != nil {
+			outlet.route = child
+		}
+	}
 	return outlet.component().Render(ctx, w)
 }
 
 templ (outlet Outlet) component() {
-	<div id={ buildOutletID(ctx) } class={ "gong-outlet", outlet.class }>
-		@RenderFunc(func(ctx context.Context, w io.Writer) error {
-			gCtx := getContext(ctx)
-			gCtx.id = ""
-			if child := gCtx.route.Child(gCtx.path); child != nil {
-				return render(ctx, gCtx, w, child)
-			}
-			return nil
-		})
+	<div
+		id={ buildOutletID(ctx) }
+		if outlet.oob {
+			hx-swap-oob="true"
+		}
+		class={ "gong-outlet", outlet.class }
+	>
+		if outlet.route != nil {
+			@outlet.route
+		}
 	</div>
 }
