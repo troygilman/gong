@@ -32,7 +32,8 @@ const (
 	// TriggerNone indicates no automatic trigger
 	TriggerNone = "none"
 	// TriggerLoad indicates the component should update on page load
-	TriggerLoad = "load"
+	TriggerLoad  = "load"
+	TriggerClick = "click"
 )
 
 // HTMX swap constants for content updates

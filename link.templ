@@ -9,26 +9,19 @@ import "strings"
 // specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
 	path    string
-	target  string
 	swap    string
 	headers []string
+	trigger string
 }
 
 // NewLink creates a new Link instance with the specified path.
 // The path should be a valid route path within the application.
 func NewLink(path string) Link {
 	return Link{
-		path: path,
-		swap: SwapNone,
+		path:    path,
+		swap:    SwapNone,
+		trigger: TriggerClick,
 	}
-}
-
-// WithClosestOutlet configures the link to target the closest parent outlet element.
-// This is useful for nested navigation where you want to update the nearest outlet.
-// Returns the modified link for method chaining.
-func (link Link) WithClosestOutlet() Link {
-	link.target = "closest .gong-outlet"
-	return link
 }
 
 func (link Link) WithSwap(swap string) Link {
@@ -41,6 +34,11 @@ func (link Link) WithHeaders(headers ...string) Link {
 	return link
 }
 
+func (link Link) WithTrigger(trigger string) Link {
+	link.trigger = trigger
+	return link
+}
+
 // Render writes the link's HTML representation to the provided writer.
 // It handles the rendering of the link with all configured HTMX attributes.
 // Returns an error if rendering fails.
@@ -50,9 +48,6 @@ func (link Link) Render(ctx context.Context, w io.Writer) error {
 
 templ (link Link) component() {
 	{{
-		if link.target == "" {
-			link.target = "#" + buildOutletID(ctx)
-		}
 		headers := append(gongHeaders(ctx, GongRequestTypeRoute), link.headers...)
 	}}
 	<div
@@ -61,6 +56,7 @@ templ (link Link) component() {
 		if link.swap != SwapNone {
 			hx-target={ "#" + buildComponentID(ctx, "") }
 		}
+		hx-trigger={ link.trigger }
 		hx-headers={ buildHeaders(headers) }
 		hx-push-url="true"
 	>

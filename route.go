@@ -47,6 +47,9 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 
 	if gCtx.link {
 		parent := route.Parent()
+		if parent == nil {
+			return nil
+		}
 		gCtx.route = parent
 		gCtx.link = false
 		if component, ok := parent.Component().Find(gCtx.id); ok {

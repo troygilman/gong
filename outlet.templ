@@ -9,7 +9,6 @@ import (
 // It serves as a dynamic content area where route components are rendered
 // based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
-	class string
 	oob   bool
 	route Route
 }
@@ -18,14 +17,6 @@ type Outlet struct {
 // The outlet will automatically render child routes based on the current path.
 func NewOutlet() Outlet {
 	return Outlet{}
-}
-
-// WithClass adds a CSS class to the outlet element.
-// This allows for custom styling of the outlet container.
-// Returns the modified outlet for method chaining.
-func (outlet Outlet) WithClass(class string) Outlet {
-	outlet.class = class
-	return outlet
 }
 
 func (outlet Outlet) withOOB(oob bool) Outlet {
@@ -57,7 +48,7 @@ templ (outlet Outlet) component() {
 		if outlet.oob {
 			hx-swap-oob="true"
 		}
-		class={ "gong-outlet", outlet.class }
+		class="gong-outlet"
 	>
 		if outlet.route != nil {
 			@outlet.route

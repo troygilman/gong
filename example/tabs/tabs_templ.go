@@ -15,7 +15,7 @@ import (
 )
 
 func Route() gong.RouteBuilder {
-	return gong.NewRoute("/tabs/", gong.NewComponent(TabsComponent{})).WithRoutes(
+	return gong.NewRoute("/", gong.NewComponent(TabsComponent{})).WithRoutes(
 		gong.NewRoute("1", gong.NewComponent(TabContentComponent{"Tab 1 Content"})),
 		gong.NewRoute("2", gong.NewComponent(TabContentComponent{"Tab 2 Content"})),
 		gong.NewRoute("3", gong.NewComponent(TabContentComponent{"Tab 3 Content"})),
@@ -105,7 +105,7 @@ func (c TabsComponent) Action() templ.Component {
 }
 
 func parseTab(url *url.URL) string {
-	return strings.Split(url.EscapedPath(), "/")[2]
+	return strings.Split(url.EscapedPath(), "/")[1]
 }
 
 func tabList() templ.Component {
