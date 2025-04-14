@@ -2,7 +2,6 @@ package gong
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"reflect"
 	"strconv"
@@ -60,7 +59,7 @@ func (component Component) Render(ctx context.Context, w io.Writer) error {
 	if gCtx.action {
 		gCtx.action = false
 		if component.action == nil {
-			return fmt.Errorf("no action available")
+			return nil
 		}
 		return render(ctx, gCtx, w, component.action.Action())
 	}
