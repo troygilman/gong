@@ -1,6 +1,10 @@
 package tabs_2
 
-import "github.com/troygilman/gong"
+import (
+	"github.com/troygilman/gong"
+	"net/url"
+	"strings"
+)
 
 func Route() gong.RouteBuilder {
 	return gong.NewRoute("/tabs/", gong.NewComponent(TabsComponent{})).WithRoutes(
@@ -14,19 +18,26 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@gong.NewTarget() {
-		@tabList("1")
+		@tabList()
 	}
 	@gong.NewOutlet()
 }
 
 templ (c TabsComponent) Action() {
-	{{
-		tab := gong.Request(ctx).Header.Get("Tab")
-	}}
-	@tabList(tab)
+	@tabList()
 }
 
-templ tabList(activeTab string) {
+func parseTab(url *url.URL) string {
+	return strings.Split(url.EscapedPath(), "/")[2]
+}
+
+templ tabList() {
+	{{
+		activeTab := parseTab(gong.Request(ctx).URL)
+		if activeTab == "" {
+			activeTab = "1"
+		}
+	}}
 	<div class={ tabListClass() }>
 		@tab("Tab 1", "1", activeTab)
 		@tab("Tab 2", "2", activeTab)
@@ -47,7 +58,7 @@ templ tab(title string, path string, activeTab string) {
 			classes = append(classes, activeTabClass())
 		}
 	}}
-	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithHeaders("Tab", path) {
+	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML) {
 		<div class={ classes }>
 			{ title }
 		</div>

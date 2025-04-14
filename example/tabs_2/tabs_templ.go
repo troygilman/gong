@@ -8,7 +8,11 @@ package tabs_2
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/troygilman/gong"
+import (
+	"github.com/troygilman/gong"
+	"net/url"
+	"strings"
+)
 
 func Route() gong.RouteBuilder {
 	return gong.NewRoute("/tabs/", gong.NewComponent(TabsComponent{})).WithRoutes(
@@ -53,7 +57,7 @@ func (c TabsComponent) View() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = tabList("1").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = tabList().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -92,9 +96,7 @@ func (c TabsComponent) Action() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-
-		tab := gong.Request(ctx).Header.Get("Tab")
-		templ_7745c5c3_Err = tabList(tab).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tabList().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +104,11 @@ func (c TabsComponent) Action() templ.Component {
 	})
 }
 
-func tabList(activeTab string) templ.Component {
+func parseTab(url *url.URL) string {
+	return strings.Split(url.EscapedPath(), "/")[2]
+}
+
+func tabList() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -123,6 +129,11 @@ func tabList(activeTab string) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+
+		activeTab := parseTab(gong.Request(ctx).URL)
+		if activeTab == "" {
+			activeTab = "1"
+		}
 		var templ_7745c5c3_Var5 = []any{tabListClass()}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
@@ -240,7 +251,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs_2/tabs.templ`, Line: 52, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs_2/tabs.templ`, Line: 63, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -252,7 +263,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithHeaders("Tab", path).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewLink(path).WithSwap(gong.SwapInnerHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -310,7 +321,7 @@ func (c TabContentComponent) View() templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs_2/tabs.templ`, Line: 72, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs_2/tabs.templ`, Line: 83, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
