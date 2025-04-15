@@ -53,3 +53,7 @@ func Redirect(ctx context.Context, path string) error {
 	http.Redirect(gCtx.writer, gCtx.request, path, http.StatusSeeOther)
 	return nil
 }
+
+func ChildRoute(ctx context.Context) Route {
+	return getContext(ctx).childRoute
+}

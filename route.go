@@ -69,6 +69,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 			panic("could not find parent")
 		}
 		gCtx.route = parent
+		gCtx.childRoute = route
 		gCtx.link = false
 		if component, ok := parent.Component().Find(gCtx.componentID); ok {
 			gCtx.action = true
@@ -123,11 +124,7 @@ func (route *gongRoute) Component() Component {
 }
 
 func (route *gongRoute) Path() string {
-	if route.parent != nil {
-		return route.parent.Path() + route.path
-	} else {
-		return route.path
-	}
+	return route.path
 }
 
 func (route *gongRoute) Depth() int {

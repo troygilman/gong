@@ -33,10 +33,7 @@ func parseTab(url *url.URL) string {
 
 templ tabList() {
 	{{
-		activeTab := parseTab(gong.Request(ctx).URL)
-		if activeTab == "" {
-			activeTab = "1"
-		}
+		activeTab := gong.ChildRoute(ctx).Path()
 	}}
 	<div style={ "display: flex", "flex-direction", "gap: 12px" }>
 		@tab("Tab 1", "1", activeTab)

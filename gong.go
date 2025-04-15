@@ -74,14 +74,15 @@ func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 	for _, builder := range builders {
 		route := builder.build(g.root, strconv.Itoa(len(g.root.children)))
 		g.root.children = append(g.root.children, route)
-		g.setupRoute(route)
+		g.setupRoute(route, "")
 	}
 	return g
 }
 
-func (g *Gong) setupRoute(route Route) {
-	log.Printf("Route=%s\n", route.Path())
-	g.mux.Handle(route.Path(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (g *Gong) setupRoute(route Route, path string) {
+	path += route.Path()
+	log.Printf("Route=%s\n", path)
+	g.mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writer := response_writer.NewResponseWriter(w)
 		requestType := r.Header.Get(HeaderGongRequestType)
 
@@ -115,7 +116,7 @@ func (g *Gong) setupRoute(route Route) {
 	}))
 
 	for i := range route.NumChildren() {
-		g.setupRoute(route.Child(i))
+		g.setupRoute(route.Child(i), path)
 	}
 }
 
