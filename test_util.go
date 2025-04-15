@@ -68,6 +68,10 @@ func (mock mockRoute) Parent() Route {
 	return nil
 }
 
+func (mock mockRoute) Depth() int {
+	return 0
+}
+
 func (mock mockRoute) ID() string {
 	return ""
 }

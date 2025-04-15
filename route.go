@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 )
 
 // Route represents a route in the application's routing tree.
@@ -26,6 +27,8 @@ type Route interface {
 	Path() string
 
 	ID() string
+
+	Depth() int
 
 	// Component returns the component associated with this route.
 	Component() Component
@@ -50,9 +53,10 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx.route = route
 
 	if len(route.children) > 0 {
-		depth := route.depth()
+		depth := route.Depth()
 		if len(gCtx.routeID) > depth {
 			index := int(gCtx.routeID[depth] - '0')
+			log.Println(route.Path(), depth, index, len(route.children))
 			gCtx.childRoute = route.children[index]
 		} else {
 			gCtx.childRoute = route.children[0]
@@ -126,12 +130,10 @@ func (route *gongRoute) Path() string {
 	}
 }
 
-func (route *gongRoute) depth() int {
-	depth := 0
-	var r Route = route
-	for r.Parent() != nil {
-		r = r.Parent()
-		depth++
+func (route *gongRoute) Depth() int {
+	if route.parent == nil {
+		return 0
+	} else {
+		return route.parent.Depth() + 1
 	}
-	return depth
 }
