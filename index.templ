@@ -3,8 +3,11 @@ package gong
 type indexComponent struct{}
 
 templ (c indexComponent) View() {
+	{{
+		head := getContext(ctx).childRoute.Component().head
+	}}
 	<html>
-		if head := getContext(ctx).head; head != nil {
+		if head != nil {
 			@head.Head()
 		} else {
 			<head>
