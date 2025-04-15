@@ -48,7 +48,16 @@ type gongRoute struct {
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = route
-	gCtx.routeIDIndex++
+
+	if len(route.children) > 0 {
+		depth := route.depth()
+		if len(gCtx.routeID) > depth {
+			index := int(gCtx.routeID[depth] - '0')
+			gCtx.childRoute = route.children[index]
+		} else {
+			gCtx.childRoute = route.children[0]
+		}
+	}
 
 	if gCtx.link {
 		parent := route.Parent()
@@ -115,4 +124,14 @@ func (route *gongRoute) Path() string {
 	} else {
 		return route.path
 	}
+}
+
+func (route *gongRoute) depth() int {
+	depth := 0
+	var r Route = route
+	for r.Parent() != nil {
+		r = r.Parent()
+		depth++
+	}
+	return depth
 }

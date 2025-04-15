@@ -34,12 +34,7 @@ func (outlet Outlet) withRoute(route Route) Outlet {
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	if outlet.route == nil {
-		gCtx := getContext(ctx)
-		id := 0
-		if len(gCtx.routeID) > gCtx.routeIDIndex {
-			id = int(gCtx.routeID[gCtx.routeIDIndex] - '0')
-		}
-		if child := getContext(ctx).route.Child(id); child != nil {
+		if child := getContext(ctx).childRoute; child != nil {
 			outlet.route = child
 		}
 	}

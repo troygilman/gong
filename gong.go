@@ -86,15 +86,14 @@ func (g *Gong) setupRoute(route Route) {
 		requestType := r.Header.Get(HeaderGongRequestType)
 
 		gCtx := gongContext{
-			route:        route,
-			routeID:      r.Header.Get(HeaderGongRouteID),
-			routeIDIndex: -1,
-			url:          r.URL.EscapedPath(),
-			request:      r,
-			writer:       writer,
-			action:       requestType == GongRequestTypeAction,
-			link:         requestType == GongRequestTypeLink,
-			componentID:  r.Header.Get(HeaderGongComponentID),
+			route:       route,
+			routeID:     r.Header.Get(HeaderGongRouteID),
+			url:         r.URL.EscapedPath(),
+			request:     r,
+			writer:      writer,
+			action:      requestType == GongRequestTypeAction,
+			link:        requestType == GongRequestTypeLink,
+			componentID: r.Header.Get(HeaderGongComponentID),
 		}
 
 		if requestType == "" {
@@ -127,17 +126,17 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type gongContext struct {
-	route        Route
-	request      *http.Request
-	writer       *response_writer.ResponseWriter
-	routeID      string
-	routeIDIndex int
-	componentID  string
-	url          string
-	action       bool
-	link         bool
-	loader       Loader
-	head         templ.Component
+	route       Route
+	childRoute  Route
+	request     *http.Request
+	writer      *response_writer.ResponseWriter
+	routeID     string
+	componentID string
+	url         string
+	action      bool
+	link        bool
+	loader      Loader
+	head        templ.Component
 }
 
 // Mux is an interface for HTTP request multiplexing.

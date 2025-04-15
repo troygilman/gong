@@ -42,12 +42,7 @@ func (outlet Outlet) withRoute(route Route) Outlet {
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	if outlet.route == nil {
-		gCtx := getContext(ctx)
-		id := 0
-		if len(gCtx.routeID) > gCtx.routeIDIndex {
-			id = int(gCtx.routeID[gCtx.routeIDIndex] - '0')
-		}
-		if child := getContext(ctx).route.Child(id); child != nil {
+		if child := getContext(ctx).childRoute; child != nil {
 			outlet.route = child
 		}
 	}
@@ -82,7 +77,7 @@ func (outlet Outlet) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(buildOutletID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 51, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet.templ`, Line: 46, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
