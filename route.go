@@ -12,10 +12,10 @@ type Route interface {
 	// Child returns the child route for the given path.
 	// If no exact match is found and a default child exists, returns the default child.
 	// Returns nil if no matching route is found.
-	Child(path string) Route
+	Child(int) Route
 
 	// Children returns all direct child routes of this route.
-	Children() []Route
+	NumChildren() int
 
 	Parent() Route
 
@@ -24,6 +24,8 @@ type Route interface {
 
 	// Path returns the path segment that this route represents.
 	Path() string
+
+	ID() string
 
 	// Component returns the component associated with this route.
 	Component() Component
@@ -37,22 +39,25 @@ type Route interface {
 type gongRoute struct {
 	path         string
 	component    Component
-	children     map[string]Route
+	children     []Route
 	defaultChild Route
 	parent       Route
+	id           string
 }
 
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
+	gCtx.route = route
+	gCtx.routeIDIndex++
 
 	if gCtx.link {
 		parent := route.Parent()
 		if parent == nil {
-			return nil
+			panic("could not find parent")
 		}
 		gCtx.route = parent
 		gCtx.link = false
-		if component, ok := parent.Component().Find(gCtx.id); ok {
+		if component, ok := parent.Component().Find(gCtx.componentID); ok {
 			gCtx.action = true
 			if err := render(ctx, gCtx, w, component); err != nil {
 				return err
@@ -62,40 +67,31 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 		return render(ctx, gCtx, w, NewOutlet().withRoute(route).withOOB(true))
 	}
 
-	gCtx.route = route
-
 	if gCtx.action {
-		component, ok := route.component.Find(gCtx.id)
+		component, ok := route.component.Find(gCtx.componentID)
 		if !ok {
-			panic(fmt.Sprintf("could not find component with id %s", gCtx.id))
+			panic(fmt.Sprintf("could not find component with id %s", gCtx.componentID))
 		}
 		return render(ctx, gCtx, w, component)
 	}
 
-	gCtx.id = ""
+	gCtx.componentID = ""
 	return render(ctx, gCtx, w, route.component)
 }
 
-func (route *gongRoute) Child(path string) Route {
-	if child, ok := route.children[path]; ok {
-		if child.Path() == path {
-			return child
-		} else {
-			return child.Child(path)
-		}
-	}
-	if route.defaultChild != nil {
-		return route.defaultChild
-	}
-	return nil
+func (route *gongRoute) Child(index int) Route {
+	return route.children[index]
 }
 
-func (route *gongRoute) Children() []Route {
-	children := []Route{}
-	for _, route := range route.children {
-		children = append(children, route)
+func (route *gongRoute) ID() string {
+	if route.parent != nil {
+		return route.parent.ID() + route.id
 	}
-	return children
+	return route.id
+}
+
+func (route *gongRoute) NumChildren() int {
+	return len(route.children)
 }
 
 func (route *gongRoute) Parent() Route {
@@ -114,5 +110,9 @@ func (route *gongRoute) Component() Component {
 }
 
 func (route *gongRoute) Path() string {
-	return route.path
+	if route.parent != nil {
+		return route.parent.Path() + route.path
+	} else {
+		return route.path
+	}
 }

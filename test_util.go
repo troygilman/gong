@@ -56,16 +56,20 @@ type mockRoute struct {
 	path string
 }
 
-func (mock mockRoute) Child(path string) Route {
+func (mock mockRoute) Child(id int) Route {
 	return nil
 }
 
-func (mock mockRoute) Children() []Route {
-	return []Route{}
+func (mock mockRoute) NumChildren() int {
+	return 0
 }
 
 func (mock mockRoute) Parent() Route {
 	return nil
+}
+
+func (mock mockRoute) ID() string {
+	return ""
 }
 
 func (mock mockRoute) Root() Route {

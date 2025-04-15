@@ -8,7 +8,9 @@ package gong
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func index(route Route) templ.Component {
+type indexComponent struct{}
+
+func (c indexComponent) View() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -33,8 +35,8 @@ func index(route Route) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if head := route.Component().head; head != nil {
-			templ_7745c5c3_Err = head.Head().Render(ctx, templ_7745c5c3_Buffer)
+		if head := getContext(ctx).head; head != nil {
+			templ_7745c5c3_Err = head.Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -48,7 +50,7 @@ func index(route Route) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = route.Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = NewOutlet().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -15,9 +15,9 @@ func getContext(ctx context.Context) gongContext {
 
 func buildComponentID(ctx context.Context, id string) string {
 	gCtx := getContext(ctx)
-	prefix := "gong" + "_" + hash(gCtx.route.Path())
-	if gCtx.id != "" {
-		prefix += "_" + gCtx.id
+	prefix := "gong" + "_" + gCtx.route.ID()
+	if gCtx.componentID != "" {
+		prefix += "_" + gCtx.componentID
 	}
 	if id != "" {
 		prefix += "_" + id
@@ -27,7 +27,7 @@ func buildComponentID(ctx context.Context, id string) string {
 
 func buildOutletID(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	return "gong" + "_" + hash(gCtx.route.Path()) + "_outlet"
+	return "gong" + "_" + gCtx.route.ID() + "_outlet"
 }
 
 func gongHeaders(ctx context.Context, requestType string) []string {
@@ -35,10 +35,10 @@ func gongHeaders(ctx context.Context, requestType string) []string {
 	return []string{
 		HeaderGongRequestType,
 		requestType,
-		HeaderGongRoutePath,
-		gCtx.route.Path(),
+		HeaderGongRouteID,
+		gCtx.route.ID(),
 		HeaderGongComponentID,
-		gCtx.id,
+		gCtx.componentID,
 	}
 }
 

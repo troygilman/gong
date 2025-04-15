@@ -76,7 +76,7 @@ func (link Link) component() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		headers := append(gongHeaders(ctx, GongRequestTypeRoute), link.headers...)
+		headers := append(gongHeaders(ctx, GongRequestTypeLink), link.headers...)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

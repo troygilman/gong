@@ -64,10 +64,10 @@ func (component Component) Render(ctx context.Context, w io.Writer) error {
 		return render(ctx, gCtx, w, component.action.Action())
 	}
 
-	if gCtx.id == "" {
-		gCtx.id = component.id
+	if gCtx.componentID == "" {
+		gCtx.componentID = component.id
 	} else {
-		gCtx.id += idDelimeter + component.id
+		gCtx.componentID += idDelimeter + component.id
 	}
 
 	return render(ctx, gCtx, w, component.view.View())

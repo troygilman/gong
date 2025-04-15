@@ -1,9 +1,11 @@
 package gong
 
-templ index(route Route) {
+type indexComponent struct{}
+
+templ (c indexComponent) View() {
 	<html>
-		if head := route.Component().head; head != nil {
-			@head.Head()
+		if head := getContext(ctx).head; head != nil {
+			@head
 		} else {
 			<head>
 				<meta charset="utf-8"/>
@@ -12,7 +14,7 @@ templ index(route Route) {
 			</head>
 		}
 		<body>
-			@route
+			@NewOutlet()
 		</body>
 	</html>
 }

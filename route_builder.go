@@ -1,5 +1,7 @@
 package gong
 
+import "strconv"
+
 // RouteBuilder is a builder pattern implementation for creating routes in the Gong framework.
 // It allows for declarative route definition with nested child routes.
 type RouteBuilder struct {
@@ -26,24 +28,19 @@ func (builder RouteBuilder) WithRoutes(routes ...RouteBuilder) RouteBuilder {
 	return builder
 }
 
-func (builder RouteBuilder) build(parent Route) Route {
-	path := builder.path
-	if parent != nil {
-		path = parent.Path() + builder.path
-	}
-
+func (builder RouteBuilder) build(parent Route, id string) Route {
 	route := &gongRoute{
 		component: builder.component,
-		path:      path,
-		children:  make(map[string]Route),
+		path:      builder.path,
 		parent:    parent,
+		id:        id,
 	}
 
 	for i, childBuilder := range builder.children {
-		childRoute := childBuilder.build(route)
-		route.children[childRoute.Path()] = childRoute
+		child := childBuilder.build(route, strconv.Itoa(len(route.children)))
+		route.children = append(route.children, child)
 		if i == 0 {
-			route.defaultChild = childRoute
+			route.defaultChild = child
 		}
 	}
 

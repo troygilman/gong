@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/troygilman/gong/internal/response_writer"
@@ -18,13 +19,13 @@ const contextKey = contextKeyType(0)
 const (
 	HeaderGongRequestType = "Gong-Request-Type"
 	HeaderGongComponentID = "Gong-Component-ID"
-	HeaderGongRoutePath   = "Gong-Route-Path"
+	HeaderGongRouteID     = "Gong-Route-ID"
 )
 
 // Request type constants used by Gong
 const (
 	GongRequestTypeAction = "action"
-	GongRequestTypeRoute  = "route"
+	GongRequestTypeLink   = "link"
 )
 
 // HTMX trigger constants for component updates
@@ -51,7 +52,8 @@ const (
 // Gong is the main framework instance that handles routing and request processing.
 // It implements the http.Handler interface and manages the application's routes.
 type Gong struct {
-	mux Mux
+	mux  Mux
+	root *gongRoute
 }
 
 // New creates a new Gong instance with the specified HTTP mux.
@@ -59,6 +61,9 @@ type Gong struct {
 func New(mux Mux) *Gong {
 	return &Gong{
 		mux: mux,
+		root: &gongRoute{
+			component: NewComponent(indexComponent{}),
+		},
 	}
 }
 
@@ -67,7 +72,9 @@ func New(mux Mux) *Gong {
 // Returns the Gong instance for method chaining.
 func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 	for _, builder := range builders {
-		g.setupRoute(builder.build(nil))
+		route := builder.build(g.root, strconv.Itoa(len(g.root.children)))
+		g.root.children = append(g.root.children, route)
+		g.setupRoute(route)
 	}
 	return g
 }
@@ -79,46 +86,37 @@ func (g *Gong) setupRoute(route Route) {
 		requestType := r.Header.Get(HeaderGongRequestType)
 
 		gCtx := gongContext{
-			requestType: requestType,
-			route:       route,
-			path:        r.Header.Get(HeaderGongRoutePath),
-			url:         r.URL.EscapedPath(),
-			request:     r,
-			writer:      writer,
-			action:      requestType == GongRequestTypeAction,
-			id:          r.Header.Get(HeaderGongComponentID),
+			route:        route,
+			routeID:      r.Header.Get(HeaderGongRouteID),
+			routeIDIndex: -1,
+			url:          r.URL.EscapedPath(),
+			request:      r,
+			writer:       writer,
+			action:       requestType == GongRequestTypeAction,
+			link:         requestType == GongRequestTypeLink,
+			componentID:  r.Header.Get(HeaderGongComponentID),
 		}
 
-		var templComponent templ.Component
-		switch requestType {
-		case GongRequestTypeAction:
-			if route.Path() != gCtx.path {
-				gCtx.route = route.Child(gCtx.path)
-			}
-			templComponent = gCtx.route
-		case GongRequestTypeRoute:
-			gCtx.link = true
-			templComponent = gCtx.route
-		default:
-			gCtx.path = route.Path()
-			gCtx.route = route.Root()
-			templComponent = index(gCtx.route)
+		if requestType == "" {
+			gCtx.route = g.root
+			gCtx.routeID = route.ID()
 		}
 
 		if gCtx.route == nil {
 			panic("route is nil")
 		}
 
-		if err := render(r.Context(), gCtx, writer, templComponent); err != nil {
+		if err := render(r.Context(), gCtx, writer, gCtx.route); err != nil {
 			panic(err)
 		}
+
 		if err := writer.Flush(); err != nil {
 			panic(err)
 		}
 	}))
 
-	for _, child := range route.Children() {
-		g.setupRoute(child)
+	for i := range route.NumChildren() {
+		g.setupRoute(route.Child(i))
 	}
 }
 
@@ -129,16 +127,17 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type gongContext struct {
-	requestType string
-	route       Route
-	request     *http.Request
-	writer      *response_writer.ResponseWriter
-	path        string
-	url         string
-	action      bool
-	link        bool
-	loader      Loader
-	id          string
+	route        Route
+	request      *http.Request
+	writer       *response_writer.ResponseWriter
+	routeID      string
+	routeIDIndex int
+	componentID  string
+	url          string
+	action       bool
+	link         bool
+	loader       Loader
+	head         templ.Component
 }
 
 // Mux is an interface for HTTP request multiplexing.

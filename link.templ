@@ -48,7 +48,7 @@ func (link Link) Render(ctx context.Context, w io.Writer) error {
 
 templ (link Link) component() {
 	{{
-		headers := append(gongHeaders(ctx, GongRequestTypeRoute), link.headers...)
+		headers := append(gongHeaders(ctx, GongRequestTypeLink), link.headers...)
 	}}
 	<div
 		hx-get={ link.path }

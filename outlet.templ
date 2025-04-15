@@ -35,7 +35,11 @@ func (outlet Outlet) withRoute(route Route) Outlet {
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	if outlet.route == nil {
 		gCtx := getContext(ctx)
-		if child := getContext(ctx).route.Child(gCtx.path); child != nil {
+		id := 0
+		if len(gCtx.routeID) > gCtx.routeIDIndex {
+			id = int(gCtx.routeID[gCtx.routeIDIndex] - '0')
+		}
+		if child := getContext(ctx).route.Child(id); child != nil {
 			outlet.route = child
 		}
 	}
