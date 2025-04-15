@@ -5,7 +5,7 @@ type indexComponent struct{}
 templ (c indexComponent) View() {
 	<html>
 		if head := getContext(ctx).head; head != nil {
-			@head
+			@head.Head()
 		} else {
 			<head>
 				<meta charset="utf-8"/>

@@ -99,6 +99,7 @@ func (g *Gong) setupRoute(route Route) {
 		if requestType == "" {
 			gCtx.route = g.root
 			gCtx.routeID = route.ID()
+			gCtx.head = route.Component().head
 		}
 
 		if gCtx.route == nil {
@@ -136,7 +137,7 @@ type gongContext struct {
 	action      bool
 	link        bool
 	loader      Loader
-	head        templ.Component
+	head        Head
 }
 
 // Mux is an interface for HTTP request multiplexing.
