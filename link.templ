@@ -8,6 +8,7 @@ import "strings"
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
 type Link struct {
+	id      string
 	path    string
 	swap    string
 	headers []string
@@ -22,6 +23,11 @@ func NewLink(path string) Link {
 		swap:    SwapNone,
 		trigger: TriggerClick,
 	}
+}
+
+func (link Link) WithID(id string) Link {
+	link.id = id
+	return link
 }
 
 func (link Link) WithSwap(swap string) Link {
@@ -51,6 +57,7 @@ templ (link Link) component() {
 		headers := append(gongHeaders(ctx, GongRequestTypeLink), link.headers...)
 	}}
 	<div
+		id={ link.id }
 		hx-get={ link.path }
 		hx-swap={ link.swap }
 		if link.swap != SwapNone {
