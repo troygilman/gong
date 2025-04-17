@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"net/http"
 	"testing"
 
 	"github.com/a-h/templ"
@@ -101,4 +102,12 @@ func testRender(t *testing.T, c templ.Component, gCtx gongContext, expected stri
 	err := render(context.Background(), gCtx, buffer, c)
 	assert.Equals(t, nil, err)
 	assert.Equals(t, expected, buffer.String())
+}
+
+func newRequest(method string, url string) *http.Request {
+	r, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

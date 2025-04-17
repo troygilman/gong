@@ -97,6 +97,9 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 }
 
 func (route *gongRoute) Child(index int) Route {
+	if index < 0 || index >= len(route.children) {
+		return nil
+	}
 	return route.children[index]
 }
 

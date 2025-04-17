@@ -1,6 +1,7 @@
 package gong
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/troygilman/gong/internal/assert"
@@ -25,7 +26,11 @@ func TestRouteBasic(t *testing.T) {
 		children: make(map[string]Component),
 	}, route.Component())
 
-	testRender(t, route, gongContext{}, "view")
+	ctx := gongContext{
+		request: newRequest(http.MethodGet, "/"),
+	}
+
+	testRender(t, route, ctx, "view")
 }
 
 func TestRouteRenderAction(t *testing.T) {
@@ -35,7 +40,13 @@ func TestRouteRenderAction(t *testing.T) {
 
 	route := NewRoute("/", NewComponent(comp).WithID("mock")).build(nil, "")
 
-	testRender(t, route, gongContext{action: true, componentID: "mock"}, "action")
+	ctx := gongContext{
+		action:      true,
+		componentID: "mock",
+		request:     newRequest(http.MethodGet, "/"),
+	}
+
+	testRender(t, route, ctx, "action")
 }
 
 func TestRouteRenderAction_withLoader(t *testing.T) {
@@ -46,5 +57,11 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 
 	route := NewRoute("/", NewComponent(comp).WithID("mock")).build(nil, "")
 
-	testRender(t, route, gongContext{action: true, componentID: "mock"}, "action")
+	ctx := gongContext{
+		action:      true,
+		componentID: "mock",
+		request:     newRequest(http.MethodGet, "/"),
+	}
+
+	testRender(t, route, ctx, "action")
 }
