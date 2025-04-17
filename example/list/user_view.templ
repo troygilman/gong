@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/troygilman/gong"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -25,11 +26,12 @@ templ (view userView) Action() {
 	switch gong.Request(ctx).Method {
 		case http.MethodDelete:
 			{{
-			name := gong.FormValue(ctx, "name")
-			view.db.Delete(name)
+				name := gong.FormValue(ctx, "name")
+				view.db.Delete(name)
 			}}
 		case http.MethodPatch:
 			{{
+				log.Println(gong.PathValue(ctx, "name"))
 				name := gong.FormValue(ctx, "name")
 				balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
 				if err != nil {

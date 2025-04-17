@@ -53,7 +53,7 @@ type gongRoute struct {
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = route
-	gCtx.path = route.FullPath()
+	gCtx.path = buildRealPath(route, gCtx.request)
 
 	log.Println("Route:", route.path, route.id)
 	if len(route.children) > 0 {

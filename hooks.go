@@ -23,6 +23,10 @@ func FormValue(ctx context.Context, key string) string {
 	return Request(ctx).FormValue(key)
 }
 
+func PathValue(ctx context.Context, key string) string {
+	return Request(ctx).PathValue(key)
+}
+
 func QueryParam(ctx context.Context, key string) string {
 	return Request(ctx).URL.Query().Get(key)
 }
