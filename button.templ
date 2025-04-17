@@ -57,7 +57,7 @@ func (button Button) Render(ctx context.Context, w io.Writer) error {
 
 templ (button Button) component() {
 	{{
-		uri := getContext(ctx).url
+		uri := getContext(ctx).path
 	}}
 	<button
 		if button.method == http.MethodGet {

@@ -74,22 +74,20 @@ func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 	for _, builder := range builders {
 		route := builder.build(g.root, strconv.Itoa(len(g.root.children)))
 		g.root.children = append(g.root.children, route)
-		g.setupRoute(route, "")
+		g.setupRoute(route)
 	}
 	return g
 }
 
-func (g *Gong) setupRoute(route Route, path string) {
-	path += route.Path()
-	log.Printf("Route=%s\n", path)
-	g.mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (g *Gong) setupRoute(route Route) {
+	log.Printf("Route=%s\n", route.FullPath())
+	g.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writer := response_writer.NewResponseWriter(w)
 		requestType := r.Header.Get(HeaderGongRequestType)
 
 		gCtx := gongContext{
 			route:       route,
 			routeID:     r.Header.Get(HeaderGongRouteID),
-			url:         r.URL.EscapedPath(),
 			request:     r,
 			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
@@ -116,7 +114,7 @@ func (g *Gong) setupRoute(route Route, path string) {
 	}))
 
 	for i := range route.NumChildren() {
-		g.setupRoute(route.Child(i), path)
+		g.setupRoute(route.Child(i))
 	}
 }
 
@@ -133,7 +131,7 @@ type gongContext struct {
 	writer      *response_writer.ResponseWriter
 	routeID     string
 	componentID string
-	url         string
+	path        string
 	action      bool
 	link        bool
 	loader      Loader

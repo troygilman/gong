@@ -26,6 +26,8 @@ type Route interface {
 	// Path returns the path segment that this route represents.
 	Path() string
 
+	FullPath() string
+
 	ID() string
 
 	Depth() int
@@ -51,12 +53,13 @@ type gongRoute struct {
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = route
+	gCtx.path = route.FullPath()
 
+	log.Println("Route:", route.path, route.id)
 	if len(route.children) > 0 {
 		depth := route.Depth()
 		if len(gCtx.routeID) > depth {
 			index := int(gCtx.routeID[depth] - '0')
-			log.Println(route.Path(), depth, index, len(route.children))
 			gCtx.childRoute = route.children[index]
 		} else {
 			gCtx.childRoute = route.children[0]
@@ -84,7 +87,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	if gCtx.action {
 		component, ok := route.component.Find(gCtx.componentID)
 		if !ok {
-			panic(fmt.Sprintf("could not find component with id %s", gCtx.componentID))
+			panic(fmt.Sprintf("could not find component with id %s in route %s", gCtx.componentID, route.path))
 		}
 		return render(ctx, gCtx, w, component)
 	}
@@ -124,6 +127,13 @@ func (route *gongRoute) Component() Component {
 }
 
 func (route *gongRoute) Path() string {
+	return route.path
+}
+
+func (route *gongRoute) FullPath() string {
+	if route.parent != nil {
+		return route.parent.FullPath() + route.path
+	}
 	return route.path
 }
 

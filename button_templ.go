@@ -85,7 +85,7 @@ func (button Button) component() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		uri := getContext(ctx).url
+		uri := getContext(ctx).path
 		var templ_7745c5c3_Var2 = []any{button.cssClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {

@@ -10,7 +10,7 @@ func TestForm(t *testing.T) {
 		path: "/",
 	}
 	ctx := gongContext{
-		url:         "/",
+		path:        "/",
 		route:       route,
 		componentID: "id",
 	}

@@ -84,6 +84,10 @@ func (mock mockRoute) Path() string {
 	return mock.path
 }
 
+func (mock mockRoute) FullPath() string {
+	return ""
+}
+
 func (mock mockRoute) Component() Component {
 	return Component{}
 }
