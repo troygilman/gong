@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+// Button represents an HTMX-powered button component that can trigger actions dynamically.
+// It provides a way to create buttons with configurable HTTP methods, CSS classes,
+// target elements, and HTMX swap behaviors.
 type Button struct {
 	method   string
 	targetID string
@@ -14,6 +17,8 @@ type Button struct {
 	pushUrl  string
 }
 
+// NewButton creates a new Button instance with default settings.
+// By default, it uses POST method, no swap behavior, and does not push a URL.
 func NewButton() Button {
 	return Button{
 		method:  http.MethodPost,
@@ -22,26 +27,40 @@ func NewButton() Button {
 	}
 }
 
+// WithMethod sets the HTTP method for the button action.
+// Valid methods include POST, PATCH, and DELETE.
+// Returns the modified button for method chaining.
 func (button Button) WithMethod(method string) Button {
 	button.method = method
 	return button
 }
 
+// WithCSSClasses adds CSS classes to the button element.
+// The classes will be applied to the rendered button.
+// Returns the modified button for method chaining.
 func (button Button) WithCSSClasses(cssClass ...templ.CSSClass) Button {
 	button.cssClass = cssClass
 	return button
 }
 
+// WithTargetID sets the target ID for the button action.
+// This is used to specify the element that will be updated after the button action.
+// Returns the modified button for method chaining.
 func (button Button) WithTargetID(targetID string) Button {
 	button.targetID = targetID
 	return button
 }
 
+// WithSwap sets the HTMX swap behavior for the button action.
+// This determines how the response will be swapped into the DOM.
+// Returns the modified button for method chaining.
 func (button Button) WithSwap(swap string) Button {
 	button.swap = swap
 	return button
 }
 
+// WithPushUrl sets whether the button action should push a URL to the browser's history.
+// Returns the modified button for method chaining.
 func (button Button) WithPushUrl(pushUrl bool) Button {
 	if pushUrl {
 		button.pushUrl = "true"
@@ -51,6 +70,9 @@ func (button Button) WithPushUrl(pushUrl bool) Button {
 	return button
 }
 
+// Render writes the button's HTML representation to the provided writer.
+// It handles the rendering of the button with all configured attributes.
+// Returns an error if rendering fails.
 func (button Button) Render(ctx context.Context, w io.Writer) error {
 	return button.component().Render(ctx, w)
 }

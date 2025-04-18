@@ -15,9 +15,10 @@ type Route interface {
 	// Returns nil if no matching route is found.
 	Child(int) Route
 
-	// Children returns all direct child routes of this route.
+	// NumChildren returns the number of direct child routes of this route.
 	NumChildren() int
 
+	// Parent returns the parent route of this route.
 	Parent() Route
 
 	// Root returns the root route of the routing tree.
@@ -26,10 +27,13 @@ type Route interface {
 	// Path returns the path segment that this route represents.
 	Path() string
 
+	// FullPath returns the full path of this route, including all parent paths.
 	FullPath() string
 
+	// ID returns the unique identifier for this route.
 	ID() string
 
+	// Depth returns the depth of this route in the routing tree.
 	Depth() int
 
 	// Component returns the component associated with this route.

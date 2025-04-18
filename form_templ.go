@@ -49,8 +49,8 @@ func (form Form) WithCSSClass(cssClass templ.CSSClass) Form {
 	return form
 }
 
-// WithTargetID sets the ID of the element that will be updated after form submission.
-// This ID is used with HTMX's target attribute to specify where the response should be rendered.
+// WithTargetID sets the target ID for the form submission.
+// This is used to specify the element that will be updated after the form submission.
 // Returns the modified form for method chaining.
 func (form Form) WithTargetID(targetID string) Form {
 	form.targetID = targetID
@@ -58,7 +58,7 @@ func (form Form) WithTargetID(targetID string) Form {
 }
 
 // WithSwap sets the HTMX swap behavior for the form submission.
-// This determines how the response content will be inserted into the target element.
+// This determines how the response will be swapped into the DOM.
 // Returns the modified form for method chaining.
 func (form Form) WithSwap(swap string) Form {
 	form.swap = swap

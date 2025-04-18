@@ -14,6 +14,9 @@ import (
 	"net/http"
 )
 
+// Button represents an HTMX-powered button component that can trigger actions dynamically.
+// It provides a way to create buttons with configurable HTTP methods, CSS classes,
+// target elements, and HTMX swap behaviors.
 type Button struct {
 	method   string
 	targetID string
@@ -22,6 +25,8 @@ type Button struct {
 	pushUrl  string
 }
 
+// NewButton creates a new Button instance with default settings.
+// By default, it uses POST method, no swap behavior, and does not push a URL.
 func NewButton() Button {
 	return Button{
 		method:  http.MethodPost,
@@ -30,26 +35,40 @@ func NewButton() Button {
 	}
 }
 
+// WithMethod sets the HTTP method for the button action.
+// Valid methods include POST, PATCH, and DELETE.
+// Returns the modified button for method chaining.
 func (button Button) WithMethod(method string) Button {
 	button.method = method
 	return button
 }
 
+// WithCSSClasses adds CSS classes to the button element.
+// The classes will be applied to the rendered button.
+// Returns the modified button for method chaining.
 func (button Button) WithCSSClasses(cssClass ...templ.CSSClass) Button {
 	button.cssClass = cssClass
 	return button
 }
 
+// WithTargetID sets the target ID for the button action.
+// This is used to specify the element that will be updated after the button action.
+// Returns the modified button for method chaining.
 func (button Button) WithTargetID(targetID string) Button {
 	button.targetID = targetID
 	return button
 }
 
+// WithSwap sets the HTMX swap behavior for the button action.
+// This determines how the response will be swapped into the DOM.
+// Returns the modified button for method chaining.
 func (button Button) WithSwap(swap string) Button {
 	button.swap = swap
 	return button
 }
 
+// WithPushUrl sets whether the button action should push a URL to the browser's history.
+// Returns the modified button for method chaining.
 func (button Button) WithPushUrl(pushUrl bool) Button {
 	if pushUrl {
 		button.pushUrl = "true"
@@ -59,6 +78,9 @@ func (button Button) WithPushUrl(pushUrl bool) Button {
 	return button
 }
 
+// Render writes the button's HTML representation to the provided writer.
+// It handles the rendering of the button with all configured attributes.
+// Returns an error if rendering fails.
 func (button Button) Render(ctx context.Context, w io.Writer) error {
 	return button.component().Render(ctx, w)
 }
@@ -103,7 +125,7 @@ func (button Button) component() templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 64, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 86, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -122,7 +144,7 @@ func (button Button) component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 67, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 89, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -141,7 +163,7 @@ func (button Button) component() templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 70, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 92, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -160,7 +182,7 @@ func (button Button) component() templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(uri)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 73, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 95, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -178,7 +200,7 @@ func (button Button) component() templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(button.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 75, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 97, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -196,7 +218,7 @@ func (button Button) component() templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx, button.targetID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 77, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 99, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -214,7 +236,7 @@ func (button Button) component() templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(button.pushUrl)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 80, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 102, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -227,7 +249,7 @@ func (button Button) component() templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(buildHeaders(gongHeaders(ctx, GongRequestTypeAction)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 81, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 103, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
