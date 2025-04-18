@@ -165,8 +165,8 @@ type Action interface {
 // Head is an interface for components that can provide head elements.
 // It defines the method for getting head elements.
 type Index interface {
-	HtmlAttrs() templ.Attributes
 	Head() templ.Component
+	HtmlAttrs() templ.Attributes
 }
 
 // LoaderFunc is a function type that implements the Loader interface.
