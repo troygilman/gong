@@ -4,20 +4,28 @@ type indexComponent struct{}
 
 templ (c indexComponent) View() {
 	{{
-		head := getContext(ctx).childRoute.Component().head
-	}}
-	<html>
-		if head != nil {
-			@head.Head()
-		} else {
-			<head>
-				<meta charset="utf-8"/>
-				<title>Gong App</title>
-				<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-			</head>
+		var (
+			htmlAttrs templ.Attributes = nil
+			head      templ.Component  = c.head()
+		)
+		index := getContext(ctx).childRoute.Component().index
+		if index != nil {
+			htmlAttrs = index.HtmlAttrs()
+			head = index.Head()
 		}
+	}}
+	<html { htmlAttrs... }>
+		@head
 		<body>
 			@NewOutlet()
 		</body>
 	</html>
+}
+
+templ (c indexComponent) head() {
+	<head>
+		<meta charset="utf-8"/>
+		<title>Gong App</title>
+		<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+	</head>
 }

@@ -164,7 +164,8 @@ type Action interface {
 
 // Head is an interface for components that can provide head elements.
 // It defines the method for getting head elements.
-type Head interface {
+type Index interface {
+	HtmlAttrs() templ.Attributes
 	Head() templ.Component
 }
 

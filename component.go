@@ -20,7 +20,7 @@ type Component struct {
 	view     View
 	loader   Loader
 	action   Action
-	head     Head
+	index    Index
 	children map[string]Component
 }
 
@@ -42,8 +42,8 @@ func NewComponent(view View) Component {
 		component.action = action
 	}
 
-	if head, ok := view.(Head); ok {
-		component.head = head
+	if index, ok := view.(Index); ok {
+		component.index = index
 	}
 
 	return component
