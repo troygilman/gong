@@ -4,15 +4,9 @@ type indexComponent struct{}
 
 templ (c indexComponent) View() {
 	{{
-		var (
-			htmlAttrs templ.Attributes = nil
-			head      templ.Component  = DefaultHead()
-		)
-		index := getContext(ctx).childRoute.Component().index
-		if index != nil {
-			htmlAttrs = index.HtmlAttrs()
-			head = index.Head()
-		}
+		component := getContext(ctx).childRoute.Component()
+		htmlAttrs := component.HtmlAttrs()
+		head := component.Head()
 	}}
 	<html { htmlAttrs... }>
 		@head

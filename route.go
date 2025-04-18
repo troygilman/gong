@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 )
 
 // Route represents a route in the application's routing tree.
@@ -58,6 +59,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.route = route
 	gCtx.path = buildRealPath(route, gCtx.request)
+	componentID := strings.Split(gCtx.componentID, idDelimeter)
 
 	log.Println("Route:", route.path, route.id)
 	if len(route.children) > 0 {
@@ -78,7 +80,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 		gCtx.route = parent
 		gCtx.childRoute = route
 		gCtx.link = false
-		if component, ok := parent.Component().Find(gCtx.componentID); ok {
+		if component, ok := parent.Component().Find(componentID); ok {
 			gCtx.action = true
 			if err := render(ctx, gCtx, w, component); err != nil {
 				return err
@@ -89,7 +91,7 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	}
 
 	if gCtx.action {
-		component, ok := route.component.Find(gCtx.componentID)
+		component, ok := route.component.Find(componentID)
 		if !ok {
 			panic(fmt.Sprintf("could not find component with id %s in route %s", gCtx.componentID, route.path))
 		}

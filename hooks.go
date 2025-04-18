@@ -45,11 +45,7 @@ func Request(ctx context.Context) *http.Request {
 // The generic type parameter specifies the expected type of the loaded data.
 // Returns the zero value of the specified type if no loader data is available.
 func LoaderData[Data any](ctx context.Context) (data Data) {
-	gCtx := getContext(ctx)
-	if gCtx.loader == nil {
-		return data
-	}
-	return gCtx.loader.Loader(ctx).(Data)
+	return getContext(ctx).component.Loader(ctx).(Data)
 }
 
 // Redirect sends a redirect response to the client with the specified path.

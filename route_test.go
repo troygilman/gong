@@ -18,13 +18,6 @@ func TestRouteBasic(t *testing.T) {
 	assert.Equals(t, nil, route.Child(0))
 	assert.Equals(t, 0, route.NumChildren())
 	assert.Equals(t, route, route.Root())
-	assert.Equals(t, Component{
-		id:       "mock",
-		view:     comp,
-		action:   comp,
-		loader:   comp,
-		children: make(map[string]Component),
-	}, route.Component())
 
 	ctx := gongContext{
 		request: newRequest(http.MethodGet, "/"),

@@ -42,7 +42,7 @@ func TestComponentFind(t *testing.T) {
 
 	component := NewComponent(mock).WithID("mock")
 
-	foundComponent, ok := component.Find("mock")
+	foundComponent, ok := component.Find([]string{"mock"})
 
 	assert.Equals(t, true, ok)
 	assert.Equals(t, component, foundComponent)
@@ -55,7 +55,7 @@ func TestComponentFind_withNestedComponent(t *testing.T) {
 		Child: child,
 	}).WithID("parent")
 
-	foundComponent, ok := component.Find("parent_mock")
+	foundComponent, ok := component.Find([]string{"parent", "mock"})
 
 	assert.Equals(t, true, ok)
 	assert.Equals(t, child, foundComponent)

@@ -75,3 +75,7 @@ func buildRealPath(route Route, request *http.Request) string {
 	}
 	return strings.Join(routePathSplit, "/")
 }
+
+func findComponent(id string) {
+
+}

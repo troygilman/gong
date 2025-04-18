@@ -127,6 +127,7 @@ func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type gongContext struct {
 	route       Route
 	childRoute  Route
+	component   Component
 	request     *http.Request
 	writer      *response_writer.ResponseWriter
 	routeID     string
@@ -134,7 +135,6 @@ type gongContext struct {
 	path        string
 	action      bool
 	link        bool
-	loader      Loader
 }
 
 // Mux is an interface for HTTP request multiplexing.

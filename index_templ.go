@@ -32,15 +32,9 @@ func (c indexComponent) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		var (
-			htmlAttrs templ.Attributes = nil
-			head      templ.Component  = DefaultHead()
-		)
-		index := getContext(ctx).childRoute.Component().index
-		if index != nil {
-			htmlAttrs = index.HtmlAttrs()
-			head = index.Head()
-		}
+		component := getContext(ctx).childRoute.Component()
+		htmlAttrs := component.HtmlAttrs()
+		head := component.Head()
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

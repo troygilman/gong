@@ -90,7 +90,7 @@ func (mock mockRoute) FullPath() string {
 }
 
 func (mock mockRoute) Component() Component {
-	return Component{}
+	return nil
 }
 
 func (mock mockRoute) Render(ctx context.Context, w io.Writer) error {
