@@ -56,7 +56,7 @@ func (view userView) Action() templ.Component {
 			name := gong.FormValue(ctx, "name")
 			view.db.Delete(name)
 		case http.MethodPatch:
-			log.Println(gong.PathValue(ctx, "name"))
+			log.Println(gong.PathParam(ctx, "name"))
 			name := gong.FormValue(ctx, "name")
 			balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
 			if err != nil {

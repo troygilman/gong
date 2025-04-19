@@ -23,9 +23,9 @@ func FormValue(ctx context.Context, key string) string {
 	return Request(ctx).FormValue(key)
 }
 
-// PathValue retrieves the value of a path parameter from the current request.
+// PathParam retrieves the value of a path parameter from the current request.
 // This is useful for accessing dynamic segments in the URL path.
-func PathValue(ctx context.Context, key string) string {
+func PathParam(ctx context.Context, key string) string {
 	return Request(ctx).PathValue(key)
 }
 
