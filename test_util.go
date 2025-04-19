@@ -18,7 +18,11 @@ type mockComponent struct {
 }
 
 func (mc mockComponent) View() templ.Component {
-	return mc.view
+	if mc.view != nil {
+		return mc.view
+	} else {
+		return textTemplComponent{"view"}
+	}
 }
 
 func (mc mockComponent) Action() templ.Component {

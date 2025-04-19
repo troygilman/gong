@@ -23,7 +23,7 @@ func TestComponentRenderAction(t *testing.T) {
 
 	component := NewComponent(mock)
 
-	testRender(t, component, gongContext{action: true}, "action")
+	testRender(t, component.Action(), gongContext{}, "action")
 }
 
 func TestComponentRenderAction_withLoader(t *testing.T) {
@@ -34,7 +34,7 @@ func TestComponentRenderAction_withLoader(t *testing.T) {
 
 	component := NewComponent(mock)
 
-	testRender(t, component, gongContext{action: true}, "action")
+	testRender(t, component.Action(), gongContext{}, "action")
 }
 
 func TestComponentFind(t *testing.T) {

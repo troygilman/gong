@@ -71,29 +71,28 @@ func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
 	gCtx := getContext(ctx)
 	gCtx.component = component
 
-	if gCtx.action {
-		gCtx.action = false
-		return render(ctx, gCtx, w, component.Action())
-	}
-
 	if gCtx.componentID == "" {
 		gCtx.componentID = component.id
 	} else {
 		gCtx.componentID += idDelimeter + component.id
 	}
 
-	return render(ctx, gCtx, w, component.View())
+	return render(ctx, gCtx, w, component.view.View())
 }
 
 func (component gongComponent) View() templ.Component {
-	return component.view.View()
+	return component
 }
 
 func (component gongComponent) Action() templ.Component {
-	if component.action == nil {
-		return nil
-	}
-	return component.action.Action()
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		if component.action == nil {
+			return nil
+		}
+		gCtx := getContext(ctx)
+		gCtx.component = component
+		return render(ctx, gCtx, w, component.action.Action())
+	})
 }
 
 func (component gongComponent) Loader(ctx context.Context) any {
