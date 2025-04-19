@@ -49,8 +49,11 @@ templ (view userView) Action() {
 templ (view userView) View() {
 	{{
 	user := gong.LoaderData[userData](ctx)
+	attrs := templ.Attributes{
+		"class": boxClassName(),
+	}
 	}}
-	@gong.NewTarget().WithID(user.name).WithCSSClass(boxClassName()) {
+	@gong.NewTarget().WithID(user.name).WithAttrs(attrs) {
 		{ user.name }
 		@gong.NewForm().
 			WithMethod(http.MethodPatch).

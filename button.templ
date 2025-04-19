@@ -12,9 +12,9 @@ import (
 type Button struct {
 	method   string
 	targetID string
-	cssClass []templ.CSSClass
 	swap     string
 	pushUrl  string
+	attrs    templ.Attributes
 }
 
 // NewButton creates a new Button instance with default settings.
@@ -38,8 +38,8 @@ func (button Button) WithMethod(method string) Button {
 // WithCSSClasses adds CSS classes to the button element.
 // The classes will be applied to the rendered button.
 // Returns the modified button for method chaining.
-func (button Button) WithCSSClasses(cssClass ...templ.CSSClass) Button {
-	button.cssClass = cssClass
+func (button Button) WithAttrs(attrs templ.Attributes) Button {
+	button.attrs = attrs
 	return button
 }
 
@@ -101,7 +101,7 @@ templ (button Button) component() {
 		hx-include="this"
 		hx-push-url={ button.pushUrl }
 		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
-		class={ button.cssClass }
+		{ button.attrs... }
 	>
 		{ children... }
 	</button>

@@ -12,8 +12,8 @@ import (
 type Form struct {
 	method   string
 	targetID string
-	cssClass templ.CSSClass
 	swap     string
+	attrs    templ.Attributes
 }
 
 // NewForm creates a new Form instance with default settings.
@@ -36,8 +36,8 @@ func (form Form) WithMethod(method string) Form {
 // WithCSSClass adds CSS classes to the form element.
 // The classes will be applied to the rendered form.
 // Returns the modified form for method chaining.
-func (form Form) WithCSSClass(cssClass templ.CSSClass) Form {
-	form.cssClass = cssClass
+func (form Form) WithAttrs(attrs templ.Attributes) Form {
+	form.attrs = attrs
 	return form
 }
 
@@ -86,7 +86,7 @@ templ (form Form) component() {
 			hx-target={ "#" + buildComponentID(ctx, form.targetID) }
 		}
 		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
-		class={ form.cssClass }
+		{ form.attrs... }
 	>
 		{ children... }
 	</form>

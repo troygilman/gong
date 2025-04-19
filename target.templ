@@ -7,9 +7,9 @@ import "io"
 // It provides a way to create elements that can be refreshed or modified
 // through HTMX requests, with configurable triggers and styling.
 type Target struct {
-	id       string
-	trigger  string
-	cssClass templ.CSSClass
+	id      string
+	trigger string
+	attrs   templ.Attributes
 }
 
 // NewTarget creates a new Target instance with default settings.
@@ -39,8 +39,8 @@ func (target Target) WithTrigger(trigger string) Target {
 // WithCSSClass adds CSS classes to the target element.
 // This allows for custom styling of the target container.
 // Returns the modified target for method chaining.
-func (target Target) WithCSSClass(cssClass templ.CSSClass) Target {
-	target.cssClass = cssClass
+func (target Target) WithAttrs(attrs templ.Attributes) Target {
+	target.attrs = attrs
 	return target
 }
 
@@ -59,7 +59,7 @@ templ (target Target) component() {
 		hx-trigger={ target.trigger }
 		hx-target="this"
 		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
-		class={ target.cssClass }
+		{ target.attrs ... }
 	>
 		{ children... }
 	</div>

@@ -17,10 +17,11 @@ func Route() gong.RouteBuilder {
 type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
+	@styles()
 	@gong.NewTarget() {
 		@tabList()
 	}
-	@gong.NewOutlet()
+	@gong.NewOutlet().WithAttrs(templ.Attributes{"style": "border-style: solid"})
 }
 
 templ (c TabsComponent) Action() {
@@ -35,7 +36,7 @@ templ tabList() {
 	{{
 		activeTab := gong.ChildRoute(ctx).Path()
 	}}
-	<div style={ "display: flex", "flex-direction", "gap: 12px" }>
+	<div class="tab-list">
 		@tab("Tab 1", "1", activeTab)
 		@tab("Tab 2", "2", activeTab)
 		@tab("Tab 3", "3", activeTab)
@@ -43,16 +44,35 @@ templ tabList() {
 }
 
 templ tab(title string, path string, activeTab string) {
-	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML) {
-		<div
-			style={ "border-style: solid",
-			"padding: 4px",
-			"cursor: pointer",
-			templ.KV("border-color: blue", path == activeTab) }
-		>
-			{ title }
-		</div>
+	{{
+		attrs := templ.Attributes{
+			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
+		}
+	}}
+	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithAttrs(attrs) {
+		{ title }
 	}
+}
+
+templ styles() {
+	<style type="text/css">
+		.tab {
+		    border-style: solid;
+			border-color: black;
+			color: black;
+			text-decoration: none;
+			padding: 4px;
+			cursor: pointer
+		}
+		.tab-active {
+			border-color: blue !important;
+		}
+		.tab-list {
+		    display: flex;
+			flex-direction: row;
+			gap: 12px;
+		}
+	</style>
 }
 
 type TabContentComponent struct {

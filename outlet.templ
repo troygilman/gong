@@ -11,12 +11,18 @@ import (
 type Outlet struct {
 	oob   bool
 	route Route
+	attrs templ.Attributes
 }
 
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
 func NewOutlet() Outlet {
 	return Outlet{}
+}
+
+func (outlet Outlet) WithAttrs(attrs templ.Attributes) Outlet {
+	outlet.attrs = attrs
+	return outlet
 }
 
 func (outlet Outlet) withOOB(oob bool) Outlet {
@@ -45,9 +51,9 @@ templ (outlet Outlet) component() {
 	<div
 		id={ buildOutletID(ctx) }
 		if outlet.oob {
-			hx-swap-oob="true"
+			hx-swap-oob={ SwapInnerHTML }
 		}
-		class="gong-outlet"
+		{ outlet.attrs... }
 	>
 		if outlet.route != nil {
 			@outlet.route
