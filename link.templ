@@ -13,6 +13,7 @@ type Link struct {
 	swap    string
 	headers []string
 	trigger string
+	attrs   templ.Attributes
 }
 
 // NewLink creates a new Link instance with the specified path.
@@ -45,6 +46,11 @@ func (link Link) WithTrigger(trigger string) Link {
 	return link
 }
 
+func (link Link) WithAttrs(attrs templ.Attributes) Link {
+	link.attrs = attrs
+	return link
+}
+
 // Render writes the link's HTML representation to the provided writer.
 // It handles the rendering of the link with all configured HTMX attributes.
 // Returns an error if rendering fails.
@@ -56,9 +62,10 @@ templ (link Link) component() {
 	{{
 		headers := append(gongHeaders(ctx, GongRequestTypeLink), link.headers...)
 	}}
-	<div
+	<a
 		id={ link.id }
-		hx-get={ link.path }
+		href={ templ.URL(link.path) }
+		hx-boost="true"
 		hx-swap={ link.swap }
 		if link.swap != SwapNone {
 			hx-target={ "#" + buildComponentID(ctx, "") }
@@ -66,9 +73,10 @@ templ (link Link) component() {
 		hx-trigger={ link.trigger }
 		hx-headers={ buildHeaders(headers) }
 		hx-push-url="true"
+		{ link.attrs... }
 	>
 		{ children... }
-	</div>
+	</a>
 }
 
 func buildHeaders(headers []string) string {
