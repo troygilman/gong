@@ -2,7 +2,6 @@ package gong
 
 import "context"
 import "io"
-import "strings"
 
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
@@ -77,23 +76,4 @@ templ (link Link) component() {
 	>
 		{ children... }
 	</a>
-}
-
-func buildHeaders(headers []string) string {
-	builder := &strings.Builder{}
-	builder.WriteString("{")
-	i := 0
-	for i+1 < len(headers) {
-		builder.WriteString(`"`)
-		builder.WriteString(headers[i])
-		builder.WriteString(`": "`)
-		builder.WriteString(headers[i+1])
-		builder.WriteString(`"`)
-		if i < len(headers)-2 {
-			builder.WriteString(", ")
-		}
-		i = i + 2
-	}
-	builder.WriteString("}")
-	return builder.String()
 }

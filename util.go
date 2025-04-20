@@ -2,10 +2,8 @@ package gong
 
 import (
 	"context"
-	"hash/fnv"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -44,18 +42,31 @@ func gongHeaders(ctx context.Context, requestType string) []string {
 	}
 }
 
+func buildHeaders(headers []string) string {
+	builder := &strings.Builder{}
+	builder.WriteString("{")
+	i := 0
+	for i+1 < len(headers) {
+		builder.WriteString(`"`)
+		builder.WriteString(headers[i])
+		builder.WriteString(`": "`)
+		builder.WriteString(headers[i+1])
+		builder.WriteString(`"`)
+		if i < len(headers)-2 {
+			builder.WriteString(", ")
+		}
+		i = i + 2
+	}
+	builder.WriteString("}")
+	return builder.String()
+}
+
 func render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
 	if component == nil {
 		panic("cannot render nil templ.Component")
 	}
 	ctx = context.WithValue(ctx, contextKey, gCtx)
 	return component.Render(ctx, w)
-}
-
-func hash(s string) string {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return strconv.Itoa(int(h.Sum32()))
 }
 
 func buildRealPath(route Route, request *http.Request) string {
@@ -74,8 +85,4 @@ func buildRealPath(route Route, request *http.Request) string {
 		}
 	}
 	return strings.Join(routePathSplit, "/")
-}
-
-func findComponent(id string) {
-
 }
