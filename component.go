@@ -18,7 +18,7 @@ type Component interface {
 	View
 	Action
 	Loader
-	Index
+	Head
 	ID() string
 	Find(id []string) (Component, bool)
 	WithLoaderFunc(loader LoaderFunc) Component
@@ -33,7 +33,7 @@ type gongComponent struct {
 	view     View
 	loader   Loader
 	action   Action
-	index    Index
+	head     Head
 	id       string
 	children map[string]Component
 }
@@ -57,8 +57,8 @@ func NewComponent(view View) Component {
 		component.action = action
 	}
 
-	if index, ok := view.(Index); ok {
-		component.index = index
+	if head, ok := view.(Head); ok {
+		component.head = head
 	}
 
 	return component
@@ -103,17 +103,10 @@ func (component gongComponent) Loader(ctx context.Context) any {
 }
 
 func (component gongComponent) Head() templ.Component {
-	if component.index == nil {
+	if component.head == nil {
 		return DefaultHead()
 	}
-	return component.index.Head()
-}
-
-func (component gongComponent) HtmlAttrs() templ.Attributes {
-	if component.index == nil {
-		return nil
-	}
-	return component.index.HtmlAttrs()
+	return component.head.Head()
 }
 
 func (component gongComponent) ID() string {

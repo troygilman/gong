@@ -3,13 +3,8 @@ package gong
 type indexComponent struct{}
 
 templ (c indexComponent) View() {
-	{{
-		component := getContext(ctx).childRoute.Component()
-		htmlAttrs := component.HtmlAttrs()
-		head := component.Head()
-	}}
-	<html { htmlAttrs... }>
-		@head
+	<html>
+		@getContext(ctx).childRoute.Component().Head()
 		<body>
 			@NewOutlet()
 		</body>
