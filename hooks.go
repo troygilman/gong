@@ -2,19 +2,16 @@ package gong
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+
+	"github.com/troygilman/gong/internal/bind"
 )
 
 // Bind decodes the JSON body of the current HTTP request into the provided destination.
 // The destination must be a pointer to a struct or map that matches the expected JSON structure.
 // Returns an error if the JSON decoding fails.
 func Bind(ctx context.Context, dest any) error {
-	gCtx := getContext(ctx)
-	if err := json.NewDecoder(gCtx.request.Body).Decode(dest); err != nil {
-		return err
-	}
-	return nil
+	return bind.Bind(Request(ctx), dest)
 }
 
 // FormValue retrieves the first value for the given form key from the current request.

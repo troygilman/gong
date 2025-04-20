@@ -1,0 +1,46 @@
+package bulk_update
+
+import (
+	"github.com/troygilman/gong"
+	"log"
+)
+
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/", gong.NewComponent(BulkUpdateComponent{}))
+}
+
+type BulkUpdateComponent struct{}
+
+templ (c BulkUpdateComponent) View() {
+	@gong.NewForm() {
+		<fieldset>
+			<label>First name</label>
+			<input name="people[1][first_name]"/>
+			<label>Last name</label>
+			<input name="people[1][last_name]"/>
+			<label>Email</label>
+			<input name="people[1][email]"/>
+		</fieldset>
+		<button type="submit">Submit</button>
+	}
+}
+
+type PostFormData struct {
+	People []Person `form:"people"`
+}
+
+type Person struct {
+	FirstName string `form:"first_name"`
+	LastName  string `form:"last_name"`
+	Email     string `form:"email"`
+}
+
+templ (c BulkUpdateComponent) Action() {
+	{{
+		var data PostFormData
+		if err := gong.Bind(ctx, &data); err != nil {
+			panic(err)
+		}
+		log.Println(data)
+	}}
+}
