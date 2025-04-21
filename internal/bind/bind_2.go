@@ -3,16 +3,19 @@ package bind
 import (
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+var arrayExpr = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
 
 type Node struct {
 	Val      string
 	Children map[string]Node
 }
 
-func Bind2(source url.Values, dest any) error {
+func Bind(source url.Values, dest any) error {
 	node := buildSourceNode(source)
 	return bind(node, reflect.ValueOf(dest))
 }
