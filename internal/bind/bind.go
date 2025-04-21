@@ -145,18 +145,16 @@ func bind(node Node, dest reflect.Value) error {
 		if dest.IsNil() {
 			dest.Set(reflect.MakeSlice(t, 0, len(node.Children)))
 		}
-		if len(node.Children) >= dest.Cap() {
-			dest.Grow(len(node.Children) - dest.Cap())
+		if len(node.Children) > dest.Len() {
+			dest.Grow(len(node.Children) - dest.Len())
 		}
 		for key, child := range node.Children {
 			index, err := strconv.Atoi(key)
 			if err != nil {
 				return err
 			}
-			if index >= dest.Cap() {
-				dest.Grow(index - dest.Cap() + 1)
-			}
 			if index >= dest.Len() {
+				dest.Grow(index - dest.Len() + 1)
 				dest.SetLen(index + 1)
 			}
 			if err := bind(child, dest.Index(index)); err != nil {

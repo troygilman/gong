@@ -15,11 +15,11 @@ templ (c BulkUpdateComponent) View() {
 	@gong.NewForm() {
 		<fieldset>
 			<label>First name</label>
-			<input name="people[1][first_name]"/>
+			<input name="people[0][first_name]"/>
 			<label>Last name</label>
-			<input name="people[1][last_name]"/>
+			<input name="people[0][last_name]"/>
 			<label>Email</label>
-			<input name="people[1][email]"/>
+			<input name="people[0][email]"/>
 		</fieldset>
 		<button type="submit">Submit</button>
 	}

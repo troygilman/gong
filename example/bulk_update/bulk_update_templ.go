@@ -52,7 +52,7 @@ func (c BulkUpdateComponent) View() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<fieldset><label>First name</label> <input name=\"people[1][first_name]\"> <label>Last name</label> <input name=\"people[1][last_name]\"> <label>Email</label> <input name=\"people[1][email]\"></fieldset><button type=\"submit\">Submit</button>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<fieldset><label>First name</label> <input name=\"people[0][first_name]\"> <label>Last name</label> <input name=\"people[0][last_name]\"> <label>Email</label> <input name=\"people[0][email]\"></fieldset><button type=\"submit\">Submit</button>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
