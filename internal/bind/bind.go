@@ -2,6 +2,8 @@ package bind
 
 import (
 	"encoding"
+	"fmt"
+	"log"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -18,6 +20,10 @@ type Node struct {
 }
 
 func Bind(source url.Values, dest any) error {
+	val := reflect.ValueOf(dest)
+	if val.Kind() == reflect.Pointer && val.IsNil() {
+		return fmt.Errorf("destination is nil")
+	}
 	node := buildSourceNode(source)
 	return bind(node, reflect.ValueOf(dest))
 }
@@ -143,9 +149,10 @@ func bind(node Node, dest reflect.Value) error {
 				return err
 			}
 			if index >= dest.Cap() {
-				dest.Grow(dest.Cap() - (index - 1))
+				dest.Grow(index - dest.Cap() + 1)
 			}
 			if index >= dest.Len() {
+				log.Println(index, dest.Len(), dest.Cap())
 				dest.SetLen(index + 1)
 			}
 			if err := bind(child, dest.Index(index)); err != nil {
