@@ -25,6 +25,6 @@ func Err(t *testing.T, err error) {
 
 func Equals(t *testing.T, expected any, actual any) {
 	if !reflect.DeepEqual(expected, actual) {
-		t.Fatalf("values are not equal: expected %+V but got %+V\n", expected, actual)
+		t.Fatalf("values are not equal:\nExpected \n%v\nBut got:\n%v\n", expected, actual)
 	}
 }
