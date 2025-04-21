@@ -3,7 +3,6 @@ package bind
 import (
 	"encoding"
 	"fmt"
-	"log"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -12,7 +11,10 @@ import (
 	"time"
 )
 
-var arrayExpr = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
+var (
+	arrayExpr = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
+	timeType  = reflect.TypeOf(time.Time{})
+)
 
 type Node struct {
 	Val      string
@@ -72,13 +74,13 @@ func bind(node Node, dest reflect.Value) error {
 	case reflect.Interface:
 		if dest.IsNil() {
 			// For interface{}, create a map[string]any
-			m := make(map[string]any)
+			m := make(map[string]any, len(node.Children))
 			dest.Set(reflect.ValueOf(m))
 		}
 		return bind(node, dest.Elem())
 	case reflect.Map:
 		if dest.IsNil() {
-			dest.Set(reflect.MakeMap(t))
+			dest.Set(reflect.MakeMapWithSize(t, len(node.Children)))
 		}
 		keyType := t.Key()
 		valueType := t.Elem()
@@ -113,7 +115,7 @@ func bind(node Node, dest reflect.Value) error {
 			dest.SetMapIndex(keyValue, value)
 		}
 	case reflect.Struct:
-		if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+		if t.ConvertibleTo(timeType) {
 			if node.Val != "" {
 				tm, err := time.Parse(time.RFC3339, node.Val)
 				if err != nil {
@@ -141,7 +143,10 @@ func bind(node Node, dest reflect.Value) error {
 		}
 	case reflect.Slice:
 		if dest.IsNil() {
-			dest.Set(reflect.MakeSlice(t, 0, 0))
+			dest.Set(reflect.MakeSlice(t, 0, len(node.Children)))
+		}
+		if len(node.Children) >= dest.Cap() {
+			dest.Grow(len(node.Children) - dest.Cap())
 		}
 		for key, child := range node.Children {
 			index, err := strconv.Atoi(key)
@@ -152,7 +157,6 @@ func bind(node Node, dest reflect.Value) error {
 				dest.Grow(index - dest.Cap() + 1)
 			}
 			if index >= dest.Len() {
-				log.Println(index, dest.Len(), dest.Cap())
 				dest.SetLen(index + 1)
 			}
 			if err := bind(child, dest.Index(index)); err != nil {

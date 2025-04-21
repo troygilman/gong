@@ -10,4 +10,4 @@ build:
 	templ generate
 
 test: build
-	go test . -count=1 -v
+	go test . ./**/* -count=1
