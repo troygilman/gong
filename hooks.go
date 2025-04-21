@@ -11,7 +11,11 @@ import (
 // The destination must be a pointer to a struct or map that matches the expected JSON structure.
 // Returns an error if the JSON decoding fails.
 func Bind(ctx context.Context, dest any) error {
-	return bind.Bind(Request(ctx), dest)
+	r := Request(ctx)
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+	return bind.Bind(r.Form, dest)
 }
 
 // FormValue retrieves the first value for the given form key from the current request.

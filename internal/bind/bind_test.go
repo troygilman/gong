@@ -1,8 +1,8 @@
 package bind
 
 import (
-	"net/http"
-	"strings"
+	"log"
+	"net/url"
 	"testing"
 
 	"github.com/troygilman/gong/internal/assert"
@@ -19,13 +19,14 @@ type Person struct {
 }
 
 func TestBind(t *testing.T) {
-	reader := strings.NewReader("people%5B1%5D%5Bfirst_name%5D=Troy&people%5B1%5D%5Blast_name%5D=Gilman&people%5B1%5D%5Bemail%5D=troygilman%40gmail.com")
-	r, err := http.NewRequest(http.MethodGet, "/", reader)
-	assert.NoErr(t, err)
+	vals := url.Values{
+		"people[0][first_name]": {"Troy"},
+		"people[0][last_name]":  {"Gilman"},
+		"people[0][email]":      {"troygilman@gmail.com"},
+	}
 
 	var data PostFormData
-	err = Bind(r, &data)
-	assert.NoErr(t, err)
+	assert.NoErr(t, Bind(vals, &data))
 
 	expected := PostFormData{
 		People: []Person{
@@ -37,4 +38,45 @@ func TestBind(t *testing.T) {
 		},
 	}
 	assert.Equals(t, expected, data)
+}
+
+func BenchmarkBind(b *testing.B) {
+	vals := url.Values{
+		"people[0][first_name]": {"Troy"},
+		"people[0][last_name]":  {"Gilman"},
+		"people[0][email]":      {"troygilman@gmail.com"},
+	}
+
+	for range b.N {
+		var data PostFormData
+		if err := Bind(vals, &data); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func TestBind2(t *testing.T) {
+	vals := url.Values{
+		"people[0][first_name]": {"Troy"},
+		"people[0][last_name]":  {"Gilman"},
+		"people[0][email]":      {"troygilman@gmail.com"},
+	}
+
+	node := buildSourceNode(vals)
+	log.Printf("%v", node)
+}
+
+func BenchmarkBind2(b *testing.B) {
+	vals := url.Values{
+		"people[0][first_name]": {"Troy"},
+		"people[0][last_name]":  {"Gilman"},
+		"people[0][email]":      {"troygilman@gmail.com"},
+	}
+
+	for range b.N {
+		var data PostFormData
+		if err := Bind2(vals, &data); err != nil {
+			b.Fatal(err)
+		}
+	}
 }
