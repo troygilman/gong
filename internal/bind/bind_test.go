@@ -19,9 +19,9 @@ type Person struct {
 
 func TestBind(t *testing.T) {
 	vals := url.Values{
-		"people[0][first_name]": {"Troy"},
-		"people[0][last_name]":  {"Gilman"},
-		"people[0][email]":      {"troygilman@gmail.com"},
+		"people[0][first_name]": {"Bob"},
+		"people[0][last_name]":  {"Ross"},
+		"people[0][email]":      {"bobross@gmail.com"},
 	}
 
 	var data PostFormData
@@ -30,9 +30,9 @@ func TestBind(t *testing.T) {
 	expected := PostFormData{
 		People: []Person{
 			{
-				FirstName: "Troy",
-				LastName:  "Gilman",
-				Email:     "troygilman@gmail.com",
+				FirstName: "Bob",
+				LastName:  "Ross",
+				Email:     "bobross@gmail.com",
 			},
 		},
 	}
@@ -41,9 +41,9 @@ func TestBind(t *testing.T) {
 
 func BenchmarkBind(b *testing.B) {
 	vals := url.Values{
-		"people[0][first_name]": {"Troy"},
-		"people[0][last_name]":  {"Gilman"},
-		"people[0][email]":      {"troygilman@gmail.com"},
+		"people[0][first_name]": {"Bob"},
+		"people[0][last_name]":  {"Ross"},
+		"people[0][email]":      {"bobross@gmail.com"},
 	}
 
 	for range b.N {
