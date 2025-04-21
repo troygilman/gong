@@ -59,13 +59,13 @@ func TestBindValidation(t *testing.T) {
 			name:    "non-pointer struct",
 			values:  url.Values{},
 			dest:    Person{},
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name:    "non-pointer map",
 			values:  url.Values{},
 			dest:    map[string]string{},
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name:    "pointer to non-struct/non-map",
@@ -481,13 +481,17 @@ func TestBindErrors(t *testing.T) {
 
 func BenchmarkBind(b *testing.B) {
 	vals := url.Values{
-		"people[0][first_name]": {"Bob"},
-		"people[0][last_name]":  {"Ross"},
-		"people[0][email]":      {"bobross@gmail.com"},
+		"person[first_name]": {"Bob"},
+		"person[last_name]":  {"Ross"},
+		"person[email]":      {"bobross@gmail.com"},
+		"person[age]":        {"65"},
+		"person[active]":     {"true"},
+		"person[score]":      {"23.6"},
+		"role":               {"painter"},
 	}
 
 	for b.Loop() {
-		var data ComplexStruct
+		var data NestedStruct
 		if err := Bind(vals, &data); err != nil {
 			b.Fatal(err)
 		}

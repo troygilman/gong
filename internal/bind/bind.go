@@ -5,62 +5,25 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
 var (
-	arrayExpr = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
-	timeType  = reflect.TypeOf(time.Time{})
+	timeType = reflect.TypeOf(time.Time{})
 )
-
-type Node struct {
-	Val      string
-	Children map[string]Node
-}
 
 func Bind(source url.Values, dest any) error {
 	val := reflect.ValueOf(dest)
-	if val.Kind() == reflect.Pointer && val.IsNil() {
+	if val.Kind() != reflect.Pointer {
+		return fmt.Errorf("destination must be a pointer")
+	}
+	if val.IsNil() {
 		return fmt.Errorf("destination is nil")
 	}
-	node := buildSourceNode(source)
-	return bind(node, reflect.ValueOf(dest))
-}
-
-func buildSourceNode(source url.Values) Node {
-	node := Node{
-		Children: make(map[string]Node),
-	}
-	for key, val := range source {
-		if arrayExpr.MatchString(key) {
-			path := strings.Split(key, "[")
-			node = populateNode(node, path, val[0])
-		} else {
-			node.Children[key] = Node{
-				Val: val[0],
-			}
-		}
-	}
-	return node
-}
-
-func populateNode(node Node, path []string, val string) Node {
-	if len(path) == 0 {
-		node.Val = val
-	} else {
-		key := path[0]
-		key = strings.TrimSuffix(key, "]")
-		if node.Children == nil {
-			node.Children = make(map[string]Node)
-		}
-		child := node.Children[key]
-		child = populateNode(child, path[1:], val)
-		node.Children[key] = child
-	}
-	return node
+	node := NewParser(ArrayExpr, NodeMapPool).Parse(source)
+	defer node.Cleanup()
+	return bind(node, val)
 }
 
 func bind(node Node, dest reflect.Value) error {
