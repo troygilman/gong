@@ -490,8 +490,45 @@ func BenchmarkBind(b *testing.B) {
 		"role":               {"painter"},
 	}
 
+	var data NestedStruct
 	for b.Loop() {
-		var data NestedStruct
+		if err := Bind(vals, &data); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkBindComplex(b *testing.B) {
+	vals := url.Values{
+		"people[0][first_name]":      {"John"},
+		"people[0][last_name]":       {"Doe"},
+		"people[0][email]":           {"john@example.com"},
+		"settings[theme]":            {"dark"},
+		"metadata[name]":             {"John"},
+		"metadata[age]":              {"30"},
+		"created_at":                 {"2024-03-20T15:04:05Z"},
+		"tags[0]":                    {"go"},
+		"tags[1]":                    {"testing"},
+		"counts[users]":              {"100"},
+		"ratings[quality]":           {"4.5"},
+		"flags[enabled]":             {"true"},
+		"int_key_map[1]":             {"one"},
+		"nested[person][first_name]": {"Jane"},
+		"nested[role]":               {"admin"},
+	}
+
+	var data = ComplexStruct{
+		People:    make([]Person, 1),
+		Settings:  make(map[string]string, 1),
+		Metadata:  make(map[string]any, 2),
+		Tags:      make([]string, 2),
+		Counts:    make(map[string]int, 1),
+		Ratings:   make(map[string]float64, 1),
+		Flags:     make(map[string]bool, 1),
+		IntKeyMap: make(map[int]string, 1),
+	}
+
+	for b.Loop() {
 		if err := Bind(vals, &data); err != nil {
 			b.Fatal(err)
 		}
