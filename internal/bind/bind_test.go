@@ -39,6 +39,28 @@ func TestBind(t *testing.T) {
 	assert.Equals(t, expected, data)
 }
 
+func TestBindMap(t *testing.T) {
+	vals := url.Values{
+		"people[0][first_name]": {"Bob"},
+		"people[0][last_name]":  {"Ross"},
+		"people[0][email]":      {"bobross@gmail.com"},
+	}
+
+	var data map[string]any
+	assert.NoErr(t, Bind(vals, &data))
+
+	expected := map[string]any{
+		"people": map[string]any{
+			"0": map[string]any{
+				"first_name": "Bob",
+				"last_name":  "Ross",
+				"email":      "bobross@gmail.com",
+			},
+		},
+	}
+	assert.Equals(t, expected, data)
+}
+
 func BenchmarkBind(b *testing.B) {
 	vals := url.Values{
 		"people[0][first_name]": {"Bob"},
@@ -46,7 +68,7 @@ func BenchmarkBind(b *testing.B) {
 		"people[0][email]":      {"bobross@gmail.com"},
 	}
 
-	for range b.N {
+	for b.Loop() {
 		var data PostFormData
 		if err := Bind(vals, &data); err != nil {
 			b.Fatal(err)

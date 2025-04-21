@@ -1,11 +1,13 @@
 package bind
 
 import (
+	"encoding"
 	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var arrayExpr = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
@@ -57,8 +59,64 @@ func bind(node Node, dest reflect.Value) error {
 	t := dest.Type()
 	switch dest.Kind() {
 	case reflect.Pointer:
+		if dest.IsNil() {
+			dest.Set(reflect.New(t.Elem()))
+		}
 		return bind(node, dest.Elem())
+	case reflect.Interface:
+		if dest.IsNil() {
+			// For interface{}, create a map[string]any
+			m := make(map[string]any)
+			dest.Set(reflect.ValueOf(m))
+		}
+		return bind(node, dest.Elem())
+	case reflect.Map:
+		if dest.IsNil() {
+			dest.Set(reflect.MakeMap(t))
+		}
+		keyType := t.Key()
+		valueType := t.Elem()
+
+		for key, child := range node.Children {
+			// Create new key value
+			keyValue := reflect.New(keyType).Elem()
+			if err := setValueFromString(keyValue, key); err != nil {
+				return err
+			}
+
+			// Create new value
+			value := reflect.New(valueType).Elem()
+
+			// If this is a leaf node (no children), set the value directly
+			if len(child.Children) == 0 && child.Val != "" {
+				if valueType.Kind() == reflect.Interface {
+					value.Set(reflect.ValueOf(child.Val))
+				} else {
+					if err := setValueFromString(value, child.Val); err != nil {
+						return err
+					}
+				}
+			} else {
+				// Otherwise, recursively bind the child node
+				if err := bind(child, value); err != nil {
+					return err
+				}
+			}
+
+			// Set in map
+			dest.SetMapIndex(keyValue, value)
+		}
 	case reflect.Struct:
+		if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+			if node.Val != "" {
+				tm, err := time.Parse(time.RFC3339, node.Val)
+				if err != nil {
+					return err
+				}
+				dest.Set(reflect.ValueOf(tm))
+			}
+			return nil
+		}
 		for index := range dest.NumField() {
 			field := dest.Field(index)
 			if !field.CanInterface() {
@@ -76,6 +134,9 @@ func bind(node Node, dest reflect.Value) error {
 			}
 		}
 	case reflect.Slice:
+		if dest.IsNil() {
+			dest.Set(reflect.MakeSlice(t, 0, 0))
+		}
 		for key, child := range node.Children {
 			index, err := strconv.Atoi(key)
 			if err != nil {
@@ -91,9 +152,50 @@ func bind(node Node, dest reflect.Value) error {
 				return err
 			}
 		}
-	case reflect.String:
+	default:
 		if dest.CanSet() {
-			dest.SetString(node.Val)
+			if err := setValueFromString(dest, node.Val); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// setValueFromString sets a reflect.Value from a string based on its type
+func setValueFromString(dest reflect.Value, str string) error {
+	switch dest.Kind() {
+	case reflect.String:
+		dest.SetString(str)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		val, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return err
+		}
+		dest.SetInt(val)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		val, err := strconv.ParseUint(str, 10, 64)
+		if err != nil {
+			return err
+		}
+		dest.SetUint(val)
+	case reflect.Float32, reflect.Float64:
+		val, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return err
+		}
+		dest.SetFloat(val)
+	case reflect.Bool:
+		val, err := strconv.ParseBool(str)
+		if err != nil {
+			return err
+		}
+		dest.SetBool(val)
+	default:
+		if dest.CanAddr() {
+			if tu, ok := dest.Addr().Interface().(encoding.TextUnmarshaler); ok {
+				return tu.UnmarshalText([]byte(str))
+			}
 		}
 	}
 	return nil
