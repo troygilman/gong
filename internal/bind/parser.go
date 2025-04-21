@@ -2,16 +2,13 @@ package bind
 
 import (
 	"fmt"
-	"log"
 	"net/url"
-	"regexp"
 	"slices"
 	"strings"
 	"sync"
 )
 
 var (
-	ArrayExpr   = regexp.MustCompile(`^(.*?)\[([^\]]*)\](.*)$`)
 	NodeMapPool = &sync.Pool{
 		New: func() any {
 			return make(map[string]Node)
@@ -78,13 +75,11 @@ func (node Node) stringWithIndent(level int) string {
 }
 
 type Parser struct {
-	arrayExpr   *regexp.Regexp
 	nodeMapPool *sync.Pool
 }
 
-func NewParser(arrayExpr *regexp.Regexp, nodeMapPool *sync.Pool) Parser {
+func NewParser(nodeMapPool *sync.Pool) Parser {
 	return Parser{
-		arrayExpr:   arrayExpr,
 		nodeMapPool: nodeMapPool,
 	}
 }
@@ -116,14 +111,17 @@ func (parser Parser) populateNode(node Node, path string, start int, val []strin
 		end++
 	}
 
-	log.Printf("path: %s, start: %d, end: %d", path, start, end)
+	// log.Printf("path: %s, start: %d, end: %d, node: %v", path, start, end, node)
+	key := path[start+1 : end]
+	if node.Children == nil {
+		node.Children = parser.nodeMapPool.Get().(map[string]Node)
+	}
+
 	if end == len(path)-1 {
-		node.Val = val[0]
-	} else {
-		key := path[start+1 : end]
-		if node.Children == nil {
-			node.Children = parser.nodeMapPool.Get().(map[string]Node)
+		node.Children[key] = Node{
+			Val: val[0],
 		}
+	} else {
 		child := node.Children[key]
 		child = parser.populateNode(child, path, end+1, val)
 		node.Children[key] = child

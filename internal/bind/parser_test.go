@@ -9,7 +9,7 @@ import (
 
 func TestParser_Parse(t *testing.T) {
 	// Create a parser instance
-	parser := NewParser(ArrayExpr, NodeMapPool)
+	parser := NewParser(NodeMapPool)
 
 	// Test case: nested form data like user[name]=John&user[address][city]=New York
 	testValues := url.Values{

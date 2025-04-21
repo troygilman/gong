@@ -21,7 +21,7 @@ func Bind(source url.Values, dest any) error {
 	if val.IsNil() {
 		return fmt.Errorf("destination is nil")
 	}
-	node := NewParser(ArrayExpr, NodeMapPool).Parse(source)
+	node := NewParser(NodeMapPool).Parse(source)
 	defer node.Cleanup(NodeMapPool)
 	return bind(node, val)
 }
