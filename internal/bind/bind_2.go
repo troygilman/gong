@@ -3,6 +3,7 @@ package bind
 import (
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -49,22 +50,47 @@ func populateNode(node Node, path []string, val string) Node {
 	return node
 }
 
-func bind(source Node, dest reflect.Value) error {
+func bind(node Node, dest reflect.Value) error {
 	t := dest.Type()
 	switch dest.Kind() {
 	case reflect.Pointer:
-		return bind(source, dest.Elem())
+		return bind(node, dest.Elem())
 	case reflect.Struct:
-		for i := range dest.NumField() {
-			field := dest.Field(i)
+		for index := range dest.NumField() {
+			field := dest.Field(index)
 			if !field.CanInterface() {
 				continue
 			}
-			tag := t.Field(i).Tag
+			tag := t.Field(index).Tag
 			if sourceName, ok := tag.Lookup("form"); ok {
-				_ = sourceName
-
+				child, ok := node.Children[sourceName]
+				if !ok {
+					continue
+				}
+				if err := bind(child, field); err != nil {
+					return err
+				}
 			}
+		}
+	case reflect.Slice:
+		for key, child := range node.Children {
+			index, err := strconv.Atoi(key)
+			if err != nil {
+				return err
+			}
+			if index >= dest.Cap() {
+				dest.Grow(dest.Cap() - (index - 1))
+			}
+			if index >= dest.Len() {
+				dest.SetLen(index + 1)
+			}
+			if err := bind(child, dest.Index(index)); err != nil {
+				return err
+			}
+		}
+	case reflect.String:
+		if dest.CanSet() {
+			dest.SetString(node.Val)
 		}
 	}
 	return nil
