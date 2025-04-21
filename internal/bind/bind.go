@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"slices"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,24 +26,29 @@ func Bind(source url.Values, dest any) error {
 	}
 	node := NewParser(NodeMapPool).Parse(source)
 	defer node.Cleanup(NodeMapPool)
-	return bind(node, val)
+	return node.Bind(val)
 }
 
-func bind(node Node, dest reflect.Value) error {
+type Node struct {
+	Val      string
+	Children map[string]Node
+}
+
+func (node Node) Bind(dest reflect.Value) error {
 	t := dest.Type()
 	switch dest.Kind() {
 	case reflect.Pointer:
 		if dest.IsNil() {
 			dest.Set(reflect.New(t.Elem()))
 		}
-		return bind(node, dest.Elem())
+		return node.Bind(dest.Elem())
 	case reflect.Interface:
 		if dest.IsNil() {
 			// For interface{}, create a map[string]any
 			m := make(map[string]any, len(node.Children))
 			dest.Set(reflect.ValueOf(m))
 		}
-		return bind(node, dest.Elem())
+		return node.Bind(dest.Elem())
 	case reflect.Map:
 		if dest.IsNil() {
 			dest.Set(reflect.MakeMapWithSize(t, len(node.Children)))
@@ -69,7 +77,7 @@ func bind(node Node, dest reflect.Value) error {
 				}
 			} else {
 				// Otherwise, recursively bind the child node
-				if err := bind(child, value); err != nil {
+				if err := child.Bind(value); err != nil {
 					return err
 				}
 			}
@@ -99,7 +107,7 @@ func bind(node Node, dest reflect.Value) error {
 				if !ok {
 					continue
 				}
-				if err := bind(child, field); err != nil {
+				if err := child.Bind(field); err != nil {
 					return err
 				}
 			}
@@ -120,7 +128,7 @@ func bind(node Node, dest reflect.Value) error {
 				dest.Grow(index - dest.Len() + 1)
 				dest.SetLen(index + 1)
 			}
-			if err := bind(child, dest.Index(index)); err != nil {
+			if err := child.Bind(dest.Index(index)); err != nil {
 				return err
 			}
 		}
@@ -132,6 +140,59 @@ func bind(node Node, dest reflect.Value) error {
 		}
 	}
 	return nil
+}
+
+func (node Node) Cleanup(pool *sync.Pool) {
+	if node.Children != nil {
+		for key, child := range node.Children {
+			child.Cleanup(pool)
+			delete(node.Children, key)
+		}
+		pool.Put(node.Children)
+	}
+}
+
+func (node Node) String() string {
+	return node.stringWithIndent(0)
+}
+
+func (node Node) stringWithIndent(level int) string {
+	var b strings.Builder
+	indent := strings.Repeat(" ", level)
+
+	if node.Val != "" {
+		b.WriteString(node.Val)
+	}
+
+	if len(node.Children) > 0 {
+		b.WriteString("\n")
+
+		childKeys := make([]string, 0, len(node.Children))
+		for key := range node.Children {
+			childKeys = append(childKeys, key)
+		}
+		slices.Sort(childKeys)
+
+		for _, key := range childKeys {
+			child := node.Children[key]
+			b.WriteString(fmt.Sprintf("%s- %s: ", indent, key))
+			childStr := child.stringWithIndent(level + 1)
+
+			// Add indentation to all lines of the child string except the first line
+			lines := strings.Split(childStr, "\n")
+			for j, line := range lines {
+				if j == 0 {
+					b.WriteString(line)
+				} else {
+					b.WriteString("\n" + indent + "  " + line)
+				}
+			}
+
+			b.WriteString("\n")
+		}
+	}
+
+	return b.String()
 }
 
 // setValueFromString sets a reflect.Value from a string based on its type
