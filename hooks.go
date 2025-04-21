@@ -7,9 +7,10 @@ import (
 	"github.com/troygilman/gong/internal/bind"
 )
 
-// Bind decodes the JSON body of the current HTTP request into the provided destination.
-// The destination must be a pointer to a struct or map that matches the expected JSON structure.
-// Returns an error if the JSON decoding fails.
+// Bind decodes form data from the current HTTP request into the provided destination.
+// It processes both URL query parameters and form values submitted via POST or GET requests.
+// The destination must be a pointer to a struct or map with appropriate "form" tags.
+// Returns an error if the form parsing or binding fails.
 func Bind(ctx context.Context, dest any) error {
 	r := Request(ctx)
 	if err := r.ParseForm(); err != nil {
@@ -59,6 +60,9 @@ func Redirect(ctx context.Context, path string) error {
 	return nil
 }
 
+// ChildRoute retrieves the child route from the current context.
+// This is useful when working with nested routes and needing to access
+// the currently active child route within a parent component.
 func ChildRoute(ctx context.Context) Route {
 	return getContext(ctx).childRoute
 }

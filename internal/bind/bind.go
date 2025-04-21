@@ -16,6 +16,10 @@ var (
 	timeType = reflect.TypeOf(time.Time{})
 )
 
+// Bind binds URL form values to a destination object.
+// The destination must be a pointer to a struct, map, or other supported type.
+// It uses struct field tags with the "form" key to map form values to struct fields.
+// Returns an error if binding fails or if the destination is invalid.
 func Bind(source url.Values, dest any) error {
 	val := reflect.ValueOf(dest)
 	if val.Kind() != reflect.Pointer {

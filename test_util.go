@@ -101,6 +101,9 @@ func (mock mockRoute) Render(ctx context.Context, w io.Writer) error {
 	return nil
 }
 
+// testRender is a helper function for testing templ component rendering.
+// It renders the given component with the provided context and asserts
+// that the output matches the expected string.
 func testRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
 	buffer := bytes.NewBuffer([]byte{})
 	err := render(context.Background(), gCtx, buffer, c)
@@ -108,6 +111,9 @@ func testRender(t *testing.T, c templ.Component, gCtx gongContext, expected stri
 	assert.Equals(t, expected, buffer.String())
 }
 
+// newRequest creates a new HTTP request with the given method and URL.
+// It panics if the request creation fails. This is a helper function
+// for creating request objects in tests.
 func newRequest(method string, url string) *http.Request {
 	r, err := http.NewRequest(method, url, nil)
 	if err != nil {
