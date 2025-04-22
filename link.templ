@@ -9,7 +9,6 @@ import "io"
 type Link struct {
 	id      string
 	path    string
-	swap    string
 	headers []string
 	trigger string
 	attrs   templ.Attributes
@@ -20,18 +19,12 @@ type Link struct {
 func NewLink(path string) Link {
 	return Link{
 		path:    path,
-		swap:    SwapNone,
 		trigger: TriggerClick,
 	}
 }
 
 func (link Link) WithID(id string) Link {
 	link.id = id
-	return link
-}
-
-func (link Link) WithSwap(swap string) Link {
-	link.swap = swap
 	return link
 }
 
@@ -65,11 +58,8 @@ templ (link Link) component() {
 		id={ link.id }
 		href={ templ.URL(link.path) }
 		hx-boost="true"
-		hx-swap={ link.swap }
-		if link.swap != SwapNone {
-			hx-target={ "#" + TargetID(ctx, "") }
-		}
 		hx-trigger={ link.trigger }
+		hx-swap="none"
 		hx-headers={ buildHeaders(headers) }
 		hx-push-url="true"
 		{ link.attrs... }
