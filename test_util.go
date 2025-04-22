@@ -85,6 +85,10 @@ func (mock mockRoute) Root() Route {
 	return mock
 }
 
+func (mock mockRoute) Find(id string) Route {
+	return nil
+}
+
 func (mock mockRoute) Path() string {
 	return mock.path
 }

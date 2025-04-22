@@ -96,7 +96,7 @@ templ (button Button) component() {
 		}
 		hx-swap={ button.swap }
 		if button.swap != SwapNone {
-			hx-target={ "#" + buildComponentID(ctx, button.targetID) }
+			hx-target={ "#" + TargetID(ctx, button.targetID) }
 		}
 		hx-include="this"
 		hx-push-url={ button.pushUrl }

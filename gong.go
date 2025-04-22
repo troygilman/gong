@@ -84,10 +84,11 @@ func (g *Gong) setupRoute(route Route) {
 	g.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writer := response_writer.NewResponseWriter(w)
 		requestType := r.Header.Get(HeaderGongRequestType)
+		routeID := r.Header.Get(HeaderGongRouteID)
 
 		gCtx := gongContext{
 			route:       route,
-			routeID:     r.Header.Get(HeaderGongRouteID),
+			routeID:     route.ID(),
 			request:     r,
 			writer:      writer,
 			action:      requestType == GongRequestTypeAction,
@@ -95,9 +96,12 @@ func (g *Gong) setupRoute(route Route) {
 			componentID: r.Header.Get(HeaderGongComponentID),
 		}
 
-		if requestType == "" {
+		switch requestType {
+		case GongRequestTypeAction:
+			gCtx.route = g.root.Find(routeID)
+		case GongRequestTypeLink:
+		default:
 			gCtx.route = g.root
-			gCtx.routeID = route.ID()
 		}
 
 		if gCtx.route == nil {

@@ -211,9 +211,9 @@ func (button Button) component() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("#" + buildComponentID(ctx, button.targetID))
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("#" + TargetID(ctx, button.targetID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 99, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button.templ`, Line: 99, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {

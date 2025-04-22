@@ -67,7 +67,7 @@ templ (link Link) component() {
 		hx-boost="true"
 		hx-swap={ link.swap }
 		if link.swap != SwapNone {
-			hx-target={ "#" + buildComponentID(ctx, "") }
+			hx-target={ "#" + TargetID(ctx, "") }
 		}
 		hx-trigger={ link.trigger }
 		hx-headers={ buildHeaders(headers) }

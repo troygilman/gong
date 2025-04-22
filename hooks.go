@@ -2,6 +2,7 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/troygilman/gong/internal/bind"
@@ -65,4 +66,29 @@ func Redirect(ctx context.Context, path string) error {
 // the currently active child route within a parent component.
 func ChildRoute(ctx context.Context) Route {
 	return getContext(ctx).childRoute
+}
+
+func OutletID(ctx context.Context) string {
+	gCtx := getContext(ctx)
+	return "gong_" + gCtx.route.ID() + "_outlet"
+}
+
+func TargetID(ctx context.Context, id string) string {
+	gCtx := getContext(ctx)
+	prefix := "gong_" + gCtx.route.ID()
+	if gCtx.componentID != "" {
+		prefix += "_" + gCtx.componentID
+	}
+	if id != "" {
+		prefix += "_" + id
+	}
+	return prefix
+}
+
+func TriggerAfterSwap(id string) string {
+	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
+}
+
+func TriggerAfterSwapOOB(id string) string {
+	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }

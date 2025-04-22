@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -19,6 +18,8 @@ type Route interface {
 	// If no exact match is found and a default child exists, returns the default child.
 	// Returns nil if no matching route is found.
 	Child(int) Route
+
+	Find(string) Route
 
 	// NumChildren returns the number of direct child routes of this route.
 	NumChildren() int
@@ -60,12 +61,12 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx.path = buildRealPath(route, gCtx.request)
 	componentID := strings.Split(gCtx.componentID, idDelimeter)
 
-	log.Println("Route:", route.path, route.id)
+	// log.Printf("Rendering Route: %+v\n", gCtx)
 	if len(route.children) > 0 {
 		depth := route.Depth()
 		if len(gCtx.routeID) > depth {
 			index := int(gCtx.routeID[depth] - '0')
-			gCtx.childRoute = route.children[index]
+			gCtx.childRoute = route.Child(index)
 		} else {
 			gCtx.childRoute = route.children[0]
 		}
@@ -79,11 +80,6 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 		gCtx.route = parent
 		gCtx.childRoute = route
 		gCtx.link = false
-		if component, ok := parent.Component().Find(componentID); ok {
-			if err := render(ctx, gCtx, w, component.Action()); err != nil {
-				return err
-			}
-		}
 		return render(ctx, gCtx, w, NewOutlet().withRoute(route).withOOB(true))
 	}
 
@@ -104,6 +100,14 @@ func (route *gongRoute) Child(index int) Route {
 		return nil
 	}
 	return route.children[index]
+}
+
+func (route *gongRoute) Find(id string) Route {
+	var r Route = route
+	for _, index := range id {
+		r = r.Child(int(index - '0'))
+	}
+	return r
 }
 
 func (route *gongRoute) ID() string {

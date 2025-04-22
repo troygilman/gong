@@ -13,23 +13,6 @@ func getContext(ctx context.Context) gongContext {
 	return ctx.Value(contextKey).(gongContext)
 }
 
-func buildComponentID(ctx context.Context, id string) string {
-	gCtx := getContext(ctx)
-	prefix := "gong_" + gCtx.route.ID()
-	if gCtx.componentID != "" {
-		prefix += "_" + gCtx.componentID
-	}
-	if id != "" {
-		prefix += "_" + id
-	}
-	return prefix
-}
-
-func buildOutletID(ctx context.Context) string {
-	gCtx := getContext(ctx)
-	return "gong_" + gCtx.route.ID() + "_outlet"
-}
-
 func gongHeaders(ctx context.Context, requestType string) []string {
 	gCtx := getContext(ctx)
 	return []string{

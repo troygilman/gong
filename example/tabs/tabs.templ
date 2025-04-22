@@ -1,10 +1,6 @@
 package tabs
 
-import (
-	"github.com/troygilman/gong"
-	"net/url"
-	"strings"
-)
+import "github.com/troygilman/gong"
 
 func Route() gong.RouteBuilder {
 	return gong.NewRoute("/", gong.NewComponent(TabsComponent{})).WithRoutes(
@@ -18,7 +14,7 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@gong.NewTarget() {
+	@gong.NewTarget().WithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx))) {
 		@tabList()
 	}
 	@gong.NewOutlet().WithAttrs(templ.Attributes{"style": "border-style: solid"})
@@ -26,10 +22,6 @@ templ (c TabsComponent) View() {
 
 templ (c TabsComponent) Action() {
 	@tabList()
-}
-
-func parseTab(url *url.URL) string {
-	return strings.Split(url.EscapedPath(), "/")[1]
 }
 
 templ tabList() {
@@ -49,7 +41,7 @@ templ tab(title string, path string, activeTab string) {
 			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
 		}
 	}}
-	@gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithAttrs(attrs) {
+	@gong.NewLink(path).WithAttrs(attrs) {
 		{ title }
 	}
 }

@@ -8,11 +8,7 @@ package tabs
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/troygilman/gong"
-	"net/url"
-	"strings"
-)
+import "github.com/troygilman/gong"
 
 func Route() gong.RouteBuilder {
 	return gong.NewRoute("/", gong.NewComponent(TabsComponent{})).WithRoutes(
@@ -67,7 +63,7 @@ func (c TabsComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewTarget().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().WithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -106,10 +102,6 @@ func (c TabsComponent) Action() templ.Component {
 		}
 		return nil
 	})
-}
-
-func parseTab(url *url.URL) string {
-	return strings.Split(url.EscapedPath(), "/")[1]
 }
 
 func tabList() templ.Component {
@@ -199,7 +191,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 53, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 45, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -207,7 +199,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewLink(path).WithSwap(gong.SwapInnerHTML).WithAttrs(attrs).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewLink(path).WithAttrs(attrs).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -272,7 +264,7 @@ func (c TabContentComponent) View() templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 83, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 75, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

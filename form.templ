@@ -83,7 +83,7 @@ templ (form Form) component() {
 		}
 		hx-swap={ form.swap }
 		if form.swap != SwapNone {
-			hx-target={ "#" + buildComponentID(ctx, form.targetID) }
+			hx-target={ "#" + TargetID(ctx, form.targetID) }
 		}
 		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
 		{ form.attrs... }

@@ -49,7 +49,7 @@ func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 
 templ (outlet Outlet) component() {
 	<div
-		id={ buildOutletID(ctx) }
+		id={ OutletID(ctx) }
 		if outlet.oob {
 			hx-swap-oob={ SwapInnerHTML }
 		}
