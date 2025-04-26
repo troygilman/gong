@@ -50,11 +50,11 @@ templ (c BulkUpdateComponent) Action() {
 templ personFieldSet(index int) {
 	<fieldset>
 		<label>First name</label>
-		<input name={ fmt.Sprintf("people[%d][first_name]", index) }/>
+		<input name={ fmt.Sprintf("people[%d][first_name]", index) } placeholder="Joe"/>
 		<label>Last name</label>
-		<input name={ fmt.Sprintf("people[%d][last_name]", index) }/>
+		<input name={ fmt.Sprintf("people[%d][last_name]", index) } placeholder="Blow"/>
 		<label>Email</label>
-		<input name={ fmt.Sprintf("people[%d][email]", index) }/>
+		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
 	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this").WithAttrs(templ.Attributes{"class": "add-btn"}) {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
