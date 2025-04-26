@@ -48,21 +48,54 @@ templ tab(title string, path string, activeTab string) {
 
 templ styles() {
 	<style type="text/css">
-		.tab {
-		    border-style: solid;
-			border-color: black;
-			color: black;
-			text-decoration: none;
-			padding: 4px;
-			cursor: pointer
-		}
-		.tab-active {
-			border-color: blue !important;
-		}
 		.tab-list {
-		    display: flex;
+			display: flex;
 			flex-direction: row;
 			gap: 12px;
+			flex-wrap: wrap;
+			margin-bottom: 12px;
+		}
+		.tab {
+			border: 1px solid #bbb;
+			border-radius: 8px 8px 0 0;
+			background: #f7f7f7;
+			color: #222;
+			text-decoration: none;
+			padding: 8px 20px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: 
+				background 0.2s,
+				color 0.2s,
+				border-color 0.2s,
+				box-shadow 0.2s;
+			outline: none;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+			position: relative;
+			top: 2px;
+		}
+		.tab:hover, .tab:focus {
+			background: #e0e7ff;
+			color: #1d4ed8;
+			border-color: #1d4ed8;
+		}
+		.tab-active {
+			background: #1d4ed8;
+			color: #fff !important;
+			border-color: #1d4ed8 !important;
+			font-weight: bold;
+			box-shadow: 0 4px 12px rgba(30,64,175,0.08);
+			z-index: 1;
+		}
+		/* Optional: style the outlet/content area */
+		[style*="border-style: solid"] {
+			border-radius: 0 8px 8px 8px;
+			border-width: 1px;
+			border-color: #bbb;
+			padding: 24px;
+			background: #fff;
+			min-height: 120px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 		}
 	</style>
 }

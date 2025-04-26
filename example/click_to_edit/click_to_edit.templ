@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/", NewUserDetailComponent())
+}
+
 type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
@@ -13,28 +17,26 @@ func NewUserDetailComponent() gong.Component {
 
 templ (c UserDetailComponent) View() {
 	@gong.NewTarget() {
-		@c.details(defaultUser)
+		@details(defaultUser)
 	}
 }
 
 templ (c UserDetailComponent) Action() {
+	{{
+		var user User
+		if err := gong.Bind(ctx, &user); err != nil {
+			panic(err)
+		}
+	}}
 	switch gong.Request(ctx).Method {
 		case http.MethodGet:
-			@c.form(User{
-				FirstName: gong.QueryParam(ctx, "firstName"),
-				LastName:  gong.QueryParam(ctx, "lastName"),
-				Email:     gong.QueryParam(ctx, "email"),
-			})
+			@form(user)
 		case http.MethodPatch:
-			@c.details(User{
-				FirstName: gong.FormValue(ctx, "firstName"),
-				LastName:  gong.FormValue(ctx, "lastName"),
-				Email:     gong.FormValue(ctx, "email"),
-			})
+			@details(user)
 	}
 }
 
-templ (c UserDetailComponent) details(user User) {
+templ details(user User) {
 	@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
 		<div>
 			<div><label>First Name: </label>{ user.FirstName }</div>
@@ -54,7 +56,7 @@ templ (c UserDetailComponent) details(user User) {
 	}
 }
 
-templ (c UserDetailComponent) form(user User) {
+templ form(user User) {
 	@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
 		<div>
 			<label>First Name</label>
@@ -79,9 +81,9 @@ templ (c UserDetailComponent) form(user User) {
 }
 
 type User struct {
-	FirstName string
-	LastName  string
-	Email     string
+	FirstName string `form:"firstName"`
+	LastName  string `form:"lastName"`
+	Email     string `form:"email"`
 }
 
 var defaultUser = User{

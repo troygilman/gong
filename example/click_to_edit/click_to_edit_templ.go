@@ -13,6 +13,10 @@ import (
 	"net/http"
 )
 
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/", NewUserDetailComponent())
+}
+
 type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
@@ -52,7 +56,7 @@ func (c UserDetailComponent) View() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = c.details(defaultUser).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = details(defaultUser).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -87,22 +91,19 @@ func (c UserDetailComponent) Action() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+
+		var user User
+		if err := gong.Bind(ctx, &user); err != nil {
+			panic(err)
+		}
 		switch gong.Request(ctx).Method {
 		case http.MethodGet:
-			templ_7745c5c3_Err = c.form(User{
-				FirstName: gong.QueryParam(ctx, "firstName"),
-				LastName:  gong.QueryParam(ctx, "lastName"),
-				Email:     gong.QueryParam(ctx, "email"),
-			}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = form(user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case http.MethodPatch:
-			templ_7745c5c3_Err = c.details(User{
-				FirstName: gong.FormValue(ctx, "firstName"),
-				LastName:  gong.FormValue(ctx, "lastName"),
-				Email:     gong.FormValue(ctx, "email"),
-			}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = details(user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -111,7 +112,7 @@ func (c UserDetailComponent) Action() templ.Component {
 	})
 }
 
-func (c UserDetailComponent) details(user User) templ.Component {
+func details(user User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -151,7 +152,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 40, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 42, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +165,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 41, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 43, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -177,7 +178,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 44, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 46, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -190,7 +191,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 45, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 47, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -203,7 +204,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 48, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 50, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -216,7 +217,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 49, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 51, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -236,7 +237,7 @@ func (c UserDetailComponent) details(user User) templ.Component {
 	})
 }
 
-func (c UserDetailComponent) form(user User) templ.Component {
+func form(user User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -276,7 +277,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 61, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 63, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -289,7 +290,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 65, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 67, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -302,7 +303,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 69, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 71, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -331,7 +332,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 73, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 75, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -344,7 +345,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 74, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 76, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -357,7 +358,7 @@ func (c UserDetailComponent) form(user User) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/user_detail.templ`, Line: 75, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 77, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -384,9 +385,9 @@ func (c UserDetailComponent) form(user User) templ.Component {
 }
 
 type User struct {
-	FirstName string
-	LastName  string
-	Email     string
+	FirstName string `form:"firstName"`
+	LastName  string `form:"lastName"`
+	Email     string `form:"email"`
 }
 
 var defaultUser = User{
