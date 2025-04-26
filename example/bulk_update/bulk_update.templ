@@ -53,7 +53,7 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) }/>
 	</fieldset>
-	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithInclude("this").WithTarget("this") {
+	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this") {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+
 	}

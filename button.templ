@@ -16,7 +16,6 @@ type Button struct {
 	swap    string
 	pushUrl string
 	headers []string
-	include *string
 	attrs   templ.Attributes
 }
 
@@ -78,11 +77,6 @@ func (button Button) WithHeaders(headers ...string) Button {
 	return button
 }
 
-func (button Button) WithInclude(include string) Button {
-	button.include = &include
-	return button
-}
-
 // Render writes the button's HTML representation to the provided writer.
 // It handles the rendering of the button with all configured attributes.
 // Returns an error if rendering fails.
@@ -118,9 +112,7 @@ templ (button Button) component() {
 		hx-include="this"
 		hx-push-url={ button.pushUrl }
 		hx-headers={ buildHeaders(headers) }
-		if button.include != nil {
-			hx-include={ *button.include }
-		}
+		type="button"
 		{ button.attrs... }
 	>
 		{ children... }
