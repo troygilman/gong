@@ -1,8 +1,10 @@
 package bulk_update
 
 import (
+	"fmt"
 	"github.com/troygilman/gong"
-	"log"
+	"net/http"
+	"strconv"
 )
 
 func Route() gong.RouteBuilder {
@@ -12,17 +14,63 @@ func Route() gong.RouteBuilder {
 type BulkUpdateComponent struct{}
 
 templ (c BulkUpdateComponent) View() {
-	@gong.NewForm() {
-		<fieldset>
-			<label>First name</label>
-			<input name="people[0][first_name]"/>
-			<label>Last name</label>
-			<input name="people[0][last_name]"/>
-			<label>Email</label>
-			<input name="people[0][email]"/>
-		</fieldset>
+	@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
+		@personFieldSet(0)
 		<button type="submit">Submit</button>
 	}
+	@gong.NewTarget()
+}
+
+templ (c BulkUpdateComponent) Action() {
+	switch gong.Request(ctx).Method {
+		case http.MethodGet:
+			{{
+				index, err := strconv.Atoi(gong.QueryParam(ctx, "index"))
+				if err != nil {
+					panic(err)
+				}
+			}}
+			@personFieldSet(index + 1)
+		case http.MethodPost:
+			{{
+				var data PostFormData
+				if err := gong.Bind(ctx, &data); err != nil {
+					panic(err)
+				}
+			}}
+			for _, person := range data.People {
+				@personRow(person)
+			}
+	}
+}
+
+templ personFieldSet(index int) {
+	<fieldset>
+		<label>First name</label>
+		<input name={ fmt.Sprintf("people[%d][first_name]", index) }/>
+		<label>Last name</label>
+		<input name={ fmt.Sprintf("people[%d][last_name]", index) }/>
+		<label>Email</label>
+		<input name={ fmt.Sprintf("people[%d][email]", index) }/>
+	</fieldset>
+	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithInclude("this").WithTarget("this") {
+		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
+		+
+	}
+}
+
+templ personRow(person Person) {
+	<div style={ "display: flex", "flex-direction: row", "gap: 8px" }>
+		<div>
+			{ person.FirstName }
+		</div>
+		<div>
+			{ person.LastName }
+		</div>
+		<div>
+			{ person.Email }
+		</div>
+	</div>
 }
 
 type PostFormData struct {
@@ -33,14 +81,4 @@ type Person struct {
 	FirstName string `form:"first_name"`
 	LastName  string `form:"last_name"`
 	Email     string `form:"email"`
-}
-
-templ (c BulkUpdateComponent) Action() {
-	{{
-		var data PostFormData
-		if err := gong.Bind(ctx, &data); err != nil {
-			panic(err)
-		}
-		log.Println(data)
-	}}
 }

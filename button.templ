@@ -2,6 +2,7 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -10,11 +11,13 @@ import (
 // It provides a way to create buttons with configurable HTTP methods, CSS classes,
 // target elements, and HTMX swap behaviors.
 type Button struct {
-	method   string
-	targetID string
-	swap     string
-	pushUrl  string
-	attrs    templ.Attributes
+	method  string
+	target  *string
+	swap    string
+	pushUrl string
+	headers []string
+	include *string
+	attrs   templ.Attributes
 }
 
 // NewButton creates a new Button instance with default settings.
@@ -46,8 +49,8 @@ func (button Button) WithAttrs(attrs templ.Attributes) Button {
 // WithTargetID sets the target ID for the button action.
 // This is used to specify the element that will be updated after the button action.
 // Returns the modified button for method chaining.
-func (button Button) WithTargetID(targetID string) Button {
-	button.targetID = targetID
+func (button Button) WithTarget(target string) Button {
+	button.target = &target
 	return button
 }
 
@@ -70,6 +73,16 @@ func (button Button) WithPushUrl(pushUrl bool) Button {
 	return button
 }
 
+func (button Button) WithHeaders(headers ...string) Button {
+	button.headers = headers
+	return button
+}
+
+func (button Button) WithInclude(include string) Button {
+	button.include = &include
+	return button
+}
+
 // Render writes the button's HTML representation to the provided writer.
 // It handles the rendering of the button with all configured attributes.
 // Returns an error if rendering fails.
@@ -79,28 +92,35 @@ func (button Button) Render(ctx context.Context, w io.Writer) error {
 
 templ (button Button) component() {
 	{{
-		uri := getContext(ctx).path
+		headers := append(gongHeaders(ctx, GongRequestTypeAction), button.headers...)
+		if button.target == nil {
+			target := fmt.Sprintf("#%s", TargetID(ctx, ""))
+			button.target = &target
+		}
 	}}
 	<button
 		if button.method == http.MethodGet {
-			hx-get={ uri }
+			hx-get
 		}
 		if button.method == http.MethodPost {
-			hx-post={ uri }
+			hx-post
 		}
 		if button.method == http.MethodPatch {
-			hx-patch={ uri }
+			hx-patch
 		}
 		if button.method == http.MethodDelete {
-			hx-delete={ uri }
+			hx-delete
 		}
 		hx-swap={ button.swap }
 		if button.swap != SwapNone {
-			hx-target={ "#" + TargetID(ctx, button.targetID) }
+			hx-target={ *button.target }
 		}
 		hx-include="this"
 		hx-push-url={ button.pushUrl }
-		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
+		hx-headers={ buildHeaders(headers) }
+		if button.include != nil {
+			hx-include={ *button.include }
+		}
 		{ button.attrs... }
 	>
 		{ children... }

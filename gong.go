@@ -44,7 +44,8 @@ const (
 	// SwapOuterHTML replaces the entire target element
 	SwapOuterHTML = "outerHTML"
 	// SwapInnerHTML replaces the content inside the target element
-	SwapInnerHTML = "innerHTML"
+	SwapInnerHTML   = "innerHTML"
+	SwapBeforeBegin = "beforebegin"
 	// SwapBeforeEnd appends content before the end of the target element
 	SwapBeforeEnd = "beforeend"
 )
