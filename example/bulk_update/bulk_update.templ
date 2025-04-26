@@ -14,11 +14,14 @@ func Route() gong.RouteBuilder {
 type BulkUpdateComponent struct{}
 
 templ (c BulkUpdateComponent) View() {
-	@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
-		@personFieldSet(0)
-		<button type="submit">Submit</button>
-	}
-	@gong.NewTarget()
+	@styles()
+	<div class="bulk-card">
+		@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
+			@personFieldSet(0)
+			<button type="submit">Submit</button>
+		}
+		@gong.NewTarget()
+	</div>
 }
 
 templ (c BulkUpdateComponent) Action() {
@@ -53,23 +56,17 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) }/>
 	</fieldset>
-	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this") {
+	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this").WithAttrs(templ.Attributes{"class": "add-btn"}) {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+
 	}
 }
 
 templ personRow(person Person) {
-	<div style={ "display: flex", "flex-direction: row", "gap: 8px" }>
-		<div>
-			{ person.FirstName }
-		</div>
-		<div>
-			{ person.LastName }
-		</div>
-		<div>
-			{ person.Email }
-		</div>
+	<div class="person-row">
+		<div>{ person.FirstName }</div>
+		<div>{ person.LastName }</div>
+		<div>{ person.Email }</div>
 	</div>
 }
 
@@ -81,4 +78,83 @@ type Person struct {
 	FirstName string `form:"first_name"`
 	LastName  string `form:"last_name"`
 	Email     string `form:"email"`
+}
+
+templ styles() {
+	<style type="text/css">
+		.bulk-card {
+			max-width: 500px;
+			margin: 40px auto;
+			padding: 32px 24px;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+			border: 1px solid #e5e7eb;
+		}
+		fieldset {
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			padding: 18px 16px 12px 16px;
+			margin-bottom: 18px;
+		}
+		label {
+			display: block;
+			font-weight: 500;
+			margin-bottom: 6px;
+			color: #1e293b;
+		}
+		input[type="text"], input[type="email"], input:not([type]) {
+			width: 100%;
+			padding: 8px 12px;
+			border: 1px solid #cbd5e1;
+			border-radius: 6px;
+			font-size: 1rem;
+			transition: border-color 0.2s;
+			background: #f8fafc;
+			margin-bottom: 12px;
+		}
+		input[type="text"]:focus, input[type="email"]:focus, input:not([type]):focus {
+			border-color: #2563eb;
+			outline: none;
+			background: #fff;
+		}
+		button, .add-btn {
+			padding: 8px 20px;
+			border: none;
+			border-radius: 6px;
+			background: #2563eb;
+			color: #fff;
+			font-weight: 600;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background 0.2s;
+			margin-right: 10px;
+		}
+		button:hover, .add-btn:hover, button:focus, .add-btn:focus {
+			background: #1d4ed8;
+		}
+		.add-btn {
+			padding: 6px 14px;
+			font-size: 1.2rem;
+			background: #22c55e;
+			margin-left: 8px;
+			margin-top: 8px;
+		}
+		.add-btn:hover, .add-btn:focus {
+			background: #16a34a;
+		}
+		.person-row-list {
+			margin-top: 32px;
+			border-top: 1px solid #e5e7eb;
+			padding-top: 16px;
+		}
+		.person-row {
+			display: flex;
+			flex-direction: row;
+			gap: 16px;
+			padding: 8px 0;
+			border-bottom: 1px solid #f1f5f9;
+			font-size: 1rem;
+		}
+	</style>
 }
