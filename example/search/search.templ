@@ -24,7 +24,7 @@ type SearchComponent struct {
 
 templ (c SearchComponent) View() {
 	@gong.NewForm().
-		WithMethod(http.MethodGet).
+		WithMethod(http.MethodPost).
 		WithSwap(gong.SwapInnerHTML) {
 		<input
 			type="search"
@@ -32,10 +32,10 @@ templ (c SearchComponent) View() {
 			list="options"
 			autocomplete="off"
 			hx-get
-			hx-headers={ gong.ActionHeaders(ctx, "Autocomplete", "true") }
+			hx-headers={ gong.ActionHeaders(ctx) }
 			hx-target="#options"
 			hx-swap={ gong.SwapOuterHTML }
-			hx-trigger="keydown delay:0.2s"
+			hx-trigger="input changed delay:200ms"
 		/>
 		@searchOptions([]string{})
 	}
@@ -44,27 +44,33 @@ templ (c SearchComponent) View() {
 }
 
 templ (c SearchComponent) Action() {
-	if gong.Request(ctx).Header.Get("Autocomplete") == "true" {
-	}
-	{{
-		queryName := gong.QueryParam(ctx, "name")
-		queryName = strings.ToLower(queryName)
-		matches := []string{}
-		if queryName != "" {
-			for _, name := range c.names {
-				if strings.Contains(strings.ToLower(name), queryName) {
-					matches = append(matches, name)
+	switch gong.Request(ctx).Method {
+		case http.MethodGet:
+			{{
+			queryName := gong.QueryParam(ctx, "name")
+			queryName = strings.ToLower(queryName)
+			matches := []string{}
+			if queryName != "" {
+				for _, name := range c.names {
+					if strings.Contains(strings.ToLower(name), queryName) {
+						matches = append(matches, name)
+					}
 				}
 			}
-		}
-	}}
-	@searchOptions(matches)
+			}}
+			@searchOptions(matches)
+		case http.MethodPost:
+			{{
+				queryName := gong.FormValue(ctx, "name")
+			}}
+			{ queryName }
+	}
 }
 
 templ searchOptions(options []string) {
 	<datalist id="options">
 		for _, name := range options {
-			<option value={ name }>test</option>
+			<option value={ name }></option>
 		}
 	</datalist>
 }
