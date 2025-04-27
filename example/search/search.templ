@@ -13,7 +13,7 @@ func Route() gong.RouteBuilder {
 			"Chris Evans",
 			"John Smith",
 			"Jack Williams",
-			"May Winter",
+			"May Flower",
 		},
 	}))
 }
@@ -39,8 +39,7 @@ templ (c SearchComponent) View() {
 		/>
 		@searchOptions([]string{})
 	}
-	@gong.NewTarget() {
-	}
+	@gong.NewTarget()
 }
 
 templ (c SearchComponent) Action() {
