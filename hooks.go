@@ -92,3 +92,7 @@ func TriggerAfterSwap(id string) string {
 func TriggerAfterSwapOOB(id string) string {
 	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }
+
+func ActionHeaders(ctx context.Context, headers ...string) string {
+	return buildHeaders(append(gongHeaders(ctx, GongRequestTypeAction), headers...))
+}

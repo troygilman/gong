@@ -13,6 +13,7 @@ type Form struct {
 	method   string
 	targetID string
 	swap     string
+	trigger  string
 	attrs    templ.Attributes
 }
 
@@ -57,6 +58,11 @@ func (form Form) WithSwap(swap string) Form {
 	return form
 }
 
+func (form Form) WithTrigger(trigger string) Form {
+	form.trigger = trigger
+	return form
+}
+
 // Render writes the form's HTML representation to the provided writer.
 // It handles the rendering of the form with all configured attributes.
 // Returns an error if rendering fails.
@@ -82,6 +88,7 @@ templ (form Form) component() {
 			hx-delete={ uri }
 		}
 		hx-swap={ form.swap }
+		hx-trigger={ form.trigger }
 		if form.swap != SwapNone {
 			hx-target={ "#" + TargetID(ctx, form.targetID) }
 		}

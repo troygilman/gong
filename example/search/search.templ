@@ -1,0 +1,70 @@
+package search
+
+import (
+	"github.com/troygilman/gong"
+	"net/http"
+	"strings"
+)
+
+func Route() gong.RouteBuilder {
+	return gong.NewRoute("/", gong.NewComponent(SearchComponent{
+		names: []string{
+			"Sam Goodwill",
+			"Chris Evans",
+			"John Smith",
+			"Jack Williams",
+			"May Winter",
+		},
+	}))
+}
+
+type SearchComponent struct {
+	names []string
+}
+
+templ (c SearchComponent) View() {
+	@gong.NewForm().
+		WithMethod(http.MethodGet).
+		WithSwap(gong.SwapInnerHTML) {
+		<input
+			type="search"
+			name="name"
+			list="options"
+			autocomplete="off"
+			hx-get
+			hx-headers={ gong.ActionHeaders(ctx, "Autocomplete", "true") }
+			hx-target="#options"
+			hx-swap={ gong.SwapOuterHTML }
+			hx-trigger="keydown delay:0.2s"
+		/>
+		@searchOptions([]string{})
+	}
+	@gong.NewTarget() {
+	}
+}
+
+templ (c SearchComponent) Action() {
+	if gong.Request(ctx).Header.Get("Autocomplete") == "true" {
+	}
+	{{
+		queryName := gong.QueryParam(ctx, "name")
+		queryName = strings.ToLower(queryName)
+		matches := []string{}
+		if queryName != "" {
+			for _, name := range c.names {
+				if strings.Contains(strings.ToLower(name), queryName) {
+					matches = append(matches, name)
+				}
+			}
+		}
+	}}
+	@searchOptions(matches)
+}
+
+templ searchOptions(options []string) {
+	<datalist id="options">
+		for _, name := range options {
+			<option value={ name }>test</option>
+		}
+	</datalist>
+}
