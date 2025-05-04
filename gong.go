@@ -83,9 +83,11 @@ func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
 func (g *Gong) setupRoute(route Route) {
 	log.Printf("Route=%s\n", route.FullPath())
 	g.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writer := response_writer.NewResponseWriter(w)
-		requestType := r.Header.Get(HeaderGongRequestType)
-		routeID := r.Header.Get(HeaderGongRouteID)
+		var (
+			writer      = response_writer.NewResponseWriter(w)
+			requestType = r.Header.Get(HeaderGongRequestType)
+			routeID     = r.Header.Get(HeaderGongRouteID)
+		)
 
 		gCtx := gongContext{
 			route:       route,
@@ -101,6 +103,14 @@ func (g *Gong) setupRoute(route Route) {
 		case GongRequestTypeAction:
 			gCtx.route = g.root.Find(routeID)
 		case GongRequestTypeLink:
+			currentUrl, err := getCurrentUrl(r)
+			if err != nil {
+				panic(err)
+			}
+			if currentUrl.EscapedPath() == r.URL.EscapedPath() {
+				w.Header().Set("Hx-Reswap", "none")
+				return
+			}
 		default:
 			gCtx.route = g.root
 		}

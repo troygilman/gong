@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -68,4 +69,8 @@ func buildRealPath(route Route, request *http.Request) string {
 		}
 	}
 	return strings.Join(routePathSplit, "/")
+}
+
+func getCurrentUrl(r *http.Request) (*url.URL, error) {
+	return url.Parse(r.Header.Get("Hx-Current-Url"))
 }
