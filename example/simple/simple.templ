@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/target"
 )
 
 type SimpleComponent struct{}
 
 templ (component SimpleComponent) View() {
-	@gong.NewTarget() {
+	@target.New() {
 		Hello World
 	}
-	@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
+	@form.New().WithSwap(gong.SwapInnerHTML) {
 		<button>
 			Submit
 		</button>

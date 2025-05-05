@@ -1,7 +1,10 @@
-package gong
+package outlet
 
 import (
 	"context"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/internal/gctx"
 	"io"
 )
 
@@ -10,13 +13,13 @@ import (
 // based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
 	oob   bool
-	route Route
+	route gong.Route
 	attrs templ.Attributes
 }
 
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-func NewOutlet() Outlet {
+func New() Outlet {
 	return Outlet{}
 }
 
@@ -25,12 +28,12 @@ func (outlet Outlet) WithAttrs(attrs templ.Attributes) Outlet {
 	return outlet
 }
 
-func (outlet Outlet) withOOB(oob bool) Outlet {
+func (outlet Outlet) WithOOB(oob bool) Outlet {
 	outlet.oob = oob
 	return outlet
 }
 
-func (outlet Outlet) withRoute(route Route) Outlet {
+func (outlet Outlet) WithRoute(route gong.Route) Outlet {
 	outlet.route = route
 	return outlet
 }
@@ -40,7 +43,7 @@ func (outlet Outlet) withRoute(route Route) Outlet {
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 	if outlet.route == nil {
-		if child := getContext(ctx).childRoute; child != nil {
+		if child := gctx.GetContext(ctx).ChildRoute; child != nil {
 			outlet.route = child
 		}
 	}
@@ -49,9 +52,9 @@ func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
 
 templ (outlet Outlet) component() {
 	<div
-		id={ OutletID(ctx) }
+		id={ hooks.OutletID(ctx) }
 		if outlet.oob {
-			hx-swap-oob={ SwapInnerHTML }
+			hx-swap-oob={ gong.SwapInnerHTML }
 		}
 		{ outlet.attrs... }
 	>

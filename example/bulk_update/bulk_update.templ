@@ -3,12 +3,18 @@ package bulk_update
 import (
 	"fmt"
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/button"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 	"strconv"
 )
 
-func Route() gong.RouteBuilder {
-	return gong.NewRoute("/", gong.NewComponent(BulkUpdateComponent{}))
+func Route() route.Builder {
+	return route.New("/", component.New(BulkUpdateComponent{}))
 }
 
 type BulkUpdateComponent struct{}
@@ -16,19 +22,19 @@ type BulkUpdateComponent struct{}
 templ (c BulkUpdateComponent) View() {
 	@styles()
 	<div class="bulk-card">
-		@gong.NewForm().WithSwap(gong.SwapInnerHTML) {
+		@form.New().WithSwap(gong.SwapInnerHTML) {
 			@personFieldSet(0)
 			<button type="submit">Submit</button>
 		}
-		@gong.NewTarget()
+		@target.New()
 	</div>
 }
 
 templ (c BulkUpdateComponent) Action() {
-	switch gong.Request(ctx).Method {
+	switch hooks.Request(ctx).Method {
 		case http.MethodGet:
 			{{
-				index, err := strconv.Atoi(gong.QueryParam(ctx, "index"))
+				index, err := strconv.Atoi(hooks.QueryParam(ctx, "index"))
 				if err != nil {
 					panic(err)
 				}
@@ -37,7 +43,7 @@ templ (c BulkUpdateComponent) Action() {
 		case http.MethodPost:
 			{{
 				var data PostFormData
-				if err := gong.Bind(ctx, &data); err != nil {
+				if err := hooks.Bind(ctx, &data); err != nil {
 					panic(err)
 				}
 			}}
@@ -56,7 +62,7 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
-	@gong.NewButton().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this").WithAttrs(templ.Attributes{"class": "add-btn"}) {
+	@button.New().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this").WithAttrs(templ.Attributes{"class": "add-btn"}) {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+
 	}

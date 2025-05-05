@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
@@ -11,7 +14,7 @@ type listView struct {
 }
 
 templ (view listView) Action() {
-	switch gong.Request(ctx).Method {
+	switch hooks.Request(ctx).Method {
 		case http.MethodGet:
 			{{
 			users := view.db.ReadAll()
@@ -21,13 +24,13 @@ templ (view listView) Action() {
 			}
 		case http.MethodPost:
 			{{
-			name := gong.FormValue(ctx, "name")
-			user := userData{
-				name: name,
-			}
-			if err := view.db.Create(user); err != nil {
-				return nil
-			}
+				name := hooks.FormValue(ctx, "name")
+				user := userData{
+					name: name,
+				}
+				if err := view.db.Create(user); err != nil {
+					return nil
+				}
 			}}
 			@view.UserComponent.WithLoaderData(user)
 	}
@@ -35,10 +38,10 @@ templ (view listView) Action() {
 
 templ (view listView) View() {
 	<div>
-		@gong.NewForm().WithSwap(gong.SwapBeforeEnd) {
+		@form.New().WithSwap(gong.SwapBeforeEnd) {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
 		}
-		@gong.NewTarget().WithTrigger(gong.TriggerLoad)
+		@target.New().WithTrigger(gong.TriggerLoad)
 	</div>
 }

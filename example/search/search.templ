@@ -2,12 +2,17 @@ package search
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 	"strings"
 )
 
-func Route() gong.RouteBuilder {
-	return gong.NewRoute("/", gong.NewComponent(SearchComponent{
+func Route() route.Builder {
+	return route.New("/", component.New(SearchComponent{
 		names: []string{
 			"Sam Goodwill",
 			"Chris Evans",
@@ -23,7 +28,7 @@ type SearchComponent struct {
 }
 
 templ (c SearchComponent) View() {
-	@gong.NewForm().
+	@form.New().
 		WithMethod(http.MethodPost).
 		WithSwap(gong.SwapInnerHTML) {
 		<input
@@ -32,21 +37,21 @@ templ (c SearchComponent) View() {
 			list="options"
 			autocomplete="off"
 			hx-get
-			hx-headers={ gong.ActionHeaders(ctx) }
+			hx-headers={ hooks.ActionHeaders(ctx) }
 			hx-target="#options"
 			hx-swap={ gong.SwapOuterHTML }
 			hx-trigger="input changed delay:200ms"
 		/>
 		@searchOptions([]string{})
 	}
-	@gong.NewTarget()
+	@target.New()
 }
 
 templ (c SearchComponent) Action() {
-	switch gong.Request(ctx).Method {
+	switch hooks.Request(ctx).Method {
 		case http.MethodGet:
 			{{
-			queryName := gong.QueryParam(ctx, "name")
+			queryName := hooks.QueryParam(ctx, "name")
 			queryName = strings.ToLower(queryName)
 			matches := []string{}
 			if queryName != "" {
@@ -60,7 +65,7 @@ templ (c SearchComponent) Action() {
 			@searchOptions(matches)
 		case http.MethodPost:
 			{{
-				queryName := gong.FormValue(ctx, "name")
+				queryName := hooks.FormValue(ctx, "name")
 			}}
 			{ queryName }
 	}

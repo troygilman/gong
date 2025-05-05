@@ -1,8 +1,10 @@
-package gong
+package button
 
 import (
 	"context"
 	"fmt"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/hooks"
 	"io"
 	"net/http"
 )
@@ -21,10 +23,10 @@ type Button struct {
 
 // NewButton creates a new Button instance with default settings.
 // By default, it uses POST method, no swap behavior, and does not push a URL.
-func NewButton() Button {
+func New() Button {
 	return Button{
 		method:  http.MethodPost,
-		swap:    SwapNone,
+		swap:    gong.SwapNone,
 		pushUrl: "false",
 	}
 }
@@ -86,9 +88,8 @@ func (button Button) Render(ctx context.Context, w io.Writer) error {
 
 templ (button Button) component() {
 	{{
-		headers := append(gongHeaders(ctx, GongRequestTypeAction), button.headers...)
 		if button.target == nil {
-			target := fmt.Sprintf("#%s", TargetID(ctx, ""))
+			target := fmt.Sprintf("#%s", hooks.TargetID(ctx, ""))
 			button.target = &target
 		}
 	}}
@@ -106,12 +107,12 @@ templ (button Button) component() {
 			hx-delete
 		}
 		hx-swap={ button.swap }
-		if button.swap != SwapNone {
+		if button.swap != gong.SwapNone {
 			hx-target={ *button.target }
 		}
 		hx-include="this"
 		hx-push-url={ button.pushUrl }
-		hx-headers={ buildHeaders(headers) }
+		hx-headers={ hooks.ActionHeaders(ctx, button.headers...) }
 		type="button"
 		{ button.attrs... }
 	>

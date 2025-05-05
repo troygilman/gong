@@ -1,21 +1,26 @@
 package nested_components
 
-import "github.com/troygilman/gong"
+import (
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/target"
+)
 
 type ParentComponent struct {
 	ChildComponent gong.Component
 }
 
 func NewParentComponent(child gong.Component) gong.Component {
-	return gong.NewComponent(ParentComponent{
+	return component.New(ParentComponent{
 		ChildComponent: child,
 	})
 }
 
 templ (c ParentComponent) View() {
 	<div class={ BoxClass() }>
-		@gong.NewTarget()
-		@gong.NewForm().WithSwap(gong.SwapOuterHTML) {
+		@target.New()
+		@form.New().WithSwap(gong.SwapOuterHTML) {
 			<button>Click</button>
 		}
 		@c.ChildComponent

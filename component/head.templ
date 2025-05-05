@@ -1,15 +1,4 @@
-package gong
-
-type indexComponent struct{}
-
-templ (c indexComponent) View() {
-	<html>
-		@getContext(ctx).childRoute.Component().Head()
-		<body>
-			@NewOutlet()
-		</body>
-	</html>
-}
+package component
 
 templ DefaultHead() {
 	<head>

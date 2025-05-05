@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/link"
+	"github.com/troygilman/gong/target"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,7 +18,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := gong.FormValue(ctx, "name")
+	name := hooks.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -23,17 +27,17 @@ func (view userView) Loader(ctx context.Context) any {
 }
 
 templ (view userView) Action() {
-	switch gong.Request(ctx).Method {
+	switch hooks.Request(ctx).Method {
 		case http.MethodDelete:
 			{{
-				name := gong.FormValue(ctx, "name")
+				name := hooks.FormValue(ctx, "name")
 				view.db.Delete(name)
 			}}
 		case http.MethodPatch:
 			{{
-				log.Println(gong.PathParam(ctx, "name"))
-				name := gong.FormValue(ctx, "name")
-				balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
+				log.Println(hooks.PathParam(ctx, "name"))
+				name := hooks.FormValue(ctx, "name")
+				balance, err := strconv.Atoi(hooks.FormValue(ctx, "balance"))
 				if err != nil {
 					panic(err)
 				}
@@ -48,14 +52,14 @@ templ (view userView) Action() {
 
 templ (view userView) View() {
 	{{
-	user := gong.LoaderData[userData](ctx)
+	user := hooks.LoaderData[userData](ctx)
 	attrs := templ.Attributes{
 		"class": boxClassName(),
 	}
 	}}
-	@gong.NewTarget().WithID(user.name).WithAttrs(attrs) {
+	@target.New().WithID(user.name).WithAttrs(attrs) {
 		{ user.name }
-		@gong.NewForm().
+		@form.New().
 			WithMethod(http.MethodPatch).
 			WithTargetID(user.name).
 			WithSwap(gong.SwapOuterHTML) {
@@ -63,14 +67,14 @@ templ (view userView) View() {
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@gong.NewForm().
+		@form.New().
 			WithMethod(http.MethodDelete).
 			WithTargetID(user.name).
 			WithSwap(gong.SwapOuterHTML) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}
-		@gong.NewLink("/user/" + user.name) {
+		@link.New("/user/" + user.name) {
 			LINK
 		}
 	}

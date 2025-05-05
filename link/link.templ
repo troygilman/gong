@@ -1,7 +1,11 @@
-package gong
+package link
 
-import "context"
-import "io"
+import (
+	"context"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/hooks"
+	"io"
+)
 
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
@@ -16,10 +20,10 @@ type Link struct {
 
 // NewLink creates a new Link instance with the specified path.
 // The path should be a valid route path within the application.
-func NewLink(path string) Link {
+func New(path string) Link {
 	return Link{
 		path:    path,
-		trigger: TriggerClick,
+		trigger: gong.TriggerClick,
 	}
 }
 
@@ -51,16 +55,13 @@ func (link Link) Render(ctx context.Context, w io.Writer) error {
 }
 
 templ (link Link) component() {
-	{{
-		headers := append(gongHeaders(ctx, GongRequestTypeLink), link.headers...)
-	}}
 	<a
 		id={ link.id }
 		href={ templ.URL(link.path) }
 		hx-boost="true"
 		hx-trigger={ link.trigger }
 		hx-swap="none"
-		hx-headers={ buildHeaders(headers) }
+		hx-headers={ hooks.LinkHeaders(ctx, link.headers...) }
 		hx-push-url="true"
 		{ link.attrs... }
 	>

@@ -10,6 +10,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
@@ -39,7 +42,7 @@ func (view listView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch gong.Request(ctx).Method {
+		switch hooks.Request(ctx).Method {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
@@ -49,7 +52,7 @@ func (view listView) Action() templ.Component {
 				}
 			}
 		case http.MethodPost:
-			name := gong.FormValue(ctx, "name")
+			name := hooks.FormValue(ctx, "name")
 			user := userData{
 				name: name,
 			}
@@ -108,11 +111,11 @@ func (view listView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewForm().WithSwap(gong.SwapBeforeEnd).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = form.New().WithSwap(gong.SwapBeforeEnd).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.NewTarget().WithTrigger(gong.TriggerLoad).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = target.New().WithTrigger(gong.TriggerLoad).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
