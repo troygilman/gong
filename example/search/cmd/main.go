@@ -1,15 +1,13 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/troygilman/gong/example/search"
-	"github.com/troygilman/gong/mux"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
-	g := mux.New().Routes(search.Route())
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	svr := server.New().Routes(search.Route())
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

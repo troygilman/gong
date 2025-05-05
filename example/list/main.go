@@ -1,11 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/mux"
 	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
@@ -15,7 +13,7 @@ func main() {
 		db: db,
 	})
 
-	g := mux.New().Routes(
+	svr := server.New().Routes(
 		route.New("/", component.New(homeView{})).WithRoutes(
 			route.New("users", component.New(listView{
 				db:            db,
@@ -28,7 +26,7 @@ func main() {
 		),
 	)
 
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

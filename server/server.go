@@ -1,4 +1,4 @@
-package mux
+package server
 
 import (
 	"log"
@@ -15,7 +15,7 @@ import (
 
 // Gong is the main framework instance that handles routing and request processing.
 // It implements the http.Handler interface and manages the application's routes.
-type Gong struct {
+type Server struct {
 	mux         *http.ServeMux
 	rootBuilder route.Builder
 	root        gong.Route
@@ -23,8 +23,8 @@ type Gong struct {
 
 // New creates a new Gong instance with the specified HTTP mux.
 // The mux is used for routing HTTP requests to the appropriate handlers.
-func New() *Gong {
-	return &Gong{
+func New() *Server {
+	return &Server{
 		mux:         http.NewServeMux(),
 		rootBuilder: route.New("", component.New(indexComponent{})),
 	}
@@ -33,19 +33,19 @@ func New() *Gong {
 // Routes registers one or more route builders with the Gong instance.
 // Each route builder is built and set up with appropriate handlers.
 // Returns the Gong instance for method chaining.
-func (g *Gong) Routes(builders ...route.Builder) *Gong {
-	g.rootBuilder = g.rootBuilder.WithRoutes(builders...)
+func (svr *Server) Routes(builders ...route.Builder) *Server {
+	svr.rootBuilder = svr.rootBuilder.WithRoutes(builders...)
 
-	g.root = g.rootBuilder.Build(nil, "")
-	for i := range g.root.NumChildren() {
-		g.setupRoute(g.root.Child(i))
+	svr.root = svr.rootBuilder.Build(nil, "")
+	for i := range svr.root.NumChildren() {
+		svr.setupRoute(svr.root.Child(i))
 	}
-	return g
+	return svr
 }
 
-func (g *Gong) setupRoute(route gong.Route) {
+func (svr *Server) setupRoute(route gong.Route) {
 	log.Printf("Route=%s\n", route.FullPath())
-	g.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	svr.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			writer      = response_writer.NewResponseWriter(w)
 			requestType = r.Header.Get(gong.HeaderGongRequestType)
@@ -64,7 +64,7 @@ func (g *Gong) setupRoute(route gong.Route) {
 
 		switch requestType {
 		case gong.GongRequestTypeAction:
-			gCtx.Route = g.root.Find(routeID)
+			gCtx.Route = svr.root.Find(routeID)
 		case gong.GongRequestTypeLink:
 			currentUrl, err := getCurrentUrl(r)
 			if err != nil {
@@ -75,7 +75,7 @@ func (g *Gong) setupRoute(route gong.Route) {
 				return
 			}
 		default:
-			gCtx.Route = g.root
+			gCtx.Route = svr.root
 		}
 
 		if gCtx.Route == nil {
@@ -92,18 +92,16 @@ func (g *Gong) setupRoute(route gong.Route) {
 	}))
 
 	for i := range route.NumChildren() {
-		g.setupRoute(route.Child(i))
+		svr.setupRoute(route.Child(i))
 	}
 }
 
-func (g *Gong) Handle(pattern string, handler http.Handler) {
-	g.mux.Handle(pattern, handler)
+func (svr *Server) Handle(pattern string, handler http.Handler) {
+	svr.mux.Handle(pattern, handler)
 }
 
-// ServeHTTP implements the http.Handler interface.
-// It delegates request handling to the underlying mux.
-func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	g.mux.ServeHTTP(w, r)
+func (svr *Server) Run(addr string) error {
+	return http.ListenAndServe(addr, svr.mux)
 }
 
 func getCurrentUrl(r *http.Request) (*url.URL, error) {
