@@ -96,6 +96,10 @@ func (g *Gong) setupRoute(route gong.Route) {
 	}
 }
 
+func (g *Gong) Handle(pattern string, handler http.Handler) {
+	g.mux.Handle(pattern, handler)
+}
+
 // ServeHTTP implements the http.Handler interface.
 // It delegates request handling to the underlying mux.
 func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
