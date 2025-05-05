@@ -1,8 +1,6 @@
 package route
 
 import (
-	"strconv"
-
 	"github.com/troygilman/gong"
 )
 
@@ -32,16 +30,15 @@ func (builder Builder) WithRoutes(routes ...Builder) Builder {
 	return builder
 }
 
-func (builder Builder) Build(parent gong.Route, id string) gong.Route {
+func (builder Builder) Build(parent gong.Route) gong.Route {
 	route := &gongRoute{
 		component: builder.component,
 		path:      builder.path,
 		parent:    parent,
-		id:        id,
 	}
 
 	for i, childBuilder := range builder.children {
-		child := childBuilder.Build(route, strconv.Itoa(len(route.children)))
+		child := childBuilder.Build(route)
 		route.children = append(route.children, child)
 		if i == 0 {
 			route.defaultChild = child

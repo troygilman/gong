@@ -8,8 +8,11 @@ import (
 type indexComponent struct{}
 
 templ (c indexComponent) View() {
+	{{
+		gCtx := gctx.GetContext(ctx)
+	}}
 	<html>
-		@gctx.GetContext(ctx).ChildRoute.Component().Head()
+		@gCtx.Route.Child(gCtx.ChildRouteIndex).Component().Head()
 		<body>
 			@outlet.New()
 		</body>

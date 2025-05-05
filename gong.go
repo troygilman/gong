@@ -128,9 +128,6 @@ type Route interface {
 	// FullPath returns the full path of this route, including all parent paths.
 	FullPath() string
 
-	// ID returns the unique identifier for this route.
-	ID() string
-
 	// Depth returns the depth of this route in the routing tree.
 	Depth() int
 

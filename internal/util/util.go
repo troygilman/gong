@@ -24,7 +24,7 @@ func GongHeaders(ctx context.Context, requestType string) []string {
 		gong.HeaderGongRequestType,
 		requestType,
 		gong.HeaderGongRouteID,
-		gCtx.Route.ID(),
+		gCtx.CurrentRouteID,
 		gong.HeaderGongComponentID,
 		gCtx.ComponentID,
 	}

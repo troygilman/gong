@@ -68,17 +68,18 @@ func Redirect(ctx context.Context, path string) error {
 // This is useful when working with nested routes and needing to access
 // the currently active child route within a parent component.
 func ChildRoute(ctx context.Context) gong.Route {
-	return gctx.GetContext(ctx).ChildRoute
+	gCtx := gctx.GetContext(ctx)
+	return gCtx.Route.Child(gCtx.ChildRouteIndex)
 }
 
 func OutletID(ctx context.Context) string {
 	gCtx := gctx.GetContext(ctx)
-	return "gong_" + gCtx.Route.ID() + "_outlet"
+	return "gong_" + gCtx.CurrentRouteID + "_outlet"
 }
 
 func TargetID(ctx context.Context, id string) string {
 	gCtx := gctx.GetContext(ctx)
-	prefix := "gong_" + gCtx.Route.ID()
+	prefix := "gong_" + gCtx.CurrentRouteID
 	if gCtx.ComponentID != "" {
 		prefix += "_" + gCtx.ComponentID
 	}

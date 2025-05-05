@@ -5,7 +5,9 @@ import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/internal/gctx"
+	"github.com/troygilman/gong/internal/util"
 	"io"
+	"strconv"
 )
 
 // Outlet represents a container component that renders child routes.
@@ -13,7 +15,6 @@ import (
 // based on the current URL path. Outlets are essential for nested routing.
 type Outlet struct {
 	oob   bool
-	route gong.Route
 	attrs templ.Attributes
 }
 
@@ -33,20 +34,10 @@ func (outlet Outlet) WithOOB(oob bool) Outlet {
 	return outlet
 }
 
-func (outlet Outlet) WithRoute(route gong.Route) Outlet {
-	outlet.route = route
-	return outlet
-}
-
 // Render writes the outlet's HTML representation to the provided writer.
 // It handles the rendering of the outlet and its child route components.
 // Returns an error if rendering fails.
 func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
-	if outlet.route == nil {
-		if child := gctx.GetContext(ctx).ChildRoute; child != nil {
-			outlet.route = child
-		}
-	}
 	return outlet.component().Render(ctx, w)
 }
 
@@ -58,8 +49,13 @@ templ (outlet Outlet) component() {
 		}
 		{ outlet.attrs... }
 	>
-		if outlet.route != nil {
-			@outlet.route
-		}
+		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+			gCtx := gctx.GetContext(ctx)
+			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
+				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
+				return util.Render(ctx, gCtx, w, child)
+			}
+			return nil
+		})
 	</div>
 }

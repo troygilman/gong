@@ -58,7 +58,9 @@ templ (view userView) View() {
 	}
 	}}
 	@target.New().WithID(user.name).WithAttrs(attrs) {
-		{ user.name }
+		@link.New("/user/" + user.name) {
+			{ user.name }
+		}
 		@form.New().
 			WithMethod(http.MethodPatch).
 			WithTargetID(user.name).
@@ -73,9 +75,6 @@ templ (view userView) View() {
 			WithSwap(gong.SwapOuterHTML) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
-		}
-		@link.New("/user/" + user.name) {
-			LINK
 		}
 	}
 }

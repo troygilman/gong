@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
@@ -36,25 +37,22 @@ func New() *Server {
 func (svr *Server) Routes(builders ...route.Builder) *Server {
 	svr.rootBuilder = svr.rootBuilder.WithRoutes(builders...)
 
-	svr.root = svr.rootBuilder.Build(nil, "")
+	svr.root = svr.rootBuilder.Build(nil)
 	for i := range svr.root.NumChildren() {
-		svr.setupRoute(svr.root.Child(i))
+		svr.setupRoute(svr.root.Child(i), strconv.Itoa(i))
 	}
 	return svr
 }
 
-func (svr *Server) setupRoute(route gong.Route) {
+func (svr *Server) setupRoute(route gong.Route, routeID string) {
 	log.Printf("Route=%s\n", route.FullPath())
 	svr.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			writer      = response_writer.NewResponseWriter(w)
 			requestType = r.Header.Get(gong.HeaderGongRequestType)
-			routeID     = r.Header.Get(gong.HeaderGongRouteID)
 		)
 
 		gCtx := gctx.Context{
-			Route:       route,
-			RouteID:     route.ID(),
 			Request:     r,
 			Writer:      writer,
 			Action:      requestType == gong.GongRequestTypeAction,
@@ -64,7 +62,9 @@ func (svr *Server) setupRoute(route gong.Route) {
 
 		switch requestType {
 		case gong.GongRequestTypeAction:
-			gCtx.Route = svr.root.Find(routeID)
+			gCtx.RequestRouteID = routeID
+			gCtx.CurrentRouteID = r.Header.Get(gong.HeaderGongRouteID)
+			gCtx.Route = svr.root.Find(gCtx.CurrentRouteID)
 		case gong.GongRequestTypeLink:
 			currentUrl, err := getCurrentUrl(r)
 			if err != nil {
@@ -74,9 +74,16 @@ func (svr *Server) setupRoute(route gong.Route) {
 				w.Header().Set("Hx-Reswap", "none")
 				return
 			}
+			gCtx.RequestRouteID = routeID
+			gCtx.CurrentRouteID = routeID[:len(routeID)-1]
+			gCtx.Route = route.Parent()
 		default:
+			gCtx.RequestRouteID = routeID
+			gCtx.CurrentRouteID = ""
 			gCtx.Route = svr.root
 		}
+
+		// log.Println("RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
 
 		if gCtx.Route == nil {
 			panic("route is nil")
@@ -92,7 +99,7 @@ func (svr *Server) setupRoute(route gong.Route) {
 	}))
 
 	for i := range route.NumChildren() {
-		svr.setupRoute(route.Child(i))
+		svr.setupRoute(route.Child(i), routeID+strconv.Itoa(i))
 	}
 }
 

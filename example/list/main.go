@@ -19,7 +19,7 @@ func main() {
 				db:            db,
 				UserComponent: userComponent,
 			})),
-			route.New("user/{name}", component.New(testView{
+			route.New("user/{name}/", component.New(testView{
 				db:            db,
 				UserComponent: userComponent,
 			})),

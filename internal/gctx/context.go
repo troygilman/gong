@@ -13,16 +13,17 @@ type contextKeyType int
 const contextKey = contextKeyType(0)
 
 type Context struct {
-	Route       gong.Route
-	ChildRoute  gong.Route
-	Component   gong.Component
-	Request     *http.Request
-	Writer      *response_writer.ResponseWriter
-	RouteID     string
-	ComponentID string
-	Path        string
-	Action      bool
-	Link        bool
+	Route           gong.Route
+	ChildRouteIndex int
+	Component       gong.Component
+	Request         *http.Request
+	Writer          *response_writer.ResponseWriter
+	RequestRouteID  string
+	CurrentRouteID  string
+	ComponentID     string
+	Path            string
+	Action          bool
+	Link            bool
 }
 
 func GetContext(ctx context.Context) Context {

@@ -17,34 +17,24 @@ type gongRoute struct {
 	children     []gong.Route
 	defaultChild gong.Route
 	parent       gong.Route
-	id           string
 }
 
 func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := gctx.GetContext(ctx)
 	gCtx.Route = route
-	// gCtx.Path = buildRealPath(route, gCtx.request)
+	gCtx.ChildRouteIndex = 0
 
 	// log.Printf("Rendering Route: %+v\n", gCtx)
 	if len(route.children) > 0 {
 		depth := route.Depth()
-		if len(gCtx.RouteID) > depth {
-			index := int(gCtx.RouteID[depth] - '0')
-			gCtx.ChildRoute = route.Child(index)
-		} else {
-			gCtx.ChildRoute = route.children[0]
+		if len(gCtx.RequestRouteID) > depth {
+			gCtx.ChildRouteIndex = int(gCtx.RequestRouteID[depth] - '0')
 		}
 	}
 
 	if gCtx.Link {
-		parent := route.Parent()
-		if parent == nil {
-			panic("could not find parent")
-		}
-		gCtx.Route = parent
-		gCtx.ChildRoute = route
 		gCtx.Link = false
-		return util.Render(ctx, gCtx, w, outlet.New().WithRoute(route).WithOOB(true))
+		return util.Render(ctx, gCtx, w, outlet.New().WithOOB(true))
 	}
 
 	if gCtx.Action {
@@ -72,13 +62,6 @@ func (route *gongRoute) Find(id string) gong.Route {
 		r = r.Child(int(index - '0'))
 	}
 	return r
-}
-
-func (route *gongRoute) ID() string {
-	if route.parent != nil {
-		return route.parent.ID() + route.id
-	}
-	return route.id
 }
 
 func (route *gongRoute) NumChildren() int {
