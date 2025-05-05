@@ -2,7 +2,6 @@ package hooks
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/troygilman/gong"
@@ -87,14 +86,6 @@ func TargetID(ctx context.Context, id string) string {
 		prefix += "_" + id
 	}
 	return prefix
-}
-
-func TriggerAfterSwap(id string) string {
-	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
-}
-
-func TriggerAfterSwapOOB(id string) string {
-	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }
 
 func ActionHeaders(ctx context.Context, headers ...string) string {

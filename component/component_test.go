@@ -4,10 +4,11 @@ package component
 // 	"testing"
 
 // 	"github.com/troygilman/gong/internal/assert"
+// 	"github.com/troygilman/gong/internal/test_util"
 // )
 
 // func TestComponentRenderView(t *testing.T) {
-// 	mock := mockComponent{
+// 	mock := test_util.MockComponent{
 // 		view: textTemplComponent{"view"},
 // 	}
 

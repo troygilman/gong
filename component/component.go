@@ -95,7 +95,7 @@ func (component gongComponent) Loader(ctx context.Context) any {
 
 func (component gongComponent) Head() templ.Component {
 	if component.head == nil {
-		return DefaultHead()
+		return defaultHead()
 	}
 	return component.head.Head()
 }

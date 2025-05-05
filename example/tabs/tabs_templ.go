@@ -9,6 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/link"
@@ -70,7 +71,7 @@ func (c TabsComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = target.New().WithTrigger(hooks.TriggerAfterSwapOOB(hooks.OutletID(ctx))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = target.New().WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -198,7 +199,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 52, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 53, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -271,7 +272,7 @@ func (c TabContentComponent) View() templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 115, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 116, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

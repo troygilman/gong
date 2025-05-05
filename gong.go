@@ -2,14 +2,11 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/a-h/templ"
 )
-
-type contextKeyType int
-
-const contextKey = contextKeyType(0)
 
 // HTTP header keys used by Gong for request handling and routing
 const (
@@ -133,4 +130,12 @@ type Route interface {
 
 	// Component returns the component associated with this route.
 	Component() Component
+}
+
+func TriggerAfterSwap(id string) string {
+	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
+}
+
+func TriggerAfterSwapOOB(id string) string {
+	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }

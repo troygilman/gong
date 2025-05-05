@@ -1,6 +1,7 @@
 package tabs
 
 import (
+	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/link"
@@ -21,7 +22,7 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@target.New().WithTrigger(hooks.TriggerAfterSwapOOB(hooks.OutletID(ctx))) {
+	@target.New().WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx))) {
 		@tabList()
 	}
 	@outlet.New().WithAttrs(templ.Attributes{"style": "border-style: solid"})
