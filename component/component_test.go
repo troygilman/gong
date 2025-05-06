@@ -1,63 +1,62 @@
 package component
 
-// import (
-// 	"testing"
+import (
+	"testing"
 
-// 	"github.com/troygilman/gong/internal/assert"
-// 	"github.com/troygilman/gong/internal/test_util"
-// )
+	"github.com/troygilman/gong/internal/assert"
+	"github.com/troygilman/gong/internal/gctx"
+	"github.com/troygilman/gong/internal/test_util"
+)
 
-// func TestComponentRenderView(t *testing.T) {
-// 	mock := test_util.MockComponent{
-// 		view: textTemplComponent{"view"},
-// 	}
+func TestComponentRenderView(t *testing.T) {
+	mock := test_util.MockComponent{
+		MockView: test_util.TextTemplComponent{Text: "view"},
+	}
 
-// 	component := NewComponent(mock)
+	component := New(mock)
 
-// 	testRender(t, component, gongContext{}, "view")
-// }
+	test_util.TestRender(t, component, gctx.Context{}, "view")
+}
 
-// func TestComponentRenderAction(t *testing.T) {
-// 	mock := mockComponent{
-// 		action: textTemplComponent{"action"},
-// 	}
+func TestComponentRenderAction(t *testing.T) {
+	mock := test_util.MockComponent{
+		MockAction: test_util.TextTemplComponent{Text: "action"},
+	}
 
-// 	component := NewComponent(mock)
+	component := New(mock)
 
-// 	testRender(t, component.Action(), gongContext{}, "action")
-// }
+	test_util.TestRender(t, component.Action(), gctx.Context{}, "action")
+}
 
-// func TestComponentRenderAction_withLoader(t *testing.T) {
-// 	mock := mockComponent{
-// 		action:     loaderTemplComponent{},
-// 		loaderData: "action",
-// 	}
+func TestComponentRenderAction_withLoader(t *testing.T) {
+	mock := test_util.MockComponent{
+		MockAction:     test_util.LoaderTemplComponent{},
+		MockLoaderData: "action",
+	}
 
-// 	component := NewComponent(mock)
+	component := New(mock)
 
-// 	testRender(t, component.Action(), gongContext{}, "action")
-// }
+	test_util.TestRender(t, component.Action(), gctx.Context{}, "action")
+}
 
-// func TestComponentFind(t *testing.T) {
-// 	mock := mockComponent{}
+func TestComponentFind(t *testing.T) {
+	mock := test_util.MockComponent{}
 
-// 	component := NewComponent(mock).WithID("mock")
+	component := New(mock, WithID("mock"))
 
-// 	foundComponent, ok := component.Find([]string{"mock"})
+	foundComponent, ok := component.Find("mock")
 
-// 	assert.Equals(t, true, ok)
-// 	assert.Equals(t, component, foundComponent)
-// }
+	assert.Equals(t, true, ok)
+	assert.Equals(t, component, foundComponent)
+}
 
-// func TestComponentFind_withNestedComponent(t *testing.T) {
-// 	child := NewComponent(mockComponent{}).WithID("mock")
+func TestComponentFind_withNestedComponent(t *testing.T) {
+	child := New(test_util.MockComponent{}, WithID("mock"))
 
-// 	component := NewComponent(parentComponent{
-// 		Child: child,
-// 	}).WithID("parent")
+	component := New(test_util.ParentComponent{Child: child}, WithID("parent"))
 
-// 	foundComponent, ok := component.Find([]string{"parent", "mock"})
+	foundComponent, ok := component.Find("parent_mock")
 
-// 	assert.Equals(t, true, ok)
-// 	assert.Equals(t, child, foundComponent)
-// }
+	assert.Equals(t, true, ok)
+	assert.Equals(t, child, foundComponent)
+}
