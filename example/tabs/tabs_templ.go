@@ -16,14 +16,15 @@ import (
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
+	"log"
 )
 
-func Route() route.Builder {
-	return route.New("/", component.New(TabsComponent{})).WithRoutes(
+func Route() gong.Route {
+	return route.New("/", component.New(TabsComponent{}), route.WithChildren(
 		route.New("1", component.New(TabContentComponent{"Tab 1 Content"})),
 		route.New("2", component.New(TabContentComponent{"Tab 2 Content"})),
 		route.New("3", component.New(TabContentComponent{"Tab 3 Content"})),
-	)
+	))
 }
 
 type TabsComponent struct{}
@@ -135,6 +136,7 @@ func tabList() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 
 		activeTab := hooks.ChildRoute(ctx).Path()
+		log.Println(activeTab)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"tab-list\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -199,7 +201,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 53, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 55, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -272,7 +274,7 @@ func (c TabContentComponent) View() templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 116, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 118, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

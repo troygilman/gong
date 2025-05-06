@@ -13,8 +13,9 @@ func main() {
 		db: db,
 	})
 
-	svr := server.New().Routes(
-		route.New("/", component.New(homeView{})).WithRoutes(
+	svr := server.New()
+	svr.Route(route.New("/", component.New(homeView{}),
+		route.WithChildren(
 			route.New("users", component.New(listView{
 				db:            db,
 				UserComponent: userComponent,
@@ -24,7 +25,7 @@ func main() {
 				UserComponent: userComponent,
 			})),
 		),
-	)
+	))
 
 	if err := svr.Run(":8080"); err != nil {
 		panic(err)

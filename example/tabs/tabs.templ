@@ -8,14 +8,15 @@ import (
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
+	"log"
 )
 
-func Route() route.Builder {
-	return route.New("/", component.New(TabsComponent{})).WithRoutes(
+func Route() gong.Route {
+	return route.New("/", component.New(TabsComponent{}), route.WithChildren(
 		route.New("1", component.New(TabContentComponent{"Tab 1 Content"})),
 		route.New("2", component.New(TabContentComponent{"Tab 2 Content"})),
 		route.New("3", component.New(TabContentComponent{"Tab 3 Content"})),
-	)
+	))
 }
 
 type TabsComponent struct{}
@@ -35,6 +36,7 @@ templ (c TabsComponent) Action() {
 templ tabList() {
 	{{
 		activeTab := hooks.ChildRoute(ctx).Path()
+		log.Println(activeTab)
 	}}
 	<div class="tab-list">
 		@tab("Tab 1", "1", activeTab)

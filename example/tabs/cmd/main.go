@@ -6,7 +6,8 @@ import (
 )
 
 func main() {
-	svr := server.New().Routes(tabs.Route())
+	svr := server.New()
+	svr.Route(tabs.Route())
 	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}

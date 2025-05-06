@@ -6,7 +6,8 @@ import (
 )
 
 func main() {
-	svr := server.New().Routes(nested_components.Route())
+	svr := server.New()
+	svr.Route(nested_components.Route())
 	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}

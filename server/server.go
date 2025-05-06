@@ -17,36 +17,51 @@ import (
 // Gong is the main framework instance that handles routing and request processing.
 // It implements the http.Handler interface and manages the application's routes.
 type Server struct {
-	mux         *http.ServeMux
-	rootBuilder route.Builder
-	root        gong.Route
+	mux    *http.ServeMux
+	routes []gong.Route
 }
 
 // New creates a new Gong instance with the specified HTTP mux.
 // The mux is used for routing HTTP requests to the appropriate handlers.
 func New() *Server {
 	return &Server{
-		mux:         http.NewServeMux(),
-		rootBuilder: route.New("", component.New(indexComponent{})),
+		mux: http.NewServeMux(),
 	}
+}
+
+func (svr *Server) Handle(pattern string, handler http.Handler) {
+	svr.mux.Handle(pattern, handler)
 }
 
 // Routes registers one or more route builders with the Gong instance.
 // Each route builder is built and set up with appropriate handlers.
 // Returns the Gong instance for method chaining.
-func (svr *Server) Routes(builders ...route.Builder) *Server {
-	svr.rootBuilder = svr.rootBuilder.WithRoutes(builders...)
-
-	svr.root = svr.rootBuilder.Build(nil)
-	for i := range svr.root.NumChildren() {
-		svr.setupRoute(svr.root.Child(i), strconv.Itoa(i))
-	}
-	return svr
+func (svr *Server) Route(route gong.Route) {
+	svr.routes = append(svr.routes, route)
 }
 
-func (svr *Server) setupRoute(route gong.Route, routeID string) {
-	log.Printf("Route=%s\n", route.FullPath())
-	svr.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (svr *Server) Run(addr string) error {
+	root := route.New("", component.New(indexComponent{}), route.WithChildren(svr.routes...))
+
+	for i := range root.NumChildren() {
+		child := root.Child(i)
+		svr.setupRoute(root, root, child, strconv.Itoa(i), child.Path(), 1)
+	}
+
+	return http.ListenAndServe(addr, svr.mux)
+}
+
+func (svr *Server) setupRoute(
+	root gong.Route,
+	parent gong.Route,
+	route gong.Route,
+	routeID string,
+	path string,
+	depth int,
+) {
+	log.Printf("Route=%s\n", path)
+
+	svr.mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			writer      = response_writer.NewResponseWriter(w)
 			requestType = r.Header.Get(gong.HeaderGongRequestType)
@@ -64,7 +79,7 @@ func (svr *Server) setupRoute(route gong.Route, routeID string) {
 		case gong.GongRequestTypeAction:
 			gCtx.RequestRouteID = routeID
 			gCtx.CurrentRouteID = r.Header.Get(gong.HeaderGongRouteID)
-			gCtx.Route = svr.root.Find(gCtx.CurrentRouteID)
+			gCtx.Route, gCtx.Depth = root.Find(gCtx.CurrentRouteID)
 		case gong.GongRequestTypeLink:
 			currentUrl, err := getCurrentUrl(r)
 			if err != nil {
@@ -76,14 +91,16 @@ func (svr *Server) setupRoute(route gong.Route, routeID string) {
 			}
 			gCtx.RequestRouteID = routeID
 			gCtx.CurrentRouteID = routeID[:len(routeID)-1]
-			gCtx.Route = route.Parent()
+			gCtx.Depth = depth - 1
+			gCtx.Route = parent
 		default:
 			gCtx.RequestRouteID = routeID
 			gCtx.CurrentRouteID = ""
-			gCtx.Route = svr.root
+			gCtx.Depth = 0
+			gCtx.Route = root
 		}
 
-		// log.Println("RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
+		log.Println("RequestPath:", r.URL.Path, "RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
 
 		if gCtx.Route == nil {
 			panic("route is nil")
@@ -99,16 +116,9 @@ func (svr *Server) setupRoute(route gong.Route, routeID string) {
 	}))
 
 	for i := range route.NumChildren() {
-		svr.setupRoute(route.Child(i), routeID+strconv.Itoa(i))
+		child := route.Child(i)
+		svr.setupRoute(root, route, child, routeID+strconv.Itoa(i), path+child.Path(), depth+1)
 	}
-}
-
-func (svr *Server) Handle(pattern string, handler http.Handler) {
-	svr.mux.Handle(pattern, handler)
-}
-
-func (svr *Server) Run(addr string) error {
-	return http.ListenAndServe(addr, svr.mux)
 }
 
 func getCurrentUrl(r *http.Request) (*url.URL, error) {

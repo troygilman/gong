@@ -9,9 +9,8 @@ import (
 func main() {
 	simpleComponent := component.New(SimpleComponent{})
 
-	svr := server.New().Routes(
-		route.New("/", simpleComponent),
-	)
+	svr := server.New()
+	svr.Route(route.New("/", simpleComponent))
 
 	if err := svr.Run(":8080"); err != nil {
 		panic(err)

@@ -12,23 +12,33 @@ import (
 )
 
 type gongRoute struct {
-	path         string
-	component    gong.Component
-	children     []gong.Route
-	defaultChild gong.Route
-	parent       gong.Route
+	path      string
+	component gong.Component
+	children  []gong.Route
 }
 
-func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
+func New(path string, component gong.Component, opts ...Option) gong.Route {
+	route := gongRoute{
+		path:      path,
+		component: component,
+	}
+
+	for _, opt := range opts {
+		route = opt(route)
+	}
+
+	return route
+}
+
+func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 	gCtx := gctx.GetContext(ctx)
 	gCtx.Route = route
 	gCtx.ChildRouteIndex = 0
 
 	// log.Printf("Rendering Route: %+v\n", gCtx)
 	if len(route.children) > 0 {
-		depth := route.Depth()
-		if len(gCtx.RequestRouteID) > depth {
-			gCtx.ChildRouteIndex = int(gCtx.RequestRouteID[depth] - '0')
+		if len(gCtx.RequestRouteID) > gCtx.Depth {
+			gCtx.ChildRouteIndex = int(gCtx.RequestRouteID[gCtx.Depth] - '0')
 		}
 	}
 
@@ -49,55 +59,40 @@ func (route *gongRoute) Render(ctx context.Context, w io.Writer) error {
 	return util.Render(ctx, gCtx, w, route.component.View())
 }
 
-func (route *gongRoute) Child(index int) gong.Route {
+func (route gongRoute) Child(index int) gong.Route {
 	if index < 0 || index >= len(route.children) {
 		return nil
 	}
 	return route.children[index]
 }
 
-func (route *gongRoute) Find(id string) gong.Route {
+func (route gongRoute) Find(id string) (gong.Route, int) {
 	var r gong.Route = route
+	depth := 0
 	for _, index := range id {
 		r = r.Child(int(index - '0'))
+		depth++
 	}
-	return r
+	return r, depth
 }
 
-func (route *gongRoute) NumChildren() int {
+func (route gongRoute) NumChildren() int {
 	return len(route.children)
 }
 
-func (route *gongRoute) Parent() gong.Route {
-	return route.parent
-}
-
-func (route *gongRoute) Root() gong.Route {
-	if route.parent == nil {
-		return route
-	}
-	return route.parent
-}
-
-func (route *gongRoute) Component() gong.Component {
+func (route gongRoute) Component() gong.Component {
 	return route.component
 }
 
-func (route *gongRoute) Path() string {
+func (route gongRoute) Path() string {
 	return route.path
 }
 
-func (route *gongRoute) FullPath() string {
-	if route.parent != nil {
-		return route.parent.FullPath() + route.path
-	}
-	return route.path
-}
+type Option func(gongRoute) gongRoute
 
-func (route *gongRoute) Depth() int {
-	if route.parent == nil {
-		return 0
-	} else {
-		return route.parent.Depth() + 1
+func WithChildren(children ...gong.Route) Option {
+	return func(gr gongRoute) gongRoute {
+		gr.children = children
+		return gr
 	}
 }

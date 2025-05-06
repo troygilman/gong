@@ -215,4 +215,20 @@ func (form Form) component() templ.Component {
 	})
 }
 
+type Option func(Form) Form
+
+func WithMethod(method string) Option {
+	return func(f Form) Form {
+		f.method = method
+		return f
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(f Form) Form {
+		f.attrs = attrs
+		return f
+	}
+}
+
 var _ = templruntime.GeneratedTemplate

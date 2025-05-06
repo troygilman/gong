@@ -32,12 +32,17 @@ type gongComponent struct {
 // NewComponent creates a new Component instance with the specified view.
 // It automatically scans the view for any child components and sets up
 // optional interfaces (Loader, Action, Head) if the view implements them.
-func New(view gong.View) gong.Component {
+func New(view gong.View, opts ...Option) gong.Component {
 	component := gongComponent{
 		id:       nextComponentID(),
 		view:     view,
 		children: make(map[string]gong.Component),
 	}
+
+	for _, opt := range opts {
+		component = opt(component)
+	}
+
 	component.scanViewForActions()
 
 	if loader, ok := view.(gong.Loader); ok {
@@ -138,12 +143,16 @@ func (component gongComponent) WithLoaderData(data any) gong.Component {
 	return component
 }
 
+type Option func(gongComponent) gongComponent
+
 // WithID sets a custom ID for the component.
 // This ID is used for component identification and event handling.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithID(id string) gong.Component {
-	component.id = id
-	return component
+func WithID(id string) Option {
+	return func(gc gongComponent) gongComponent {
+		gc.id = id
+		return gc
+	}
 }
 
 func (component gongComponent) scanViewForActions() {

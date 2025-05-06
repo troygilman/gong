@@ -95,7 +95,6 @@ type Component interface {
 	Find(id string) (Component, bool)
 	WithLoaderFunc(loader LoaderFunc) Component
 	WithLoaderData(data any) Component
-	WithID(id string) Component
 }
 
 // Route represents a route in the application's routing tree.
@@ -108,25 +107,13 @@ type Route interface {
 	// Returns nil if no matching route is found.
 	Child(int) Route
 
-	Find(string) Route
+	Find(string) (Route, int)
 
 	// NumChildren returns the number of direct child routes of this route.
 	NumChildren() int
 
-	// Parent returns the parent route of this route.
-	Parent() Route
-
-	// Root returns the root route of the routing tree.
-	Root() Route
-
 	// Path returns the path segment that this route represents.
 	Path() string
-
-	// FullPath returns the full path of this route, including all parent paths.
-	FullPath() string
-
-	// Depth returns the depth of this route in the routing tree.
-	Depth() int
 
 	// Component returns the component associated with this route.
 	Component() Component

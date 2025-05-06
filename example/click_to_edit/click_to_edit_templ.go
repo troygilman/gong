@@ -19,7 +19,7 @@ import (
 	"net/http"
 )
 
-func Route() route.Builder {
+func Route() gong.Route {
 	return route.New("/", NewUserDetailComponent())
 }
 

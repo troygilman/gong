@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func Route() route.Builder {
+func Route() gong.Route {
 	return route.New("/", component.New(BulkUpdateComponent{}))
 }
 

@@ -22,6 +22,7 @@ type Context struct {
 	CurrentRouteID  string
 	ComponentID     string
 	Path            string
+	Depth           int
 	Action          bool
 	Link            bool
 }

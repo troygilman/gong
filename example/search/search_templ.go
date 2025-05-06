@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-func Route() route.Builder {
+func Route() gong.Route {
 	return route.New("/", component.New(SearchComponent{
 		names: []string{
 			"Sam Goodwill",

@@ -118,6 +118,7 @@ func (outlet Outlet) component() templ.Component {
 			gCtx := gctx.GetContext(ctx)
 			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
 				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
+				gCtx.Depth++
 				return util.Render(ctx, gCtx, w, child)
 			}
 			return nil
