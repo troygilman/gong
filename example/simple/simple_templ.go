@@ -11,6 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"fmt"
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/target"
 )
 
 type SimpleComponent struct{}
@@ -54,7 +56,7 @@ func (component SimpleComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewTarget().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = target.New().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -76,7 +78,7 @@ func (component SimpleComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewForm().WithSwap(gong.SwapInnerHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = form.New().WithSwap(gong.SwapInnerHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -10,12 +10,17 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 	"strings"
 )
 
-func Route() gong.RouteBuilder {
-	return gong.NewRoute("/", gong.NewComponent(SearchComponent{
+func Route() gong.Route {
+	return route.New("/", component.New(SearchComponent{
 		names: []string{
 			"Sam Goodwill",
 			"Chris Evans",
@@ -68,9 +73,9 @@ func (c SearchComponent) View() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(gong.ActionHeaders(ctx))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 35, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 40, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -83,7 +88,7 @@ func (c SearchComponent) View() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(gong.SwapOuterHTML)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 37, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 42, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -99,13 +104,13 @@ func (c SearchComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewForm().
+		templ_7745c5c3_Err = form.New().
 			WithMethod(http.MethodPost).
 			WithSwap(gong.SwapInnerHTML).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.NewTarget().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = target.New().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -134,9 +139,9 @@ func (c SearchComponent) Action() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch gong.Request(ctx).Method {
+		switch hooks.Request(ctx).Method {
 		case http.MethodGet:
-			queryName := gong.QueryParam(ctx, "name")
+			queryName := hooks.QueryParam(ctx, "name")
 			queryName = strings.ToLower(queryName)
 			matches := []string{}
 			if queryName != "" {
@@ -151,11 +156,11 @@ func (c SearchComponent) Action() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case http.MethodPost:
-			queryName := gong.FormValue(ctx, "name")
+			queryName := hooks.FormValue(ctx, "name")
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(queryName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 65, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 70, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -199,7 +204,7 @@ func searchOptions(options []string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 72, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 77, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {

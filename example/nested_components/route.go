@@ -2,10 +2,11 @@ package nested_components
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/route"
 )
 
-func Route() gong.RouteBuilder {
+func Route() gong.Route {
 	childComponent := NewChildComponent()
 	parentComponent := NewParentComponent(childComponent)
-	return gong.NewRoute("/", parentComponent)
+	return route.New("/", parentComponent)
 }

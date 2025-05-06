@@ -1,17 +1,6 @@
-package gong
+package component
 
-type indexComponent struct{}
-
-templ (c indexComponent) View() {
-	<html>
-		@getContext(ctx).childRoute.Component().Head()
-		<body>
-			@NewOutlet()
-		</body>
-	</html>
-}
-
-templ DefaultHead() {
+templ defaultHead() {
 	<head>
 		<meta charset="utf-8"/>
 		<title>Gong App</title>

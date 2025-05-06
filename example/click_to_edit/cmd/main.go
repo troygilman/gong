@@ -1,15 +1,14 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/example/click_to_edit"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
-	g := gong.New(http.NewServeMux()).Routes(click_to_edit.Route())
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	svr := server.New()
+	svr.Route(click_to_edit.Route())
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

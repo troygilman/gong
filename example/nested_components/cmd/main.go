@@ -1,15 +1,14 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/example/nested_components"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
-	g := gong.New(http.NewServeMux()).Routes(nested_components.Route())
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	svr := server.New()
+	svr.Route(nested_components.Route())
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

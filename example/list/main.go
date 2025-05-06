@@ -1,32 +1,33 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
 	db := newUserDatabase()
 
-	userComponent := gong.NewComponent(userView{
+	userComponent := component.New(userView{
 		db: db,
 	})
 
-	g := gong.New(http.NewServeMux()).Routes(
-		gong.NewRoute("/", gong.NewComponent(homeView{})).WithRoutes(
-			gong.NewRoute("users", gong.NewComponent(listView{
+	svr := server.New()
+	svr.Route(route.New("/", component.New(homeView{}),
+		route.WithChildren(
+			route.New("users", component.New(listView{
 				db:            db,
 				UserComponent: userComponent,
 			})),
-			gong.NewRoute("user/{name}", gong.NewComponent(testView{
+			route.New("user/{name}/", component.New(testView{
 				db:            db,
 				UserComponent: userComponent,
 			})),
 		),
-	)
+	))
 
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

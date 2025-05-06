@@ -1,19 +1,18 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/server"
 )
 
 func main() {
-	simpleComponent := gong.NewComponent(SimpleComponent{})
+	simpleComponent := component.New(SimpleComponent{})
 
-	g := gong.New(http.NewServeMux()).Routes(
-		gong.NewRoute("/", simpleComponent),
-	)
+	svr := server.New()
+	svr.Route(route.New("/", simpleComponent))
 
-	if err := http.ListenAndServe(":8080", g); err != nil {
+	if err := svr.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

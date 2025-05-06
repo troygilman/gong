@@ -1,7 +1,9 @@
-package gong
+package form
 
 import (
 	"context"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/hooks"
 	"io"
 	"net/http"
 )
@@ -19,10 +21,10 @@ type Form struct {
 
 // NewForm creates a new Form instance with default settings.
 // By default, it uses POST method and no swap behavior.
-func NewForm() Form {
+func New() Form {
 	return Form{
 		method: http.MethodPost,
-		swap:   SwapNone,
+		swap:   gong.SwapNone,
 	}
 }
 
@@ -71,30 +73,43 @@ func (form Form) Render(ctx context.Context, w io.Writer) error {
 }
 
 templ (form Form) component() {
-	{{
-		uri := getContext(ctx).path
-	}}
 	<form
 		if form.method == http.MethodGet {
-			hx-get={ uri }
+			hx-get
 		}
 		if form.method == http.MethodPost {
-			hx-post={ uri }
+			hx-post
 		}
 		if form.method == http.MethodPatch {
-			hx-patch={ uri }
+			hx-patch
 		}
 		if form.method == http.MethodDelete {
-			hx-delete={ uri }
+			hx-delete
 		}
 		hx-swap={ form.swap }
 		hx-trigger={ form.trigger }
-		if form.swap != SwapNone {
-			hx-target={ "#" + TargetID(ctx, form.targetID) }
+		if form.swap != gong.SwapNone {
+			hx-target={ "#" + hooks.TargetID(ctx, form.targetID) }
 		}
-		hx-headers={ buildHeaders(gongHeaders(ctx, GongRequestTypeAction)) }
+		hx-headers={ hooks.ActionHeaders(ctx) }
 		{ form.attrs... }
 	>
 		{ children... }
 	</form>
+}
+
+type Option func(Form) Form
+
+func WithMethod(method string) Option {
+	return func(f Form) Form {
+		f.method = method
+		return f
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(f Form) Form {
+		f.attrs = attrs
+		return f
+	}
 }

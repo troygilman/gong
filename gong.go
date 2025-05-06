@@ -2,18 +2,11 @@ package gong
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"log"
-	"net/http"
-	"strconv"
 
 	"github.com/a-h/templ"
-	"github.com/troygilman/gong/internal/response_writer"
 )
-
-type contextKeyType int
-
-const contextKey = contextKeyType(0)
 
 // HTTP header keys used by Gong for request handling and routing
 const (
@@ -49,115 +42,6 @@ const (
 	// SwapBeforeEnd appends content before the end of the target element
 	SwapBeforeEnd = "beforeend"
 )
-
-// Gong is the main framework instance that handles routing and request processing.
-// It implements the http.Handler interface and manages the application's routes.
-type Gong struct {
-	mux  Mux
-	root *gongRoute
-}
-
-// New creates a new Gong instance with the specified HTTP mux.
-// The mux is used for routing HTTP requests to the appropriate handlers.
-func New(mux Mux) *Gong {
-	return &Gong{
-		mux: mux,
-		root: &gongRoute{
-			component: NewComponent(indexComponent{}),
-		},
-	}
-}
-
-// Routes registers one or more route builders with the Gong instance.
-// Each route builder is built and set up with appropriate handlers.
-// Returns the Gong instance for method chaining.
-func (g *Gong) Routes(builders ...RouteBuilder) *Gong {
-	for _, builder := range builders {
-		route := builder.build(g.root, strconv.Itoa(len(g.root.children)))
-		g.root.children = append(g.root.children, route)
-		g.setupRoute(route)
-	}
-	return g
-}
-
-func (g *Gong) setupRoute(route Route) {
-	log.Printf("Route=%s\n", route.FullPath())
-	g.mux.Handle(route.FullPath(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var (
-			writer      = response_writer.NewResponseWriter(w)
-			requestType = r.Header.Get(HeaderGongRequestType)
-			routeID     = r.Header.Get(HeaderGongRouteID)
-		)
-
-		gCtx := gongContext{
-			route:       route,
-			routeID:     route.ID(),
-			request:     r,
-			writer:      writer,
-			action:      requestType == GongRequestTypeAction,
-			link:        requestType == GongRequestTypeLink,
-			componentID: r.Header.Get(HeaderGongComponentID),
-		}
-
-		switch requestType {
-		case GongRequestTypeAction:
-			gCtx.route = g.root.Find(routeID)
-		case GongRequestTypeLink:
-			currentUrl, err := getCurrentUrl(r)
-			if err != nil {
-				panic(err)
-			}
-			if currentUrl.EscapedPath() == r.URL.EscapedPath() {
-				w.Header().Set("Hx-Reswap", "none")
-				return
-			}
-		default:
-			gCtx.route = g.root
-		}
-
-		if gCtx.route == nil {
-			panic("route is nil")
-		}
-
-		if err := render(r.Context(), gCtx, writer, gCtx.route); err != nil {
-			panic(err)
-		}
-
-		if err := writer.Flush(); err != nil {
-			panic(err)
-		}
-	}))
-
-	for i := range route.NumChildren() {
-		g.setupRoute(route.Child(i))
-	}
-}
-
-// ServeHTTP implements the http.Handler interface.
-// It delegates request handling to the underlying mux.
-func (g *Gong) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	g.mux.ServeHTTP(w, r)
-}
-
-type gongContext struct {
-	route       Route
-	childRoute  Route
-	component   Component
-	request     *http.Request
-	writer      *response_writer.ResponseWriter
-	routeID     string
-	componentID string
-	path        string
-	action      bool
-	link        bool
-}
-
-// Mux is an interface for HTTP request multiplexing.
-// It defines the methods required for routing HTTP requests.
-type Mux interface {
-	ServeHTTP(w http.ResponseWriter, r *http.Request)
-	Handle(path string, handler http.Handler)
-}
 
 // View is an interface for components that can render themselves.
 // It defines the method for getting a templ component.
@@ -199,4 +83,46 @@ type RenderFunc func(ctx context.Context, w io.Writer) error
 // Render implements the templ.Component interface for RenderFunc.
 func (r RenderFunc) Render(ctx context.Context, w io.Writer) error {
 	return r(ctx, w)
+}
+
+type Component interface {
+	templ.Component
+	View
+	Action
+	Loader
+	Head
+	ID() string
+	Find(id string) (Component, bool)
+	WithLoaderFunc(loader LoaderFunc) Component
+	WithLoaderData(data any) Component
+}
+
+// Route represents a route in the application's routing tree.
+// It defines the interface for handling component routing and rendering.
+type Route interface {
+	templ.Component
+
+	// Child returns the child route for the given path.
+	// If no exact match is found and a default child exists, returns the default child.
+	// Returns nil if no matching route is found.
+	Child(int) Route
+
+	Find(string) (Route, int)
+
+	// NumChildren returns the number of direct child routes of this route.
+	NumChildren() int
+
+	// Path returns the path segment that this route represents.
+	Path() string
+
+	// Component returns the component associated with this route.
+	Component() Component
+}
+
+func TriggerAfterSwap(id string) string {
+	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
+}
+
+func TriggerAfterSwapOOB(id string) string {
+	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }

@@ -1,11 +1,13 @@
-package gong
+package hooks
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
+	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/internal/bind"
+	"github.com/troygilman/gong/internal/gctx"
+	"github.com/troygilman/gong/internal/util"
 )
 
 // Bind decodes form data from the current HTTP request into the provided destination.
@@ -41,43 +43,44 @@ func QueryParam(ctx context.Context, key string) string {
 // Request returns the current HTTP request object from the context.
 // This provides access to all request properties and methods.
 func Request(ctx context.Context) *http.Request {
-	return getContext(ctx).request
+	return gctx.GetContext(ctx).Request
 }
 
 // LoaderData retrieves data loaded by a route's loader function.
 // The generic type parameter specifies the expected type of the loaded data.
 // Returns the zero value of the specified type if no loader data is available.
 func LoaderData[Data any](ctx context.Context) (data Data) {
-	return getContext(ctx).component.Loader(ctx).(Data)
+	return gctx.GetContext(ctx).Component.Loader(ctx).(Data)
 }
 
 // Redirect sends a redirect response to the client with the specified path.
 // Uses HTTP status code 303 (See Other) for the redirect.
 // Returns an error if the redirect fails.
 func Redirect(ctx context.Context, path string) error {
-	gCtx := getContext(ctx)
-	gCtx.writer.Reset()
-	http.Redirect(gCtx.writer, gCtx.request, path, http.StatusSeeOther)
+	gCtx := gctx.GetContext(ctx)
+	gCtx.Writer.Reset()
+	http.Redirect(gCtx.Writer, gCtx.Request, path, http.StatusSeeOther)
 	return nil
 }
 
 // ChildRoute retrieves the child route from the current context.
 // This is useful when working with nested routes and needing to access
 // the currently active child route within a parent component.
-func ChildRoute(ctx context.Context) Route {
-	return getContext(ctx).childRoute
+func ChildRoute(ctx context.Context) gong.Route {
+	gCtx := gctx.GetContext(ctx)
+	return gCtx.Route.Child(gCtx.ChildRouteIndex)
 }
 
 func OutletID(ctx context.Context) string {
-	gCtx := getContext(ctx)
-	return "gong_" + gCtx.route.ID() + "_outlet"
+	gCtx := gctx.GetContext(ctx)
+	return "gong_" + gCtx.CurrentRouteID + "_outlet"
 }
 
 func TargetID(ctx context.Context, id string) string {
-	gCtx := getContext(ctx)
-	prefix := "gong_" + gCtx.route.ID()
-	if gCtx.componentID != "" {
-		prefix += "_" + gCtx.componentID
+	gCtx := gctx.GetContext(ctx)
+	prefix := "gong_" + gCtx.CurrentRouteID
+	if gCtx.ComponentID != "" {
+		prefix += "_" + gCtx.ComponentID
 	}
 	if id != "" {
 		prefix += "_" + id
@@ -85,14 +88,10 @@ func TargetID(ctx context.Context, id string) string {
 	return prefix
 }
 
-func TriggerAfterSwap(id string) string {
-	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
-}
-
-func TriggerAfterSwapOOB(id string) string {
-	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
-}
-
 func ActionHeaders(ctx context.Context, headers ...string) string {
-	return buildHeaders(append(gongHeaders(ctx, GongRequestTypeAction), headers...))
+	return util.BuildHeaders(append(util.GongHeaders(ctx, gong.GongRequestTypeAction), headers...))
+}
+
+func LinkHeaders(ctx context.Context, headers ...string) string {
+	return util.BuildHeaders(append(util.GongHeaders(ctx, gong.GongRequestTypeLink), headers...))
 }

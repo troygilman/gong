@@ -2,48 +2,54 @@ package click_to_edit
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/button"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
-func Route() gong.RouteBuilder {
-	return gong.NewRoute("/", NewUserDetailComponent())
+func Route() gong.Route {
+	return route.New("/", NewUserDetailComponent())
 }
 
 type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
-	return gong.NewComponent(UserDetailComponent{})
+	return component.New(UserDetailComponent{})
 }
 
 templ (c UserDetailComponent) View() {
 	@styles()
-	@gong.NewTarget() {
-		@details(defaultUser)
+	@target.New() {
+		@userDetails(defaultUser)
 	}
 }
 
 templ (c UserDetailComponent) Action() {
 	{{
 		var user User
-		if err := gong.Bind(ctx, &user); err != nil {
+		if err := hooks.Bind(ctx, &user); err != nil {
 			panic(err)
 		}
 	}}
-	switch gong.Request(ctx).Method {
+	switch hooks.Request(ctx).Method {
 		case http.MethodGet:
-			if gong.FormValue(ctx, "view") == "form" {
-				@form(user)
+			if hooks.FormValue(ctx, "view") == "form" {
+				@userForm(user)
 			} else {
-				@details(user)
+				@userDetails(user)
 			}
 		case http.MethodPatch:
-			@details(user)
+			@userDetails(user)
 	}
 }
 
-templ details(user User) {
+templ userDetails(user User) {
 	<div class="user-card user-details">
-		@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
+		@form.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
 			<input type="hidden" name="view" value="form"/>
 			<div>
 				<div><label>First Name: </label>{ user.FirstName }</div>
@@ -64,9 +70,9 @@ templ details(user User) {
 	</div>
 }
 
-templ form(user User) {
+templ userForm(user User) {
 	<div class="user-card">
-		@gong.NewForm().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
+		@form.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
 			<div>
 				<label>First Name</label>
 				<input type="text" name="firstName" value={ user.FirstName }/>
@@ -81,7 +87,7 @@ templ form(user User) {
 			</div>
 			<div class="button-row">
 				<button>Submit</button>
-				@gong.NewButton().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
+				@button.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
 					<input type="hidden" name="email" value={ user.Email }/>
 					<input type="hidden" name="lastName" value={ user.LastName }/>
 					<input type="hidden" name="firstName" value={ user.FirstName }/>

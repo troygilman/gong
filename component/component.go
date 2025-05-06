@@ -1,63 +1,59 @@
-package gong
+package component
 
 import (
 	"context"
 	"io"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/internal/gctx"
+	"github.com/troygilman/gong/internal/util"
 )
 
 const (
 	idDelimeter = "_"
 )
 
-type Component interface {
-	templ.Component
-	View
-	Action
-	Loader
-	Head
-	ID() string
-	Find(id []string) (Component, bool)
-	WithLoaderFunc(loader LoaderFunc) Component
-	WithLoaderData(data any) Component
-	WithID(id string) Component
-}
-
 // Component represents a UI component in the Gong framework.
 // It encapsulates a view, optional loader, action, and head elements,
 // along with any child components that may be part of its structure.
 type gongComponent struct {
-	view     View
-	loader   Loader
-	action   Action
-	head     Head
+	view     gong.View
+	loader   gong.Loader
+	action   gong.Action
+	head     gong.Head
 	id       string
-	children map[string]Component
+	children map[string]gong.Component
 }
 
 // NewComponent creates a new Component instance with the specified view.
 // It automatically scans the view for any child components and sets up
 // optional interfaces (Loader, Action, Head) if the view implements them.
-func NewComponent(view View) Component {
+func New(view gong.View, opts ...Option) gong.Component {
 	component := gongComponent{
 		id:       nextComponentID(),
 		view:     view,
-		children: make(map[string]Component),
+		children: make(map[string]gong.Component),
 	}
+
+	for _, opt := range opts {
+		component = opt(component)
+	}
+
 	component.scanViewForActions()
 
-	if loader, ok := view.(Loader); ok {
+	if loader, ok := view.(gong.Loader); ok {
 		component.loader = loader
 	}
 
-	if action, ok := view.(Action); ok {
+	if action, ok := view.(gong.Action); ok {
 		component.action = action
 	}
 
-	if head, ok := view.(Head); ok {
+	if head, ok := view.(gong.Head); ok {
 		component.head = head
 	}
 
@@ -68,16 +64,16 @@ func NewComponent(view View) Component {
 // It handles both normal rendering and action execution based on the context.
 // Returns an error if rendering fails.
 func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
-	gCtx := getContext(ctx)
-	gCtx.component = component
+	gCtx := gctx.GetContext(ctx)
+	gCtx.Component = component
 
-	if gCtx.componentID == "" {
-		gCtx.componentID = component.id
+	if gCtx.ComponentID == "" {
+		gCtx.ComponentID = component.id
 	} else {
-		gCtx.componentID += idDelimeter + component.id
+		gCtx.ComponentID += idDelimeter + component.id
 	}
 
-	return render(ctx, gCtx, w, component.view.View())
+	return util.Render(ctx, gCtx, w, component.view.View())
 }
 
 func (component gongComponent) View() templ.Component {
@@ -89,9 +85,9 @@ func (component gongComponent) Action() templ.Component {
 		if component.action == nil {
 			return nil
 		}
-		gCtx := getContext(ctx)
-		gCtx.component = component
-		return render(ctx, gCtx, w, component.action.Action())
+		gCtx := gctx.GetContext(ctx)
+		gCtx.Component = component
+		return util.Render(ctx, gCtx, w, component.action.Action())
 	})
 }
 
@@ -104,7 +100,7 @@ func (component gongComponent) Loader(ctx context.Context) any {
 
 func (component gongComponent) Head() templ.Component {
 	if component.head == nil {
-		return DefaultHead()
+		return defaultHead()
 	}
 	return component.head.Head()
 }
@@ -116,13 +112,14 @@ func (component gongComponent) ID() string {
 // Find searches for a child component with the specified ID.
 // The ID can be a simple identifier or a path of IDs separated by the delimiter.
 // Returns the found component and a boolean indicating if it was found.
-func (component gongComponent) Find(id []string) (Component, bool) {
+func (component gongComponent) Find(idStr string) (gong.Component, bool) {
+	id := strings.Split(idStr, idDelimeter)
 	if len(id) > 0 && id[0] == component.id {
 		if len(id) == 1 {
 			return component, true
 		}
 		if child, ok := component.children[id[1]]; ok {
-			return child.Find(id[1:])
+			return child.Find(strings.Join(id[1:], idDelimeter))
 		}
 	}
 	return gongComponent{}, false
@@ -131,7 +128,7 @@ func (component gongComponent) Find(id []string) (Component, bool) {
 // WithLoaderFunc sets a loader function for the component.
 // The loader function will be called to fetch data before rendering.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithLoaderFunc(loader LoaderFunc) Component {
+func (component gongComponent) WithLoaderFunc(loader gong.LoaderFunc) gong.Component {
 	component.loader = loader
 	return component
 }
@@ -139,19 +136,23 @@ func (component gongComponent) WithLoaderFunc(loader LoaderFunc) Component {
 // WithLoaderData sets static data for the component's loader.
 // This is a convenience method for components that don't need dynamic data loading.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithLoaderData(data any) Component {
-	component.loader = LoaderFunc(func(ctx context.Context) any {
+func (component gongComponent) WithLoaderData(data any) gong.Component {
+	component.loader = gong.LoaderFunc(func(ctx context.Context) any {
 		return data
 	})
 	return component
 }
 
+type Option func(gongComponent) gongComponent
+
 // WithID sets a custom ID for the component.
 // This ID is used for component identification and event handling.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithID(id string) Component {
-	component.id = id
-	return component
+func WithID(id string) Option {
+	return func(gc gongComponent) gongComponent {
+		gc.id = id
+		return gc
+	}
 }
 
 func (component gongComponent) scanViewForActions() {
@@ -163,7 +164,7 @@ func (component gongComponent) scanViewForActions() {
 			if !field.CanInterface() {
 				continue
 			}
-			if child, ok := field.Interface().(Component); ok {
+			if child, ok := field.Interface().(gong.Component); ok {
 				component.children[child.ID()] = child
 			}
 		}

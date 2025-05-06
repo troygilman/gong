@@ -1,23 +1,32 @@
 package tabs
 
-import "github.com/troygilman/gong"
+import (
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/link"
+	"github.com/troygilman/gong/outlet"
+	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
+	"log"
+)
 
-func Route() gong.RouteBuilder {
-	return gong.NewRoute("/", gong.NewComponent(TabsComponent{})).WithRoutes(
-		gong.NewRoute("1", gong.NewComponent(TabContentComponent{"Tab 1 Content"})),
-		gong.NewRoute("2", gong.NewComponent(TabContentComponent{"Tab 2 Content"})),
-		gong.NewRoute("3", gong.NewComponent(TabContentComponent{"Tab 3 Content"})),
-	)
+func Route() gong.Route {
+	return route.New("/", component.New(TabsComponent{}), route.WithChildren(
+		route.New("1", component.New(TabContentComponent{"Tab 1 Content"})),
+		route.New("2", component.New(TabContentComponent{"Tab 2 Content"})),
+		route.New("3", component.New(TabContentComponent{"Tab 3 Content"})),
+	))
 }
 
 type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@gong.NewTarget().WithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx))) {
+	@target.New().WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx))) {
 		@tabList()
 	}
-	@gong.NewOutlet().WithAttrs(templ.Attributes{"style": "border-style: solid"})
+	@outlet.New().WithAttrs(templ.Attributes{"style": "border-style: solid"})
 }
 
 templ (c TabsComponent) Action() {
@@ -26,7 +35,8 @@ templ (c TabsComponent) Action() {
 
 templ tabList() {
 	{{
-		activeTab := gong.ChildRoute(ctx).Path()
+		activeTab := hooks.ChildRoute(ctx).Path()
+		log.Println(activeTab)
 	}}
 	<div class="tab-list">
 		@tab("Tab 1", "1", activeTab)
@@ -41,7 +51,7 @@ templ tab(title string, path string, activeTab string) {
 			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
 		}
 	}}
-	@gong.NewLink(path).WithAttrs(attrs) {
+	@link.New(path).WithAttrs(attrs) {
 		{ title }
 	}
 }
@@ -64,7 +74,7 @@ templ styles() {
 			padding: 8px 20px;
 			cursor: pointer;
 			font-size: 1rem;
-			transition: 
+			transition:
 				background 0.2s,
 				color 0.2s,
 				border-color 0.2s,
