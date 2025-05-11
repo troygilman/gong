@@ -15,7 +15,12 @@ func Render(ctx context.Context, gCtx gctx.Context, w io.Writer, component templ
 		panic("cannot render nil templ.Component")
 	}
 	ctx = gctx.SetContext(ctx, gCtx)
-	return component.Render(ctx, w)
+	err := component.Render(ctx, w)
+	if err != nil && gCtx.ErrorHandler != nil {
+		gCtx.ErrorHandler(ctx, err)
+		return nil
+	}
+	return err
 }
 
 func GongHeaders(ctx context.Context, requestType string) []string {

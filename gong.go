@@ -126,3 +126,11 @@ func TriggerAfterSwap(id string) string {
 func TriggerAfterSwapOOB(id string) string {
 	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }
+
+func Error(err error) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		return err
+	})
+}
+
+type ErrorHandler func(context.Context, error)

@@ -25,6 +25,7 @@ type Context struct {
 	Depth           int
 	Action          bool
 	Link            bool
+	ErrorHandler    gong.ErrorHandler
 }
 
 func GetContext(ctx context.Context) Context {

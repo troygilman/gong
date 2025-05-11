@@ -14,19 +14,33 @@ import (
 	"github.com/troygilman/gong/route"
 )
 
+type Option func(*Server) *Server
+
+func WithErrorHandler(handler gong.ErrorHandler) Option {
+	return func(s *Server) *Server {
+		s.errorHandler = handler
+		return s
+	}
+}
+
 // Gong is the main framework instance that handles routing and request processing.
 // It implements the http.Handler interface and manages the application's routes.
 type Server struct {
-	mux    *http.ServeMux
-	routes []gong.Route
+	mux          *http.ServeMux
+	routes       []gong.Route
+	errorHandler gong.ErrorHandler
 }
 
 // New creates a new Gong instance with the specified HTTP mux.
 // The mux is used for routing HTTP requests to the appropriate handlers.
-func New() *Server {
-	return &Server{
+func New(opts ...Option) *Server {
+	s := &Server{
 		mux: http.NewServeMux(),
 	}
+	for _, opt := range opts {
+		s = opt(s)
+	}
+	return s
 }
 
 func (svr *Server) Handle(pattern string, handler http.Handler) {
@@ -68,11 +82,12 @@ func (svr *Server) setupRoute(
 		)
 
 		gCtx := gctx.Context{
-			Request:     r,
-			Writer:      writer,
-			Action:      requestType == gong.GongRequestTypeAction,
-			Link:        requestType == gong.GongRequestTypeLink,
-			ComponentID: r.Header.Get(gong.HeaderGongComponentID),
+			Request:      r,
+			Writer:       writer,
+			Action:       requestType == gong.GongRequestTypeAction,
+			Link:         requestType == gong.GongRequestTypeLink,
+			ComponentID:  r.Header.Get(gong.HeaderGongComponentID),
+			ErrorHandler: svr.errorHandler,
 		}
 
 		switch requestType {

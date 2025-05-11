@@ -63,6 +63,10 @@ func Redirect(ctx context.Context, path string) error {
 	return nil
 }
 
+func Header(ctx context.Context) http.Header {
+	return gctx.GetContext(ctx).Writer.Header()
+}
+
 // ChildRoute retrieves the child route from the current context.
 // This is useful when working with nested routes and needing to access
 // the currently active child route within a parent component.
