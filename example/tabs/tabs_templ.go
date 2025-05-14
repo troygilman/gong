@@ -76,7 +76,7 @@ func (c TabsComponent) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = outlet.New().WithAttrs(templ.Attributes{"style": "border-style: solid"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = outlet.New(outlet.WithAttrs(templ.Attributes{"style": "border-style: solid"})).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

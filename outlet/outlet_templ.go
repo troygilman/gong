@@ -28,17 +28,11 @@ type Outlet struct {
 
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-func New() Outlet {
-	return Outlet{}
-}
-
-func (outlet Outlet) WithAttrs(attrs templ.Attributes) Outlet {
-	outlet.attrs = attrs
-	return outlet
-}
-
-func (outlet Outlet) WithOOB(oob bool) Outlet {
-	outlet.oob = oob
+func New(opts ...Option) Outlet {
+	outlet := Outlet{}
+	for _, opt := range opts {
+		outlet = opt(outlet)
+	}
 	return outlet
 }
 
@@ -77,7 +71,7 @@ func (outlet Outlet) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.OutletID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 46, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 40, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -95,7 +89,7 @@ func (outlet Outlet) component() templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(gong.SwapInnerHTML)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 48, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 42, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -132,6 +126,22 @@ func (outlet Outlet) component() templ.Component {
 		}
 		return nil
 	})
+}
+
+type Option func(Outlet) Outlet
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(o Outlet) Outlet {
+		o.attrs = attrs
+		return o
+	}
+}
+
+func WithOOB(oob bool) Option {
+	return func(o Outlet) Outlet {
+		o.oob = oob
+		return o
+	}
 }
 
 var _ = templruntime.GeneratedTemplate
