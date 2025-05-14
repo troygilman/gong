@@ -9,60 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"context"
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/hooks"
-	"io"
 )
 
-// Link represents an HTMX-powered navigation link component.
-// It provides a way to create client-side navigation links that update
-// specific parts of the page using HTMX's AJAX capabilities.
-type Link struct {
-	id      string
-	path    string
-	headers []string
-	trigger string
-	attrs   templ.Attributes
-}
-
-// NewLink creates a new Link instance with the specified path.
-// The path should be a valid route path within the application.
-func New(path string) Link {
-	return Link{
-		path:    path,
-		trigger: gong.TriggerClick,
-	}
-}
-
-func (link Link) WithID(id string) Link {
-	link.id = id
-	return link
-}
-
-func (link Link) WithHeaders(headers ...string) Link {
-	link.headers = headers
-	return link
-}
-
-func (link Link) WithTrigger(trigger string) Link {
-	link.trigger = trigger
-	return link
-}
-
-func (link Link) WithAttrs(attrs templ.Attributes) Link {
-	link.attrs = attrs
-	return link
-}
-
-// Render writes the link's HTML representation to the provided writer.
-// It handles the rendering of the link with all configured HTMX attributes.
-// Returns an error if rendering fails.
-func (link Link) Render(ctx context.Context, w io.Writer) error {
-	return link.component().Render(ctx, w)
-}
-
-func (link Link) component() templ.Component {
+func New(path string, opts ...Option) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -83,14 +34,21 @@ func (link Link) component() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+
+		c := Config{
+			trigger: gong.TriggerClick,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<a id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(link.id)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(c.id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 59, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 18, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -100,7 +58,7 @@ func (link Link) component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 templ.SafeURL = templ.URL(link.path)
+		var templ_7745c5c3_Var3 templ.SafeURL = templ.URL(path)
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var3)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -110,9 +68,9 @@ func (link Link) component() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(link.trigger)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(c.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 62, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 21, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -123,9 +81,9 @@ func (link Link) component() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.LinkHeaders(ctx, link.headers...))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.LinkHeaders(ctx, c.headers...))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 64, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 23, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -135,7 +93,7 @@ func (link Link) component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, link.attrs)
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, c.attrs)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -153,6 +111,46 @@ func (link Link) component() templ.Component {
 		}
 		return nil
 	})
+}
+
+// Link represents an HTMX-powered navigation link component.
+// It provides a way to create client-side navigation links that update
+// specific parts of the page using HTMX's AJAX capabilities.
+type Config struct {
+	id      string
+	headers []string
+	trigger string
+	attrs   templ.Attributes
+}
+
+type Option func(Config) Config
+
+func WithID(id string) Option {
+	return func(c Config) Config {
+		c.id = id
+		return c
+	}
+}
+
+func WithHeaders(headers ...string) Option {
+	return func(c Config) Config {
+		c.headers = headers
+		return c
+	}
+}
+
+func WithTrigger(trigger string) Option {
+	return func(c Config) Config {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

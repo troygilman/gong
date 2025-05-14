@@ -51,7 +51,7 @@ templ tab(title string, path string, activeTab string) {
 			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
 		}
 	}}
-	@link.New(path).WithAttrs(attrs) {
+	@link.New(path, link.WithAttrs(attrs)) {
 		{ title }
 	}
 }

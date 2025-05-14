@@ -115,7 +115,7 @@ func (svr *Server) setupRoute(
 			gCtx.Route = root
 		}
 
-		log.Println("RequestPath:", r.URL.Path, "RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
+		// log.Println("RequestPath:", r.URL.Path, "RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
 
 		if gCtx.Route == nil {
 			panic("route is nil")

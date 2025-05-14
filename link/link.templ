@@ -1,70 +1,69 @@
 package link
 
 import (
-	"context"
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/hooks"
-	"io"
 )
+
+templ New(path string, opts ...Option) {
+	{{
+		c := Config{
+			trigger: gong.TriggerClick,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<a
+		id={ c.id }
+		href={ templ.URL(path) }
+		hx-boost="true"
+		hx-trigger={ c.trigger }
+		hx-swap="none"
+		hx-headers={ hooks.LinkHeaders(ctx, c.headers...) }
+		hx-push-url="true"
+		{ c.attrs... }
+	>
+		{ children... }
+	</a>
+}
 
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
-type Link struct {
+type Config struct {
 	id      string
-	path    string
 	headers []string
 	trigger string
 	attrs   templ.Attributes
 }
 
-// NewLink creates a new Link instance with the specified path.
-// The path should be a valid route path within the application.
-func New(path string) Link {
-	return Link{
-		path:    path,
-		trigger: gong.TriggerClick,
+type Option func(Config) Config
+
+func WithID(id string) Option {
+	return func(c Config) Config {
+		c.id = id
+		return c
 	}
 }
 
-func (link Link) WithID(id string) Link {
-	link.id = id
-	return link
+func WithHeaders(headers ...string) Option {
+	return func(c Config) Config {
+		c.headers = headers
+		return c
+	}
 }
 
-func (link Link) WithHeaders(headers ...string) Link {
-	link.headers = headers
-	return link
+func WithTrigger(trigger string) Option {
+	return func(c Config) Config {
+		c.trigger = trigger
+		return c
+	}
 }
 
-func (link Link) WithTrigger(trigger string) Link {
-	link.trigger = trigger
-	return link
-}
-
-func (link Link) WithAttrs(attrs templ.Attributes) Link {
-	link.attrs = attrs
-	return link
-}
-
-// Render writes the link's HTML representation to the provided writer.
-// It handles the rendering of the link with all configured HTMX attributes.
-// Returns an error if rendering fails.
-func (link Link) Render(ctx context.Context, w io.Writer) error {
-	return link.component().Render(ctx, w)
-}
-
-templ (link Link) component() {
-	<a
-		id={ link.id }
-		href={ templ.URL(link.path) }
-		hx-boost="true"
-		hx-trigger={ link.trigger }
-		hx-swap="none"
-		hx-headers={ hooks.LinkHeaders(ctx, link.headers...) }
-		hx-push-url="true"
-		{ link.attrs... }
-	>
-		{ children... }
-	</a>
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
+	}
 }
