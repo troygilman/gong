@@ -1,0 +1,93 @@
+package form
+
+import "context"
+import "io"
+import "github.com/troygilman/gong/hooks"
+import "net/http"
+import "github.com/troygilman/gong"
+
+type Form struct {
+	method  string
+	swap    string
+	headers []string
+	attrs   templ.Attributes
+	class   string
+}
+
+func New(opts ...Option) Form {
+	form := Form{
+		method: http.MethodPost,
+		swap:   gong.SwapInnerHTML,
+	}
+	for _, opt := range opts {
+		form = opt(form)
+	}
+	return form
+}
+
+func (form Form) Render(ctx context.Context, w io.Writer) error {
+	return form.render().Render(ctx, w)
+}
+
+templ (form Form) render() {
+	<form
+		if form.method == http.MethodGet {
+			hx-get
+		}
+		if form.method == http.MethodPost {
+			hx-post
+		}
+		if form.method == http.MethodPatch {
+			hx-patch
+		}
+		if form.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-swap={ form.swap }
+		hx-target={ "#" + hooks.ComponentID(ctx) }
+		hx-headers={ hooks.ActionHeaders(ctx, form.headers...) }
+		if form.class != "" {
+			class={ form.class }
+		}
+		{ form.attrs... }
+	>
+		{ children... }
+	</form>
+}
+
+type Option func(Form) Form
+
+func WithMethod(method string) Option {
+	return func(f Form) Form {
+		f.method = method
+		return f
+	}
+}
+
+func WithHeaders(headers ...string) Option {
+	return func(f Form) Form {
+		f.headers = headers
+		return f
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(f Form) Form {
+		f.attrs = attrs
+		return f
+	}
+}
+
+func WithSwap(swap string) Option {
+	return func(f Form) Form {
+		f.swap = swap
+		return f
+	}
+}
+
+func WithClass(class string) Option {
+	return func(f Form) Form {
+		f.class = class
+		return f
+	}
+}

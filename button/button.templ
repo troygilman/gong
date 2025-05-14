@@ -1,0 +1,96 @@
+package button
+
+import (
+	"context"
+	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/hooks"
+	"io"
+	"net/http"
+)
+
+type Button struct {
+	method  string
+	swap    string
+	headers []string
+	attrs   templ.Attributes
+	class   string
+}
+
+func New(opts ...Option) Button {
+	button := Button{
+		method: http.MethodPost,
+		swap:   gong.SwapInnerHTML,
+	}
+	for _, opt := range opts {
+		button = opt(button)
+	}
+	return button
+}
+
+func (button Button) Render(ctx context.Context, w io.Writer) error {
+	return button.render().Render(ctx, w)
+}
+
+templ (button Button) render() {
+	<button
+		if button.method == http.MethodGet {
+			hx-get
+		}
+		if button.method == http.MethodPost {
+			hx-post
+		}
+		if button.method == http.MethodPatch {
+			hx-patch
+		}
+		if button.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-swap={ button.swap }
+		hx-target={ "#" + hooks.ComponentID(ctx) }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+		hx-include="this"
+		if button.class != "" {
+			class={ button.class }
+		}
+		{ button.attrs... }
+	>
+		{ children... }
+	</button>
+}
+
+type Option func(Button) Button
+
+func WithMethod(method string) Option {
+	return func(b Button) Button {
+		b.method = method
+		return b
+	}
+}
+
+func WithHeaders(headers ...string) Option {
+	return func(b Button) Button {
+		b.headers = headers
+		return b
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(b Button) Button {
+		b.attrs = attrs
+		return b
+	}
+}
+
+func WithSwap(swap string) Option {
+	return func(b Button) Button {
+		b.swap = swap
+		return b
+	}
+}
+
+func WithClass(class string) Option {
+	return func(b Button) Button {
+		b.class = class
+		return b
+	}
+}

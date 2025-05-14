@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/hooks"
 )
 
@@ -11,15 +12,9 @@ templ (component SimpleComponent) View() {
 	<div id={ hooks.ComponentID(ctx) }>
 		Hello World
 	</div>
-	<form
-		hx-post
-		hx-target={ "#" + hooks.ComponentID(ctx) }
-		hx-headers={ hooks.ActionHeaders(ctx) }
-	>
-		<button>
-			Submit
-		</button>
-	</form>
+	@button.New() {
+		Submit
+	}
 }
 
 templ (component SimpleComponent) Action() {
