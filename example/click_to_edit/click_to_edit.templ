@@ -49,7 +49,10 @@ templ (c UserDetailComponent) Action() {
 
 templ userDetails(user User) {
 	<div class="user-card user-details">
-		@form.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
+		@form.New(
+			form.WithSwap(gong.SwapInnerHTML),
+			form.WithMethod(http.MethodGet),
+		) {
 			<input type="hidden" name="view" value="form"/>
 			<div>
 				<div><label>First Name: </label>{ user.FirstName }</div>
@@ -72,7 +75,10 @@ templ userDetails(user User) {
 
 templ userForm(user User) {
 	<div class="user-card">
-		@form.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodPatch) {
+		@form.New(
+			form.WithSwap(gong.SwapInnerHTML),
+			form.WithMethod(http.MethodPatch),
+		) {
 			<div>
 				<label>First Name</label>
 				<input type="text" name="firstName" value={ user.FirstName }/>

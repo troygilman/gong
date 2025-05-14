@@ -13,7 +13,7 @@ templ (component SimpleComponent) View() {
 	@target.New() {
 		Hello World
 	}
-	@form.New().WithSwap(gong.SwapInnerHTML) {
+	@form.New(form.WithSwap(gong.SwapInnerHTML)) {
 		<button>
 			Submit
 		</button>

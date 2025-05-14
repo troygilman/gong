@@ -22,7 +22,9 @@ type BulkUpdateComponent struct{}
 templ (c BulkUpdateComponent) View() {
 	@styles()
 	<div class="bulk-card">
-		@form.New().WithSwap(gong.SwapInnerHTML) {
+		@form.New(
+			form.WithSwap(gong.SwapInnerHTML),
+		) {
 			@personFieldSet(0)
 			<button type="submit">Submit</button>
 		}

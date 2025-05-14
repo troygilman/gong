@@ -16,7 +16,7 @@ func NewChildComponent() gong.Component {
 templ (c ChildComponent) View() {
 	<div class={ BoxClass() }>
 		@target.New()
-		@form.New().WithSwap(gong.SwapOuterHTML) {
+		@form.New(form.WithSwap(gong.SwapOuterHTML)) {
 			<button>Click</button>
 		}
 	</div>

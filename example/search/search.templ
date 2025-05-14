@@ -28,9 +28,10 @@ type SearchComponent struct {
 }
 
 templ (c SearchComponent) View() {
-	@form.New().
-		WithMethod(http.MethodPost).
-		WithSwap(gong.SwapInnerHTML) {
+	@form.New(
+		form.WithMethod(http.MethodPost),
+		form.WithSwap(gong.SwapInnerHTML),
+	) {
 		<input
 			type="search"
 			name="name"

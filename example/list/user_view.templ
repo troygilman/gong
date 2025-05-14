@@ -61,18 +61,20 @@ templ (view userView) View() {
 		@link.New("/user/" + user.name) {
 			{ user.name }
 		}
-		@form.New().
-			WithMethod(http.MethodPatch).
-			WithTargetID(user.name).
-			WithSwap(gong.SwapOuterHTML) {
+		@form.New(
+			form.WithMethod(http.MethodPatch),
+			form.WithTargetID(user.name),
+			form.WithSwap(gong.SwapOuterHTML),
+		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@form.New().
-			WithMethod(http.MethodDelete).
-			WithTargetID(user.name).
-			WithSwap(gong.SwapOuterHTML) {
+		@form.New(
+			form.WithMethod(http.MethodDelete),
+			form.WithTargetID(user.name),
+			form.WithSwap(gong.SwapOuterHTML),
+		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
 		}

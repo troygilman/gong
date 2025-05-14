@@ -29,48 +29,15 @@ type Form struct {
 
 // NewForm creates a new Form instance with default settings.
 // By default, it uses POST method and no swap behavior.
-func New() Form {
-	return Form{
+func New(opts ...Option) Form {
+	f := Form{
 		method: http.MethodPost,
 		swap:   gong.SwapNone,
 	}
-}
-
-// WithMethod sets the HTTP method for the form submission.
-// Valid methods include POST, PATCH, and DELETE.
-// Returns the modified form for method chaining.
-func (form Form) WithMethod(method string) Form {
-	form.method = method
-	return form
-}
-
-// WithCSSClass adds CSS classes to the form element.
-// The classes will be applied to the rendered form.
-// Returns the modified form for method chaining.
-func (form Form) WithAttrs(attrs templ.Attributes) Form {
-	form.attrs = attrs
-	return form
-}
-
-// WithTargetID sets the target ID for the form submission.
-// This is used to specify the element that will be updated after the form submission.
-// Returns the modified form for method chaining.
-func (form Form) WithTargetID(targetID string) Form {
-	form.targetID = targetID
-	return form
-}
-
-// WithSwap sets the HTMX swap behavior for the form submission.
-// This determines how the response will be swapped into the DOM.
-// Returns the modified form for method chaining.
-func (form Form) WithSwap(swap string) Form {
-	form.swap = swap
-	return form
-}
-
-func (form Form) WithTrigger(trigger string) Form {
-	form.trigger = trigger
-	return form
+	for _, opt := range opts {
+		f = opt(f)
+	}
+	return f
 }
 
 // Render writes the form's HTML representation to the provided writer.
@@ -136,7 +103,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(form.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 89, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 56, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -149,7 +116,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(form.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 90, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 57, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -167,7 +134,7 @@ func (form Form) component() templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + hooks.TargetID(ctx, form.targetID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 92, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 59, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -185,7 +152,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 94, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 61, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -227,6 +194,27 @@ func WithMethod(method string) Option {
 func WithAttrs(attrs templ.Attributes) Option {
 	return func(f Form) Form {
 		f.attrs = attrs
+		return f
+	}
+}
+
+func WithTargetID(id string) Option {
+	return func(f Form) Form {
+		f.targetID = id
+		return f
+	}
+}
+
+func WithSwap(swap string) Option {
+	return func(f Form) Form {
+		f.swap = swap
+		return f
+	}
+}
+
+func WithTrigger(trigger string) Option {
+	return func(f Form) Form {
+		f.trigger = trigger
 		return f
 	}
 }
