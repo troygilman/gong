@@ -7,6 +7,7 @@ import (
 	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
@@ -22,9 +23,9 @@ func NewUserDetailComponent() gong.Component {
 
 templ (c UserDetailComponent) View() {
 	@styles()
-	<div id={ hooks.ComponentID(ctx) }>
+	@target.New() {
 		@userDetails(defaultUser)
-	</div>
+	}
 }
 
 templ (c UserDetailComponent) Action() {

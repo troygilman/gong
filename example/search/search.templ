@@ -6,6 +6,7 @@ import (
 	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 	"strings"
 )
@@ -41,7 +42,7 @@ templ (c SearchComponent) View() {
 		/>
 		@searchOptions([]string{})
 	}
-	<div id={ hooks.ComponentID(ctx) }></div>
+	@target.New()
 }
 
 templ (c SearchComponent) Action() {

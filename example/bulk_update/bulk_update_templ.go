@@ -16,6 +16,7 @@ import (
 	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"net/http"
 	"strconv"
 )
@@ -81,20 +82,11 @@ func (c BulkUpdateComponent) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"")
+		templ_7745c5c3_Err = target.New().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ComponentID(ctx))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 28, Col: 34}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -118,9 +110,9 @@ func (c BulkUpdateComponent) Action() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		switch hooks.Request(ctx).Method {
@@ -165,55 +157,55 @@ func personFieldSet(index int) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<fieldset><label>First name</label> <input name=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<fieldset><label>First name</label> <input name=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][first_name]", index))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 59, Col: 60}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" placeholder=\"Joe\"> <label>Last name</label> <input name=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][first_name]", index))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][last_name]", index))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 58, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 61, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" placeholder=\"Joe\"> <label>Last name</label> <input name=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" placeholder=\"Blow\"> <label>Email</label> <input name=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][last_name]", index))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][email]", index))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 60, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 63, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" placeholder=\"Blow\"> <label>Email</label> <input name=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" placeholder=\"joe@blow.com\"></fieldset>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("people[%d][email]", index))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 62, Col: 55}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" placeholder=\"joe@blow.com\"></fieldset>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -225,20 +217,20 @@ func personFieldSet(index int) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<input type=\"hidden\" name=\"index\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<input type=\"hidden\" name=\"index\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(index))
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(index))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 70, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 71, Col: 63}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"> +")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"> +")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -249,7 +241,7 @@ func personFieldSet(index int) templ.Component {
 			button.WithTarget("this"),
 			button.WithSwap(gong.SwapOuterHTML),
 			button.WithClass("add-button"),
-		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -273,19 +265,32 @@ func personRow(person Person) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"person-row\"><div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"person-row\"><div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(person.FirstName)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 78, Col: 25}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(person.FirstName)
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(person.LastName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 77, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 79, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -296,28 +301,15 @@ func personRow(person Person) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(person.LastName)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(person.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 78, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 80, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div><div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(person.Email)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/bulk_update/bulk_update.templ`, Line: 79, Col: 21}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -351,12 +343,12 @@ func styles() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var15 == nil {
-			templ_7745c5c3_Var15 = templ.NopComponent
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<style type=\"text/css\">\n\t\t.bulk-card {\n\t\t\tmax-width: 500px;\n\t\t\tmargin: 40px auto;\n\t\t\tpadding: 32px 24px;\n\t\t\tbackground: #fff;\n\t\t\tborder-radius: 12px;\n\t\t\tbox-shadow: 0 4px 24px rgba(0,0,0,0.08);\n\t\t\tborder: 1px solid #e5e7eb;\n\t\t}\n\t\tfieldset {\n\t\t\tborder: 1px solid #cbd5e1;\n\t\t\tborder-radius: 8px;\n\t\t\tpadding: 18px 16px 12px 16px;\n\t\t\tmargin-bottom: 18px;\n\t\t}\n\t\tlabel {\n\t\t\tdisplay: block;\n\t\t\tfont-weight: 500;\n\t\t\tmargin-bottom: 6px;\n\t\t\tcolor: #1e293b;\n\t\t}\n\t\tinput[type=\"text\"], input[type=\"email\"], input:not([type]) {\n\t\t\twidth: 100%;\n\t\t\tpadding: 8px 12px;\n\t\t\tborder: 1px solid #cbd5e1;\n\t\t\tborder-radius: 6px;\n\t\t\tfont-size: 1rem;\n\t\t\ttransition: border-color 0.2s;\n\t\t\tbackground: #f8fafc;\n\t\t\tmargin-bottom: 12px;\n\t\t}\n\t\tinput[type=\"text\"]:focus, input[type=\"email\"]:focus, input:not([type]):focus {\n\t\t\tborder-color: #2563eb;\n\t\t\toutline: none;\n\t\t\tbackground: #fff;\n\t\t}\n\t\tbutton, .add-btn {\n\t\t\tpadding: 8px 20px;\n\t\t\tborder: none;\n\t\t\tborder-radius: 6px;\n\t\t\tbackground: #2563eb;\n\t\t\tcolor: #fff;\n\t\t\tfont-weight: 600;\n\t\t\tfont-size: 1rem;\n\t\t\tcursor: pointer;\n\t\t\ttransition: background 0.2s;\n\t\t\tmargin-right: 10px;\n\t\t}\n\t\tbutton:hover, .add-btn:hover, button:focus, .add-btn:focus {\n\t\t\tbackground: #1d4ed8;\n\t\t}\n\t\t.add-btn {\n\t\t\tpadding: 6px 14px;\n\t\t\tfont-size: 1.2rem;\n\t\t\tbackground: #22c55e;\n\t\t\tmargin-left: 8px;\n\t\t\tmargin-top: 8px;\n\t\t}\n\t\t.add-btn:hover, .add-btn:focus {\n\t\t\tbackground: #16a34a;\n\t\t}\n\t\t.person-row-list {\n\t\t\tmargin-top: 32px;\n\t\t\tborder-top: 1px solid #e5e7eb;\n\t\t\tpadding-top: 16px;\n\t\t}\n\t\t.person-row {\n\t\t\tdisplay: flex;\n\t\t\tflex-direction: row;\n\t\t\tgap: 16px;\n\t\t\tpadding: 8px 0;\n\t\t\tborder-bottom: 1px solid #f1f5f9;\n\t\t\tfont-size: 1rem;\n\t\t}\n\t</style>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<style type=\"text/css\">\n\t\t.bulk-card {\n\t\t\tmax-width: 500px;\n\t\t\tmargin: 40px auto;\n\t\t\tpadding: 32px 24px;\n\t\t\tbackground: #fff;\n\t\t\tborder-radius: 12px;\n\t\t\tbox-shadow: 0 4px 24px rgba(0,0,0,0.08);\n\t\t\tborder: 1px solid #e5e7eb;\n\t\t}\n\t\tfieldset {\n\t\t\tborder: 1px solid #cbd5e1;\n\t\t\tborder-radius: 8px;\n\t\t\tpadding: 18px 16px 12px 16px;\n\t\t\tmargin-bottom: 18px;\n\t\t}\n\t\tlabel {\n\t\t\tdisplay: block;\n\t\t\tfont-weight: 500;\n\t\t\tmargin-bottom: 6px;\n\t\t\tcolor: #1e293b;\n\t\t}\n\t\tinput[type=\"text\"], input[type=\"email\"], input:not([type]) {\n\t\t\twidth: 100%;\n\t\t\tpadding: 8px 12px;\n\t\t\tborder: 1px solid #cbd5e1;\n\t\t\tborder-radius: 6px;\n\t\t\tfont-size: 1rem;\n\t\t\ttransition: border-color 0.2s;\n\t\t\tbackground: #f8fafc;\n\t\t\tmargin-bottom: 12px;\n\t\t}\n\t\tinput[type=\"text\"]:focus, input[type=\"email\"]:focus, input:not([type]):focus {\n\t\t\tborder-color: #2563eb;\n\t\t\toutline: none;\n\t\t\tbackground: #fff;\n\t\t}\n\t\tbutton, .add-btn {\n\t\t\tpadding: 8px 20px;\n\t\t\tborder: none;\n\t\t\tborder-radius: 6px;\n\t\t\tbackground: #2563eb;\n\t\t\tcolor: #fff;\n\t\t\tfont-weight: 600;\n\t\t\tfont-size: 1rem;\n\t\t\tcursor: pointer;\n\t\t\ttransition: background 0.2s;\n\t\t\tmargin-right: 10px;\n\t\t}\n\t\tbutton:hover, .add-btn:hover, button:focus, .add-btn:focus {\n\t\t\tbackground: #1d4ed8;\n\t\t}\n\t\t.add-btn {\n\t\t\tpadding: 6px 14px;\n\t\t\tfont-size: 1.2rem;\n\t\t\tbackground: #22c55e;\n\t\t\tmargin-left: 8px;\n\t\t\tmargin-top: 8px;\n\t\t}\n\t\t.add-btn:hover, .add-btn:focus {\n\t\t\tbackground: #16a34a;\n\t\t}\n\t\t.person-row-list {\n\t\t\tmargin-top: 32px;\n\t\t\tborder-top: 1px solid #e5e7eb;\n\t\t\tpadding-top: 16px;\n\t\t}\n\t\t.person-row {\n\t\t\tdisplay: flex;\n\t\t\tflex-direction: row;\n\t\t\tgap: 16px;\n\t\t\tpadding: 8px 0;\n\t\t\tborder-bottom: 1px solid #f1f5f9;\n\t\t\tfont-size: 1rem;\n\t\t}\n\t</style>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

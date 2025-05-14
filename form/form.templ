@@ -9,6 +9,7 @@ import "github.com/troygilman/gong"
 type Form struct {
 	method  string
 	swap    string
+	target  string
 	headers []string
 	attrs   templ.Attributes
 	class   string
@@ -44,7 +45,11 @@ templ (form Form) render() {
 			hx-delete
 		}
 		hx-swap={ form.swap }
-		hx-target={ "#" + hooks.ComponentID(ctx) }
+		if form.target != "" {
+			hx-target={ form.target }
+		} else {
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+		}
 		hx-headers={ hooks.ActionHeaders(ctx, form.headers...) }
 		if form.class != "" {
 			class={ form.class }
@@ -88,6 +93,13 @@ func WithSwap(swap string) Option {
 func WithClass(class string) Option {
 	return func(f Form) Form {
 		f.class = class
+		return f
+	}
+}
+
+func WithTarget(target string) Option {
+	return func(f Form) Form {
+		f.target = target
 		return f
 	}
 }

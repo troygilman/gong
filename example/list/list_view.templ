@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
@@ -36,21 +38,10 @@ templ (view listView) Action() {
 
 templ (view listView) View() {
 	<div>
-		<form
-			hx-post
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-			hx-swap={ gong.SwapBeforeEnd }
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		>
+		@form.New(form.WithSwap(gong.SwapBeforeBegin)) {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
-		</form>
-		<div
-			id={ hooks.ComponentID(ctx) }
-			hx-get
-			hx-trigger="load"
-			hx-target="this"
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		></div>
+		}
+		@target.New(target.WithTrigger("load"))
 	</div>
 }

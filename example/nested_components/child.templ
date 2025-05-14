@@ -4,7 +4,7 @@ import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/target"
 )
 
 type ChildComponent struct{}
@@ -15,7 +15,7 @@ func NewChildComponent() gong.Component {
 
 templ (c ChildComponent) View() {
 	<div class={ BoxClass() }>
-		<div id={ hooks.ComponentID(ctx) }></div>
+		@target.New()
 		@button.New() {
 			Click
 		}

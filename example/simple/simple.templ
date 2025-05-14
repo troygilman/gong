@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/target"
 )
 
 type SimpleComponent struct{}
 
 templ (component SimpleComponent) View() {
-	<div id={ hooks.ComponentID(ctx) }>
+	@target.New() {
 		Hello World
-	</div>
+	}
 	@button.New() {
 		Submit
 	}

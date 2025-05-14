@@ -1,0 +1,88 @@
+package target
+
+import "github.com/troygilman/gong/hooks"
+import "net/http"
+import "github.com/troygilman/gong"
+
+type Config struct {
+	method  string
+	trigger string
+	swap    string
+	class   string
+	attrs   templ.Attributes
+}
+
+type Option func(Config) Config
+
+func WithTrigger(trigger string) Option {
+	return func(c Config) Config {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func WithMethod(method string) Option {
+	return func(c Config) Config {
+		c.method = method
+		return c
+	}
+}
+
+func WithSwap(swap string) Option {
+	return func(c Config) Config {
+		c.swap = swap
+		return c
+	}
+}
+
+func WithClass(class string) Option {
+	return func(c Config) Config {
+		c.class = class
+		return c
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
+	}
+}
+
+templ New(opts ...Option) {
+	{{
+		c := Config{
+			method:  http.MethodGet,
+			swap:    gong.SwapInnerHTML,
+			trigger: "none",
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<div
+		id={ hooks.ComponentID(ctx) }
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-trigger={ c.trigger }
+		hx-target="this"
+		hx-swap={ c.swap }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+		if c.class != "" {
+			class={ c.class }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</div>
+}

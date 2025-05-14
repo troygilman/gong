@@ -15,6 +15,7 @@ import (
 	"github.com/troygilman/gong/link"
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
+	"github.com/troygilman/gong/target"
 	"log"
 )
 
@@ -53,54 +54,25 @@ func (c TabsComponent) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ComponentID(ctx))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 26, Col: 29}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-get hx-trigger=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx)))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 28, Col: 60}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" hx-headers=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 29, Col: 39}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = tabList().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
+		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = tabList().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,9 +100,9 @@ func (c TabsComponent) Action() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = tabList().Render(ctx, templ_7745c5c3_Buffer)
@@ -157,15 +129,15 @@ func tabList() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var6 == nil {
-			templ_7745c5c3_Var6 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 
 		activeTab := hooks.ChildRoute(ctx).Path()
 		log.Println(activeTab)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"tab-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"tab-list\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -181,7 +153,7 @@ func tabList() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -205,16 +177,16 @@ func tab(title string, path string, activeTab string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 
 		attrs := templ.Attributes{
 			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
 		}
-		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -226,18 +198,18 @@ func tab(title string, path string, activeTab string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 59, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 55, Col: 9}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = link.New(path).WithAttrs(attrs).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = link.New(path).WithAttrs(attrs).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -261,12 +233,12 @@ func styles() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var10 == nil {
-			templ_7745c5c3_Var10 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<style type=\"text/css\">\n\t\t.tab-list {\n\t\t\tdisplay: flex;\n\t\t\tflex-direction: row;\n\t\t\tgap: 12px;\n\t\t\tflex-wrap: wrap;\n\t\t\tmargin-bottom: 12px;\n\t\t}\n\t\t.tab {\n\t\t\tborder: 1px solid #bbb;\n\t\t\tborder-radius: 8px 8px 0 0;\n\t\t\tbackground: #f7f7f7;\n\t\t\tcolor: #222;\n\t\t\ttext-decoration: none;\n\t\t\tpadding: 8px 20px;\n\t\t\tcursor: pointer;\n\t\t\tfont-size: 1rem;\n\t\t\ttransition:\n\t\t\t\tbackground 0.2s,\n\t\t\t\tcolor 0.2s,\n\t\t\t\tborder-color 0.2s,\n\t\t\t\tbox-shadow 0.2s;\n\t\t\toutline: none;\n\t\t\tbox-shadow: 0 2px 4px rgba(0,0,0,0.03);\n\t\t\tposition: relative;\n\t\t\ttop: 2px;\n\t\t}\n\t\t.tab:hover, .tab:focus {\n\t\t\tbackground: #e0e7ff;\n\t\t\tcolor: #1d4ed8;\n\t\t\tborder-color: #1d4ed8;\n\t\t}\n\t\t.tab-active {\n\t\t\tbackground: #1d4ed8;\n\t\t\tcolor: #fff !important;\n\t\t\tborder-color: #1d4ed8 !important;\n\t\t\tfont-weight: bold;\n\t\t\tbox-shadow: 0 4px 12px rgba(30,64,175,0.08);\n\t\t\tz-index: 1;\n\t\t}\n\t\t/* Optional: style the outlet/content area */\n\t\t[style*=\"border-style: solid\"] {\n\t\t\tborder-radius: 0 8px 8px 8px;\n\t\t\tborder-width: 1px;\n\t\t\tborder-color: #bbb;\n\t\t\tpadding: 24px;\n\t\t\tbackground: #fff;\n\t\t\tmin-height: 120px;\n\t\t\tbox-shadow: 0 2px 8px rgba(0,0,0,0.04);\n\t\t}\n\t</style>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<style type=\"text/css\">\n\t\t.tab-list {\n\t\t\tdisplay: flex;\n\t\t\tflex-direction: row;\n\t\t\tgap: 12px;\n\t\t\tflex-wrap: wrap;\n\t\t\tmargin-bottom: 12px;\n\t\t}\n\t\t.tab {\n\t\t\tborder: 1px solid #bbb;\n\t\t\tborder-radius: 8px 8px 0 0;\n\t\t\tbackground: #f7f7f7;\n\t\t\tcolor: #222;\n\t\t\ttext-decoration: none;\n\t\t\tpadding: 8px 20px;\n\t\t\tcursor: pointer;\n\t\t\tfont-size: 1rem;\n\t\t\ttransition:\n\t\t\t\tbackground 0.2s,\n\t\t\t\tcolor 0.2s,\n\t\t\t\tborder-color 0.2s,\n\t\t\t\tbox-shadow 0.2s;\n\t\t\toutline: none;\n\t\t\tbox-shadow: 0 2px 4px rgba(0,0,0,0.03);\n\t\t\tposition: relative;\n\t\t\ttop: 2px;\n\t\t}\n\t\t.tab:hover, .tab:focus {\n\t\t\tbackground: #e0e7ff;\n\t\t\tcolor: #1d4ed8;\n\t\t\tborder-color: #1d4ed8;\n\t\t}\n\t\t.tab-active {\n\t\t\tbackground: #1d4ed8;\n\t\t\tcolor: #fff !important;\n\t\t\tborder-color: #1d4ed8 !important;\n\t\t\tfont-weight: bold;\n\t\t\tbox-shadow: 0 4px 12px rgba(30,64,175,0.08);\n\t\t\tz-index: 1;\n\t\t}\n\t\t/* Optional: style the outlet/content area */\n\t\t[style*=\"border-style: solid\"] {\n\t\t\tborder-radius: 0 8px 8px 8px;\n\t\t\tborder-width: 1px;\n\t\t\tborder-color: #bbb;\n\t\t\tpadding: 24px;\n\t\t\tbackground: #fff;\n\t\t\tmin-height: 120px;\n\t\t\tbox-shadow: 0 2px 8px rgba(0,0,0,0.04);\n\t\t}\n\t</style>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -294,17 +266,17 @@ func (c TabContentComponent) View() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 122, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 118, Col: 12}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
