@@ -10,38 +10,21 @@ import (
 	"strconv"
 )
 
-// Outlet represents a container component that renders child routes.
-// It serves as a dynamic content area where route components are rendered
-// based on the current URL path. Outlets are essential for nested routing.
-type Outlet struct {
-	oob   bool
-	attrs templ.Attributes
-}
-
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-func New(opts ...Option) Outlet {
-	outlet := Outlet{}
-	for _, opt := range opts {
-		outlet = opt(outlet)
-	}
-	return outlet
-}
-
-// Render writes the outlet's HTML representation to the provided writer.
-// It handles the rendering of the outlet and its child route components.
-// Returns an error if rendering fails.
-func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
-	return outlet.component().Render(ctx, w)
-}
-
-templ (outlet Outlet) component() {
+templ New(opts ...Option) {
+	{{
+		c := Config{}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
 	<div
 		id={ hooks.OutletID(ctx) }
-		if outlet.oob {
+		if c.oob {
 			hx-swap-oob={ gong.SwapInnerHTML }
 		}
-		{ outlet.attrs... }
+		{ c.attrs... }
 	>
 		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := gctx.GetContext(ctx)
@@ -55,18 +38,26 @@ templ (outlet Outlet) component() {
 	</div>
 }
 
-type Option func(Outlet) Outlet
+// Outlet represents a container component that renders child routes.
+// It serves as a dynamic content area where route components are rendered
+// based on the current URL path. Outlets are essential for nested routing.
+type Config struct {
+	oob   bool
+	attrs templ.Attributes
+}
+
+type Option func(Config) Config
 
 func WithAttrs(attrs templ.Attributes) Option {
-	return func(o Outlet) Outlet {
-		o.attrs = attrs
-		return o
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
 	}
 }
 
 func WithOOB(oob bool) Option {
-	return func(o Outlet) Outlet {
-		o.oob = oob
-		return o
+	return func(c Config) Config {
+		c.oob = oob
+		return c
 	}
 }

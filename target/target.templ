@@ -4,6 +4,44 @@ import "github.com/troygilman/gong/hooks"
 import "net/http"
 import "github.com/troygilman/gong"
 
+templ New(opts ...Option) {
+	{{
+		c := Config{
+			method:  http.MethodGet,
+			swap:    gong.SwapInnerHTML,
+			trigger: "none",
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<div
+		id={ hooks.ComponentID(ctx) }
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-trigger={ c.trigger }
+		hx-target="this"
+		hx-swap={ c.swap }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+		if c.class != "" {
+			class={ c.class }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</div>
+}
+
 type Config struct {
 	method  string
 	trigger string
@@ -47,42 +85,4 @@ func WithAttrs(attrs templ.Attributes) Option {
 		c.attrs = attrs
 		return c
 	}
-}
-
-templ New(opts ...Option) {
-	{{
-		c := Config{
-			method:  http.MethodGet,
-			swap:    gong.SwapInnerHTML,
-			trigger: "none",
-		}
-		for _, opt := range opts {
-			c = opt(c)
-		}
-	}}
-	<div
-		id={ hooks.ComponentID(ctx) }
-		if c.method == http.MethodGet {
-			hx-get
-		}
-		if c.method == http.MethodPost {
-			hx-post
-		}
-		if c.method == http.MethodPatch {
-			hx-patch
-		}
-		if c.method == http.MethodDelete {
-			hx-delete
-		}
-		hx-trigger={ c.trigger }
-		hx-target="this"
-		hx-swap={ c.swap }
-		hx-headers={ hooks.ActionHeaders(ctx) }
-		if c.class != "" {
-			class={ c.class }
-		}
-		{ c.attrs... }
-	>
-		{ children... }
-	</div>
 }

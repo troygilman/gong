@@ -1,12 +1,49 @@
 package form
 
-import "context"
-import "io"
 import "github.com/troygilman/gong/hooks"
 import "net/http"
 import "github.com/troygilman/gong"
 
-type Form struct {
+templ New(opts ...Option) {
+	{{
+		c := Config{
+			method: http.MethodPost,
+			swap:   gong.SwapInnerHTML,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<form
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-swap={ c.swap }
+		if c.target != "" {
+			hx-target={ c.target }
+		} else {
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+		}
+		hx-headers={ hooks.ActionHeaders(ctx, c.headers...) }
+		if c.class != "" {
+			class={ c.class }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</form>
+}
+
+type Config struct {
 	method  string
 	swap    string
 	target  string
@@ -15,91 +52,46 @@ type Form struct {
 	class   string
 }
 
-func New(opts ...Option) Form {
-	form := Form{
-		method: http.MethodPost,
-		swap:   gong.SwapInnerHTML,
-	}
-	for _, opt := range opts {
-		form = opt(form)
-	}
-	return form
-}
-
-func (form Form) Render(ctx context.Context, w io.Writer) error {
-	return form.render().Render(ctx, w)
-}
-
-templ (form Form) render() {
-	<form
-		if form.method == http.MethodGet {
-			hx-get
-		}
-		if form.method == http.MethodPost {
-			hx-post
-		}
-		if form.method == http.MethodPatch {
-			hx-patch
-		}
-		if form.method == http.MethodDelete {
-			hx-delete
-		}
-		hx-swap={ form.swap }
-		if form.target != "" {
-			hx-target={ form.target }
-		} else {
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-		}
-		hx-headers={ hooks.ActionHeaders(ctx, form.headers...) }
-		if form.class != "" {
-			class={ form.class }
-		}
-		{ form.attrs... }
-	>
-		{ children... }
-	</form>
-}
-
-type Option func(Form) Form
+type Option func(Config) Config
 
 func WithMethod(method string) Option {
-	return func(f Form) Form {
-		f.method = method
-		return f
+	return func(c Config) Config {
+		c.method = method
+		return c
 	}
 }
 
 func WithHeaders(headers ...string) Option {
-	return func(f Form) Form {
-		f.headers = headers
-		return f
+	return func(c Config) Config {
+		c.headers = headers
+		return c
 	}
 }
 
 func WithAttrs(attrs templ.Attributes) Option {
-	return func(f Form) Form {
-		f.attrs = attrs
-		return f
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
 	}
 }
 
 func WithSwap(swap string) Option {
-	return func(f Form) Form {
-		f.swap = swap
-		return f
+	return func(c Config) Config {
+		c.swap = swap
+		return c
 	}
 }
 
 func WithClass(class string) Option {
-	return func(f Form) Form {
-		f.class = class
-		return f
+	return func(c Config) Config {
+		c.class = class
+		return c
 	}
 }
 
 func WithTarget(target string) Option {
-	return func(f Form) Form {
-		f.target = target
-		return f
+	return func(c Config) Config {
+		c.target = target
+		return c
 	}
 }

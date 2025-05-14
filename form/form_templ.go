@@ -8,37 +8,11 @@ package form
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "context"
-import "io"
 import "github.com/troygilman/gong/hooks"
 import "net/http"
 import "github.com/troygilman/gong"
 
-type Form struct {
-	method  string
-	swap    string
-	target  string
-	headers []string
-	attrs   templ.Attributes
-	class   string
-}
-
-func New(opts ...Option) Form {
-	form := Form{
-		method: http.MethodPost,
-		swap:   gong.SwapInnerHTML,
-	}
-	for _, opt := range opts {
-		form = opt(form)
-	}
-	return form
-}
-
-func (form Form) Render(ctx context.Context, w io.Writer) error {
-	return form.render().Render(ctx, w)
-}
-
-func (form Form) render() templ.Component {
+func New(opts ...Option) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -59,7 +33,15 @@ func (form Form) render() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{form.class}
+
+		c := Config{
+			method: http.MethodPost,
+			swap:   gong.SwapInnerHTML,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+		var templ_7745c5c3_Var2 = []any{c.class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -68,25 +50,25 @@ func (form Form) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if form.method == http.MethodGet {
+		if c.method == http.MethodGet {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " hx-get")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if form.method == http.MethodPost {
+		if c.method == http.MethodPost {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " hx-post")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if form.method == http.MethodPatch {
+		if c.method == http.MethodPatch {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " hx-patch")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if form.method == http.MethodDelete {
+		if c.method == http.MethodDelete {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " hx-delete")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -97,9 +79,9 @@ func (form Form) render() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(form.swap)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(c.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 47, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 30, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -109,15 +91,15 @@ func (form Form) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if form.target != "" {
+		if c.target != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " hx-target=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(form.target)
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(c.target)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 49, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 32, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -135,7 +117,7 @@ func (form Form) render() templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("#" + hooks.ComponentID(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 51, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 34, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -151,9 +133,9 @@ func (form Form) render() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx, form.headers...))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx, c.headers...))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 53, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 36, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -163,7 +145,7 @@ func (form Form) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if form.class != "" {
+		if c.class != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -182,7 +164,7 @@ func (form Form) render() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, form.attrs)
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, c.attrs)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -202,47 +184,56 @@ func (form Form) render() templ.Component {
 	})
 }
 
-type Option func(Form) Form
+type Config struct {
+	method  string
+	swap    string
+	target  string
+	headers []string
+	attrs   templ.Attributes
+	class   string
+}
+
+type Option func(Config) Config
 
 func WithMethod(method string) Option {
-	return func(f Form) Form {
-		f.method = method
-		return f
+	return func(c Config) Config {
+		c.method = method
+		return c
 	}
 }
 
 func WithHeaders(headers ...string) Option {
-	return func(f Form) Form {
-		f.headers = headers
-		return f
+	return func(c Config) Config {
+		c.headers = headers
+		return c
 	}
 }
 
 func WithAttrs(attrs templ.Attributes) Option {
-	return func(f Form) Form {
-		f.attrs = attrs
-		return f
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
 	}
 }
 
 func WithSwap(swap string) Option {
-	return func(f Form) Form {
-		f.swap = swap
-		return f
+	return func(c Config) Config {
+		c.swap = swap
+		return c
 	}
 }
 
 func WithClass(class string) Option {
-	return func(f Form) Form {
-		f.class = class
-		return f
+	return func(c Config) Config {
+		c.class = class
+		return c
 	}
 }
 
 func WithTarget(target string) Option {
-	return func(f Form) Form {
-		f.target = target
-		return f
+	return func(c Config) Config {
+		c.target = target
+		return c
 	}
 }
 

@@ -9,38 +9,12 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"context"
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/hooks"
-	"io"
 	"net/http"
 )
 
-type Button struct {
-	method  string
-	swap    string
-	headers []string
-	attrs   templ.Attributes
-	class   string
-	target  string
-}
-
-func New(opts ...Option) Button {
-	button := Button{
-		method: http.MethodPost,
-		swap:   gong.SwapInnerHTML,
-	}
-	for _, opt := range opts {
-		button = opt(button)
-	}
-	return button
-}
-
-func (button Button) Render(ctx context.Context, w io.Writer) error {
-	return button.render().Render(ctx, w)
-}
-
-func (button Button) render() templ.Component {
+func New(opts ...Option) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -61,7 +35,15 @@ func (button Button) render() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{button.class}
+
+		c := Config{
+			method: http.MethodPost,
+			swap:   gong.SwapInnerHTML,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+		var templ_7745c5c3_Var2 = []any{c.class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -70,25 +52,25 @@ func (button Button) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if button.method == http.MethodGet {
+		if c.method == http.MethodGet {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " hx-get")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if button.method == http.MethodPost {
+		if c.method == http.MethodPost {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " hx-post")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if button.method == http.MethodPatch {
+		if c.method == http.MethodPatch {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " hx-patch")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if button.method == http.MethodDelete {
+		if c.method == http.MethodDelete {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " hx-delete")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -99,9 +81,9 @@ func (button Button) render() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(button.swap)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(c.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 49, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 32, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -111,15 +93,15 @@ func (button Button) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if button.target != "" {
+		if c.target != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " hx-target=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(button.target)
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(c.target)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 51, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 34, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -137,7 +119,7 @@ func (button Button) render() templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("#" + hooks.ComponentID(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 53, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 36, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -155,7 +137,7 @@ func (button Button) render() templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 55, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `button/button.templ`, Line: 38, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +147,7 @@ func (button Button) render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if button.class != "" {
+		if c.class != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -184,7 +166,7 @@ func (button Button) render() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, button.attrs)
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, c.attrs)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -204,47 +186,56 @@ func (button Button) render() templ.Component {
 	})
 }
 
-type Option func(Button) Button
+type Config struct {
+	method  string
+	swap    string
+	headers []string
+	attrs   templ.Attributes
+	class   string
+	target  string
+}
+
+type Option func(Config) Config
 
 func WithMethod(method string) Option {
-	return func(b Button) Button {
-		b.method = method
-		return b
+	return func(c Config) Config {
+		c.method = method
+		return c
 	}
 }
 
 func WithHeaders(headers ...string) Option {
-	return func(b Button) Button {
-		b.headers = headers
-		return b
+	return func(c Config) Config {
+		c.headers = headers
+		return c
 	}
 }
 
 func WithAttrs(attrs templ.Attributes) Option {
-	return func(b Button) Button {
-		b.attrs = attrs
-		return b
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
 	}
 }
 
 func WithSwap(swap string) Option {
-	return func(b Button) Button {
-		b.swap = swap
-		return b
+	return func(c Config) Config {
+		c.swap = swap
+		return c
 	}
 }
 
 func WithClass(class string) Option {
-	return func(b Button) Button {
-		b.class = class
-		return b
+	return func(c Config) Config {
+		c.class = class
+		return c
 	}
 }
 
 func WithTarget(target string) Option {
-	return func(b Button) Button {
-		b.target = target
-		return b
+	return func(c Config) Config {
+		c.target = target
+		return c
 	}
 }
 

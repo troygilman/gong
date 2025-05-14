@@ -18,32 +18,9 @@ import (
 	"strconv"
 )
 
-// Outlet represents a container component that renders child routes.
-// It serves as a dynamic content area where route components are rendered
-// based on the current URL path. Outlets are essential for nested routing.
-type Outlet struct {
-	oob   bool
-	attrs templ.Attributes
-}
-
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-func New(opts ...Option) Outlet {
-	outlet := Outlet{}
-	for _, opt := range opts {
-		outlet = opt(outlet)
-	}
-	return outlet
-}
-
-// Render writes the outlet's HTML representation to the provided writer.
-// It handles the rendering of the outlet and its child route components.
-// Returns an error if rendering fails.
-func (outlet Outlet) Render(ctx context.Context, w io.Writer) error {
-	return outlet.component().Render(ctx, w)
-}
-
-func (outlet Outlet) component() templ.Component {
+func New(opts ...Option) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -64,6 +41,11 @@ func (outlet Outlet) component() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+
+		c := Config{}
+		for _, opt := range opts {
+			c = opt(c)
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -71,7 +53,7 @@ func (outlet Outlet) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.OutletID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 40, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 23, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -81,7 +63,7 @@ func (outlet Outlet) component() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if outlet.oob {
+		if c.oob {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " hx-swap-oob=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -89,7 +71,7 @@ func (outlet Outlet) component() templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(gong.SwapInnerHTML)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 42, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `outlet/outlet.templ`, Line: 25, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -100,7 +82,7 @@ func (outlet Outlet) component() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, outlet.attrs)
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, c.attrs)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,19 +110,27 @@ func (outlet Outlet) component() templ.Component {
 	})
 }
 
-type Option func(Outlet) Outlet
+// Outlet represents a container component that renders child routes.
+// It serves as a dynamic content area where route components are rendered
+// based on the current URL path. Outlets are essential for nested routing.
+type Config struct {
+	oob   bool
+	attrs templ.Attributes
+}
+
+type Option func(Config) Config
 
 func WithAttrs(attrs templ.Attributes) Option {
-	return func(o Outlet) Outlet {
-		o.attrs = attrs
-		return o
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
 	}
 }
 
 func WithOOB(oob bool) Option {
-	return func(o Outlet) Outlet {
-		o.oob = oob
-		return o
+	return func(c Config) Config {
+		c.oob = oob
+		return c
 	}
 }
 

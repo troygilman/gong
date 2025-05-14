@@ -12,51 +12,6 @@ import "github.com/troygilman/gong/hooks"
 import "net/http"
 import "github.com/troygilman/gong"
 
-type Config struct {
-	method  string
-	trigger string
-	swap    string
-	class   string
-	attrs   templ.Attributes
-}
-
-type Option func(Config) Config
-
-func WithTrigger(trigger string) Option {
-	return func(c Config) Config {
-		c.trigger = trigger
-		return c
-	}
-}
-
-func WithMethod(method string) Option {
-	return func(c Config) Config {
-		c.method = method
-		return c
-	}
-}
-
-func WithSwap(swap string) Option {
-	return func(c Config) Config {
-		c.swap = swap
-		return c
-	}
-}
-
-func WithClass(class string) Option {
-	return func(c Config) Config {
-		c.class = class
-		return c
-	}
-}
-
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
-		c.attrs = attrs
-		return c
-	}
-}
-
 func New(opts ...Option) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -99,7 +54,7 @@ func New(opts ...Option) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ComponentID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 64, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 19, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -140,7 +95,7 @@ func New(opts ...Option) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(c.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 77, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 32, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -153,7 +108,7 @@ func New(opts ...Option) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(c.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 79, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 34, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -166,7 +121,7 @@ func New(opts ...Option) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 80, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 35, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -213,6 +168,51 @@ func New(opts ...Option) templ.Component {
 		}
 		return nil
 	})
+}
+
+type Config struct {
+	method  string
+	trigger string
+	swap    string
+	class   string
+	attrs   templ.Attributes
+}
+
+type Option func(Config) Config
+
+func WithTrigger(trigger string) Option {
+	return func(c Config) Config {
+		c.trigger = trigger
+		return c
+	}
+}
+
+func WithMethod(method string) Option {
+	return func(c Config) Config {
+		c.method = method
+		return c
+	}
+}
+
+func WithSwap(swap string) Option {
+	return func(c Config) Config {
+		c.swap = swap
+		return c
+	}
+}
+
+func WithClass(class string) Option {
+	return func(c Config) Config {
+		c.class = class
+		return c
+	}
+}
+
+func WithAttrs(attrs templ.Attributes) Option {
+	return func(c Config) Config {
+		c.attrs = attrs
+		return c
+	}
 }
 
 var _ = templruntime.GeneratedTemplate
