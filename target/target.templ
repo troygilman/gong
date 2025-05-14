@@ -57,7 +57,7 @@ func (target Target) Render(ctx context.Context, w io.Writer) error {
 
 templ (target Target) component() {
 	<div
-		id={ hooks.TargetID(ctx, target.id) }
+		id={ hooks.ComponentID(ctx) }
 		hx-get
 		hx-swap={ gong.SwapInnerHTML }
 		hx-trigger={ target.trigger }

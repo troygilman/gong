@@ -89,7 +89,7 @@ func (button Button) Render(ctx context.Context, w io.Writer) error {
 templ (button Button) component() {
 	{{
 		if button.target == nil {
-			target := fmt.Sprintf("#%s", hooks.TargetID(ctx, ""))
+			target := fmt.Sprintf("#%s", hooks.ComponentID(ctx))
 			button.target = &target
 		}
 	}}

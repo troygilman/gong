@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/link"
-	"github.com/troygilman/gong/target"
 	"log"
 	"net/http"
 	"strconv"
@@ -53,32 +51,31 @@ templ (view userView) Action() {
 templ (view userView) View() {
 	{{
 	user := hooks.LoaderData[userData](ctx)
-	attrs := templ.Attributes{
-		"class": boxClassName(),
-	}
 	}}
-	@target.New().WithID(user.name).WithAttrs(attrs) {
+	<div id={ hooks.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
 		@link.New("/user/" + user.name) {
 			{ user.name }
 		}
-		@form.New(
-			form.WithMethod(http.MethodPatch),
-			form.WithTargetID(user.name),
-			form.WithSwap(gong.SwapOuterHTML),
-		) {
+		<form
+			hx-patch
+			hx-target={ "#" + hooks.ComponentID(ctx) + "-" + user.name }
+			hx-swap={ gong.SwapOuterHTML }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
-		}
-		@form.New(
-			form.WithMethod(http.MethodDelete),
-			form.WithTargetID(user.name),
-			form.WithSwap(gong.SwapOuterHTML),
-		) {
+		</form>
+		<form
+			hx-delete
+			hx-target={ "#" + hooks.ComponentID(ctx) + "-" + user.name }
+			hx-swap={ gong.SwapOuterHTML }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>
-		}
-	}
+		</form>
+	</div>
 }
 
 css boxClassName() {

@@ -80,14 +80,11 @@ func OutletID(ctx context.Context) string {
 	return "gong_" + gCtx.CurrentRouteID + "_outlet"
 }
 
-func TargetID(ctx context.Context, id string) string {
+func ComponentID(ctx context.Context) string {
 	gCtx := gctx.GetContext(ctx)
 	prefix := "gong_" + gCtx.CurrentRouteID
 	if gCtx.ComponentID != "" {
 		prefix += "_" + gCtx.ComponentID
-	}
-	if id != "" {
-		prefix += "_" + id
 	}
 	return prefix
 }

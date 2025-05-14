@@ -12,11 +12,10 @@ import (
 // It provides a builder pattern for creating forms with various HTTP methods,
 // target elements, CSS classes, and HTMX swap behaviors.
 type Form struct {
-	method   string
-	targetID string
-	swap     string
-	trigger  string
-	attrs    templ.Attributes
+	method  string
+	swap    string
+	trigger string
+	attrs   templ.Attributes
 }
 
 // NewForm creates a new Form instance with default settings.
@@ -56,7 +55,7 @@ templ (form Form) component() {
 		hx-swap={ form.swap }
 		hx-trigger={ form.trigger }
 		if form.swap != gong.SwapNone {
-			hx-target={ "#" + hooks.TargetID(ctx, form.targetID) }
+			hx-target={ "#" + hooks.ComponentID(ctx) }
 		}
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		{ form.attrs... }
@@ -77,13 +76,6 @@ func WithMethod(method string) Option {
 func WithAttrs(attrs templ.Attributes) Option {
 	return func(f Form) Form {
 		f.attrs = attrs
-		return f
-	}
-}
-
-func WithTargetID(id string) Option {
-	return func(f Form) Form {
-		f.targetID = id
 		return f
 	}
 }

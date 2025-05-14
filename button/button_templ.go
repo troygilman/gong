@@ -117,7 +117,7 @@ func (button Button) component() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 
 		if button.target == nil {
-			target := fmt.Sprintf("#%s", hooks.TargetID(ctx, ""))
+			target := fmt.Sprintf("#%s", hooks.ComponentID(ctx))
 			button.target = &target
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<button")

@@ -20,11 +20,10 @@ import (
 // It provides a builder pattern for creating forms with various HTTP methods,
 // target elements, CSS classes, and HTMX swap behaviors.
 type Form struct {
-	method   string
-	targetID string
-	swap     string
-	trigger  string
-	attrs    templ.Attributes
+	method  string
+	swap    string
+	trigger string
+	attrs   templ.Attributes
 }
 
 // NewForm creates a new Form instance with default settings.
@@ -103,7 +102,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(form.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 56, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 55, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -116,7 +115,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(form.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 57, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 56, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -132,9 +131,9 @@ func (form Form) component() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + hooks.TargetID(ctx, form.targetID))
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("#" + hooks.ComponentID(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 59, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 58, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -152,7 +151,7 @@ func (form Form) component() templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 61, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `form/form.templ`, Line: 60, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -194,13 +193,6 @@ func WithMethod(method string) Option {
 func WithAttrs(attrs templ.Attributes) Option {
 	return func(f Form) Form {
 		f.attrs = attrs
-		return f
-	}
-}
-
-func WithTargetID(id string) Option {
-	return func(f Form) Form {
-		f.targetID = id
 		return f
 	}
 }

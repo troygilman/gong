@@ -3,12 +3,9 @@ package bulk_update
 import (
 	"fmt"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"net/http"
 	"strconv"
 )
@@ -22,13 +19,15 @@ type BulkUpdateComponent struct{}
 templ (c BulkUpdateComponent) View() {
 	@styles()
 	<div class="bulk-card">
-		@form.New(
-			form.WithSwap(gong.SwapInnerHTML),
-		) {
+		<form
+			hx-post
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			@personFieldSet(0)
 			<button type="submit">Submit</button>
-		}
-		@target.New()
+		</form>
+		<div id={ hooks.ComponentID(ctx) }></div>
 	</div>
 }
 
@@ -64,10 +63,17 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
-	@button.New().WithMethod(http.MethodGet).WithSwap(gong.SwapOuterHTML).WithTarget("this").WithAttrs(templ.Attributes{"class": "add-btn"}) {
+	<button
+		hx-get
+		hx-target="this"
+		hx-include="this"
+		hx-swap={ gong.SwapOuterHTML }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+		class="add-button"
+	>
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+
-	}
+	</button>
 }
 
 templ personRow(person Person) {
