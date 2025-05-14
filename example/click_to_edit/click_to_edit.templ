@@ -2,12 +2,9 @@ package click_to_edit
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
@@ -23,9 +20,9 @@ func NewUserDetailComponent() gong.Component {
 
 templ (c UserDetailComponent) View() {
 	@styles()
-	@target.New() {
+	<div id={ hooks.ComponentID(ctx) }>
 		@userDetails(defaultUser)
-	}
+	</div>
 }
 
 templ (c UserDetailComponent) Action() {
@@ -49,10 +46,11 @@ templ (c UserDetailComponent) Action() {
 
 templ userDetails(user User) {
 	<div class="user-card user-details">
-		@form.New(
-			form.WithSwap(gong.SwapInnerHTML),
-			form.WithMethod(http.MethodGet),
-		) {
+		<form
+			hx-get
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			<input type="hidden" name="view" value="form"/>
 			<div>
 				<div><label>First Name: </label>{ user.FirstName }</div>
@@ -69,16 +67,17 @@ templ userDetails(user User) {
 			<button>
 				Click To Edit
 			</button>
-		}
+		</form>
 	</div>
 }
 
 templ userForm(user User) {
 	<div class="user-card">
-		@form.New(
-			form.WithSwap(gong.SwapInnerHTML),
-			form.WithMethod(http.MethodPatch),
-		) {
+		<form
+			hx-patch
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			<div>
 				<label>First Name</label>
 				<input type="text" name="firstName" value={ user.FirstName }/>
@@ -93,14 +92,19 @@ templ userForm(user User) {
 			</div>
 			<div class="button-row">
 				<button>Submit</button>
-				@button.New().WithSwap(gong.SwapInnerHTML).WithMethod(http.MethodGet) {
+				<button
+					hx-get
+					hx-target={ "#" + hooks.ComponentID(ctx) }
+					hx-headers={ hooks.ActionHeaders(ctx) }
+					hx-include="this"
+				>
 					<input type="hidden" name="email" value={ user.Email }/>
 					<input type="hidden" name="lastName" value={ user.LastName }/>
 					<input type="hidden" name="firstName" value={ user.FirstName }/>
 					Cancel
-				}
+				</button>
 			</div>
-		}
+		</form>
 	</div>
 }
 
