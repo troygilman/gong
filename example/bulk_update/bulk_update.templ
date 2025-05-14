@@ -3,7 +3,9 @@ package bulk_update
 import (
 	"fmt"
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
 	"net/http"
@@ -19,14 +21,10 @@ type BulkUpdateComponent struct{}
 templ (c BulkUpdateComponent) View() {
 	@styles()
 	<div class="bulk-card">
-		<form
-			hx-post
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		>
+		@form.New() {
 			@personFieldSet(0)
 			<button type="submit">Submit</button>
-		</form>
+		}
 		<div id={ hooks.ComponentID(ctx) }></div>
 	</div>
 }
@@ -63,17 +61,15 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
-	<button
-		hx-get
-		hx-target="this"
-		hx-include="this"
-		hx-swap={ gong.SwapOuterHTML }
-		hx-headers={ hooks.ActionHeaders(ctx) }
-		class="add-button"
-	>
+	@button.New(
+		button.WithMethod(http.MethodGet),
+		button.WithTarget("this"),
+		button.WithSwap(gong.SwapOuterHTML),
+		button.WithClass("add-button"),
+	) {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+
-	</button>
+	}
 }
 
 templ personRow(person Person) {

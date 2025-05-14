@@ -2,6 +2,7 @@ package nested_components
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/hooks"
 )
@@ -19,14 +20,9 @@ func NewParentComponent(child gong.Component) gong.Component {
 templ (c ParentComponent) View() {
 	<div class={ BoxClass() }>
 		<div id={ hooks.ComponentID(ctx) }></div>
-		<form
-			hx-post
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-			hx-swap={ gong.SwapOuterHTML }
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		>
-			<button>Click</button>
-		</form>
+		@button.New() {
+			Click
+		}
 		@c.ChildComponent
 	</div>
 }

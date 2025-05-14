@@ -14,6 +14,7 @@ type Button struct {
 	headers []string
 	attrs   templ.Attributes
 	class   string
+	target  string
 }
 
 func New(opts ...Option) Button {
@@ -46,7 +47,11 @@ templ (button Button) render() {
 			hx-delete
 		}
 		hx-swap={ button.swap }
-		hx-target={ "#" + hooks.ComponentID(ctx) }
+		if button.target != "" {
+			hx-target={ button.target }
+		} else {
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+		}
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		hx-include="this"
 		if button.class != "" {
@@ -91,6 +96,13 @@ func WithSwap(swap string) Option {
 func WithClass(class string) Option {
 	return func(b Button) Button {
 		b.class = class
+		return b
+	}
+}
+
+func WithTarget(target string) Option {
+	return func(b Button) Button {
+		b.target = target
 		return b
 	}
 }

@@ -2,7 +2,9 @@ package click_to_edit
 
 import (
 	"github.com/troygilman/gong"
+	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
+	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
 	"net/http"
@@ -39,73 +41,59 @@ templ (c UserDetailComponent) Action() {
 			} else {
 				@userDetails(user)
 			}
-		case http.MethodPatch:
+		case http.MethodPost:
 			@userDetails(user)
 	}
 }
 
 templ userDetails(user User) {
-	<div class="user-card user-details">
-		<form
-			hx-get
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		>
-			<input type="hidden" name="view" value="form"/>
-			<div>
-				<div><label>First Name: </label>{ user.FirstName }</div>
-				<input type="hidden" name="firstName" value={ user.FirstName }/>
-			</div>
-			<div>
-				<div><label>Last Name: </label>{ user.LastName }</div>
-				<input type="hidden" name="lastName" value={ user.LastName }/>
-			</div>
-			<div>
-				<div><label>Email: </label>{ user.Email }</div>
-				<input type="hidden" name="email" value={ user.Email }/>
-			</div>
-			<button>
-				Click To Edit
-			</button>
-		</form>
-	</div>
+	@form.New(
+		form.WithMethod(http.MethodGet),
+		form.WithClass("user-card user-details"),
+	) {
+		<input type="hidden" name="view" value="form"/>
+		<div>
+			<div><label>First Name: </label>{ user.FirstName }</div>
+			<input type="hidden" name="firstName" value={ user.FirstName }/>
+		</div>
+		<div>
+			<div><label>Last Name: </label>{ user.LastName }</div>
+			<input type="hidden" name="lastName" value={ user.LastName }/>
+		</div>
+		<div>
+			<div><label>Email: </label>{ user.Email }</div>
+			<input type="hidden" name="email" value={ user.Email }/>
+		</div>
+		<button>
+			Click To Edit
+		</button>
+	}
 }
 
 templ userForm(user User) {
-	<div class="user-card">
-		<form
-			hx-patch
-			hx-target={ "#" + hooks.ComponentID(ctx) }
-			hx-headers={ hooks.ActionHeaders(ctx) }
-		>
-			<div>
-				<label>First Name</label>
-				<input type="text" name="firstName" value={ user.FirstName }/>
-			</div>
-			<div>
-				<label>Last Name</label>
-				<input type="text" name="lastName" value={ user.LastName }/>
-			</div>
-			<div>
-				<label>Email Address</label>
-				<input type="email" name="email" value={ user.Email }/>
-			</div>
-			<div class="button-row">
-				<button>Submit</button>
-				<button
-					hx-get
-					hx-target={ "#" + hooks.ComponentID(ctx) }
-					hx-headers={ hooks.ActionHeaders(ctx) }
-					hx-include="this"
-				>
-					<input type="hidden" name="email" value={ user.Email }/>
-					<input type="hidden" name="lastName" value={ user.LastName }/>
-					<input type="hidden" name="firstName" value={ user.FirstName }/>
-					Cancel
-				</button>
-			</div>
-		</form>
-	</div>
+	@form.New(form.WithClass("user-card")) {
+		<div>
+			<label>First Name</label>
+			<input type="text" name="firstName" value={ user.FirstName }/>
+		</div>
+		<div>
+			<label>Last Name</label>
+			<input type="text" name="lastName" value={ user.LastName }/>
+		</div>
+		<div>
+			<label>Email Address</label>
+			<input type="email" name="email" value={ user.Email }/>
+		</div>
+		<div class="button-row">
+			<button>Submit</button>
+			@button.New(button.WithMethod(http.MethodGet)) {
+				<input type="hidden" name="email" value={ user.Email }/>
+				<input type="hidden" name="lastName" value={ user.LastName }/>
+				<input type="hidden" name="firstName" value={ user.FirstName }/>
+				Cancel
+			}
+		</div>
+	}
 }
 
 type User struct {
