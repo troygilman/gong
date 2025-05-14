@@ -7,7 +7,6 @@ import (
 	"github.com/troygilman/gong/link"
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"log"
 )
 
@@ -23,9 +22,14 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@target.New().WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx))) {
+	<div
+		id={ hooks.ComponentID(ctx) }
+		hx-get
+		hx-trigger={ gong.TriggerAfterSwapOOB(hooks.OutletID(ctx)) }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+	>
 		@tabList()
-	}
+	</div>
 	@outlet.New(outlet.WithAttrs(templ.Attributes{"style": "border-style: solid"}))
 }
 

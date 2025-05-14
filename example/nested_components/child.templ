@@ -3,8 +3,7 @@ package nested_components
 import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/target"
+	"github.com/troygilman/gong/hooks"
 )
 
 type ChildComponent struct{}
@@ -15,10 +14,15 @@ func NewChildComponent() gong.Component {
 
 templ (c ChildComponent) View() {
 	<div class={ BoxClass() }>
-		@target.New()
-		@form.New(form.WithSwap(gong.SwapOuterHTML)) {
+		<div id={ hooks.ComponentID(ctx) }></div>
+		<form
+			hx-post
+			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-swap={ gong.SwapOuterHTML }
+			hx-headers={ hooks.ActionHeaders(ctx) }
+		>
 			<button>Click</button>
-		}
+		</form>
 	</div>
 }
 

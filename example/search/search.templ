@@ -3,10 +3,8 @@ package search
 import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
 	"github.com/troygilman/gong/hooks"
 	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"net/http"
 	"strings"
 )
@@ -28,10 +26,11 @@ type SearchComponent struct {
 }
 
 templ (c SearchComponent) View() {
-	@form.New(
-		form.WithMethod(http.MethodPost),
-		form.WithSwap(gong.SwapInnerHTML),
-	) {
+	<form
+		hx-post
+		hx-target={ "#" + hooks.ComponentID(ctx) }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+	>
 		<input
 			type="search"
 			name="name"
@@ -44,8 +43,8 @@ templ (c SearchComponent) View() {
 			hx-trigger="input changed delay:200ms"
 		/>
 		@searchOptions([]string{})
-	}
-	@target.New()
+	</form>
+	<div id={ hooks.ComponentID(ctx) }></div>
 }
 
 templ (c SearchComponent) Action() {

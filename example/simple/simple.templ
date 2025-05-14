@@ -2,22 +2,24 @@ package main
 
 import (
 	"fmt"
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/target"
+	"github.com/troygilman/gong/hooks"
 )
 
 type SimpleComponent struct{}
 
 templ (component SimpleComponent) View() {
-	@target.New() {
+	<div id={ hooks.ComponentID(ctx) }>
 		Hello World
-	}
-	@form.New(form.WithSwap(gong.SwapInnerHTML)) {
+	</div>
+	<form
+		hx-post
+		hx-target={ "#" + hooks.ComponentID(ctx) }
+		hx-headers={ hooks.ActionHeaders(ctx) }
+	>
 		<button>
 			Submit
 		</button>
-	}
+	</form>
 }
 
 templ (component SimpleComponent) Action() {
