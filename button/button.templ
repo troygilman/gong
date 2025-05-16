@@ -38,7 +38,7 @@ templ New(opts ...Option) {
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		hx-include="this"
 		if c.classes != nil {
-			class={ c.classes.String() }
+			class={ c.classes }
 		}
 		{ c.attrs... }
 	>
@@ -87,7 +87,7 @@ func WithSwap(swap string) Option {
 
 func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.classes = templ.Classes(classes)
+		c.classes = templ.Classes(classes...)
 		return c
 	}
 }

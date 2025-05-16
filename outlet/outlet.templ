@@ -25,7 +25,7 @@ templ New(opts ...Option) {
 			hx-swap-oob={ gong.SwapInnerHTML }
 		}
 		if c.classes != nil {
-			class={ c.classes.String() }
+			class={ c.classes }
 		}
 		{ c.attrs... }
 	>
@@ -68,7 +68,7 @@ func WithOOB(oob bool) Option {
 
 func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.classes = templ.Classes(classes)
+		c.classes = templ.Classes(classes...)
 		return c
 	}
 }

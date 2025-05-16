@@ -23,7 +23,7 @@ templ New(path string, opts ...Option) {
 		hx-headers={ hooks.LinkHeaders(ctx, c.headers...) }
 		hx-push-url="true"
 		if c.classes != nil {
-			class={ c.classes.String() }
+			class={ c.classes }
 		}
 		{ c.attrs... }
 	>
@@ -74,7 +74,7 @@ func WithAttrs(attrs templ.Attributes) Option {
 
 func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.classes = templ.Classes(classes)
+		c.classes = templ.Classes(classes...)
 		return c
 	}
 }

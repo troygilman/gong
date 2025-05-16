@@ -41,7 +41,7 @@ func New(path string, opts ...Option) templ.Component {
 		for _, opt := range opts {
 			c = opt(c)
 		}
-		var templ_7745c5c3_Var2 = []any{c.classes.String()}
+		var templ_7745c5c3_Var2 = []any{c.classes}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -180,7 +180,7 @@ func WithAttrs(attrs templ.Attributes) Option {
 
 func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.classes = templ.Classes(classes)
+		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
