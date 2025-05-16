@@ -6,7 +6,7 @@ import (
 )
 
 func Route() gong.Route {
-	return gong.NewRoute("/", gong.NewComponent(TabsComponent{}), gong.RouteWithChildren(
+	return gong.NewRoute("/", gong.NewComponent(TabsComponent{}), gong.WithChildren(
 		gong.NewRoute("1", gong.NewComponent(TabContentComponent{"Tab 1 Content"})),
 		gong.NewRoute("2", gong.NewComponent(TabContentComponent{"Tab 2 Content"})),
 		gong.NewRoute("3", gong.NewComponent(TabContentComponent{"Tab 3 Content"})),

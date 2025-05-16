@@ -13,7 +13,7 @@ func main() {
 
 	svr := gong.NewServer()
 	svr.Route(gong.NewRoute("/", gong.NewComponent(homeView{}),
-		gong.RouteWithChildren(
+		gong.WithChildren(
 			gong.NewRoute("users", gong.NewComponent(listView{
 				db:            db,
 				UserComponent: userComponent,

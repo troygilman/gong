@@ -40,7 +40,7 @@ func TestComponentRenderAction_withLoader(t *testing.T) {
 func TestComponentFind(t *testing.T) {
 	mock := testComponent{}
 
-	component := NewComponent(mock, ComponentWithID("mock"))
+	component := NewComponent(mock, withID("mock"))
 
 	foundComponent, ok := component.Find("mock")
 
@@ -49,9 +49,9 @@ func TestComponentFind(t *testing.T) {
 }
 
 func TestComponentFind_withNestedComponent(t *testing.T) {
-	child := NewComponent(testComponent{}, ComponentWithID("mock"))
+	child := NewComponent(testComponent{}, withID("mock"))
 
-	component := NewComponent(testParentComponent{Child: child}, ComponentWithID("parent"))
+	component := NewComponent(testParentComponent{Child: child}, withID("parent"))
 
 	foundComponent, ok := component.Find("parent_mock")
 

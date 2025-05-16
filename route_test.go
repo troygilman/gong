@@ -12,7 +12,7 @@ func TestRouteBasic(t *testing.T) {
 		view: testTemplComponent{text: "view"},
 	}
 
-	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
+	route := NewRoute("/", NewComponent(comp, withID("mock")))
 
 	assert.Equals(t, "/", route.Path())
 	assert.Equals(t, nil, route.Child(0))
@@ -30,7 +30,7 @@ func TestRouteRenderAction(t *testing.T) {
 		action: testTemplComponent{text: "action"},
 	}
 
-	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
+	route := NewRoute("/", NewComponent(comp, withID("mock")))
 
 	ctx := gongContext{
 		Action:      true,
@@ -47,7 +47,7 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 		loaderData: "action",
 	}
 
-	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
+	route := NewRoute("/", NewComponent(comp, withID("mock")))
 
 	ctx := gongContext{
 		Action:      true,

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	svr := gong.NewServer(gong.ServerWithErrorHandler(func(ctx context.Context, err error) {
+	svr := gong.NewServer(gong.WithErrorHandler(func(ctx context.Context, err error) {
 		log.Println(err)
 		gong.Header(ctx).Set("Hx-Reswap", "none")
 	}))

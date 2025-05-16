@@ -144,7 +144,7 @@ type ComponentOption func(gongComponent) gongComponent
 // WithID sets a custom ID for the component.
 // This ID is used for component identification and event handling.
 // Returns the modified component for method chaining.
-func ComponentWithID(id string) ComponentOption {
+func withID(id string) ComponentOption {
 	return func(gc gongComponent) gongComponent {
 		gc.id = id
 		return gc

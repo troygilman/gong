@@ -15,7 +15,7 @@ type ServerOption func(*Server) *Server
 
 // WithErrorHandler sets a custom error handler for the server.
 // The handler will be called when errors occur during request processing.
-func ServerWithErrorHandler(handler ErrorHandler) ServerOption {
+func WithErrorHandler(handler ErrorHandler) ServerOption {
 	return func(s *Server) *Server {
 		s.errorHandler = handler
 		return s
@@ -56,7 +56,7 @@ func (svr *Server) Route(route Route) {
 // Run starts the server and begins listening for HTTP requests on the specified address.
 // This method blocks until the server is stopped or encounters an error.
 func (svr *Server) Run(addr string) error {
-	root := NewRoute("", NewComponent(indexComponent{}), RouteWithChildren(svr.routes...))
+	root := NewRoute("", NewComponent(indexComponent{}), WithChildren(svr.routes...))
 
 	for i := range root.NumChildren() {
 		child := root.Child(i)

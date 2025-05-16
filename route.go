@@ -100,7 +100,7 @@ type RouteOption func(gongRoute) gongRoute
 
 // WithChildren sets the child routes for a route.
 // This allows for creating a hierarchical routing structure.
-func RouteWithChildren(children ...Route) RouteOption {
+func WithChildren(children ...Route) RouteOption {
 	return func(gr gongRoute) gongRoute {
 		gr.children = children
 		return gr
