@@ -41,26 +41,26 @@ type CounterComponent struct {}
 templ (c CounterComponent) View() {
 	@target.New() {
 		<p>Count: 0</p>
-        @button.New() {
-        	Increment
-        	<input type="hidden" name="count" value="0"/>
-        }
+		@button.New() {
+			Increment
+			<input type="hidden" name="count" value="0"/>
+		}
 	}
 }
 
 // Action method handles user interactions
 templ (c CounterComponent) Action() {
     {{
-        // Update state when the button is clicked
-        count, err := strconv.Atoi(hooks.FormValue(ctx, "count"))
-        if err != nil {
-        	return err
-        }
+    	// Update state when the button is clicked
+     	count, err := strconv.Atoi(hooks.FormValue(ctx, "count"))
+      	if err != nil {
+       		return err
+       	}
     }}
     <p>Count: {count}</p>
     @button.New() {
-        Increment
-       	<input type="hidden" name="count" value={ strconv.Itoa(count+1) }/>
+    	Increment
+     	<input type="hidden" name="count" value={ strconv.Itoa(count+1) }/>
     }
 }
 
