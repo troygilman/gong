@@ -32,7 +32,7 @@ func NewForm(opts ...FormOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		c := FormConfig{
+		c := formConfig{
 			method: http.MethodPost,
 			swap:   SwapInnerHTML,
 		}
@@ -201,7 +201,7 @@ func NewForm(opts ...FormOption) templ.Component {
 	})
 }
 
-type FormConfig struct {
+type formConfig struct {
 	method  string
 	swap    string
 	target  string
@@ -211,52 +211,52 @@ type FormConfig struct {
 	classes templ.CSSClasses
 }
 
-type FormOption func(FormConfig) FormConfig
+type FormOption func(formConfig) formConfig
 
 func FormWithMethod(method string) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.method = method
 		return c
 	}
 }
 
 func FormWithHeaders(headers ...string) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.headers = headers
 		return c
 	}
 }
 
 func FormWithAttrs(attrs templ.Attributes) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
 func FormWithSwap(swap string) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.swap = swap
 		return c
 	}
 }
 
 func FormWithClasses(classes ...any) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
 func FormWithTarget(target string) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.target = target
 		return c
 	}
 }
 
 func FormWithTrigger(trigger string) FormOption {
-	return func(c FormConfig) FormConfig {
+	return func(c formConfig) formConfig {
 		c.trigger = &trigger
 		return c
 	}

@@ -32,7 +32,7 @@ func NewButton(opts ...ButtonOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		c := ButtonConfig{
+		c := buttonConfig{
 			method: http.MethodPost,
 			swap:   SwapInnerHTML,
 		}
@@ -182,7 +182,7 @@ func NewButton(opts ...ButtonOption) templ.Component {
 	})
 }
 
-type ButtonConfig struct {
+type buttonConfig struct {
 	method  string
 	swap    string
 	headers []string
@@ -191,45 +191,45 @@ type ButtonConfig struct {
 	target  string
 }
 
-type ButtonOption func(ButtonConfig) ButtonConfig
+type ButtonOption func(buttonConfig) buttonConfig
 
 func ButtonWithMethod(method string) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.method = method
 		return c
 	}
 }
 
 func ButtonWithHeaders(headers ...string) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.headers = headers
 		return c
 	}
 }
 
 func ButtonWithAttrs(attrs templ.Attributes) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
 func ButtonWithSwap(swap string) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.swap = swap
 		return c
 	}
 }
 
 func ButtonWithClasses(classes ...any) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
 func ButtonWithTarget(target string) ButtonOption {
-	return func(c ButtonConfig) ButtonConfig {
+	return func(c buttonConfig) buttonConfig {
 		c.target = target
 		return c
 	}

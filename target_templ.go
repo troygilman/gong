@@ -32,7 +32,7 @@ func NewTarget(opts ...TargetOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		c := TargetConfig{
+		c := targetConfig{
 			method:  http.MethodGet,
 			swap:    SwapInnerHTML,
 			trigger: "none",
@@ -168,7 +168,7 @@ func NewTarget(opts ...TargetOption) templ.Component {
 	})
 }
 
-type TargetConfig struct {
+type targetConfig struct {
 	method  string
 	trigger string
 	swap    string
@@ -176,38 +176,38 @@ type TargetConfig struct {
 	attrs   templ.Attributes
 }
 
-type TargetOption func(TargetConfig) TargetConfig
+type TargetOption func(targetConfig) targetConfig
 
 func TargetWithTrigger(trigger string) TargetOption {
-	return func(c TargetConfig) TargetConfig {
+	return func(c targetConfig) targetConfig {
 		c.trigger = trigger
 		return c
 	}
 }
 
 func TargetWithMethod(method string) TargetOption {
-	return func(c TargetConfig) TargetConfig {
+	return func(c targetConfig) targetConfig {
 		c.method = method
 		return c
 	}
 }
 
 func TargetWithSwap(swap string) TargetOption {
-	return func(c TargetConfig) TargetConfig {
+	return func(c targetConfig) targetConfig {
 		c.swap = swap
 		return c
 	}
 }
 
 func TargetWithClasses(classes ...any) TargetOption {
-	return func(c TargetConfig) TargetConfig {
+	return func(c targetConfig) targetConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
 func TargetWithAttrs(attrs templ.Attributes) TargetOption {
-	return func(c TargetConfig) TargetConfig {
+	return func(c targetConfig) targetConfig {
 		c.attrs = attrs
 		return c
 	}

@@ -30,7 +30,7 @@ func NewLink(path string, opts ...LinkOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		c := LinkConfig{
+		c := linkConfig{
 			trigger: TriggerClick,
 		}
 		for _, opt := range opts {
@@ -135,7 +135,7 @@ func NewLink(path string, opts ...LinkOption) templ.Component {
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
-type LinkConfig struct {
+type linkConfig struct {
 	id      string
 	headers []string
 	trigger string
@@ -143,38 +143,38 @@ type LinkConfig struct {
 	attrs   templ.Attributes
 }
 
-type LinkOption func(LinkConfig) LinkConfig
+type LinkOption func(linkConfig) linkConfig
 
 func LinkWithID(id string) LinkOption {
-	return func(c LinkConfig) LinkConfig {
+	return func(c linkConfig) linkConfig {
 		c.id = id
 		return c
 	}
 }
 
 func LinkWithHeaders(headers ...string) LinkOption {
-	return func(c LinkConfig) LinkConfig {
+	return func(c linkConfig) linkConfig {
 		c.headers = headers
 		return c
 	}
 }
 
 func LinkWithTrigger(trigger string) LinkOption {
-	return func(c LinkConfig) LinkConfig {
+	return func(c linkConfig) linkConfig {
 		c.trigger = trigger
 		return c
 	}
 }
 
 func LinkWithAttrs(attrs templ.Attributes) LinkOption {
-	return func(c LinkConfig) LinkConfig {
+	return func(c linkConfig) linkConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
 func LinkWithClasses(classes ...any) LinkOption {
-	return func(c LinkConfig) LinkConfig {
+	return func(c linkConfig) linkConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}

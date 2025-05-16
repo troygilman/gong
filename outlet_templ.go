@@ -38,7 +38,7 @@ func NewOutlet(opts ...OutletOption) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		c := OutletConfig{}
+		c := outletConfig{}
 		for _, opt := range opts {
 			c = opt(c)
 		}
@@ -133,30 +133,30 @@ func NewOutlet(opts ...OutletOption) templ.Component {
 // Outlet represents a container component that renders child routes.
 // It serves as a dynamic content area where route components are rendered
 // based on the current URL path. Outlets are essential for nested routing.
-type OutletConfig struct {
+type outletConfig struct {
 	oob     bool
 	attrs   templ.Attributes
 	classes templ.CSSClasses
 }
 
-type OutletOption func(OutletConfig) OutletConfig
+type OutletOption func(outletConfig) outletConfig
 
 func OutletWithAttrs(attrs templ.Attributes) OutletOption {
-	return func(c OutletConfig) OutletConfig {
+	return func(c outletConfig) outletConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
-func OutletWithOOB(oob bool) OutletOption {
-	return func(c OutletConfig) OutletConfig {
+func outletWithOOB(oob bool) OutletOption {
+	return func(c outletConfig) outletConfig {
 		c.oob = oob
 		return c
 	}
 }
 
 func OutletWithClasses(classes ...any) OutletOption {
-	return func(c OutletConfig) OutletConfig {
+	return func(c outletConfig) outletConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
