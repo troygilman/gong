@@ -27,10 +27,10 @@ type gongContext struct {
 	ErrorHandler    ErrorHandler
 }
 
-func GetContext(ctx context.Context) gongContext {
+func getContext(ctx context.Context) gongContext {
 	return ctx.Value(contextKey).(gongContext)
 }
 
-func SetContext(ctx context.Context, gCtx gongContext) context.Context {
+func setContext(ctx context.Context, gCtx gongContext) context.Context {
 	return context.WithValue(ctx, contextKey, gCtx)
 }

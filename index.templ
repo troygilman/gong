@@ -4,7 +4,7 @@ type indexComponent struct{}
 
 templ (c indexComponent) View() {
 	{{
-		gCtx := GetContext(ctx)
+		gCtx := getContext(ctx)
 	}}
 	<html>
 		@gCtx.Route.Child(gCtx.ChildRouteIndex).Component().Head()

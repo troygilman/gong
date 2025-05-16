@@ -90,7 +90,7 @@ func (mock MockRoute) Render(ctx context.Context, w io.Writer) error {
 // that the output matches the expected string.
 func TestRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
 	buffer := bytes.NewBuffer([]byte{})
-	err := Render(context.Background(), gCtx, buffer, c)
+	err := render(context.Background(), gCtx, buffer, c)
 	assert.Equals(t, nil, err)
 	assert.Equals(t, expected, buffer.String())
 }

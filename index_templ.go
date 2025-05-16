@@ -32,7 +32,7 @@ func (c indexComponent) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		gCtx := GetContext(ctx)
+		gCtx := getContext(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

@@ -58,7 +58,7 @@ func NewComponent(view View, opts ...ComponentOption) Component {
 // It handles both normal rendering and action execution based on the context.
 // Returns an error if rendering fails.
 func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	gCtx.Component = component
 
 	if gCtx.ComponentID == "" {
@@ -67,7 +67,7 @@ func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
 		gCtx.ComponentID += idDelimeter + component.id
 	}
 
-	return Render(ctx, gCtx, w, component.view.View())
+	return render(ctx, gCtx, w, component.view.View())
 }
 
 func (component gongComponent) View() templ.Component {
@@ -79,9 +79,9 @@ func (component gongComponent) Action() templ.Component {
 		if component.action == nil {
 			return nil
 		}
-		gCtx := GetContext(ctx)
+		gCtx := getContext(ctx)
 		gCtx.Component = component
-		return Render(ctx, gCtx, w, component.action.Action())
+		return render(ctx, gCtx, w, component.action.Action())
 	})
 }
 

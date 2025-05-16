@@ -111,11 +111,11 @@ func NewOutlet(opts ...OutletOption) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-			gCtx := GetContext(ctx)
+			gCtx := getContext(ctx)
 			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
 				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
 				gCtx.Depth++
-				return Render(ctx, gCtx, w, child)
+				return render(ctx, gCtx, w, child)
 			}
 			return nil
 		}).Render(ctx, templ_7745c5c3_Buffer)

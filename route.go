@@ -30,7 +30,7 @@ func NewRoute(path string, component Component, opts ...RouteOption) Route {
 }
 
 func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	gCtx.Route = route
 	gCtx.ChildRouteIndex = 0
 
@@ -43,7 +43,7 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 
 	if gCtx.Link {
 		gCtx.Link = false
-		return Render(ctx, gCtx, w, NewOutlet(OutletWithOOB(true)))
+		return render(ctx, gCtx, w, NewOutlet(OutletWithOOB(true)))
 	}
 
 	if gCtx.Action {
@@ -51,11 +51,11 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 		if !ok {
 			panic(fmt.Sprintf("could not find component with id %s in route %s", gCtx.ComponentID, route.path))
 		}
-		return Render(ctx, gCtx, w, component.Action())
+		return render(ctx, gCtx, w, component.Action())
 	}
 
 	gCtx.ComponentID = ""
-	return Render(ctx, gCtx, w, route.component.View())
+	return render(ctx, gCtx, w, route.component.View())
 }
 
 // Child returns the child route at the specified index.

@@ -122,7 +122,7 @@ func (svr *Server) setupRoute(
 			panic("route is nil")
 		}
 
-		if err := Render(r.Context(), gCtx, writer, gCtx.Route); err != nil {
+		if err := render(r.Context(), gCtx, writer, gCtx.Route); err != nil {
 			panic(err)
 		}
 

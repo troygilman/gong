@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/troygilman/gong/internal/bind"
+	"github.com/troygilman/gong/internal/util"
 )
 
 // Bind decodes form data from the current HTTP request into the provided destination.
@@ -40,21 +41,21 @@ func QueryParam(ctx context.Context, key string) string {
 // Request returns the current HTTP request object from the context.
 // This provides access to all request properties and methods.
 func Request(ctx context.Context) *http.Request {
-	return GetContext(ctx).Request
+	return getContext(ctx).Request
 }
 
 // LoaderData retrieves data loaded by a route's loader function.
 // The generic type parameter specifies the expected type of the loaded data.
 // Returns the zero value of the specified type if no loader data is available.
 func LoaderData[Data any](ctx context.Context) (data Data) {
-	return GetContext(ctx).Component.Loader(ctx).(Data)
+	return getContext(ctx).Component.Loader(ctx).(Data)
 }
 
 // Redirect sends a redirect response to the client with the specified path.
 // Uses HTTP status code 303 (See Other) for the redirect.
 // Returns an error if the redirect fails.
 func Redirect(ctx context.Context, path string) error {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	gCtx.Writer.Reset()
 	http.Redirect(gCtx.Writer, gCtx.Request, path, http.StatusSeeOther)
 	return nil
@@ -63,28 +64,28 @@ func Redirect(ctx context.Context, path string) error {
 // Header returns the HTTP header map that will be sent by the response.
 // This is useful for adding or modifying response headers.
 func Header(ctx context.Context) http.Header {
-	return GetContext(ctx).Writer.Header()
+	return getContext(ctx).Writer.Header()
 }
 
 // ChildRoute retrieves the child route from the current context.
 // This is useful when working with nested routes and needing to access
 // the currently active child route within a parent component.
 func ChildRoute(ctx context.Context) Route {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	return gCtx.Route.Child(gCtx.ChildRouteIndex)
 }
 
 // OutletID generates a unique ID for an outlet component based on the current route.
 // This is used internally by the outlet component for proper targeting in HTMX.
 func OutletID(ctx context.Context) string {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	return "gong_" + gCtx.CurrentRouteID + "_outlet"
 }
 
 // ComponentID generates a unique ID for a component based on the current route and component.
 // This is used internally by components for proper targeting in HTMX.
 func ComponentID(ctx context.Context) string {
-	gCtx := GetContext(ctx)
+	gCtx := getContext(ctx)
 	prefix := "gong_" + gCtx.CurrentRouteID
 	if gCtx.ComponentID != "" {
 		prefix += "_" + gCtx.ComponentID
@@ -95,11 +96,11 @@ func ComponentID(ctx context.Context) string {
 // ActionHeaders generates the HTMX header string for action requests.
 // This includes the standard Gong action headers plus any additional headers provided.
 func ActionHeaders(ctx context.Context, headers ...string) string {
-	return BuildHeaders(append(GongHeaders(ctx, GongRequestTypeAction), headers...))
+	return util.BuildHeaders(append(gongHeaders(ctx, GongRequestTypeAction), headers...))
 }
 
 // LinkHeaders generates the HTMX header string for link navigation requests.
 // This includes the standard Gong link headers plus any additional headers provided.
 func LinkHeaders(ctx context.Context, headers ...string) string {
-	return BuildHeaders(append(GongHeaders(ctx, GongRequestTypeLink), headers...))
+	return util.BuildHeaders(append(gongHeaders(ctx, GongRequestTypeLink), headers...))
 }
