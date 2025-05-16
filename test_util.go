@@ -11,84 +11,84 @@ import (
 	"github.com/troygilman/gong/internal/assert"
 )
 
-type MockComponent struct {
-	MockView       templ.Component
-	MockAction     templ.Component
-	MockLoaderData any
+type testComponent struct {
+	view       templ.Component
+	action     templ.Component
+	loaderData any
 }
 
-func (mc MockComponent) View() templ.Component {
-	if mc.MockView != nil {
-		return mc.MockView
+func (c testComponent) View() templ.Component {
+	if c.view != nil {
+		return c.view
 	} else {
-		return TextTemplComponent{"view"}
+		return testTemplComponent{"view"}
 	}
 }
 
-func (mc MockComponent) Action() templ.Component {
-	return mc.MockAction
+func (c testComponent) Action() templ.Component {
+	return c.action
 }
 
-func (mc MockComponent) Loader(ctx context.Context) any {
-	return mc.MockLoaderData
+func (c testComponent) Loader(ctx context.Context) any {
+	return c.loaderData
 }
 
-type TextTemplComponent struct {
-	Text string
+type testTemplComponent struct {
+	text string
 }
 
-func (c TextTemplComponent) Render(ctx context.Context, w io.Writer) error {
-	_, err := io.WriteString(w, c.Text)
+func (c testTemplComponent) Render(ctx context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, c.text)
 	return err
 }
 
-type LoaderTemplComponent struct{}
+type testLoaderTemplComponent struct{}
 
-func (c LoaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
+func (c testLoaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
 	_, err := io.WriteString(w, LoaderData[string](ctx))
 	return err
 }
 
-type ParentComponent struct {
+type testParentComponent struct {
 	Child Component
 }
 
-func (pc ParentComponent) View() templ.Component {
+func (c testParentComponent) View() templ.Component {
 	return nil
 }
 
-type MockRoute struct {
-	MockPath string
+type testRoute struct {
+	path string
 }
 
-func (mock MockRoute) Child(id int) Route {
+func (r testRoute) Child(id int) Route {
 	return nil
 }
 
-func (mock MockRoute) NumChildren() int {
+func (r testRoute) NumChildren() int {
 	return 0
 }
 
-func (mock MockRoute) Find(id string) (Route, int) {
+func (r testRoute) Find(id string) (Route, int) {
 	return nil, 0
 }
 
-func (mock MockRoute) Path() string {
-	return mock.MockPath
+func (r testRoute) Path() string {
+	return r.path
 }
 
-func (mock MockRoute) Component() Component {
+func (r testRoute) Component() Component {
 	return nil
 }
 
-func (mock MockRoute) Render(ctx context.Context, w io.Writer) error {
+func (r testRoute) Render(ctx context.Context, w io.Writer) error {
 	return nil
 }
 
 // testRender is a helper function for testing templ component rendering.
 // It renders the given component with the provided context and asserts
 // that the output matches the expected string.
-func TestRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
+func testRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
 	buffer := bytes.NewBuffer([]byte{})
 	err := render(context.Background(), gCtx, buffer, c)
 	assert.Equals(t, nil, err)
@@ -98,7 +98,7 @@ func TestRender(t *testing.T, c templ.Component, gCtx gongContext, expected stri
 // newRequest creates a new HTTP request with the given method and URL.
 // It panics if the request creation fails. This is a helper function
 // for creating request objects in tests.
-func NewRequest(method string, url string) *http.Request {
+func newTestRequest(method string, url string) *http.Request {
 	r, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		panic(err)

@@ -8,8 +8,8 @@ import (
 )
 
 func TestRouteBasic(t *testing.T) {
-	comp := MockComponent{
-		MockView: TextTemplComponent{Text: "view"},
+	comp := testComponent{
+		view: testTemplComponent{text: "view"},
 	}
 
 	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
@@ -19,15 +19,15 @@ func TestRouteBasic(t *testing.T) {
 	assert.Equals(t, 0, route.NumChildren())
 
 	ctx := gongContext{
-		Request: NewRequest(http.MethodGet, "/"),
+		Request: newTestRequest(http.MethodGet, "/"),
 	}
 
-	TestRender(t, route, ctx, "view")
+	testRender(t, route, ctx, "view")
 }
 
 func TestRouteRenderAction(t *testing.T) {
-	comp := MockComponent{
-		MockAction: TextTemplComponent{Text: "action"},
+	comp := testComponent{
+		action: testTemplComponent{text: "action"},
 	}
 
 	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
@@ -35,16 +35,16 @@ func TestRouteRenderAction(t *testing.T) {
 	ctx := gongContext{
 		Action:      true,
 		ComponentID: "mock",
-		Request:     NewRequest(http.MethodGet, "/"),
+		Request:     newTestRequest(http.MethodGet, "/"),
 	}
 
-	TestRender(t, route, ctx, "action")
+	testRender(t, route, ctx, "action")
 }
 
 func TestRouteRenderAction_withLoader(t *testing.T) {
-	comp := MockComponent{
-		MockAction:     LoaderTemplComponent{},
-		MockLoaderData: "action",
+	comp := testComponent{
+		action:     testLoaderTemplComponent{},
+		loaderData: "action",
 	}
 
 	route := NewRoute("/", NewComponent(comp, ComponentWithID("mock")))
@@ -52,8 +52,8 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 	ctx := gongContext{
 		Action:      true,
 		ComponentID: "mock",
-		Request:     NewRequest(http.MethodGet, "/"),
+		Request:     newTestRequest(http.MethodGet, "/"),
 	}
 
-	TestRender(t, route, ctx, "action")
+	testRender(t, route, ctx, "action")
 }

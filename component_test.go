@@ -7,38 +7,38 @@ import (
 )
 
 func TestComponentRenderView(t *testing.T) {
-	mock := MockComponent{
-		MockView: TextTemplComponent{Text: "view"},
+	mock := testComponent{
+		view: testTemplComponent{text: "view"},
 	}
 
 	component := NewComponent(mock)
 
-	TestRender(t, component, gongContext{}, "view")
+	testRender(t, component, gongContext{}, "view")
 }
 
 func TestComponentRenderAction(t *testing.T) {
-	mock := MockComponent{
-		MockAction: TextTemplComponent{Text: "action"},
+	mock := testComponent{
+		action: testTemplComponent{text: "action"},
 	}
 
 	component := NewComponent(mock)
 
-	TestRender(t, component.Action(), gongContext{}, "action")
+	testRender(t, component.Action(), gongContext{}, "action")
 }
 
 func TestComponentRenderAction_withLoader(t *testing.T) {
-	mock := MockComponent{
-		MockAction:     LoaderTemplComponent{},
-		MockLoaderData: "action",
+	mock := testComponent{
+		action:     testLoaderTemplComponent{},
+		loaderData: "action",
 	}
 
 	component := NewComponent(mock)
 
-	TestRender(t, component.Action(), gongContext{}, "action")
+	testRender(t, component.Action(), gongContext{}, "action")
 }
 
 func TestComponentFind(t *testing.T) {
-	mock := MockComponent{}
+	mock := testComponent{}
 
 	component := NewComponent(mock, ComponentWithID("mock"))
 
@@ -49,9 +49,9 @@ func TestComponentFind(t *testing.T) {
 }
 
 func TestComponentFind_withNestedComponent(t *testing.T) {
-	child := NewComponent(MockComponent{}, ComponentWithID("mock"))
+	child := NewComponent(testComponent{}, ComponentWithID("mock"))
 
-	component := NewComponent(ParentComponent{Child: child}, ComponentWithID("parent"))
+	component := NewComponent(testParentComponent{Child: child}, ComponentWithID("parent"))
 
 	foundComponent, ok := component.Find("parent_mock")
 
