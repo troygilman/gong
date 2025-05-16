@@ -2,7 +2,7 @@ package form
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"net/http"
 )
 
@@ -33,12 +33,12 @@ templ New(opts ...Option) {
 		if c.target != "" {
 			hx-target={ c.target }
 		} else {
-			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-target={ "#" + hook.ComponentID(ctx) }
 		}
 		if c.trigger != nil {
 			hx-trigger={ *c.trigger }
 		}
-		hx-headers={ hooks.ActionHeaders(ctx, c.headers...) }
+		hx-headers={ hook.ActionHeaders(ctx, c.headers...) }
 		if c.classes != nil {
 			class={ c.classes }
 		}

@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 )
 
 func New(path string, opts ...Option) templ.Component {
@@ -86,9 +86,9 @@ func New(path string, opts ...Option) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.LinkHeaders(ctx, c.headers...))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hook.LinkHeaders(ctx, c.headers...))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 23, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `link/link.templ`, Line: 23, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {

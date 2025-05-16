@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/target"
 	"net/http"
 )
@@ -42,7 +42,7 @@ func (view listView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch hooks.Request(ctx).Method {
+		switch hook.Request(ctx).Method {
 		case http.MethodGet:
 			users := view.db.ReadAll()
 			for _, user := range users {
@@ -52,7 +52,7 @@ func (view listView) Action() templ.Component {
 				}
 			}
 		case http.MethodPost:
-			name := hooks.FormValue(ctx, "name")
+			name := hook.FormValue(ctx, "name")
 			user := userData{
 				name: name,
 			}

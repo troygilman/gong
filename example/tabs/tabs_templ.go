@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/link"
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
@@ -72,7 +72,7 @@ func (c TabsComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hook.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -135,7 +135,7 @@ func tabList() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		activeTab := hooks.ChildRoute(ctx).Path()
+		activeTab := hook.ChildRoute(ctx).Path()
 		log.Println(activeTab)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"tab-list\">")
 		if templ_7745c5c3_Err != nil {

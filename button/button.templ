@@ -2,7 +2,7 @@ package button
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"net/http"
 )
 
@@ -33,9 +33,9 @@ templ New(opts ...Option) {
 		if c.target != "" {
 			hx-target={ c.target }
 		} else {
-			hx-target={ "#" + hooks.ComponentID(ctx) }
+			hx-target={ "#" + hook.ComponentID(ctx) }
 		}
-		hx-headers={ hooks.ActionHeaders(ctx) }
+		hx-headers={ hook.ActionHeaders(ctx) }
 		hx-include="this"
 		if c.classes != nil {
 			class={ c.classes }

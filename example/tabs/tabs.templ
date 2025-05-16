@@ -3,7 +3,7 @@ package tabs
 import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/link"
 	"github.com/troygilman/gong/outlet"
 	"github.com/troygilman/gong/route"
@@ -23,7 +23,7 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hooks.OutletID(ctx)))) {
+	@target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hook.OutletID(ctx)))) {
 		@tabList()
 	}
 	@outlet.New(outlet.WithAttrs(templ.Attributes{"style": "border-style: solid"}))
@@ -35,7 +35,7 @@ templ (c TabsComponent) Action() {
 
 templ tabList() {
 	{{
-		activeTab := hooks.ChildRoute(ctx).Path()
+		activeTab := hook.ChildRoute(ctx).Path()
 		log.Println(activeTab)
 	}}
 	<div class="tab-list">

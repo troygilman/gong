@@ -8,7 +8,7 @@ package target
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/troygilman/gong/hooks"
+import "github.com/troygilman/gong/hook"
 import "net/http"
 import "github.com/troygilman/gong"
 
@@ -52,9 +52,9 @@ func New(opts ...Option) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ComponentID(ctx))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ComponentID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 19, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 19, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -119,9 +119,9 @@ func New(opts ...Option) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 35, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `target/target.templ`, Line: 35, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
 	"net/http"
@@ -73,9 +73,9 @@ func (c SearchComponent) View() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ActionHeaders(ctx))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ActionHeaders(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 38, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/search/search.templ`, Line: 38, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -137,9 +137,9 @@ func (c SearchComponent) Action() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch hooks.Request(ctx).Method {
+		switch hook.Request(ctx).Method {
 		case http.MethodGet:
-			queryName := hooks.QueryParam(ctx, "name")
+			queryName := hook.QueryParam(ctx, "name")
 			queryName = strings.ToLower(queryName)
 			matches := []string{}
 			if queryName != "" {
@@ -154,7 +154,7 @@ func (c SearchComponent) Action() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case http.MethodPost:
-			queryName := hooks.FormValue(ctx, "name")
+			queryName := hook.FormValue(ctx, "name")
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(queryName)
 			if templ_7745c5c3_Err != nil {

@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/link"
 	"log"
 	"net/http"
@@ -25,7 +25,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := hooks.FormValue(ctx, "name")
+	name := hook.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -54,14 +54,14 @@ func (view userView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch hooks.Request(ctx).Method {
+		switch hook.Request(ctx).Method {
 		case http.MethodDelete:
-			name := hooks.FormValue(ctx, "name")
+			name := hook.FormValue(ctx, "name")
 			view.db.Delete(name)
 		case http.MethodPatch:
-			log.Println(hooks.PathParam(ctx, "name"))
-			name := hooks.FormValue(ctx, "name")
-			balance, err := strconv.Atoi(hooks.FormValue(ctx, "balance"))
+			log.Println(hook.PathParam(ctx, "name"))
+			name := hook.FormValue(ctx, "name")
+			balance, err := strconv.Atoi(hook.FormValue(ctx, "balance"))
 			if err != nil {
 				panic(err)
 			}
@@ -100,7 +100,7 @@ func (view userView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		user := hooks.LoaderData[userData](ctx)
+		user := hook.LoaderData[userData](ctx)
 		var templ_7745c5c3_Var3 = []any{boxClassName()}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 		if templ_7745c5c3_Err != nil {
@@ -111,9 +111,9 @@ func (view userView) View() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hooks.ComponentID(ctx) + "-" + user.name)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ComponentID(ctx) + "-" + user.name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 56, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 56, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -209,7 +209,7 @@ func (view userView) View() templ.Component {
 		})
 		templ_7745c5c3_Err = form.New(
 			form.WithMethod(http.MethodPatch),
-			form.WithTarget("#"+hooks.ComponentID(ctx)+"-"+user.name),
+			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
 			form.WithSwap(gong.SwapOuterHTML),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func (view userView) View() templ.Component {
 		})
 		templ_7745c5c3_Err = form.New(
 			form.WithMethod(http.MethodDelete),
-			form.WithTarget("#"+hooks.ComponentID(ctx)+"-"+user.name),
+			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
 			form.WithSwap(gong.SwapOuterHTML),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

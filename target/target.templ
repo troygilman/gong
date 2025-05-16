@@ -1,6 +1,6 @@
 package target
 
-import "github.com/troygilman/gong/hooks"
+import "github.com/troygilman/gong/hook"
 import "net/http"
 import "github.com/troygilman/gong"
 
@@ -16,7 +16,7 @@ templ New(opts ...Option) {
 		}
 	}}
 	<div
-		id={ hooks.ComponentID(ctx) }
+		id={ hook.ComponentID(ctx) }
 		if c.method == http.MethodGet {
 			hx-get
 		}
@@ -32,7 +32,7 @@ templ New(opts ...Option) {
 		hx-trigger={ c.trigger }
 		hx-target="this"
 		hx-swap={ c.swap }
-		hx-headers={ hooks.ActionHeaders(ctx) }
+		hx-headers={ hook.ActionHeaders(ctx) }
 		if c.classes != nil {
 			class={ c.classes }
 		}

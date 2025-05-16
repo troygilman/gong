@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/link"
 	"log"
 	"net/http"
@@ -17,7 +17,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := hooks.FormValue(ctx, "name")
+	name := hook.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -26,17 +26,17 @@ func (view userView) Loader(ctx context.Context) any {
 }
 
 templ (view userView) Action() {
-	switch hooks.Request(ctx).Method {
+	switch hook.Request(ctx).Method {
 		case http.MethodDelete:
 			{{
-				name := hooks.FormValue(ctx, "name")
+				name := hook.FormValue(ctx, "name")
 				view.db.Delete(name)
 			}}
 		case http.MethodPatch:
 			{{
-				log.Println(hooks.PathParam(ctx, "name"))
-				name := hooks.FormValue(ctx, "name")
-				balance, err := strconv.Atoi(hooks.FormValue(ctx, "balance"))
+				log.Println(hook.PathParam(ctx, "name"))
+				name := hook.FormValue(ctx, "name")
+				balance, err := strconv.Atoi(hook.FormValue(ctx, "balance"))
 				if err != nil {
 					panic(err)
 				}
@@ -51,15 +51,15 @@ templ (view userView) Action() {
 
 templ (view userView) View() {
 	{{
-	user := hooks.LoaderData[userData](ctx)
+	user := hook.LoaderData[userData](ctx)
 	}}
-	<div id={ hooks.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
+	<div id={ hook.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
 		@link.New("/user/" + user.name) {
 			{ user.name }
 		}
 		@form.New(
 			form.WithMethod(http.MethodPatch),
-			form.WithTarget("#"+hooks.ComponentID(ctx)+"-"+user.name),
+			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
 			form.WithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
@@ -68,7 +68,7 @@ templ (view userView) View() {
 		}
 		@form.New(
 			form.WithMethod(http.MethodDelete),
-			form.WithTarget("#"+hooks.ComponentID(ctx)+"-"+user.name),
+			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
 			form.WithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>

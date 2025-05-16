@@ -2,7 +2,7 @@ package link
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 )
 
 templ New(path string, opts ...Option) {
@@ -20,7 +20,7 @@ templ New(path string, opts ...Option) {
 		hx-boost="true"
 		hx-trigger={ c.trigger }
 		hx-swap="none"
-		hx-headers={ hooks.LinkHeaders(ctx, c.headers...) }
+		hx-headers={ hook.LinkHeaders(ctx, c.headers...) }
 		hx-push-url="true"
 		if c.classes != nil {
 			class={ c.classes }

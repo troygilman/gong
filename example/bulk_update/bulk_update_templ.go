@@ -14,7 +14,7 @@ import (
 	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
 	"net/http"
@@ -115,9 +115,9 @@ func (c BulkUpdateComponent) Action() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch hooks.Request(ctx).Method {
+		switch hook.Request(ctx).Method {
 		case http.MethodGet:
-			index, err := strconv.Atoi(hooks.QueryParam(ctx, "index"))
+			index, err := strconv.Atoi(hook.QueryParam(ctx, "index"))
 			if err != nil {
 				panic(err)
 			}
@@ -127,7 +127,7 @@ func (c BulkUpdateComponent) Action() templ.Component {
 			}
 		case http.MethodPost:
 			var data PostFormData
-			if err := hooks.Bind(ctx, &data); err != nil {
+			if err := hook.Bind(ctx, &data); err != nil {
 				panic(err)
 			}
 			for _, person := range data.People {

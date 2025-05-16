@@ -13,7 +13,7 @@ import (
 	"github.com/troygilman/gong/button"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
 	"net/http"
@@ -103,12 +103,12 @@ func (c UserDetailComponent) Action() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 
 		var user User
-		if err := hooks.Bind(ctx, &user); err != nil {
+		if err := hook.Bind(ctx, &user); err != nil {
 			panic(err)
 		}
-		switch hooks.Request(ctx).Method {
+		switch hook.Request(ctx).Method {
 		case http.MethodGet:
-			if hooks.FormValue(ctx, "view") == "form" {
+			if hook.FormValue(ctx, "view") == "form" {
 				templ_7745c5c3_Err = userForm(user).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

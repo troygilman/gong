@@ -4,7 +4,7 @@ import (
 	"github.com/troygilman/gong"
 	"github.com/troygilman/gong/component"
 	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/route"
 	"github.com/troygilman/gong/target"
 	"net/http"
@@ -35,7 +35,7 @@ templ (c SearchComponent) View() {
 			list="options"
 			autocomplete="off"
 			hx-get
-			hx-headers={ hooks.ActionHeaders(ctx) }
+			hx-headers={ hook.ActionHeaders(ctx) }
 			hx-target="#options"
 			hx-swap={ gong.SwapOuterHTML }
 			hx-trigger="input changed delay:200ms"
@@ -46,10 +46,10 @@ templ (c SearchComponent) View() {
 }
 
 templ (c SearchComponent) Action() {
-	switch hooks.Request(ctx).Method {
+	switch hook.Request(ctx).Method {
 		case http.MethodGet:
 			{{
-			queryName := hooks.QueryParam(ctx, "name")
+			queryName := hook.QueryParam(ctx, "name")
 			queryName = strings.ToLower(queryName)
 			matches := []string{}
 			if queryName != "" {
@@ -63,7 +63,7 @@ templ (c SearchComponent) Action() {
 			@searchOptions(matches)
 		case http.MethodPost:
 			{{
-				queryName := hooks.FormValue(ctx, "name")
+				queryName := hook.FormValue(ctx, "name")
 			}}
 			{ queryName }
 	}

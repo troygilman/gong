@@ -9,7 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/internal/assert"
 	"github.com/troygilman/gong/internal/gctx"
 	"github.com/troygilman/gong/internal/util"
@@ -49,7 +49,7 @@ func (c TextTemplComponent) Render(ctx context.Context, w io.Writer) error {
 type LoaderTemplComponent struct{}
 
 func (c LoaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
-	_, err := io.WriteString(w, hooks.LoaderData[string](ctx))
+	_, err := io.WriteString(w, hook.LoaderData[string](ctx))
 	return err
 }
 

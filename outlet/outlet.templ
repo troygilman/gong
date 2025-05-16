@@ -3,7 +3,7 @@ package outlet
 import (
 	"context"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hooks"
+	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/internal/gctx"
 	"github.com/troygilman/gong/internal/util"
 	"io"
@@ -20,7 +20,7 @@ templ New(opts ...Option) {
 		}
 	}}
 	<div
-		id={ hooks.OutletID(ctx) }
+		id={ hook.OutletID(ctx) }
 		if c.oob {
 			hx-swap-oob={ gong.SwapInnerHTML }
 		}
