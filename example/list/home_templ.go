@@ -55,7 +55,7 @@ func (view homeView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewLink("/users").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Link("/users").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -63,7 +63,7 @@ func (view homeView) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.NewOutlet().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Outlet().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

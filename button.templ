@@ -2,7 +2,7 @@ package gong
 
 import "net/http"
 
-templ NewButton(opts ...ButtonOption) {
+templ Button(opts ...ButtonOption) {
 	{{
 		c := buttonConfig{
 			method: http.MethodPost,

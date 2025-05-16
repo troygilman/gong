@@ -99,11 +99,11 @@ func (c SearchComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewForm().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Form().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.NewTarget().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Target().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

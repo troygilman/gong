@@ -23,7 +23,7 @@ type SearchComponent struct {
 }
 
 templ (c SearchComponent) View() {
-	@gong.NewForm() {
+	@gong.Form() {
 		<input
 			type="search"
 			name="name"
@@ -37,7 +37,7 @@ templ (c SearchComponent) View() {
 		/>
 		@searchOptions([]string{})
 	}
-	@gong.NewTarget()
+	@gong.Target()
 }
 
 templ (c SearchComponent) Action() {

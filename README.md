@@ -23,14 +23,14 @@ Gong lets you build web applications in Go using components with encapsulated st
 type CounterComponent struct {}
 
 templ (c CounterComponent) View() {
-	@target.New() {
+	@gong.Target() {
 		@counter(0)
 	}
 }
 
 templ (c CounterComponent) Action() {
     {{
-     	count, err := strconv.Atoi(hooks.FormValue(ctx, "count"))
+     	count, err := strconv.Atoi(gong.FormValue(ctx, "count"))
       	if err != nil {
        		return err
        	}
@@ -40,7 +40,7 @@ templ (c CounterComponent) Action() {
 
 templ counter(count int) {
 	<p>Count: { strconv.Itoa(count) }</p>
-	@button.New() {
+	@gong.Button() {
 		Increment
  		<input type="hidden" name="count" value={ strconv.Itoa(count) }/>
    }

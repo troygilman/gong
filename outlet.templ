@@ -8,7 +8,7 @@ import (
 
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-templ NewOutlet(opts ...OutletOption) {
+templ Outlet(opts ...OutletOption) {
 	{{
 		c := outletConfig{}
 		for _, opt := range opts {

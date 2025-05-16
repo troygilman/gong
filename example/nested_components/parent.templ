@@ -14,9 +14,9 @@ func NewParentComponent(child gong.Component) gong.Component {
 
 templ (c ParentComponent) View() {
 	<div class={ BoxClass() }>
-		@gong.NewTarget()
+		@gong.Target()
 		<div id={ gong.ComponentID(ctx) }></div>
-		@gong.NewButton() {
+		@gong.Button() {
 			Click
 		}
 		@c.ChildComponent

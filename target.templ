@@ -2,7 +2,7 @@ package gong
 
 import "net/http"
 
-templ NewTarget(opts ...TargetOption) {
+templ Target(opts ...TargetOption) {
 	{{
 		c := targetConfig{
 			method:  http.MethodGet,

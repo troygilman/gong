@@ -16,11 +16,11 @@ type BulkUpdateComponent struct{}
 templ (c BulkUpdateComponent) View() {
 	@styles()
 	<div class="bulk-card">
-		@gong.NewForm() {
+		@gong.Form() {
 			@personFieldSet(0)
 			<button type="submit">Submit</button>
 		}
-		@gong.NewTarget()
+		@gong.Target()
 	</div>
 }
 
@@ -56,7 +56,7 @@ templ personFieldSet(index int) {
 		<label>Email</label>
 		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
-	@gong.NewButton(
+	@gong.Button(
 		gong.ButtonWithMethod(http.MethodGet),
 		gong.ButtonWithTarget("this"),
 		gong.ButtonWithSwap(gong.SwapOuterHTML),

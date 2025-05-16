@@ -17,7 +17,7 @@ func NewUserDetailComponent() gong.Component {
 
 templ (c UserDetailComponent) View() {
 	@styles()
-	@gong.NewTarget() {
+	@gong.Target() {
 		@userDetails(defaultUser)
 	}
 }
@@ -42,7 +42,7 @@ templ (c UserDetailComponent) Action() {
 }
 
 templ userDetails(user User) {
-	@gong.NewForm(
+	@gong.Form(
 		gong.FormWithMethod(http.MethodGet),
 		gong.FormWithClasses("user-card user-details"),
 	) {
@@ -66,7 +66,7 @@ templ userDetails(user User) {
 }
 
 templ userForm(user User) {
-	@gong.NewForm(gong.FormWithClasses("user-card")) {
+	@gong.Form(gong.FormWithClasses("user-card")) {
 		<div>
 			<label>First Name</label>
 			<input type="text" name="firstName" value={ user.FirstName }/>
@@ -81,7 +81,7 @@ templ userForm(user User) {
 		</div>
 		<div class="button-row">
 			<button>Submit</button>
-			@gong.NewButton(gong.ButtonWithMethod(http.MethodGet)) {
+			@gong.Button(gong.ButtonWithMethod(http.MethodGet)) {
 				<input type="hidden" name="email" value={ user.Email }/>
 				<input type="hidden" name="lastName" value={ user.LastName }/>
 				<input type="hidden" name="firstName" value={ user.FirstName }/>

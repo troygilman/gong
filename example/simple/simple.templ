@@ -8,10 +8,10 @@ import (
 type SimpleComponent struct{}
 
 templ (component SimpleComponent) View() {
-	@gong.NewTarget() {
+	@gong.Target() {
 		Hello World
 	}
-	@gong.NewButton() {
+	@gong.Button() {
 		Submit
 	}
 }

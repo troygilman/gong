@@ -17,10 +17,10 @@ type TabsComponent struct{}
 
 templ (c TabsComponent) View() {
 	@styles()
-	@gong.NewTarget(gong.TargetWithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx)))) {
+	@gong.Target(gong.TargetWithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx)))) {
 		@tabList()
 	}
-	@gong.NewOutlet(gong.OutletWithAttrs(templ.Attributes{"style": "border-style: solid"}))
+	@gong.Outlet(gong.OutletWithAttrs(templ.Attributes{"style": "border-style: solid"}))
 }
 
 templ (c TabsComponent) Action() {
@@ -40,7 +40,7 @@ templ tabList() {
 }
 
 templ tab(title string, path string, activeTab string) {
-	@gong.NewLink(path, gong.LinkWithClasses("tab", templ.KV("tab-active", path == activeTab))) {
+	@gong.Link(path, gong.LinkWithClasses("tab", templ.KV("tab-active", path == activeTab))) {
 		{ title }
 	}
 }

@@ -35,10 +35,10 @@ templ (view listView) Action() {
 
 templ (view listView) View() {
 	<div>
-		@gong.NewForm(gong.FormWithSwap(gong.SwapBeforeBegin)) {
+		@gong.Form(gong.FormWithSwap(gong.SwapBeforeBegin)) {
 			<input name="name" type="text"/>
 			<button type="submit">Add</button>
 		}
-		@gong.NewTarget(gong.TargetWithTrigger("load"))
+		@gong.Target(gong.TargetWithTrigger("load"))
 	</div>
 }

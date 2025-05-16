@@ -66,11 +66,11 @@ func (c TabsComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewTarget(gong.TargetWithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Target(gong.TargetWithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gong.NewOutlet(gong.OutletWithAttrs(templ.Attributes{"style": "border-style: solid"})).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Outlet(gong.OutletWithAttrs(templ.Attributes{"style": "border-style: solid"})).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -199,7 +199,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.NewLink(path, gong.LinkWithClasses("tab", templ.KV("tab-active", path == activeTab))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Link(path, gong.LinkWithClasses("tab", templ.KV("tab-active", path == activeTab))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

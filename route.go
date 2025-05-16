@@ -43,7 +43,7 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 
 	if gCtx.Link {
 		gCtx.Link = false
-		return render(ctx, gCtx, w, NewOutlet(outletWithOOB(true)))
+		return render(ctx, gCtx, w, Outlet(outletWithOOB(true)))
 	}
 
 	if gCtx.Action {

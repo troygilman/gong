@@ -51,10 +51,10 @@ templ (view userView) View() {
 	user := gong.LoaderData[userData](ctx)
 	}}
 	<div id={ gong.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
-		@gong.NewLink("/user/" + user.name) {
+		@gong.Link("/user/" + user.name) {
 			{ user.name }
 		}
-		@gong.NewForm(
+		@gong.Form(
 			gong.FormWithMethod(http.MethodPatch),
 			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
 			gong.FormWithSwap(gong.SwapOuterHTML),
@@ -63,7 +63,7 @@ templ (view userView) View() {
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@gong.NewForm(
+		@gong.Form(
 			gong.FormWithMethod(http.MethodDelete),
 			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
 			gong.FormWithSwap(gong.SwapOuterHTML),

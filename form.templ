@@ -2,7 +2,7 @@ package gong
 
 import "net/http"
 
-templ NewForm(opts ...FormOption) {
+templ Form(opts ...FormOption) {
 	{{
 		c := formConfig{
 			method: http.MethodPost,
