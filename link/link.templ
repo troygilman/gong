@@ -23,7 +23,7 @@ templ New(path string, opts ...Option) {
 		hx-headers={ hooks.LinkHeaders(ctx, c.headers...) }
 		hx-push-url="true"
 		if c.classes != nil {
-			class={ c.classes }
+			class={ c.classes.String() }
 		}
 		{ c.attrs... }
 	>

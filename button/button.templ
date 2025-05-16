@@ -38,7 +38,7 @@ templ New(opts ...Option) {
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		hx-include="this"
 		if c.classes != nil {
-			class={ c.classes }
+			class={ c.classes.String() }
 		}
 		{ c.attrs... }
 	>

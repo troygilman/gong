@@ -25,7 +25,7 @@ templ New(opts ...Option) {
 			hx-swap-oob={ gong.SwapInnerHTML }
 		}
 		if c.classes != nil {
-			class={ c.classes }
+			class={ c.classes.String() }
 		}
 		{ c.attrs... }
 	>

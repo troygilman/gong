@@ -34,7 +34,7 @@ templ New(opts ...Option) {
 		hx-swap={ c.swap }
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		if c.classes != nil {
-			class={ c.classes }
+			class={ c.classes.String() }
 		}
 		{ c.attrs... }
 	>
