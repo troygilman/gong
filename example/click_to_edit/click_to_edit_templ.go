@@ -10,23 +10,17 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
 func Route() gong.Route {
-	return route.New("/", NewUserDetailComponent())
+	return gong.NewRoute("/", NewUserDetailComponent())
 }
 
 type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
-	return component.New(UserDetailComponent{})
+	return gong.NewComponent(UserDetailComponent{})
 }
 
 func (c UserDetailComponent) View() templ.Component {
@@ -72,7 +66,7 @@ func (c UserDetailComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = target.New().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -103,12 +97,12 @@ func (c UserDetailComponent) Action() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 
 		var user User
-		if err := hook.Bind(ctx, &user); err != nil {
+		if err := gong.Bind(ctx, &user); err != nil {
 			panic(err)
 		}
-		switch hook.Request(ctx).Method {
+		switch gong.Request(ctx).Method {
 		case http.MethodGet:
-			if hook.FormValue(ctx, "view") == "form" {
+			if gong.FormValue(ctx, "view") == "form" {
 				templ_7745c5c3_Err = userForm(user).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -169,7 +163,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 57, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 51, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -182,7 +176,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 58, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 52, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -195,7 +189,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 61, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 55, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -208,7 +202,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 62, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 56, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -221,7 +215,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 65, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 59, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -234,7 +228,7 @@ func userDetails(user User) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 66, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 60, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -246,9 +240,9 @@ func userDetails(user User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = form.New(
-			form.WithMethod(http.MethodGet),
-			form.WithClasses("user-card user-details"),
+		templ_7745c5c3_Err = gong.NewForm(
+			gong.FormWithMethod(http.MethodGet),
+			gong.FormWithClasses("user-card user-details"),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -297,7 +291,7 @@ func userForm(user User) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 78, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 72, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -310,7 +304,7 @@ func userForm(user User) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 82, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 76, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -323,7 +317,7 @@ func userForm(user User) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 86, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 80, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -352,7 +346,7 @@ func userForm(user User) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 91, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 85, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -365,7 +359,7 @@ func userForm(user User) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(user.LastName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 92, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 86, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -378,7 +372,7 @@ func userForm(user User) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(user.FirstName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 93, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/click_to_edit/click_to_edit.templ`, Line: 87, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -390,7 +384,7 @@ func userForm(user User) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = button.New(button.WithMethod(http.MethodGet)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.NewButton(gong.ButtonWithMethod(http.MethodGet)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -400,7 +394,7 @@ func userForm(user User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = form.New(form.WithClasses("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewForm(gong.FormWithClasses("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

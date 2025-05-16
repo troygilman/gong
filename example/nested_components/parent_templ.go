@@ -8,20 +8,14 @@ package nested_components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/target"
-)
+import "github.com/troygilman/gong"
 
 type ParentComponent struct {
 	ChildComponent gong.Component
 }
 
 func NewParentComponent(child gong.Component) gong.Component {
-	return component.New(ParentComponent{
+	return gong.NewComponent(ParentComponent{
 		ChildComponent: child,
 	})
 }
@@ -69,7 +63,7 @@ func (c ParentComponent) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = target.New().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -78,9 +72,9 @@ func (c ParentComponent) View() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ComponentID(ctx))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(gong.ComponentID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/nested_components/parent.templ`, Line: 24, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/nested_components/parent.templ`, Line: 18, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -108,7 +102,7 @@ func (c ParentComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.New().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewButton().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

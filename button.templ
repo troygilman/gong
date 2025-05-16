@@ -1,16 +1,12 @@
-package button
+package gong
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
-	"net/http"
-)
+import "net/http"
 
-templ New(opts ...Option) {
+templ NewButton(opts ...ButtonOption) {
 	{{
-		c := Config{
+		c := ButtonConfig{
 			method: http.MethodPost,
-			swap:   gong.SwapInnerHTML,
+			swap:   SwapInnerHTML,
 		}
 		for _, opt := range opts {
 			c = opt(c)
@@ -33,9 +29,9 @@ templ New(opts ...Option) {
 		if c.target != "" {
 			hx-target={ c.target }
 		} else {
-			hx-target={ "#" + hook.ComponentID(ctx) }
+			hx-target={ "#" + ComponentID(ctx) }
 		}
-		hx-headers={ hook.ActionHeaders(ctx) }
+		hx-headers={ ActionHeaders(ctx) }
 		hx-include="this"
 		if c.classes != nil {
 			class={ c.classes }
@@ -46,7 +42,7 @@ templ New(opts ...Option) {
 	</button>
 }
 
-type Config struct {
+type ButtonConfig struct {
 	method  string
 	swap    string
 	headers []string
@@ -55,45 +51,45 @@ type Config struct {
 	target  string
 }
 
-type Option func(Config) Config
+type ButtonOption func(ButtonConfig) ButtonConfig
 
-func WithMethod(method string) Option {
-	return func(c Config) Config {
+func ButtonWithMethod(method string) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.method = method
 		return c
 	}
 }
 
-func WithHeaders(headers ...string) Option {
-	return func(c Config) Config {
+func ButtonWithHeaders(headers ...string) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.headers = headers
 		return c
 	}
 }
 
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
+func ButtonWithAttrs(attrs templ.Attributes) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
-func WithSwap(swap string) Option {
-	return func(c Config) Config {
+func ButtonWithSwap(swap string) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.swap = swap
 		return c
 	}
 }
 
-func WithClasses(classes ...any) Option {
-	return func(c Config) Config {
+func ButtonWithClasses(classes ...any) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
-func WithTarget(target string) Option {
-	return func(c Config) Config {
+func ButtonWithTarget(target string) ButtonOption {
+	return func(c ButtonConfig) ButtonConfig {
 		c.target = target
 		return c
 	}

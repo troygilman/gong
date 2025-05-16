@@ -1,27 +1,22 @@
-package route
+package gong
 
 import (
 	"context"
 	"fmt"
 	"io"
-
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/internal/gctx"
-	"github.com/troygilman/gong/internal/util"
-	"github.com/troygilman/gong/outlet"
 )
 
 // gongRoute is the internal implementation of the gong.Route interface.
 // It represents a route in the application's routing tree.
 type gongRoute struct {
 	path      string
-	component gong.Component
-	children  []gong.Route
+	component Component
+	children  []Route
 }
 
 // New creates a new Route instance with the specified path and component.
 // It accepts optional configurations via the Option pattern.
-func New(path string, component gong.Component, opts ...Option) gong.Route {
+func NewRoute(path string, component Component, opts ...RouteOption) Route {
 	route := gongRoute{
 		path:      path,
 		component: component,
@@ -35,7 +30,7 @@ func New(path string, component gong.Component, opts ...Option) gong.Route {
 }
 
 func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
-	gCtx := gctx.GetContext(ctx)
+	gCtx := GetContext(ctx)
 	gCtx.Route = route
 	gCtx.ChildRouteIndex = 0
 
@@ -48,7 +43,7 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 
 	if gCtx.Link {
 		gCtx.Link = false
-		return util.Render(ctx, gCtx, w, outlet.New(outlet.WithOOB(true)))
+		return Render(ctx, gCtx, w, NewOutlet(OutletWithOOB(true)))
 	}
 
 	if gCtx.Action {
@@ -56,16 +51,16 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 		if !ok {
 			panic(fmt.Sprintf("could not find component with id %s in route %s", gCtx.ComponentID, route.path))
 		}
-		return util.Render(ctx, gCtx, w, component.Action())
+		return Render(ctx, gCtx, w, component.Action())
 	}
 
 	gCtx.ComponentID = ""
-	return util.Render(ctx, gCtx, w, route.component.View())
+	return Render(ctx, gCtx, w, route.component.View())
 }
 
 // Child returns the child route at the specified index.
 // Returns nil if the index is out of bounds.
-func (route gongRoute) Child(index int) gong.Route {
+func (route gongRoute) Child(index int) Route {
 	if index < 0 || index >= len(route.children) {
 		return nil
 	}
@@ -74,8 +69,8 @@ func (route gongRoute) Child(index int) gong.Route {
 
 // Find locates a route by its ID string.
 // Returns the found route and the depth in the routing tree.
-func (route gongRoute) Find(id string) (gong.Route, int) {
-	var r gong.Route = route
+func (route gongRoute) Find(id string) (Route, int) {
+	var r Route = route
 	depth := 0
 	for _, index := range id {
 		r = r.Child(int(index - '0'))
@@ -90,7 +85,7 @@ func (route gongRoute) NumChildren() int {
 }
 
 // Component returns the component associated with this route.
-func (route gongRoute) Component() gong.Component {
+func (route gongRoute) Component() Component {
 	return route.component
 }
 
@@ -101,11 +96,11 @@ func (route gongRoute) Path() string {
 
 // Option is a function type for configuring routes with the options pattern.
 // It takes a gongRoute and returns a modified one.
-type Option func(gongRoute) gongRoute
+type RouteOption func(gongRoute) gongRoute
 
 // WithChildren sets the child routes for a route.
 // This allows for creating a hierarchical routing structure.
-func WithChildren(children ...gong.Route) Option {
+func RouteWithChildren(children ...Route) RouteOption {
 	return func(gr gongRoute) gongRoute {
 		gr.children = children
 		return gr

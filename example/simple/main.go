@@ -1,16 +1,14 @@
 package main
 
 import (
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/server"
+	"github.com/troygilman/gong"
 )
 
 func main() {
-	simpleComponent := component.New(SimpleComponent{})
+	simpleComponent := gong.NewComponent(SimpleComponent{})
 
-	svr := server.New()
-	svr.Route(route.New("/", simpleComponent))
+	svr := gong.NewServer()
+	svr.Route(gong.NewRoute("/", simpleComponent))
 
 	if err := svr.Run(":8080"); err != nil {
 		panic(err)

@@ -12,9 +12,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/link"
 	"log"
 	"net/http"
 	"strconv"
@@ -25,7 +22,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := hook.FormValue(ctx, "name")
+	name := gong.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -54,14 +51,14 @@ func (view userView) Action() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch hook.Request(ctx).Method {
+		switch gong.Request(ctx).Method {
 		case http.MethodDelete:
-			name := hook.FormValue(ctx, "name")
+			name := gong.FormValue(ctx, "name")
 			view.db.Delete(name)
 		case http.MethodPatch:
-			log.Println(hook.PathParam(ctx, "name"))
-			name := hook.FormValue(ctx, "name")
-			balance, err := strconv.Atoi(hook.FormValue(ctx, "balance"))
+			log.Println(gong.PathParam(ctx, "name"))
+			name := gong.FormValue(ctx, "name")
+			balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
 			if err != nil {
 				panic(err)
 			}
@@ -100,7 +97,7 @@ func (view userView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		user := hook.LoaderData[userData](ctx)
+		user := gong.LoaderData[userData](ctx)
 		var templ_7745c5c3_Var3 = []any{boxClassName()}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 		if templ_7745c5c3_Err != nil {
@@ -111,9 +108,9 @@ func (view userView) View() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(hook.ComponentID(ctx) + "-" + user.name)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(gong.ComponentID(ctx) + "-" + user.name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 56, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 53, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -151,7 +148,7 @@ func (view userView) View() templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 58, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 55, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -159,7 +156,7 @@ func (view userView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = link.New("/user/"+user.name).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewLink("/user/"+user.name).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -182,7 +179,7 @@ func (view userView) View() templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 65, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 62, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -195,7 +192,7 @@ func (view userView) View() templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", user.balance))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 66, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 63, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -207,10 +204,10 @@ func (view userView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = form.New(
-			form.WithMethod(http.MethodPatch),
-			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
-			form.WithSwap(gong.SwapOuterHTML),
+		templ_7745c5c3_Err = gong.NewForm(
+			gong.FormWithMethod(http.MethodPatch),
+			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -234,7 +231,7 @@ func (view userView) View() templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(user.name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 74, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/list/user_view.templ`, Line: 71, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -246,10 +243,10 @@ func (view userView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = form.New(
-			form.WithMethod(http.MethodDelete),
-			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
-			form.WithSwap(gong.SwapOuterHTML),
+		templ_7745c5c3_Err = gong.NewForm(
+			gong.FormWithMethod(http.MethodDelete),
+			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

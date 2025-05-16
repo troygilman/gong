@@ -1,4 +1,4 @@
-package component
+package gong
 
 import (
 	"context"
@@ -8,9 +8,6 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/internal/gctx"
-	"github.com/troygilman/gong/internal/util"
 )
 
 const (
@@ -18,22 +15,22 @@ const (
 )
 
 type gongComponent struct {
-	view     gong.View
-	loader   gong.Loader
-	action   gong.Action
-	head     gong.Head
+	view     View
+	loader   Loader
+	action   Action
+	head     Head
 	id       string
-	children map[string]gong.Component
+	children map[string]Component
 }
 
 // New creates a new Component instance with the specified view.
 // It automatically scans the view for any child components and sets up
 // optional interfaces (Loader, Action, Head) if the view implements them.
-func New(view gong.View, opts ...Option) gong.Component {
+func NewComponent(view View, opts ...ComponentOption) Component {
 	component := gongComponent{
 		id:       nextComponentID(),
 		view:     view,
-		children: make(map[string]gong.Component),
+		children: make(map[string]Component),
 	}
 
 	for _, opt := range opts {
@@ -42,15 +39,15 @@ func New(view gong.View, opts ...Option) gong.Component {
 
 	component.scanViewForActions()
 
-	if loader, ok := view.(gong.Loader); ok {
+	if loader, ok := view.(Loader); ok {
 		component.loader = loader
 	}
 
-	if action, ok := view.(gong.Action); ok {
+	if action, ok := view.(Action); ok {
 		component.action = action
 	}
 
-	if head, ok := view.(gong.Head); ok {
+	if head, ok := view.(Head); ok {
 		component.head = head
 	}
 
@@ -61,7 +58,7 @@ func New(view gong.View, opts ...Option) gong.Component {
 // It handles both normal rendering and action execution based on the context.
 // Returns an error if rendering fails.
 func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
-	gCtx := gctx.GetContext(ctx)
+	gCtx := GetContext(ctx)
 	gCtx.Component = component
 
 	if gCtx.ComponentID == "" {
@@ -70,7 +67,7 @@ func (component gongComponent) Render(ctx context.Context, w io.Writer) error {
 		gCtx.ComponentID += idDelimeter + component.id
 	}
 
-	return util.Render(ctx, gCtx, w, component.view.View())
+	return Render(ctx, gCtx, w, component.view.View())
 }
 
 func (component gongComponent) View() templ.Component {
@@ -82,9 +79,9 @@ func (component gongComponent) Action() templ.Component {
 		if component.action == nil {
 			return nil
 		}
-		gCtx := gctx.GetContext(ctx)
+		gCtx := GetContext(ctx)
 		gCtx.Component = component
-		return util.Render(ctx, gCtx, w, component.action.Action())
+		return Render(ctx, gCtx, w, component.action.Action())
 	})
 }
 
@@ -109,7 +106,7 @@ func (component gongComponent) ID() string {
 // Find searches for a child component with the specified ID.
 // The ID can be a simple identifier or a path of IDs separated by the delimiter.
 // Returns the found component and a boolean indicating if it was found.
-func (component gongComponent) Find(idStr string) (gong.Component, bool) {
+func (component gongComponent) Find(idStr string) (Component, bool) {
 	id := strings.Split(idStr, idDelimeter)
 	if len(id) > 0 && id[0] == component.id {
 		if len(id) == 1 {
@@ -125,7 +122,7 @@ func (component gongComponent) Find(idStr string) (gong.Component, bool) {
 // WithLoaderFunc sets a loader function for the component.
 // The loader function will be called to fetch data before rendering.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithLoaderFunc(loader gong.LoaderFunc) gong.Component {
+func (component gongComponent) WithLoaderFunc(loader LoaderFunc) Component {
 	component.loader = loader
 	return component
 }
@@ -133,8 +130,8 @@ func (component gongComponent) WithLoaderFunc(loader gong.LoaderFunc) gong.Compo
 // WithLoaderData sets static data for the component's loader.
 // This is a convenience method for components that don't need dynamic data loading.
 // Returns the modified component for method chaining.
-func (component gongComponent) WithLoaderData(data any) gong.Component {
-	component.loader = gong.LoaderFunc(func(ctx context.Context) any {
+func (component gongComponent) WithLoaderData(data any) Component {
+	component.loader = LoaderFunc(func(ctx context.Context) any {
 		return data
 	})
 	return component
@@ -142,12 +139,12 @@ func (component gongComponent) WithLoaderData(data any) gong.Component {
 
 // Option is a function type for configuring components with the options pattern.
 // It takes a gongComponent and returns a modified one.
-type Option func(gongComponent) gongComponent
+type ComponentOption func(gongComponent) gongComponent
 
 // WithID sets a custom ID for the component.
 // This ID is used for component identification and event handling.
 // Returns the modified component for method chaining.
-func WithID(id string) Option {
+func ComponentWithID(id string) ComponentOption {
 	return func(gc gongComponent) gongComponent {
 		gc.id = id
 		return gc
@@ -163,7 +160,7 @@ func (component gongComponent) scanViewForActions() {
 			if !field.CanInterface() {
 				continue
 			}
-			if child, ok := field.Interface().(gong.Component); ok {
+			if child, ok := field.Interface().(Component); ok {
 				component.children[child.ID()] = child
 			}
 		}

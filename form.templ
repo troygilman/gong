@@ -1,16 +1,12 @@
-package form
+package gong
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
-	"net/http"
-)
+import "net/http"
 
-templ New(opts ...Option) {
+templ NewForm(opts ...FormOption) {
 	{{
-		c := Config{
+		c := FormConfig{
 			method: http.MethodPost,
-			swap:   gong.SwapInnerHTML,
+			swap:   SwapInnerHTML,
 		}
 		for _, opt := range opts {
 			c = opt(c)
@@ -33,12 +29,12 @@ templ New(opts ...Option) {
 		if c.target != "" {
 			hx-target={ c.target }
 		} else {
-			hx-target={ "#" + hook.ComponentID(ctx) }
+			hx-target={ "#" + ComponentID(ctx) }
 		}
 		if c.trigger != nil {
 			hx-trigger={ *c.trigger }
 		}
-		hx-headers={ hook.ActionHeaders(ctx, c.headers...) }
+		hx-headers={ ActionHeaders(ctx, c.headers...) }
 		if c.classes != nil {
 			class={ c.classes }
 		}
@@ -48,7 +44,7 @@ templ New(opts ...Option) {
 	</form>
 }
 
-type Config struct {
+type FormConfig struct {
 	method  string
 	swap    string
 	target  string
@@ -58,52 +54,52 @@ type Config struct {
 	classes templ.CSSClasses
 }
 
-type Option func(Config) Config
+type FormOption func(FormConfig) FormConfig
 
-func WithMethod(method string) Option {
-	return func(c Config) Config {
+func FormWithMethod(method string) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.method = method
 		return c
 	}
 }
 
-func WithHeaders(headers ...string) Option {
-	return func(c Config) Config {
+func FormWithHeaders(headers ...string) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.headers = headers
 		return c
 	}
 }
 
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
+func FormWithAttrs(attrs templ.Attributes) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
-func WithSwap(swap string) Option {
-	return func(c Config) Config {
+func FormWithSwap(swap string) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.swap = swap
 		return c
 	}
 }
 
-func WithClasses(classes ...any) Option {
-	return func(c Config) Config {
+func FormWithClasses(classes ...any) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
-func WithTarget(target string) Option {
-	return func(c Config) Config {
+func FormWithTarget(target string) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.target = target
 		return c
 	}
 }
 
-func WithTrigger(trigger string) Option {
-	return func(c Config) Config {
+func FormWithTrigger(trigger string) FormOption {
+	return func(c FormConfig) FormConfig {
 		c.trigger = &trigger
 		return c
 	}

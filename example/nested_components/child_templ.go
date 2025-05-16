@@ -8,17 +8,12 @@ package nested_components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/target"
-)
+import "github.com/troygilman/gong"
 
 type ChildComponent struct{}
 
 func NewChildComponent() gong.Component {
-	return component.New(ChildComponent{})
+	return gong.NewComponent(ChildComponent{})
 }
 
 func (c ChildComponent) View() templ.Component {
@@ -64,7 +59,7 @@ func (c ChildComponent) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = target.New().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,7 +81,7 @@ func (c ChildComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.New().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewButton().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

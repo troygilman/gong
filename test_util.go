@@ -1,4 +1,4 @@
-package test_util
+package gong
 
 import (
 	"bytes"
@@ -8,11 +8,7 @@ import (
 	"testing"
 
 	"github.com/a-h/templ"
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
 	"github.com/troygilman/gong/internal/assert"
-	"github.com/troygilman/gong/internal/gctx"
-	"github.com/troygilman/gong/internal/util"
 )
 
 type MockComponent struct {
@@ -49,12 +45,12 @@ func (c TextTemplComponent) Render(ctx context.Context, w io.Writer) error {
 type LoaderTemplComponent struct{}
 
 func (c LoaderTemplComponent) Render(ctx context.Context, w io.Writer) error {
-	_, err := io.WriteString(w, hook.LoaderData[string](ctx))
+	_, err := io.WriteString(w, LoaderData[string](ctx))
 	return err
 }
 
 type ParentComponent struct {
-	Child gong.Component
+	Child Component
 }
 
 func (pc ParentComponent) View() templ.Component {
@@ -65,7 +61,7 @@ type MockRoute struct {
 	MockPath string
 }
 
-func (mock MockRoute) Child(id int) gong.Route {
+func (mock MockRoute) Child(id int) Route {
 	return nil
 }
 
@@ -73,7 +69,7 @@ func (mock MockRoute) NumChildren() int {
 	return 0
 }
 
-func (mock MockRoute) Find(id string) (gong.Route, int) {
+func (mock MockRoute) Find(id string) (Route, int) {
 	return nil, 0
 }
 
@@ -81,7 +77,7 @@ func (mock MockRoute) Path() string {
 	return mock.MockPath
 }
 
-func (mock MockRoute) Component() gong.Component {
+func (mock MockRoute) Component() Component {
 	return nil
 }
 
@@ -92,9 +88,9 @@ func (mock MockRoute) Render(ctx context.Context, w io.Writer) error {
 // testRender is a helper function for testing templ component rendering.
 // It renders the given component with the provided context and asserts
 // that the output matches the expected string.
-func TestRender(t *testing.T, c templ.Component, gCtx gctx.Context, expected string) {
+func TestRender(t *testing.T, c templ.Component, gCtx gongContext, expected string) {
 	buffer := bytes.NewBuffer([]byte{})
-	err := util.Render(context.Background(), gCtx, buffer, c)
+	err := Render(context.Background(), gCtx, buffer, c)
 	assert.Equals(t, nil, err)
 	assert.Equals(t, expected, buffer.String())
 }

@@ -1,26 +1,24 @@
 package main
 
 import (
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/server"
+	"github.com/troygilman/gong"
 )
 
 func main() {
 	db := newUserDatabase()
 
-	userComponent := component.New(userView{
+	userComponent := gong.NewComponent(userView{
 		db: db,
 	})
 
-	svr := server.New()
-	svr.Route(route.New("/", component.New(homeView{}),
-		route.WithChildren(
-			route.New("users", component.New(listView{
+	svr := gong.NewServer()
+	svr.Route(gong.NewRoute("/", gong.NewComponent(homeView{}),
+		gong.RouteWithChildren(
+			gong.NewRoute("users", gong.NewComponent(listView{
 				db:            db,
 				UserComponent: userComponent,
 			})),
-			route.New("user/{name}/", component.New(testView{
+			gong.NewRoute("user/{name}/", gong.NewComponent(testView{
 				db:            db,
 				UserComponent: userComponent,
 			})),

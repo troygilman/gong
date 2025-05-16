@@ -1,9 +1,6 @@
 package main
 
-import (
-	"github.com/troygilman/gong/link"
-	"github.com/troygilman/gong/outlet"
-)
+import "github.com/troygilman/gong"
 
 type homeView struct{}
 
@@ -11,10 +8,10 @@ templ (view homeView) View() {
 	<div>
 		HOME
 		<div>
-			@link.New("/users") {
+			@gong.NewLink("/users") {
 				Users
 			}
 		</div>
-		@outlet.New()
+		@gong.NewOutlet()
 	</div>
 }

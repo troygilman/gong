@@ -1,4 +1,4 @@
-package server
+package gong
 
 import (
 	"log"
@@ -6,21 +6,16 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/internal/gctx"
 	"github.com/troygilman/gong/internal/response_writer"
-	"github.com/troygilman/gong/internal/util"
-	"github.com/troygilman/gong/route"
 )
 
 // Option is a function type for configuring servers with the options pattern.
 // It takes a Server pointer and returns a modified Server pointer.
-type Option func(*Server) *Server
+type ServerOption func(*Server) *Server
 
 // WithErrorHandler sets a custom error handler for the server.
 // The handler will be called when errors occur during request processing.
-func WithErrorHandler(handler gong.ErrorHandler) Option {
+func ServerWithErrorHandler(handler ErrorHandler) ServerOption {
 	return func(s *Server) *Server {
 		s.errorHandler = handler
 		return s
@@ -31,13 +26,13 @@ func WithErrorHandler(handler gong.ErrorHandler) Option {
 // It implements the http.Handler interface and manages the application's routes.
 type Server struct {
 	mux          *http.ServeMux
-	routes       []gong.Route
-	errorHandler gong.ErrorHandler
+	routes       []Route
+	errorHandler ErrorHandler
 }
 
 // New creates a new Server instance.
 // It accepts optional configurations via the Option pattern.
-func New(opts ...Option) *Server {
+func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
 		mux: http.NewServeMux(),
 	}
@@ -54,14 +49,14 @@ func (svr *Server) Handle(pattern string, handler http.Handler) {
 
 // Route registers a route with the server.
 // The route will be set up with appropriate handlers when the server runs.
-func (svr *Server) Route(route gong.Route) {
+func (svr *Server) Route(route Route) {
 	svr.routes = append(svr.routes, route)
 }
 
 // Run starts the server and begins listening for HTTP requests on the specified address.
 // This method blocks until the server is stopped or encounters an error.
 func (svr *Server) Run(addr string) error {
-	root := route.New("", component.New(indexComponent{}), route.WithChildren(svr.routes...))
+	root := NewRoute("", NewComponent(indexComponent{}), RouteWithChildren(svr.routes...))
 
 	for i := range root.NumChildren() {
 		child := root.Child(i)
@@ -72,9 +67,9 @@ func (svr *Server) Run(addr string) error {
 }
 
 func (svr *Server) setupRoute(
-	root gong.Route,
-	parent gong.Route,
-	route gong.Route,
+	root Route,
+	parent Route,
+	route Route,
 	routeID string,
 	path string,
 	depth int,
@@ -84,24 +79,24 @@ func (svr *Server) setupRoute(
 	svr.mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			writer      = response_writer.NewResponseWriter(w)
-			requestType = r.Header.Get(gong.HeaderGongRequestType)
+			requestType = r.Header.Get(HeaderGongRequestType)
 		)
 
-		gCtx := gctx.Context{
+		gCtx := gongContext{
 			Request:      r,
 			Writer:       writer,
-			Action:       requestType == gong.GongRequestTypeAction,
-			Link:         requestType == gong.GongRequestTypeLink,
-			ComponentID:  r.Header.Get(gong.HeaderGongComponentID),
+			Action:       requestType == GongRequestTypeAction,
+			Link:         requestType == GongRequestTypeLink,
+			ComponentID:  r.Header.Get(HeaderGongComponentID),
 			ErrorHandler: svr.errorHandler,
 		}
 
 		switch requestType {
-		case gong.GongRequestTypeAction:
+		case GongRequestTypeAction:
 			gCtx.RequestRouteID = routeID
-			gCtx.CurrentRouteID = r.Header.Get(gong.HeaderGongRouteID)
+			gCtx.CurrentRouteID = r.Header.Get(HeaderGongRouteID)
 			gCtx.Route, gCtx.Depth = root.Find(gCtx.CurrentRouteID)
-		case gong.GongRequestTypeLink:
+		case GongRequestTypeLink:
 			currentUrl, err := getCurrentUrl(r)
 			if err != nil {
 				panic(err)
@@ -127,7 +122,7 @@ func (svr *Server) setupRoute(
 			panic("route is nil")
 		}
 
-		if err := util.Render(r.Context(), gCtx, writer, gCtx.Route); err != nil {
+		if err := Render(r.Context(), gCtx, writer, gCtx.Route); err != nil {
 			panic(err)
 		}
 

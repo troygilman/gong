@@ -2,17 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/target"
+	"github.com/troygilman/gong"
 )
 
 type SimpleComponent struct{}
 
 templ (component SimpleComponent) View() {
-	@target.New() {
+	@gong.NewTarget() {
 		Hello World
 	}
-	@button.New() {
+	@gong.NewButton() {
 		Submit
 	}
 }

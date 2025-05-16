@@ -1,4 +1,4 @@
-package util
+package gong
 
 import (
 	"context"
@@ -6,19 +6,17 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/internal/gctx"
 )
 
 // Render renders a templ component with the provided Gong context.
 // This is an internal utility used by components, routes, and other elements
 // to consistently render with the Gong context. It handles error propagation
 // and custom error handling if provided.
-func Render(ctx context.Context, gCtx gctx.Context, w io.Writer, component templ.Component) error {
+func Render(ctx context.Context, gCtx gongContext, w io.Writer, component templ.Component) error {
 	if component == nil {
 		panic("cannot render nil templ.Component")
 	}
-	ctx = gctx.SetContext(ctx, gCtx)
+	ctx = SetContext(ctx, gCtx)
 	err := component.Render(ctx, w)
 	if err != nil && gCtx.ErrorHandler != nil {
 		gCtx.ErrorHandler(ctx, err)
@@ -32,13 +30,13 @@ func Render(ctx context.Context, gCtx gctx.Context, w io.Writer, component templ
 // which allows the server to properly handle the request and route it to the
 // correct component.
 func GongHeaders(ctx context.Context, requestType string) []string {
-	gCtx := gctx.GetContext(ctx)
+	gCtx := GetContext(ctx)
 	return []string{
-		gong.HeaderGongRequestType,
+		HeaderGongRequestType,
 		requestType,
-		gong.HeaderGongRouteID,
+		HeaderGongRouteID,
 		gCtx.CurrentRouteID,
-		gong.HeaderGongComponentID,
+		HeaderGongComponentID,
 		gCtx.ComponentID,
 	}
 }

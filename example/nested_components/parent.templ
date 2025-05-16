@@ -1,28 +1,22 @@
 package nested_components
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/target"
-)
+import "github.com/troygilman/gong"
 
 type ParentComponent struct {
 	ChildComponent gong.Component
 }
 
 func NewParentComponent(child gong.Component) gong.Component {
-	return component.New(ParentComponent{
+	return gong.NewComponent(ParentComponent{
 		ChildComponent: child,
 	})
 }
 
 templ (c ParentComponent) View() {
 	<div class={ BoxClass() }>
-		@target.New()
-		<div id={ hook.ComponentID(ctx) }></div>
-		@button.New() {
+		@gong.NewTarget()
+		<div id={ gong.ComponentID(ctx) }></div>
+		@gong.NewButton() {
 			Click
 		}
 		@c.ChildComponent

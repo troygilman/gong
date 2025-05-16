@@ -1,28 +1,24 @@
-package outlet
+package gong
 
 import (
 	"context"
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/internal/gctx"
-	"github.com/troygilman/gong/internal/util"
 	"io"
 	"strconv"
 )
 
 // NewOutlet creates a new Outlet instance.
 // The outlet will automatically render child routes based on the current path.
-templ New(opts ...Option) {
+templ NewOutlet(opts ...OutletOption) {
 	{{
-		c := Config{}
+		c := OutletConfig{}
 		for _, opt := range opts {
 			c = opt(c)
 		}
 	}}
 	<div
-		id={ hook.OutletID(ctx) }
+		id={ OutletID(ctx) }
 		if c.oob {
-			hx-swap-oob={ gong.SwapInnerHTML }
+			hx-swap-oob={ SwapInnerHTML }
 		}
 		if c.classes != nil {
 			class={ c.classes }
@@ -30,11 +26,11 @@ templ New(opts ...Option) {
 		{ c.attrs... }
 	>
 		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-			gCtx := gctx.GetContext(ctx)
+			gCtx := GetContext(ctx)
 			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
 				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
 				gCtx.Depth++
-				return util.Render(ctx, gCtx, w, child)
+				return Render(ctx, gCtx, w, child)
 			}
 			return nil
 		})
@@ -44,30 +40,30 @@ templ New(opts ...Option) {
 // Outlet represents a container component that renders child routes.
 // It serves as a dynamic content area where route components are rendered
 // based on the current URL path. Outlets are essential for nested routing.
-type Config struct {
+type OutletConfig struct {
 	oob     bool
 	attrs   templ.Attributes
 	classes templ.CSSClasses
 }
 
-type Option func(Config) Config
+type OutletOption func(OutletConfig) OutletConfig
 
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
+func OutletWithAttrs(attrs templ.Attributes) OutletOption {
+	return func(c OutletConfig) OutletConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
-func WithOOB(oob bool) Option {
-	return func(c Config) Config {
+func OutletWithOOB(oob bool) OutletOption {
+	return func(c OutletConfig) OutletConfig {
 		c.oob = oob
 		return c
 	}
 }
 
-func WithClasses(classes ...any) Option {
-	return func(c Config) Config {
+func OutletWithClasses(classes ...any) OutletOption {
+	return func(c OutletConfig) OutletConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}

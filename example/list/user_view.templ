@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/link"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,7 +14,7 @@ type userView struct {
 }
 
 func (view userView) Loader(ctx context.Context) any {
-	name := hook.FormValue(ctx, "name")
+	name := gong.FormValue(ctx, "name")
 	user, ok := view.db.Read(name)
 	if !ok {
 		return nil
@@ -26,17 +23,17 @@ func (view userView) Loader(ctx context.Context) any {
 }
 
 templ (view userView) Action() {
-	switch hook.Request(ctx).Method {
+	switch gong.Request(ctx).Method {
 		case http.MethodDelete:
 			{{
-				name := hook.FormValue(ctx, "name")
+				name := gong.FormValue(ctx, "name")
 				view.db.Delete(name)
 			}}
 		case http.MethodPatch:
 			{{
-				log.Println(hook.PathParam(ctx, "name"))
-				name := hook.FormValue(ctx, "name")
-				balance, err := strconv.Atoi(hook.FormValue(ctx, "balance"))
+				log.Println(gong.PathParam(ctx, "name"))
+				name := gong.FormValue(ctx, "name")
+				balance, err := strconv.Atoi(gong.FormValue(ctx, "balance"))
 				if err != nil {
 					panic(err)
 				}
@@ -51,25 +48,25 @@ templ (view userView) Action() {
 
 templ (view userView) View() {
 	{{
-	user := hook.LoaderData[userData](ctx)
+	user := gong.LoaderData[userData](ctx)
 	}}
-	<div id={ hook.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
-		@link.New("/user/" + user.name) {
+	<div id={ gong.ComponentID(ctx) + "-" + user.name } class={ boxClassName() }>
+		@gong.NewLink("/user/" + user.name) {
 			{ user.name }
 		}
-		@form.New(
-			form.WithMethod(http.MethodPatch),
-			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
-			form.WithSwap(gong.SwapOuterHTML),
+		@gong.NewForm(
+			gong.FormWithMethod(http.MethodPatch),
+			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<input type="text" name="balance" value={ fmt.Sprintf("%d", user.balance) }/>
 			<button type="submit">Update</button>
 		}
-		@form.New(
-			form.WithMethod(http.MethodDelete),
-			form.WithTarget("#"+hook.ComponentID(ctx)+"-"+user.name),
-			form.WithSwap(gong.SwapOuterHTML),
+		@gong.NewForm(
+			gong.FormWithMethod(http.MethodDelete),
+			gong.FormWithTarget("#"+gong.ComponentID(ctx)+"-"+user.name),
+			gong.FormWithSwap(gong.SwapOuterHTML),
 		) {
 			<input type="hidden" name="name" value={ user.name }/>
 			<button type="submit">Delete</button>

@@ -2,28 +2,22 @@ package click_to_edit
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/button"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/form"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"net/http"
 )
 
 func Route() gong.Route {
-	return route.New("/", NewUserDetailComponent())
+	return gong.NewRoute("/", NewUserDetailComponent())
 }
 
 type UserDetailComponent struct{}
 
 func NewUserDetailComponent() gong.Component {
-	return component.New(UserDetailComponent{})
+	return gong.NewComponent(UserDetailComponent{})
 }
 
 templ (c UserDetailComponent) View() {
 	@styles()
-	@target.New() {
+	@gong.NewTarget() {
 		@userDetails(defaultUser)
 	}
 }
@@ -31,13 +25,13 @@ templ (c UserDetailComponent) View() {
 templ (c UserDetailComponent) Action() {
 	{{
 		var user User
-		if err := hook.Bind(ctx, &user); err != nil {
+		if err := gong.Bind(ctx, &user); err != nil {
 			panic(err)
 		}
 	}}
-	switch hook.Request(ctx).Method {
+	switch gong.Request(ctx).Method {
 		case http.MethodGet:
-			if hook.FormValue(ctx, "view") == "form" {
+			if gong.FormValue(ctx, "view") == "form" {
 				@userForm(user)
 			} else {
 				@userDetails(user)
@@ -48,9 +42,9 @@ templ (c UserDetailComponent) Action() {
 }
 
 templ userDetails(user User) {
-	@form.New(
-		form.WithMethod(http.MethodGet),
-		form.WithClasses("user-card user-details"),
+	@gong.NewForm(
+		gong.FormWithMethod(http.MethodGet),
+		gong.FormWithClasses("user-card user-details"),
 	) {
 		<input type="hidden" name="view" value="form"/>
 		<div>
@@ -72,7 +66,7 @@ templ userDetails(user User) {
 }
 
 templ userForm(user User) {
-	@form.New(form.WithClasses("user-card")) {
+	@gong.NewForm(gong.FormWithClasses("user-card")) {
 		<div>
 			<label>First Name</label>
 			<input type="text" name="firstName" value={ user.FirstName }/>
@@ -87,7 +81,7 @@ templ userForm(user User) {
 		</div>
 		<div class="button-row">
 			<button>Submit</button>
-			@button.New(button.WithMethod(http.MethodGet)) {
+			@gong.NewButton(gong.ButtonWithMethod(http.MethodGet)) {
 				<input type="hidden" name="email" value={ user.Email }/>
 				<input type="hidden" name="lastName" value={ user.LastName }/>
 				<input type="hidden" name="firstName" value={ user.FirstName }/>

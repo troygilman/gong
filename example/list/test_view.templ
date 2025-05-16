@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
 	"log"
 )
 
@@ -13,13 +12,13 @@ type testView struct {
 
 templ (view testView) Action() {
 	{{
-	log.Println("TEST", hook.Request(ctx).PathValue("name"))
+	log.Println("TEST", gong.Request(ctx).PathValue("name"))
 	}}
 }
 
 templ (view testView) View() {
 	{{
-	name := hook.Request(ctx).PathValue("name")
+	name := gong.Request(ctx).PathValue("name")
 	user, ok := view.db.Read(name)
 	}}
 	if ok {

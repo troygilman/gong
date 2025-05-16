@@ -1,20 +1,15 @@
-package server
-
-import (
-	"github.com/troygilman/gong/internal/gctx"
-	"github.com/troygilman/gong/outlet"
-)
+package gong
 
 type indexComponent struct{}
 
 templ (c indexComponent) View() {
 	{{
-		gCtx := gctx.GetContext(ctx)
+		gCtx := GetContext(ctx)
 	}}
 	<html>
 		@gCtx.Route.Child(gCtx.ChildRouteIndex).Component().Head()
 		<body>
-			@outlet.New()
+			@NewOutlet()
 		</body>
 	</html>
 }

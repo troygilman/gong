@@ -1,14 +1,12 @@
-package target
+package gong
 
-import "github.com/troygilman/gong/hook"
 import "net/http"
-import "github.com/troygilman/gong"
 
-templ New(opts ...Option) {
+templ NewTarget(opts ...TargetOption) {
 	{{
-		c := Config{
+		c := TargetConfig{
 			method:  http.MethodGet,
-			swap:    gong.SwapInnerHTML,
+			swap:    SwapInnerHTML,
 			trigger: "none",
 		}
 		for _, opt := range opts {
@@ -16,7 +14,7 @@ templ New(opts ...Option) {
 		}
 	}}
 	<div
-		id={ hook.ComponentID(ctx) }
+		id={ ComponentID(ctx) }
 		if c.method == http.MethodGet {
 			hx-get
 		}
@@ -32,7 +30,7 @@ templ New(opts ...Option) {
 		hx-trigger={ c.trigger }
 		hx-target="this"
 		hx-swap={ c.swap }
-		hx-headers={ hook.ActionHeaders(ctx) }
+		hx-headers={ ActionHeaders(ctx) }
 		if c.classes != nil {
 			class={ c.classes }
 		}
@@ -42,7 +40,7 @@ templ New(opts ...Option) {
 	</div>
 }
 
-type Config struct {
+type TargetConfig struct {
 	method  string
 	trigger string
 	swap    string
@@ -50,38 +48,38 @@ type Config struct {
 	attrs   templ.Attributes
 }
 
-type Option func(Config) Config
+type TargetOption func(TargetConfig) TargetConfig
 
-func WithTrigger(trigger string) Option {
-	return func(c Config) Config {
+func TargetWithTrigger(trigger string) TargetOption {
+	return func(c TargetConfig) TargetConfig {
 		c.trigger = trigger
 		return c
 	}
 }
 
-func WithMethod(method string) Option {
-	return func(c Config) Config {
+func TargetWithMethod(method string) TargetOption {
+	return func(c TargetConfig) TargetConfig {
 		c.method = method
 		return c
 	}
 }
 
-func WithSwap(swap string) Option {
-	return func(c Config) Config {
+func TargetWithSwap(swap string) TargetOption {
+	return func(c TargetConfig) TargetConfig {
 		c.swap = swap
 		return c
 	}
 }
 
-func WithClasses(classes ...any) Option {
-	return func(c Config) Config {
+func TargetWithClasses(classes ...any) TargetOption {
+	return func(c TargetConfig) TargetConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}
 }
 
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
+func TargetWithAttrs(attrs templ.Attributes) TargetOption {
+	return func(c TargetConfig) TargetConfig {
 		c.attrs = attrs
 		return c
 	}

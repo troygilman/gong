@@ -10,20 +10,14 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/component"
-	"github.com/troygilman/gong/hook"
-	"github.com/troygilman/gong/link"
-	"github.com/troygilman/gong/outlet"
-	"github.com/troygilman/gong/route"
-	"github.com/troygilman/gong/target"
 	"log"
 )
 
 func Route() gong.Route {
-	return route.New("/", component.New(TabsComponent{}), route.WithChildren(
-		route.New("1", component.New(TabContentComponent{"Tab 1 Content"})),
-		route.New("2", component.New(TabContentComponent{"Tab 2 Content"})),
-		route.New("3", component.New(TabContentComponent{"Tab 3 Content"})),
+	return gong.NewRoute("/", gong.NewComponent(TabsComponent{}), gong.RouteWithChildren(
+		gong.NewRoute("1", gong.NewComponent(TabContentComponent{"Tab 1 Content"})),
+		gong.NewRoute("2", gong.NewComponent(TabContentComponent{"Tab 2 Content"})),
+		gong.NewRoute("3", gong.NewComponent(TabContentComponent{"Tab 3 Content"})),
 	))
 }
 
@@ -72,11 +66,11 @@ func (c TabsComponent) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = target.New(target.WithTrigger(gong.TriggerAfterSwapOOB(hook.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewTarget(gong.TargetWithTrigger(gong.TriggerAfterSwapOOB(gong.OutletID(ctx)))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = outlet.New(outlet.WithAttrs(templ.Attributes{"style": "border-style: solid"})).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewOutlet(gong.OutletWithAttrs(templ.Attributes{"style": "border-style: solid"})).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -135,7 +129,7 @@ func tabList() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		activeTab := hook.ChildRoute(ctx).Path()
+		activeTab := gong.ChildRoute(ctx).Path()
 		log.Println(activeTab)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"tab-list\">")
 		if templ_7745c5c3_Err != nil {
@@ -182,10 +176,6 @@ func tab(title string, path string, activeTab string) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-
-		attrs := templ.Attributes{
-			"class": templ.Classes("tab", templ.KV("tab-active", path == activeTab)).String(),
-		}
 		templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -201,7 +191,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 55, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 44, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -209,7 +199,7 @@ func tab(title string, path string, activeTab string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = link.New(path, link.WithAttrs(attrs)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewLink(path, gong.LinkWithClasses("tab", templ.KV("tab-active", path == activeTab))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,7 +264,7 @@ func (c TabContentComponent) View() templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.content)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 118, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `example/tabs/tabs.templ`, Line: 107, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

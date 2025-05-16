@@ -10,7 +10,6 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
 	"log"
 )
 
@@ -41,7 +40,7 @@ func (view testView) Action() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		log.Println("TEST", hook.Request(ctx).PathValue("name"))
+		log.Println("TEST", gong.Request(ctx).PathValue("name"))
 		return nil
 	})
 }
@@ -68,7 +67,7 @@ func (view testView) View() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 
-		name := hook.Request(ctx).PathValue("name")
+		name := gong.Request(ctx).PathValue("name")
 		user, ok := view.db.Read(name)
 		if ok {
 			templ_7745c5c3_Err = view.UserComponent.WithLoaderData(user).Render(ctx, templ_7745c5c3_Buffer)

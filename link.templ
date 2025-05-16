@@ -1,14 +1,9 @@
-package link
+package gong
 
-import (
-	"github.com/troygilman/gong"
-	"github.com/troygilman/gong/hook"
-)
-
-templ New(path string, opts ...Option) {
+templ NewLink(path string, opts ...LinkOption) {
 	{{
-		c := Config{
-			trigger: gong.TriggerClick,
+		c := LinkConfig{
+			trigger: TriggerClick,
 		}
 		for _, opt := range opts {
 			c = opt(c)
@@ -20,7 +15,7 @@ templ New(path string, opts ...Option) {
 		hx-boost="true"
 		hx-trigger={ c.trigger }
 		hx-swap="none"
-		hx-headers={ hook.LinkHeaders(ctx, c.headers...) }
+		hx-headers={ LinkHeaders(ctx, c.headers...) }
 		hx-push-url="true"
 		if c.classes != nil {
 			class={ c.classes }
@@ -34,7 +29,7 @@ templ New(path string, opts ...Option) {
 // Link represents an HTMX-powered navigation link component.
 // It provides a way to create client-side navigation links that update
 // specific parts of the page using HTMX's AJAX capabilities.
-type Config struct {
+type LinkConfig struct {
 	id      string
 	headers []string
 	trigger string
@@ -42,38 +37,38 @@ type Config struct {
 	attrs   templ.Attributes
 }
 
-type Option func(Config) Config
+type LinkOption func(LinkConfig) LinkConfig
 
-func WithID(id string) Option {
-	return func(c Config) Config {
+func LinkWithID(id string) LinkOption {
+	return func(c LinkConfig) LinkConfig {
 		c.id = id
 		return c
 	}
 }
 
-func WithHeaders(headers ...string) Option {
-	return func(c Config) Config {
+func LinkWithHeaders(headers ...string) LinkOption {
+	return func(c LinkConfig) LinkConfig {
 		c.headers = headers
 		return c
 	}
 }
 
-func WithTrigger(trigger string) Option {
-	return func(c Config) Config {
+func LinkWithTrigger(trigger string) LinkOption {
+	return func(c LinkConfig) LinkConfig {
 		c.trigger = trigger
 		return c
 	}
 }
 
-func WithAttrs(attrs templ.Attributes) Option {
-	return func(c Config) Config {
+func LinkWithAttrs(attrs templ.Attributes) LinkOption {
+	return func(c LinkConfig) LinkConfig {
 		c.attrs = attrs
 		return c
 	}
 }
 
-func WithClasses(classes ...any) Option {
-	return func(c Config) Config {
+func LinkWithClasses(classes ...any) LinkOption {
+	return func(c LinkConfig) LinkConfig {
 		c.classes = templ.Classes(classes...)
 		return c
 	}

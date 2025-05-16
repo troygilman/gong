@@ -8,10 +8,7 @@ package main
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/troygilman/gong/link"
-	"github.com/troygilman/gong/outlet"
-)
+import "github.com/troygilman/gong"
 
 type homeView struct{}
 
@@ -58,7 +55,7 @@ func (view homeView) View() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = link.New("/users").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewLink("/users").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,7 +63,7 @@ func (view homeView) View() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = outlet.New().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.NewOutlet().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
