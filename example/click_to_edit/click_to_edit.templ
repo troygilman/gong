@@ -43,8 +43,8 @@ templ (c UserDetailComponent) Action() {
 
 templ userDetails(user User) {
 	@gong.Form(
-		gong.FormWithMethod(http.MethodGet),
-		gong.FormWithClasses("user-card user-details"),
+		gong.WithMethod(http.MethodGet),
+		gong.WithClasses("user-card user-details"),
 	) {
 		<input type="hidden" name="view" value="form"/>
 		<div>
@@ -66,7 +66,7 @@ templ userDetails(user User) {
 }
 
 templ userForm(user User) {
-	@gong.Form(gong.FormWithClasses("user-card")) {
+	@gong.Form(gong.WithClasses("user-card")) {
 		<div>
 			<label>First Name</label>
 			<input type="text" name="firstName" value={ user.FirstName }/>
@@ -81,7 +81,7 @@ templ userForm(user User) {
 		</div>
 		<div class="button-row">
 			<button>Submit</button>
-			@gong.Button(gong.ButtonWithMethod(http.MethodGet)) {
+			@gong.Button(gong.WithMethod(http.MethodGet)) {
 				<input type="hidden" name="email" value={ user.Email }/>
 				<input type="hidden" name="lastName" value={ user.LastName }/>
 				<input type="hidden" name="firstName" value={ user.FirstName }/>

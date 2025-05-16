@@ -57,10 +57,10 @@ templ personFieldSet(index int) {
 		<input name={ fmt.Sprintf("people[%d][email]", index) } placeholder="joe@blow.com"/>
 	</fieldset>
 	@gong.Button(
-		gong.ButtonWithMethod(http.MethodGet),
-		gong.ButtonWithTarget("this"),
-		gong.ButtonWithSwap(gong.SwapOuterHTML),
-		gong.ButtonWithClasses("add-button"),
+		gong.WithMethod(http.MethodGet),
+		gong.WithTarget("this"),
+		gong.WithSwap(gong.SwapOuterHTML),
+		gong.WithClasses("add-button"),
 	) {
 		<input type="hidden" name="index" value={ strconv.Itoa(index) }/>
 		+

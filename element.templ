@@ -1,0 +1,183 @@
+package gong
+
+import (
+	"context"
+	"io"
+	"net/http"
+	"strconv"
+)
+
+templ Button(opts ...ElementOption) {
+	{{
+		c := elementConfig{
+			method: http.MethodPost,
+			swap:   SwapInnerHTML,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<button
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-swap={ c.swap }
+		if c.target != "" {
+			hx-target={ c.target }
+		} else {
+			hx-target={ "#" + ComponentID(ctx) }
+		}
+		hx-headers={ ActionHeaders(ctx) }
+		hx-include="this"
+		if c.classes != nil {
+			class={ c.classes }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</button>
+}
+
+templ Form(opts ...ElementOption) {
+	{{
+		c := elementConfig{
+			method: http.MethodPost,
+			swap:   SwapInnerHTML,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<form
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-swap={ c.swap }
+		if c.target != "" {
+			hx-target={ c.target }
+		} else {
+			hx-target={ "#" + ComponentID(ctx) }
+		}
+		hx-trigger={ c.trigger }
+		hx-headers={ ActionHeaders(ctx, c.headers...) }
+		if c.classes != nil {
+			class={ c.classes }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</form>
+}
+
+templ Link(path string, opts ...ElementOption) {
+	{{
+		c := elementConfig{
+			trigger: TriggerClick,
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<a
+		id={ c.id }
+		href={ templ.URL(path) }
+		hx-boost="true"
+		hx-trigger={ c.trigger }
+		hx-swap="none"
+		hx-headers={ LinkHeaders(ctx, c.headers...) }
+		hx-push-url="true"
+		if c.classes != nil {
+			class={ c.classes }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</a>
+}
+
+// NewOutlet creates a new Outlet instance.
+// The outlet will automatically render child routes based on the current path.
+templ Outlet(opts ...ElementOption) {
+	{{
+		c := elementConfig{}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<div
+		id={ OutletID(ctx) }
+		if c.oob {
+			hx-swap-oob={ SwapInnerHTML }
+		}
+		if c.classes != nil {
+			class={ c.classes }
+		}
+		{ c.attrs... }
+	>
+		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+			gCtx := getContext(ctx)
+			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
+				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
+				gCtx.Depth++
+				return render(ctx, gCtx, w, child)
+			}
+			return nil
+		})
+	</div>
+}
+
+templ Target(opts ...ElementOption) {
+	{{
+		c := elementConfig{
+			method:  http.MethodGet,
+			swap:    SwapInnerHTML,
+			trigger: "none",
+		}
+		for _, opt := range opts {
+			c = opt(c)
+		}
+	}}
+	<div
+		id={ ComponentID(ctx) }
+		if c.method == http.MethodGet {
+			hx-get
+		}
+		if c.method == http.MethodPost {
+			hx-post
+		}
+		if c.method == http.MethodPatch {
+			hx-patch
+		}
+		if c.method == http.MethodDelete {
+			hx-delete
+		}
+		hx-trigger={ c.trigger }
+		hx-target="this"
+		hx-swap={ c.swap }
+		hx-headers={ ActionHeaders(ctx) }
+		if c.classes != nil {
+			class={ c.classes }
+		}
+		{ c.attrs... }
+	>
+		{ children... }
+	</div>
+}

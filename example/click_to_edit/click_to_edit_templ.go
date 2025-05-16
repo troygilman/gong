@@ -241,8 +241,8 @@ func userDetails(user User) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = gong.Form(
-			gong.FormWithMethod(http.MethodGet),
-			gong.FormWithClasses("user-card user-details"),
+			gong.WithMethod(http.MethodGet),
+			gong.WithClasses("user-card user-details"),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -384,7 +384,7 @@ func userForm(user User) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = gong.Button(gong.ButtonWithMethod(http.MethodGet)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gong.Button(gong.WithMethod(http.MethodGet)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -394,7 +394,7 @@ func userForm(user User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = gong.Form(gong.FormWithClasses("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gong.Form(gong.WithClasses("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

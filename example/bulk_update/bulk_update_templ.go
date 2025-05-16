@@ -231,10 +231,10 @@ func personFieldSet(index int) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = gong.Button(
-			gong.ButtonWithMethod(http.MethodGet),
-			gong.ButtonWithTarget("this"),
-			gong.ButtonWithSwap(gong.SwapOuterHTML),
-			gong.ButtonWithClasses("add-button"),
+			gong.WithMethod(http.MethodGet),
+			gong.WithTarget("this"),
+			gong.WithSwap(gong.SwapOuterHTML),
+			gong.WithClasses("add-button"),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
