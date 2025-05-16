@@ -33,11 +33,17 @@ func Bind(source url.Values, dest any) error {
 	return node.Bind(val)
 }
 
+// Node represents a parsed form data node in a tree structure.
+// It can contain a leaf value (Val) and/or child nodes organized in a hierarchy.
+// This allows for representing nested form data structures.
 type Node struct {
-	Val      string
-	Children map[string]Node
+	Val      string          // The value of this node, if it's a leaf node
+	Children map[string]Node // Child nodes, for nested structures
 }
 
+// Bind recursively binds the node's data to the provided destination value.
+// It handles different types (structs, maps, slices, etc.) appropriately.
+// Returns an error if binding fails due to type incompatibility or invalid data.
 func (node Node) Bind(dest reflect.Value) error {
 	t := dest.Type()
 	switch dest.Kind() {
@@ -146,6 +152,8 @@ func (node Node) Bind(dest reflect.Value) error {
 	return nil
 }
 
+// Cleanup frees resources used by the node, returning them to the provided pool.
+// This helps reduce memory allocations by recycling node maps.
 func (node Node) Cleanup(pool *sync.Pool) {
 	if node.Children != nil {
 		for key, child := range node.Children {
@@ -156,6 +164,8 @@ func (node Node) Cleanup(pool *sync.Pool) {
 	}
 }
 
+// String returns a string representation of the node for debugging purposes.
+// The output shows the node's value and its children in a hierarchical format.
 func (node Node) String() string {
 	return node.stringWithIndent(0)
 }
@@ -199,7 +209,6 @@ func (node Node) stringWithIndent(level int) string {
 	return b.String()
 }
 
-// setValueFromString sets a reflect.Value from a string based on its type
 func setValueFromString(dest reflect.Value, str string) error {
 	switch dest.Kind() {
 	case reflect.String:

@@ -11,12 +11,16 @@ import (
 	"github.com/troygilman/gong/outlet"
 )
 
+// gongRoute is the internal implementation of the gong.Route interface.
+// It represents a route in the application's routing tree.
 type gongRoute struct {
 	path      string
 	component gong.Component
 	children  []gong.Route
 }
 
+// New creates a new Route instance with the specified path and component.
+// It accepts optional configurations via the Option pattern.
 func New(path string, component gong.Component, opts ...Option) gong.Route {
 	route := gongRoute{
 		path:      path,
@@ -59,6 +63,8 @@ func (route gongRoute) Render(ctx context.Context, w io.Writer) error {
 	return util.Render(ctx, gCtx, w, route.component.View())
 }
 
+// Child returns the child route at the specified index.
+// Returns nil if the index is out of bounds.
 func (route gongRoute) Child(index int) gong.Route {
 	if index < 0 || index >= len(route.children) {
 		return nil
@@ -66,6 +72,8 @@ func (route gongRoute) Child(index int) gong.Route {
 	return route.children[index]
 }
 
+// Find locates a route by its ID string.
+// Returns the found route and the depth in the routing tree.
 func (route gongRoute) Find(id string) (gong.Route, int) {
 	var r gong.Route = route
 	depth := 0
@@ -76,20 +84,27 @@ func (route gongRoute) Find(id string) (gong.Route, int) {
 	return r, depth
 }
 
+// NumChildren returns the number of direct child routes.
 func (route gongRoute) NumChildren() int {
 	return len(route.children)
 }
 
+// Component returns the component associated with this route.
 func (route gongRoute) Component() gong.Component {
 	return route.component
 }
 
+// Path returns the path segment that this route represents.
 func (route gongRoute) Path() string {
 	return route.path
 }
 
+// Option is a function type for configuring routes with the options pattern.
+// It takes a gongRoute and returns a modified one.
 type Option func(gongRoute) gongRoute
 
+// WithChildren sets the child routes for a route.
+// This allows for creating a hierarchical routing structure.
 func WithChildren(children ...gong.Route) Option {
 	return func(gr gongRoute) gongRoute {
 		gr.children = children

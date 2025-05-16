@@ -17,9 +17,6 @@ const (
 	idDelimeter = "_"
 )
 
-// Component represents a UI component in the Gong framework.
-// It encapsulates a view, optional loader, action, and head elements,
-// along with any child components that may be part of its structure.
 type gongComponent struct {
 	view     gong.View
 	loader   gong.Loader
@@ -29,7 +26,7 @@ type gongComponent struct {
 	children map[string]gong.Component
 }
 
-// NewComponent creates a new Component instance with the specified view.
+// New creates a new Component instance with the specified view.
 // It automatically scans the view for any child components and sets up
 // optional interfaces (Loader, Action, Head) if the view implements them.
 func New(view gong.View, opts ...Option) gong.Component {
@@ -143,6 +140,8 @@ func (component gongComponent) WithLoaderData(data any) gong.Component {
 	return component
 }
 
+// Option is a function type for configuring components with the options pattern.
+// It takes a gongComponent and returns a modified one.
 type Option func(gongComponent) gongComponent
 
 // WithID sets a custom ID for the component.

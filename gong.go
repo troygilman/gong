@@ -85,15 +85,26 @@ func (r RenderFunc) Render(ctx context.Context, w io.Writer) error {
 	return r(ctx, w)
 }
 
+// Component represents a complete UI component in the Gong framework.
+// It combines several interfaces (View, Action, Loader, Head) to provide
+// a unified component model with rendering, action handling, data loading,
+// and head element capabilities.
 type Component interface {
 	templ.Component
 	View
 	Action
 	Loader
 	Head
+	// ID returns the unique identifier for this component.
 	ID() string
+	// Find searches for a child component with the given ID.
+	// Returns the found component and a boolean indicating success.
 	Find(id string) (Component, bool)
+	// WithLoaderFunc attaches a loader function to the component for data loading.
+	// Returns the modified component for method chaining.
 	WithLoaderFunc(loader LoaderFunc) Component
+	// WithLoaderData sets static data for the component.
+	// Returns the modified component for method chaining.
 	WithLoaderData(data any) Component
 }
 
@@ -119,18 +130,26 @@ type Route interface {
 	Component() Component
 }
 
+// TriggerAfterSwap creates an HTMX event trigger that fires after a swap operation
+// completes for an element with the specified ID.
 func TriggerAfterSwap(id string) string {
 	return fmt.Sprintf("htmx:afterSwap[detail.target.id === '%s'] from:body", id)
 }
 
+// TriggerAfterSwapOOB creates an HTMX event trigger that fires after an out-of-band
+// swap operation completes for an element with the specified ID.
 func TriggerAfterSwapOOB(id string) string {
 	return fmt.Sprintf("htmx:oobAfterSwap[detail.target.id === '%s'] from:body", id)
 }
 
+// Error creates a templ.Component that returns the provided error when rendered.
+// This is useful for propagating errors through the component tree.
 func Error(err error) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 		return err
 	})
 }
 
+// ErrorHandler is a function type for handling errors that occur during component rendering.
+// It provides a way to implement custom error handling strategies.
 type ErrorHandler func(context.Context, error)

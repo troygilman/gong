@@ -14,8 +14,12 @@ import (
 	"github.com/troygilman/gong/route"
 )
 
+// Option is a function type for configuring servers with the options pattern.
+// It takes a Server pointer and returns a modified Server pointer.
 type Option func(*Server) *Server
 
+// WithErrorHandler sets a custom error handler for the server.
+// The handler will be called when errors occur during request processing.
 func WithErrorHandler(handler gong.ErrorHandler) Option {
 	return func(s *Server) *Server {
 		s.errorHandler = handler
@@ -23,7 +27,7 @@ func WithErrorHandler(handler gong.ErrorHandler) Option {
 	}
 }
 
-// Gong is the main framework instance that handles routing and request processing.
+// Server is the main framework instance that handles routing and request processing.
 // It implements the http.Handler interface and manages the application's routes.
 type Server struct {
 	mux          *http.ServeMux
@@ -31,8 +35,8 @@ type Server struct {
 	errorHandler gong.ErrorHandler
 }
 
-// New creates a new Gong instance with the specified HTTP mux.
-// The mux is used for routing HTTP requests to the appropriate handlers.
+// New creates a new Server instance.
+// It accepts optional configurations via the Option pattern.
 func New(opts ...Option) *Server {
 	s := &Server{
 		mux: http.NewServeMux(),
@@ -43,17 +47,19 @@ func New(opts ...Option) *Server {
 	return s
 }
 
+// Handle registers a handler for the given pattern in the server's HTTP mux.
 func (svr *Server) Handle(pattern string, handler http.Handler) {
 	svr.mux.Handle(pattern, handler)
 }
 
-// Routes registers one or more route builders with the Gong instance.
-// Each route builder is built and set up with appropriate handlers.
-// Returns the Gong instance for method chaining.
+// Route registers a route with the server.
+// The route will be set up with appropriate handlers when the server runs.
 func (svr *Server) Route(route gong.Route) {
 	svr.routes = append(svr.routes, route)
 }
 
+// Run starts the server and begins listening for HTTP requests on the specified address.
+// This method blocks until the server is stopped or encounters an error.
 func (svr *Server) Run(addr string) error {
 	root := route.New("", component.New(indexComponent{}), route.WithChildren(svr.routes...))
 

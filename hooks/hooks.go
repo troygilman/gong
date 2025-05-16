@@ -63,6 +63,8 @@ func Redirect(ctx context.Context, path string) error {
 	return nil
 }
 
+// Header returns the HTTP header map that will be sent by the response.
+// This is useful for adding or modifying response headers.
 func Header(ctx context.Context) http.Header {
 	return gctx.GetContext(ctx).Writer.Header()
 }
@@ -75,11 +77,15 @@ func ChildRoute(ctx context.Context) gong.Route {
 	return gCtx.Route.Child(gCtx.ChildRouteIndex)
 }
 
+// OutletID generates a unique ID for an outlet component based on the current route.
+// This is used internally by the outlet component for proper targeting in HTMX.
 func OutletID(ctx context.Context) string {
 	gCtx := gctx.GetContext(ctx)
 	return "gong_" + gCtx.CurrentRouteID + "_outlet"
 }
 
+// ComponentID generates a unique ID for a component based on the current route and component.
+// This is used internally by components for proper targeting in HTMX.
 func ComponentID(ctx context.Context) string {
 	gCtx := gctx.GetContext(ctx)
 	prefix := "gong_" + gCtx.CurrentRouteID
@@ -89,10 +95,14 @@ func ComponentID(ctx context.Context) string {
 	return prefix
 }
 
+// ActionHeaders generates the HTMX header string for action requests.
+// This includes the standard Gong action headers plus any additional headers provided.
 func ActionHeaders(ctx context.Context, headers ...string) string {
 	return util.BuildHeaders(append(util.GongHeaders(ctx, gong.GongRequestTypeAction), headers...))
 }
 
+// LinkHeaders generates the HTMX header string for link navigation requests.
+// This includes the standard Gong link headers plus any additional headers provided.
 func LinkHeaders(ctx context.Context, headers ...string) string {
 	return util.BuildHeaders(append(util.GongHeaders(ctx, gong.GongRequestTypeLink), headers...))
 }

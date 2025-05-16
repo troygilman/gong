@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	// NodeMapPool is a sync.Pool for recycling Node.Children maps.
+	// This reduces GC pressure when parsing many form submissions.
 	NodeMapPool = &sync.Pool{
 		New: func() any {
 			return make(map[string]Node)
@@ -14,16 +16,23 @@ var (
 	}
 )
 
+// Parser parses URL form values into a tree structure for binding.
+// It uses a sync.Pool to recycle maps for better performance.
 type Parser struct {
 	nodeMapPool *sync.Pool
 }
 
+// NewParser creates a new Parser with the provided node map pool.
+// The node map pool is used to recycle maps when parsing form data.
 func NewParser(nodeMapPool *sync.Pool) Parser {
 	return Parser{
 		nodeMapPool: nodeMapPool,
 	}
 }
 
+// Parse converts URL form values into a structured Node tree.
+// It handles nested form fields using bracket notation (e.g., "user[name]").
+// The resulting Node tree can then be bound to Go types using Bind.
 func (parser Parser) Parse(source url.Values) Node {
 	node := Node{
 		Children: parser.nodeMapPool.Get().(map[string]Node),
@@ -42,9 +51,11 @@ func (parser Parser) Parse(source url.Values) Node {
 		}
 	}
 	return node
-
 }
 
+// populateNode recursively builds a Node tree from a form field path.
+// It parses nested fields using bracket notation and assigns values at leaf nodes.
+// For example, "user[name][first]" would create a nested tree of nodes.
 func (parser Parser) populateNode(node Node, path string, start int, val []string) Node {
 	end := start
 	for end < len(path) && path[end] != ']' {
