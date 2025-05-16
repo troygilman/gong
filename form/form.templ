@@ -33,6 +33,9 @@ templ New(opts ...Option) {
 		} else {
 			hx-target={ "#" + hooks.ComponentID(ctx) }
 		}
+		if c.trigger != nil {
+			hx-trigger={ *c.trigger }
+		}
 		hx-headers={ hooks.ActionHeaders(ctx, c.headers...) }
 		if c.classes != nil {
 			class={ c.classes }
@@ -48,6 +51,7 @@ type Config struct {
 	swap    string
 	target  string
 	headers []string
+	trigger *string
 	attrs   templ.Attributes
 	classes templ.CSSClasses
 }
@@ -92,6 +96,13 @@ func WithClasses(classes ...any) Option {
 func WithTarget(target string) Option {
 	return func(c Config) Config {
 		c.target = target
+		return c
+	}
+}
+
+func WithTrigger(trigger string) Option {
+	return func(c Config) Config {
+		c.trigger = &trigger
 		return c
 	}
 }
