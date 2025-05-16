@@ -29,21 +29,21 @@ templ (c CounterComponent) View() {
 }
 
 templ (c CounterComponent) Action() {
-    {{
-     	count, err := strconv.Atoi(gong.FormValue(ctx, "count"))
-      	if err != nil {
-       		return err
-       	}
-    }}
-    @counter(count+1)
+	{{
+		count, err := strconv.Atoi(gong.FormValue(ctx, "count"))
+		if err != nil {
+			return err
+		}
+	}}
+	@counter(count+1)
 }
 
 templ counter(count int) {
 	<p>Count: { strconv.Itoa(count) }</p>
 	@gong.Button() {
 		Increment
- 		<input type="hidden" name="count" value={ strconv.Itoa(count) }/>
-   }
+		<input type="hidden" name="count" value={ strconv.Itoa(count) }/>
+	}
 }
 ```
 
