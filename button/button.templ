@@ -37,8 +37,8 @@ templ New(opts ...Option) {
 		}
 		hx-headers={ hooks.ActionHeaders(ctx) }
 		hx-include="this"
-		if c.class != "" {
-			class={ c.class }
+		if c.classes != nil {
+			class={ c.classes }
 		}
 		{ c.attrs... }
 	>
@@ -51,7 +51,7 @@ type Config struct {
 	swap    string
 	headers []string
 	attrs   templ.Attributes
-	class   string
+	classes templ.CSSClasses
 	target  string
 }
 
@@ -85,9 +85,9 @@ func WithSwap(swap string) Option {
 	}
 }
 
-func WithClass(class string) Option {
+func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.class = class
+		c.classes = templ.Classes(classes)
 		return c
 	}
 }

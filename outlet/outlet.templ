@@ -24,6 +24,9 @@ templ New(opts ...Option) {
 		if c.oob {
 			hx-swap-oob={ gong.SwapInnerHTML }
 		}
+		if c.classes != nil {
+			class={ c.classes }
+		}
 		{ c.attrs... }
 	>
 		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
@@ -42,8 +45,9 @@ templ New(opts ...Option) {
 // It serves as a dynamic content area where route components are rendered
 // based on the current URL path. Outlets are essential for nested routing.
 type Config struct {
-	oob   bool
-	attrs templ.Attributes
+	oob     bool
+	attrs   templ.Attributes
+	classes templ.CSSClasses
 }
 
 type Option func(Config) Config
@@ -58,6 +62,13 @@ func WithAttrs(attrs templ.Attributes) Option {
 func WithOOB(oob bool) Option {
 	return func(c Config) Config {
 		c.oob = oob
+		return c
+	}
+}
+
+func WithClasses(classes ...any) Option {
+	return func(c Config) Config {
+		c.classes = templ.Classes(classes)
 		return c
 	}
 }

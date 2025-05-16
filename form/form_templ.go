@@ -41,7 +41,7 @@ func New(opts ...Option) templ.Component {
 		for _, opt := range opts {
 			c = opt(c)
 		}
-		var templ_7745c5c3_Var2 = []any{c.class}
+		var templ_7745c5c3_Var2 = []any{c.classes}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -145,7 +145,7 @@ func New(opts ...Option) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if c.class != "" {
+		if c.classes != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -190,7 +190,7 @@ type Config struct {
 	target  string
 	headers []string
 	attrs   templ.Attributes
-	class   string
+	classes templ.CSSClasses
 }
 
 type Option func(Config) Config
@@ -223,9 +223,9 @@ func WithSwap(swap string) Option {
 	}
 }
 
-func WithClass(class string) Option {
+func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.class = class
+		c.classes = templ.Classes(classes)
 		return c
 	}
 }

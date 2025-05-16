@@ -240,7 +240,7 @@ func personFieldSet(index int) templ.Component {
 			button.WithMethod(http.MethodGet),
 			button.WithTarget("this"),
 			button.WithSwap(gong.SwapOuterHTML),
-			button.WithClass("add-button"),
+			button.WithClasses("add-button"),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

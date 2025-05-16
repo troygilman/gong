@@ -50,7 +50,7 @@ templ (c UserDetailComponent) Action() {
 templ userDetails(user User) {
 	@form.New(
 		form.WithMethod(http.MethodGet),
-		form.WithClass("user-card user-details"),
+		form.WithClasses("user-card user-details"),
 	) {
 		<input type="hidden" name="view" value="form"/>
 		<div>
@@ -72,7 +72,7 @@ templ userDetails(user User) {
 }
 
 templ userForm(user User) {
-	@form.New(form.WithClass("user-card")) {
+	@form.New(form.WithClasses("user-card")) {
 		<div>
 			<label>First Name</label>
 			<input type="text" name="firstName" value={ user.FirstName }/>

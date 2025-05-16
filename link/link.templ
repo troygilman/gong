@@ -22,8 +22,8 @@ templ New(path string, opts ...Option) {
 		hx-swap="none"
 		hx-headers={ hooks.LinkHeaders(ctx, c.headers...) }
 		hx-push-url="true"
-		if c.class != "" {
-			class={ c.class }
+		if c.classes != nil {
+			class={ c.classes }
 		}
 		{ c.attrs... }
 	>
@@ -38,7 +38,7 @@ type Config struct {
 	id      string
 	headers []string
 	trigger string
-	class   string
+	classes templ.CSSClasses
 	attrs   templ.Attributes
 }
 
@@ -72,9 +72,9 @@ func WithAttrs(attrs templ.Attributes) Option {
 	}
 }
 
-func WithClass(class string) Option {
+func WithClasses(classes ...any) Option {
 	return func(c Config) Config {
-		c.class = class
+		c.classes = templ.Classes(classes)
 		return c
 	}
 }

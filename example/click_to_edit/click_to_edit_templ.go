@@ -248,7 +248,7 @@ func userDetails(user User) templ.Component {
 		})
 		templ_7745c5c3_Err = form.New(
 			form.WithMethod(http.MethodGet),
-			form.WithClass("user-card user-details"),
+			form.WithClasses("user-card user-details"),
 		).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -400,7 +400,7 @@ func userForm(user User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = form.New(form.WithClass("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = form.New(form.WithClasses("user-card")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
