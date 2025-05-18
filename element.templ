@@ -134,9 +134,8 @@ templ Outlet(opts ...ElementOption) {
 	>
 		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
-			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
+			if child := gCtx.Node.children[gCtx.ChildRouteIndex]; child != nil {
 				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
-				gCtx.Depth++
 				return render(ctx, gCtx, w, child)
 			}
 			return nil

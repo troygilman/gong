@@ -108,28 +108,6 @@ type Component interface {
 	WithLoaderData(data any) Component
 }
 
-// Route represents a route in the application's routing tree.
-// It defines the interface for handling component routing and rendering.
-type Route interface {
-	templ.Component
-
-	// Child returns the child route for the given path.
-	// If no exact match is found and a default child exists, returns the default child.
-	// Returns nil if no matching route is found.
-	Child(int) Route
-
-	Find(string) (Route, int)
-
-	// NumChildren returns the number of direct child routes of this route.
-	NumChildren() int
-
-	// Path returns the path segment that this route represents.
-	Path() string
-
-	// Component returns the component associated with this route.
-	Component() Component
-}
-
 // TriggerAfterSwap creates an HTMX event trigger that fires after a swap operation
 // completes for an element with the specified ID.
 func TriggerAfterSwap(id string) string {

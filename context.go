@@ -12,7 +12,7 @@ type contextKeyType int
 const contextKey = contextKeyType(0)
 
 type gongContext struct {
-	Route           Route
+	Node            *routeNode
 	ChildRouteIndex int
 	Component       Component
 	Request         *http.Request
@@ -21,7 +21,6 @@ type gongContext struct {
 	CurrentRouteID  string
 	ComponentID     string
 	Path            string
-	Depth           int
 	Action          bool
 	Link            bool
 	ErrorHandler    ErrorHandler

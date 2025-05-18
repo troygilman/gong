@@ -72,7 +72,7 @@ func Header(ctx context.Context) http.Header {
 // the currently active child route within a parent component.
 func ChildRoute(ctx context.Context) Route {
 	gCtx := getContext(ctx)
-	return gCtx.Route.Child(gCtx.ChildRouteIndex)
+	return gCtx.Node.children[gCtx.ChildRouteIndex].route
 }
 
 // OutletID generates a unique ID for an outlet component based on the current route.

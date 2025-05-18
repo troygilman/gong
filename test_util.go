@@ -61,18 +61,6 @@ type testRoute struct {
 	path string
 }
 
-func (r testRoute) Child(id int) Route {
-	return nil
-}
-
-func (r testRoute) NumChildren() int {
-	return 0
-}
-
-func (r testRoute) Find(id string) (Route, int) {
-	return nil, 0
-}
-
 func (r testRoute) Path() string {
 	return r.path
 }

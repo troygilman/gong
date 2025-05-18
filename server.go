@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/troygilman/gong/internal/response_writer"
 )
@@ -56,27 +55,17 @@ func (svr *Server) Route(route Route) {
 // Run starts the server and begins listening for HTTP requests on the specified address.
 // This method blocks until the server is stopped or encounters an error.
 func (svr *Server) Run(addr string) error {
-	root := NewRoute("", NewComponent(indexComponent{}), WithChildren(svr.routes...))
-
-	for i := range root.NumChildren() {
-		child := root.Child(i)
-		svr.setupRoute(root, root, child, strconv.Itoa(i), child.Path(), 1)
+	root := NewRoute("", NewComponent(indexComponent{}), WithChildren(svr.routes...)).newNode(nil, "")
+	for _, node := range root.children {
+		svr.setupRoute(root, node)
 	}
-
 	return http.ListenAndServe(addr, svr.mux)
 }
 
-func (svr *Server) setupRoute(
-	root Route,
-	parent Route,
-	route Route,
-	routeID string,
-	path string,
-	depth int,
-) {
-	log.Printf("Route=%s\n", path)
+func (svr *Server) setupRoute(root *routeNode, node *routeNode) {
+	log.Printf("Route=%s\n", node.path)
 
-	svr.mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	svr.mux.Handle(node.path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			writer      = response_writer.NewResponseWriter(w)
 			requestType = r.Header.Get(HeaderGongRequestType)
@@ -93,9 +82,9 @@ func (svr *Server) setupRoute(
 
 		switch requestType {
 		case GongRequestTypeAction:
-			gCtx.RequestRouteID = routeID
+			gCtx.RequestRouteID = node.id
 			gCtx.CurrentRouteID = r.Header.Get(HeaderGongRouteID)
-			gCtx.Route, gCtx.Depth = root.Find(gCtx.CurrentRouteID)
+			gCtx.Node = root.find(gCtx.CurrentRouteID)
 		case GongRequestTypeLink:
 			currentUrl, err := getCurrentUrl(r)
 			if err != nil {
@@ -105,24 +94,22 @@ func (svr *Server) setupRoute(
 				w.Header().Set("Hx-Reswap", "none")
 				return
 			}
-			gCtx.RequestRouteID = routeID
-			gCtx.CurrentRouteID = routeID[:len(routeID)-1]
-			gCtx.Depth = depth - 1
-			gCtx.Route = parent
+			gCtx.RequestRouteID = node.id
+			gCtx.CurrentRouteID = node.id[:len(node.id)-1]
+			gCtx.Node = node.parent
 		default:
-			gCtx.RequestRouteID = routeID
+			gCtx.RequestRouteID = node.id
 			gCtx.CurrentRouteID = ""
-			gCtx.Depth = 0
-			gCtx.Route = root
+			gCtx.Node = root
 		}
 
 		// log.Println("RequestPath:", r.URL.Path, "RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
 
-		if gCtx.Route == nil {
+		if gCtx.Node == nil {
 			panic("route is nil")
 		}
 
-		if err := render(r.Context(), gCtx, writer, gCtx.Route); err != nil {
+		if err := render(r.Context(), gCtx, writer, gCtx.Node); err != nil {
 			panic(err)
 		}
 
@@ -131,9 +118,8 @@ func (svr *Server) setupRoute(
 		}
 	}))
 
-	for i := range route.NumChildren() {
-		child := route.Child(i)
-		svr.setupRoute(root, route, child, routeID+strconv.Itoa(i), path+child.Path(), depth+1)
+	for _, child := range node.children {
+		svr.setupRoute(root, child)
 	}
 }
 

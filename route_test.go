@@ -12,17 +12,15 @@ func TestRouteBasic(t *testing.T) {
 		view: testTemplComponent{text: "view"},
 	}
 
-	route := NewRoute("/", NewComponent(comp, withID("mock")))
+	node := NewRoute("/", NewComponent(comp, withID("mock"))).newNode(nil, "")
 
-	assert.Equals(t, "/", route.Path())
-	assert.Equals(t, nil, route.Child(0))
-	assert.Equals(t, 0, route.NumChildren())
+	assert.Equals(t, "/", node.route.Path())
 
 	ctx := gongContext{
 		Request: newTestRequest(http.MethodGet, "/"),
 	}
 
-	testRender(t, route, ctx, "view")
+	testRender(t, node, ctx, "view")
 }
 
 func TestRouteRenderAction(t *testing.T) {
@@ -30,7 +28,7 @@ func TestRouteRenderAction(t *testing.T) {
 		action: testTemplComponent{text: "action"},
 	}
 
-	route := NewRoute("/", NewComponent(comp, withID("mock")))
+	node := NewRoute("/", NewComponent(comp, withID("mock"))).newNode(nil, "")
 
 	ctx := gongContext{
 		Action:      true,
@@ -38,7 +36,7 @@ func TestRouteRenderAction(t *testing.T) {
 		Request:     newTestRequest(http.MethodGet, "/"),
 	}
 
-	testRender(t, route, ctx, "action")
+	testRender(t, node, ctx, "action")
 }
 
 func TestRouteRenderAction_withLoader(t *testing.T) {
@@ -47,7 +45,7 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 		loaderData: "action",
 	}
 
-	route := NewRoute("/", NewComponent(comp, withID("mock")))
+	node := NewRoute("/", NewComponent(comp, withID("mock"))).newNode(nil, "")
 
 	ctx := gongContext{
 		Action:      true,
@@ -55,5 +53,5 @@ func TestRouteRenderAction_withLoader(t *testing.T) {
 		Request:     newTestRequest(http.MethodGet, "/"),
 	}
 
-	testRender(t, route, ctx, "action")
+	testRender(t, node, ctx, "action")
 }

@@ -7,7 +7,7 @@ templ (c indexComponent) View() {
 		gCtx := getContext(ctx)
 	}}
 	<html>
-		@gCtx.Route.Child(gCtx.ChildRouteIndex).Component().Head()
+		@gCtx.Node.children[gCtx.ChildRouteIndex].route.component.Head()
 		<body>
 			@Outlet()
 		</body>

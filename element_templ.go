@@ -594,9 +594,8 @@ func Outlet(opts ...ElementOption) templ.Component {
 		}
 		templ_7745c5c3_Err = templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
-			if child := gCtx.Route.Child(gCtx.ChildRouteIndex); child != nil {
+			if child := gCtx.Node.children[gCtx.ChildRouteIndex]; child != nil {
 				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
-				gCtx.Depth++
 				return render(ctx, gCtx, w, child)
 			}
 			return nil
@@ -654,7 +653,7 @@ func Target(opts ...ElementOption) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(ComponentID(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 159, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 158, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -695,7 +694,7 @@ func Target(opts ...ElementOption) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(c.trigger)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 172, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 171, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -708,7 +707,7 @@ func Target(opts ...ElementOption) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.swap)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 174, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 173, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -721,7 +720,7 @@ func Target(opts ...ElementOption) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(ActionHeaders(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 175, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `element.templ`, Line: 174, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
