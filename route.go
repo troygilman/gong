@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"strconv"
+	"strings"
 )
 
 type RouteOption func(Route) Route
@@ -69,14 +71,9 @@ func (node *routeNode) Render(ctx context.Context, w io.Writer) error {
 
 	// log.Printf("Rendering Route: %+v\n", gCtx)
 	if len(node.children) > 0 {
-		if len(gCtx.RequestRouteID) > node.depth {
-			gCtx.ChildRouteIndex = int(gCtx.RequestRouteID[node.depth] - '0')
+		if len(gCtx.RouteID) > node.depth {
+			gCtx.ChildRouteIndex = int(gCtx.RouteID[node.depth] - '0')
 		}
-	}
-
-	if gCtx.Link {
-		gCtx.Link = false
-		return render(ctx, gCtx, w, Outlet(withOOB(true)))
 	}
 
 	if gCtx.Action {
@@ -85,6 +82,21 @@ func (node *routeNode) Render(ctx context.Context, w io.Writer) error {
 			panic(fmt.Sprintf("could not find component with id %s in route %s", gCtx.ComponentID, node.route.path))
 		}
 		return render(ctx, gCtx, w, component.Action())
+	}
+
+	if node.matchPath(gCtx.RenderedPath) {
+		log.Println("should not render - node", node, ", children", node.children, ", rendered", gCtx.RenderedPath)
+		if len(node.children) == 0 {
+			return nil
+		}
+		return render(ctx, gCtx, w, node.children[gCtx.ChildRouteIndex])
+	}
+	log.Println("rendering", node, "rendered", gCtx.RenderedPath)
+
+	if gCtx.Link {
+		gCtx.Link = false
+		gCtx.Node = node.parent
+		return render(ctx, gCtx, w, Outlet(withOOB(true), withNode(node)))
 	}
 
 	gCtx.ComponentID = ""
@@ -97,4 +109,14 @@ func (node *routeNode) find(id string) *routeNode {
 		n = n.children[int(index-'0')]
 	}
 	return n
+}
+
+func (node *routeNode) matchPath(path string) bool {
+	if path == "" {
+		return false
+	}
+	if node.path == "" && path != "" {
+		return true
+	}
+	return strings.HasPrefix(path, node.path)
 }

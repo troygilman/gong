@@ -79,14 +79,14 @@ func ChildRoute(ctx context.Context) Route {
 // This is used internally by the outlet component for proper targeting in HTMX.
 func OutletID(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	return "gong_" + gCtx.CurrentRouteID + "_outlet"
+	return "gong_" + gCtx.Node.id + "_outlet"
 }
 
 // ComponentID generates a unique ID for a component based on the current route and component.
 // This is used internally by components for proper targeting in HTMX.
 func ComponentID(ctx context.Context) string {
 	gCtx := getContext(ctx)
-	prefix := "gong_" + gCtx.CurrentRouteID
+	prefix := "gong_" + gCtx.Node.id
 	if gCtx.ComponentID != "" {
 		prefix += "_" + gCtx.ComponentID
 	}

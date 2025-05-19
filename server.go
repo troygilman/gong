@@ -76,34 +76,22 @@ func (svr *Server) setupRoute(root *routeNode, node *routeNode) {
 			Writer:       writer,
 			Action:       requestType == GongRequestTypeAction,
 			Link:         requestType == GongRequestTypeLink,
+			RouteID:      node.id,
 			ComponentID:  r.Header.Get(HeaderGongComponentID),
+			RenderedPath: getCurrentUrl(r),
 			ErrorHandler: svr.errorHandler,
 		}
 
 		switch requestType {
 		case GongRequestTypeAction:
-			gCtx.RequestRouteID = node.id
-			gCtx.CurrentRouteID = r.Header.Get(HeaderGongRouteID)
-			gCtx.Node = root.find(gCtx.CurrentRouteID)
+			gCtx.Node = root.find(r.Header.Get(HeaderGongRouteID))
 		case GongRequestTypeLink:
-			currentUrl, err := getCurrentUrl(r)
-			if err != nil {
-				panic(err)
-			}
-			if currentUrl.EscapedPath() == r.URL.EscapedPath() {
-				w.Header().Set("Hx-Reswap", "none")
-				return
-			}
-			gCtx.RequestRouteID = node.id
-			gCtx.CurrentRouteID = node.id[:len(node.id)-1]
-			gCtx.Node = node.parent
+			gCtx.Node = root
 		default:
-			gCtx.RequestRouteID = node.id
-			gCtx.CurrentRouteID = ""
 			gCtx.Node = root
 		}
 
-		// log.Println("RequestPath:", r.URL.Path, "RequestRouteID:", gCtx.RequestRouteID, "CurrentRouteID", gCtx.CurrentRouteID)
+		log.Println("RequestPath:", r.URL.Path, "RouteID:", gCtx.RouteID)
 
 		if gCtx.Node == nil {
 			panic("route is nil")
@@ -123,6 +111,11 @@ func (svr *Server) setupRoute(root *routeNode, node *routeNode) {
 	}
 }
 
-func getCurrentUrl(r *http.Request) (*url.URL, error) {
-	return url.Parse(r.Header.Get("Hx-Current-Url"))
+func getCurrentUrl(r *http.Request) string {
+	currentUrl := r.Header.Get("Hx-Current-Url")
+	u, err := url.Parse(currentUrl)
+	if err != nil {
+		return ""
+	}
+	return u.EscapedPath()
 }

@@ -17,13 +17,13 @@ type gongContext struct {
 	Component       Component
 	Request         *http.Request
 	Writer          *response_writer.ResponseWriter
-	RequestRouteID  string
-	CurrentRouteID  string
+	RouteID         string
 	ComponentID     string
 	Path            string
 	Action          bool
 	Link            bool
 	ErrorHandler    ErrorHandler
+	RenderedPath    string
 }
 
 func getContext(ctx context.Context) gongContext {

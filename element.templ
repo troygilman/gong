@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strconv"
 )
 
 templ Button(opts ...ElementOption) {
@@ -134,8 +133,10 @@ templ Outlet(opts ...ElementOption) {
 	>
 		@templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 			gCtx := getContext(ctx)
+			if c.node != nil {
+				return render(ctx, gCtx, w, c.node)
+			}
 			if child := gCtx.Node.children[gCtx.ChildRouteIndex]; child != nil {
-				gCtx.CurrentRouteID += strconv.Itoa(gCtx.ChildRouteIndex)
 				return render(ctx, gCtx, w, child)
 			}
 			return nil

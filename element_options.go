@@ -12,6 +12,7 @@ type elementConfig struct {
 	oob     bool
 	attrs   templ.Attributes
 	classes templ.CSSClasses
+	node    *routeNode
 }
 
 type ElementOption func(elementConfig) elementConfig
@@ -75,6 +76,13 @@ func WithTrigger(trigger string) ElementOption {
 func withOOB(oob bool) ElementOption {
 	return func(c elementConfig) elementConfig {
 		c.oob = oob
+		return c
+	}
+}
+
+func withNode(node *routeNode) ElementOption {
+	return func(c elementConfig) elementConfig {
+		c.node = node
 		return c
 	}
 }

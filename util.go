@@ -34,7 +34,7 @@ func gongHeaders(ctx context.Context, requestType string) []string {
 		HeaderGongRequestType,
 		requestType,
 		HeaderGongRouteID,
-		gCtx.CurrentRouteID,
+		gCtx.Node.id,
 		HeaderGongComponentID,
 		gCtx.ComponentID,
 	}
