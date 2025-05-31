@@ -1,0 +1,26 @@
+package view
+
+import (
+	"fmt"
+	"stagebase/internal/model"
+	"strconv"
+)
+
+templ Home(projectID string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-beta.11/bundles/datastar.js"></script>
+		</head>
+		<body>
+			<div data-on-load={ fmt.Sprintf("@get('/project/%s/events')", projectID) }></div>
+			<div id="events"></div>
+		</body>
+	</html>
+}
+
+templ Event(event model.Actor) {
+	<div id="events">
+		{ strconv.Itoa(event.NumEvents) }
+	</div>
+}
